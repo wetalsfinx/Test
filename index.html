@@ -10,7 +10,6 @@ body{background:#f5f7fa;font-family:sans-serif}.card{margin-top:20px;border:none
 </style>
 </head>
 <body>
-<!-- Экран загрузки -->
 <div id="splash" class="splash-screen">
     <div style="text-align:center">
         <div class="splash-spinner mx-auto mb-3"></div>
@@ -39,26 +38,12 @@ body{background:#f5f7fa;font-family:sans-serif}.card{margin-top:20px;border:none
 </div></div>
 <div id="admin-screen" class="hidden"><div class="d-flex justify-content-between align-items-center mb-3">
 <h3>👨‍💼 Панель Администратора</h3>
-<div><span id="realtime-status" class="badge bg-success me-2">🟢 Live</span><a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a></div>
+<div><span id="realtime-status" class="badge bg-warning me-2">🔄 Подключение...</span><a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a></div>
 </div><div id="admin-panel" class="shadow-sm"><h5 class="mb-3">📈 Результаты сотрудников <span id="results-count" class="badge bg-secondary"></span></h5><div id="results-area"><div class="text-center py-4 text-muted">⏳ Ожидание данных...</div></div></div></div>
 </div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// Скрываем сплеш-экран после полной загрузки
-window.addEventListener('load', function() {
-    setTimeout(function() {
-        const splash = document.getElementById('splash');
-        if(splash) {
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.style.display = 'none';
-                document.getElementById('login-screen').classList.remove('hidden');
-            }, 500);
-        }
-    }, 300); // Минимальная задержка для плавности
-});
-
 const SUPABASE_URL='https://qtostraqrnjbxlydlip.supabase.co';
 const SUPABASE_KEY='sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -76,10 +61,30 @@ const questions=[
 let step=0,nm="",sn="",ct="",ans=[],sc=0,qs=[];
 let realtimeSubscription = null;
 
+// Функция для создания таблиц, если их нет
+async function initTables() {
+    try {
+        // Проверяем, есть ли таблица results, пытаясь получить 1 запись
+        const { error } = await sb.from('results').select('*').limit(1);
+        
+        if (error && error.message.includes('does not exist')) {
+            console.log('Таблицы не найдены, создаем через SQL...');
+            // Показываем сообщение о необходимости создать таблицы
+            const adminScreen = document.getElementById('admin-screen');
+            if (adminScreen && !adminScreen.classList.contains('hidden')) {
+                const area = document.getElementById('results-area');
+                area.innerHTML = '<div class="alert alert-warning">⚠️ Таблицы в Supabase не созданы. Перейдите в Supabase → SQL Editor и выполните SQL код из консоли браузера (F12).</div>';
+            }
+        }
+    } catch(e) {
+        console.log('Ошибка проверки таблиц:', e);
+    }
+}
+
 // Функция отправки без ожидания
 function saveToSupabase(table, data) {
     sb.from(table).insert([data]).then(() => {
-        // Успешно
+        console.log(`Сохранено в ${table}`);
     }).catch(e => {
         console.error('Ошибка сохранения:', e);
         const pending = JSON.parse(localStorage.getItem('pending_saves') || '[]');
@@ -93,7 +98,6 @@ function saveToSupabase(table, data) {
     });
 }
 
-// Функция для восстановления несохраненных данных
 function retryPendingSaves() {
     const pending = JSON.parse(localStorage.getItem('pending_saves') || '[]');
     if(pending.length === 0) return;
@@ -113,18 +117,31 @@ function retryPendingSaves() {
 
 setInterval(retryPendingSaves, 30000);
 
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        const splash = document.getElementById('splash');
+        if(splash) {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+                document.getElementById('login-screen').classList.remove('hidden');
+            }, 500);
+        }
+    }, 300);
+    
+    // Проверяем таблицы
+    initTables();
+});
+
 const urlParams = new URLSearchParams(location.search);
 if(urlParams.get('mode') === 'admin'){
-    // Скрываем сплеш и показываем админку
     const splash = document.getElementById('splash');
     if(splash) splash.style.display = 'none';
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('admin-screen').classList.remove('hidden');
     initRealtime();
     loadAdmin();
-} else {
-    // Для обычного режима - показываем форму после загрузки
-    // Сплеш скроется по load событию
+    initTables();
 }
 
 async function startQuiz(){
@@ -228,7 +245,6 @@ function finish() {
     saveToSupabase('logs', {user_id:id, action:`🏁 Завершил: ${sc}/${questions.length}`});
 }
 
-// Realtime подписка
 function initRealtime() {
     if(realtimeSubscription) return;
     
@@ -249,8 +265,11 @@ function initRealtime() {
                 if(status === 'SUBSCRIBED') {
                     statusEl.innerHTML = '🟢 Live';
                     statusEl.className = 'badge bg-success me-2';
+                } else if(status === 'CHANNEL_ERROR') {
+                    statusEl.innerHTML = '🔴 Ошибка';
+                    statusEl.className = 'badge bg-danger me-2';
                 } else {
-                    statusEl.innerHTML = '🟡 Connecting...';
+                    statusEl.innerHTML = '🟡 Подключение...';
                     statusEl.className = 'badge bg-warning me-2';
                 }
             }
@@ -326,23 +345,20 @@ async function loadAdmin(){
     try {
         const {data,error} = await sb.from('results').select('*').order('created_at',{ascending:false});
         
-        const pending = JSON.parse(localStorage.getItem('pending_saves') || '[]');
-        const localResults = pending.filter(p => p.table === 'results').map(p => p.data);
+        if(error) {
+            console.error('Ошибка загрузки:', error);
+            area.innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}. Проверьте, создана ли таблица "results" в Supabase.</div>`;
+            return;
+        }
         
-        let allResults = [];
-        if(data && !error) allResults.push(...data);
-        if(localResults.length) allResults.push(...localResults);
-        
-        allResults.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-        
-        if(!allResults.length){
-            area.innerHTML='<p class="text-muted text-center py-3">Пока нет результатов</p>';
+        if(!data || data.length === 0){
+            area.innerHTML='<div class="text-center py-4 text-muted">📭 Пока нет результатов. Пройдите тест, чтобы увидеть данные здесь.</div>';
             updateResultsCount();
             return;
         }
         
         area.innerHTML='';
-        allResults.forEach(r => {
+        data.forEach(r => {
             const p = Math.round(r.score/r.total*100);
             let ah = '';
             
@@ -359,13 +375,12 @@ async function loadAdmin(){
             
             const clr = p>=80?'success':p>=50?'warning':'danger';
             const ts = new Date(r.created_at).toLocaleString('ru-RU');
-            const isLocal = !r.created_at ? ' (ожидает отправки)' : '';
             
             const c=document.createElement('div');
             c.className='user-log';
             c.innerHTML = `<div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <strong class="fs-5">${escapeHtml(r.user_id)}${isLocal}</strong>
+                    <strong class="fs-5">${escapeHtml(r.user_id)}</strong>
                     <span class="badge bg-${clr} ms-2 fs-6">${r.score}/${r.total} (${p}%)</span>
                 </div>
                 <small class="text-muted">${ts}</small>
@@ -378,8 +393,8 @@ async function loadAdmin(){
         updateResultsCount();
         
     } catch(e) {
-        console.error('Ошибка загрузки:', e);
-        area.innerHTML='<p class="text-muted text-center py-3">Ошибка подключения</p>';
+        console.error('Ошибка:', e);
+        area.innerHTML='<div class="alert alert-danger">Ошибка подключения к базе данных</div>';
     }
 }
 </script>
