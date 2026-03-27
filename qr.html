@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-код для документа</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        .qr-card {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 28px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 16px; }
+        .qr-code { background: white; padding: 20px; border-radius: 20px; display: inline-block; margin: 20px 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .qr-code img { width: 250px; height: 250px; }
+        .test-link {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            color: #667eea;
+        }
+        .buttons { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-secondary { background: #28a745; color: white; }
+        .btn-outline { background: white; border: 2px solid #667eea; color: #667eea; }
+        @media print {
+            body { background: white; }
+            .btn { display: none; }
+            .qr-card { box-shadow: none; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="qr-card">
+        <h1>📱 QR-код</h1>
+        <p class="subtitle">Отсканируйте, чтобы открыть документ</p>
+        
+        <div class="qr-code" id="qrcode"></div>
+        
+        <div class="test-link" id="linkDisplay"></div>
+        
+        <div class="buttons">
+            <button class="btn btn-primary" onclick="downloadQR()">💾 Скачать QR-код</button>
+            <button class="btn btn-secondary" onclick="window.print()">🖨️ Распечатать</button>
+            <a href="#" id="openLink" class="btn btn-outline" target="_blank">🔗 Открыть</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2-fix@1.0.0/qrcode.min.js"></script>
+    <script>
+        // Ссылка на твой документ
+        const pageUrl = 'https://wetalsfinx.github.io/Test/лич.html';
+        
+        document.getElementById('linkDisplay').innerText = pageUrl;
+        document.getElementById('openLink').href = pageUrl;
+        
+        new QRCode(document.getElementById("qrcode"), {
+            text: pageUrl,
+            width: 250,
+            height: 250,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        function downloadQR() {
+            const qrCanvas = document.querySelector('#qrcode img');
+            if (qrCanvas) {
+                const link = document.createElement('a');
+                link.download = 'qr-code.png';
+                link.href = qrCanvas.src;
+                link.click();
+            } else {
+                alert('QR-код еще не загрузился, попробуйте еще раз');
+            }
+        }
+    </script>
+</body>
+</html>
