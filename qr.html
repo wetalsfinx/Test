@@ -71,7 +71,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        // Создаем QR-код
         new QRCode(document.getElementById("qrcode"), {
             text: "https://wetalsfinx.github.io/Test/Сервис.html",
             width: 200,
@@ -82,7 +81,6 @@
         });
         
         function downloadQR() {
-            // Находим canvas с QR-кодом
             const canvas = document.querySelector('#qrcode canvas');
             if (canvas) {
                 const link = document.createElement('a');
@@ -90,7 +88,6 @@
                 link.href = canvas.toDataURL();
                 link.click();
             } else {
-                // Если canvas не найден, ищем img
                 const img = document.querySelector('#qrcode img');
                 if (img) {
                     const link = document.createElement('a');
