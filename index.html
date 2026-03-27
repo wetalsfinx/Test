@@ -5,8 +5,34 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Тест: Стандарты Продаж</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>
-body{background:#f5f7fa;font-family:sans-serif}.card{margin-top:20px;border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}.hidden{display:none!important}#admin-panel{background:#fff;padding:20px;border-radius:10px;max-height:80vh;overflow-y:auto}.user-log{border-left:4px solid #0d6efd;padding:12px;background:#f8f9fa;margin-bottom:12px;border-radius:0 5px 5px 0;transition:all 0.3s ease}.user-log-new{animation:highlight 0.5s ease}.correct{color:#198754;font-weight:600}.wrong{color:#dc3545;font-weight:600}.score-badge{font-size:1.3em;padding:8px 20px}.btn-answer{text-align:left;white-space:normal;transition:all 0.2s}.btn-answer.selected{background-color:#0d6efd;color:white;border-color:#0d6efd}.btn-submit{font-size:1.1em;padding:12px;margin-top:15px}.online-badge{position:fixed;top:10px;right:10px;background:#28a745;color:white;padding:5px 10px;border-radius:20px;font-size:12px;z-index:1000}.splash-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:#f5f7fa;display:flex;justify-content:center;align-items:center;z-index:10000;transition:opacity 0.5s}.splash-spinner{width:50px;height:50px;border:4px solid #e9ecef;border-top-color:#0d6efd;border-radius:50%;animation:spin 0.8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+body{background:#f5f7fa;font-family:sans-serif}
+.card{margin-top:20px;border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+.hidden{display:none!important}
+#admin-panel{background:#fff;padding:20px;border-radius:10px}
+.user-log{border-left:4px solid #0d6efd;padding:12px;background:#f8f9fa;margin-bottom:12px;border-radius:0 8px 8px 0;transition:all 0.3s ease;cursor:pointer}
+.user-log:hover{background:#e9ecef}
+.correct{color:#198754;font-weight:600}
+.wrong{color:#dc3545;font-weight:600}
+.score-badge{font-size:1.3em;padding:8px 20px}
+.btn-answer{text-align:left;white-space:normal;transition:all 0.2s}
+.btn-answer.selected{background-color:#0d6efd;color:white;border-color:#0d6efd}
+.btn-submit{font-size:1.1em;padding:12px;margin-top:15px}
+.online-badge{position:fixed;top:10px;right:10px;background:#28a745;color:white;padding:5px 10px;border-radius:20px;font-size:12px;z-index:1000}
+.splash-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:#f5f7fa;display:flex;justify-content:center;align-items:center;z-index:10000;transition:opacity 0.5s}
+.splash-spinner{width:50px;height:50px;border:4px solid #e9ecef;border-top-color:#0d6efd;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.answer-details{display:none;margin-top:10px;padding-top:10px;border-top:1px solid #dee2e6}
+.answer-details.show{display:block}
+.stats-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-radius:10px;padding:15px;margin-bottom:15px}
+.filter-bar{background:white;padding:15px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
+.sort-btn{cursor:pointer;transition:all 0.2s}
+.sort-btn:hover{opacity:0.7}
+.user-name{font-weight:bold;font-size:1.1em}
+.user-city{font-size:0.85em;color:#6c757d;margin-left:8px}
+.expand-icon{float:right;color:#6c757d;transition:transform 0.3s}
+.user-log.expanded .expand-icon{transform:rotate(180deg)}
 </style>
 </head>
 <body>
@@ -18,7 +44,7 @@ body{background:#f5f7fa;font-family:sans-serif}.card{margin-top:20px;border:none
 </div>
 
 <div class="online-badge" id="online-badge">🟢 Онлайн</div>
-<div class="container mt-4"><div class="row justify-content-center"><div class="col-md-8">
+<div class="container mt-4"><div class="row justify-content-center"><div class="col-md-10">
 <div id="login-screen" class="hidden"><div class="card p-4 shadow">
 <h2 class="text-center mb-3">📊 Тест: Стандарты Продаж</h2>
 <p class="text-center text-muted">Заполните данные для начала</p>
@@ -38,13 +64,77 @@ body{background:#f5f7fa;font-family:sans-serif}.card{margin-top:20px;border:none
 <p class="text-muted">Спасибо за прохождение теста!</p>
 <button onclick="location.reload()" class="btn btn-outline-primary">Пройти заново</button>
 </div></div>
-<div id="admin-screen" class="hidden"><div class="d-flex justify-content-between align-items-center mb-3">
+<div id="admin-screen" class="hidden">
+<div class="d-flex justify-content-between align-items-center mb-3">
 <h3>👨‍💼 Панель Администратора</h3>
 <div><span id="realtime-status" class="badge bg-warning me-2">🔄 Подключение...</span><a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a></div>
 </div>
+
+<!-- Статистика -->
+<div class="row mb-4" id="stats-panel">
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small opacity-75">Всего прошло</div>
+                    <div class="h3 mb-0" id="total-count">0</div>
+                </div>
+                <i class="bi bi-people fs-1 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small opacity-75">Средний балл</div>
+                    <div class="h3 mb-0" id="avg-score">0%</div>
+                </div>
+                <i class="bi bi-graph-up fs-1 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small opacity-75">Отлично (≥80%)</div>
+                    <div class="h3 mb-0" id="excellent-count">0</div>
+                </div>
+                <i class="bi bi-star fs-1 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Фильтры и сортировка -->
+<div class="filter-bar">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени...">
+        </div>
+        <div class="col-md-3">
+            <input type="text" id="city-filter" class="form-control" placeholder="🏙️ Фильтр по городу...">
+        </div>
+        <div class="col-md-3">
+            <select id="sort-select" class="form-select">
+                <option value="date-desc">📅 Сначала новые</option>
+                <option value="date-asc">📅 Сначала старые</option>
+                <option value="score-desc">⭐ Сначала высокий балл</option>
+                <option value="score-asc">⭐ Сначала низкий балл</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                <i class="bi bi-arrow-repeat"></i> Сброс
+            </button>
+        </div>
+    </div>
+</div>
+
 <div id="admin-panel" class="shadow-sm">
     <h5 class="mb-3">📈 Результаты сотрудников <span id="results-count" class="badge bg-secondary"></span></h5>
-    <div id="results-area"><div class="text-center py-4 text-muted">⏳ Ожидание данных...</div></div>
+    <div id="results-area"><div class="text-center py-4 text-muted">⏳ Загрузка...</div></div>
 </div>
 </div>
 </div></div></div>
@@ -67,43 +157,13 @@ const questions=[
 
 let step=0,nm="",sn="",ct="",ans=[],sc=0,qs=[];
 let realtimeSubscription = null;
-let selectedAnswer = null; // Хранит выбранный ответ
-let currentQuestionCorrect = null; // Хранит правильный ответ текущего вопроса
+let selectedAnswer = null;
+let currentQuestionCorrect = null;
+let allResults = [];
 
 function saveToSupabase(table, data) {
-    sb.from(table).insert([data]).then(() => {
-        console.log(`Сохранено в ${table}`);
-    }).catch(e => {
-        console.error('Ошибка сохранения:', e);
-        const pending = JSON.parse(localStorage.getItem('pending_saves') || '[]');
-        pending.push({table, data, timestamp: Date.now()});
-        localStorage.setItem('pending_saves', JSON.stringify(pending));
-        const badge = document.getElementById('online-badge');
-        if(badge) {
-            badge.innerHTML = '⚠️ Оффлайн';
-            badge.style.background = '#ffc107';
-        }
-    });
+    sb.from(table).insert([data]).catch(e => console.error('Ошибка:', e));
 }
-
-function retryPendingSaves() {
-    const pending = JSON.parse(localStorage.getItem('pending_saves') || '[]');
-    if(pending.length === 0) return;
-    
-    pending.forEach((item, index) => {
-        sb.from(item.table).insert([item.data]).then(() => {
-            pending.splice(index, 1);
-            localStorage.setItem('pending_saves', JSON.stringify(pending));
-            const badge = document.getElementById('online-badge');
-            if(badge && pending.length === 0) {
-                badge.innerHTML = '🟢 Онлайн';
-                badge.style.background = '#28a745';
-            }
-        }).catch(() => {});
-    });
-}
-
-setInterval(retryPendingSaves, 30000);
 
 window.addEventListener('load', function() {
     setTimeout(function() {
@@ -124,7 +184,6 @@ if(urlParams.get('mode') === 'admin'){
     if(splash) splash.style.display = 'none';
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('admin-screen').classList.remove('hidden');
-    initRealtime();
     loadAdmin();
 }
 
@@ -148,8 +207,6 @@ async function startQuiz(){
     ans=[];
     selectedAnswer = null;
     
-    saveToSupabase('logs', {user_id:id, action:'🟢 Начал тест'});
-    
     render();
     startBtn.disabled = false;
     startBtn.innerHTML = '▶ Начать тест';
@@ -157,65 +214,45 @@ async function startQuiz(){
 
 function render(){
     const q=qs[step];
-    currentQuestionCorrect = q.c; // Сохраняем правильный ответ
+    currentQuestionCorrect = q.c;
     document.getElementById('question-text').innerText=`${step+1}. ${q.q}`;
     document.getElementById('progress-badge').innerText=`Вопрос ${step+1} из ${questions.length}`;
     const area=document.getElementById('options-area');
     area.innerHTML='';
     selectedAnswer = null;
     
-    // Блокируем кнопку "Ответить"
     const submitBtn = document.getElementById('submit-btn');
     submitBtn.disabled = true;
-    submitBtn.classList.remove('btn-primary');
-    submitBtn.classList.add('btn-secondary');
     
-    // Перемешиваем варианты ответов
     const indices = [0,1,2,3].sort(()=>Math.random()-.5);
     indices.forEach(i=>{
         const b=document.createElement('button');
         b.className='btn btn-outline-dark btn-answer p-3 m-1';
         b.innerText=q.a[i];
-        b.setAttribute('data-value', i);
         b.onclick=() => selectAnswer(b, i);
         area.appendChild(b);
     });
 }
 
 function selectAnswer(button, answerIndex) {
-    // Убираем выделение со всех кнопок
     const allBtns = document.querySelectorAll('#options-area button');
     allBtns.forEach(btn => {
         btn.classList.remove('selected');
         btn.classList.add('btn-outline-dark');
     });
-    
-    // Выделяем выбранную кнопку
     button.classList.add('selected');
     button.classList.remove('btn-outline-dark');
-    
-    // Сохраняем выбранный ответ
     selectedAnswer = answerIndex;
-    
-    // Активируем кнопку "Ответить"
-    const submitBtn = document.getElementById('submit-btn');
-    submitBtn.disabled = false;
-    submitBtn.classList.remove('btn-secondary');
-    submitBtn.classList.add('btn-primary');
+    document.getElementById('submit-btn').disabled = false;
 }
 
 function submitAnswer() {
     if(selectedAnswer === null) {
-        alert('Пожалуйста, выберите вариант ответа');
+        alert('Выберите вариант ответа');
         return;
     }
     
-    // Блокируем кнопки, чтобы нельзя было ответить дважды
-    const submitBtn = document.getElementById('submit-btn');
-    submitBtn.disabled = true;
-    submitBtn.classList.remove('btn-primary');
-    submitBtn.classList.add('btn-secondary');
-    
+    document.getElementById('submit-btn').disabled = true;
     const btns = document.querySelectorAll('#options-area button');
     btns.forEach(btn => btn.style.pointerEvents = 'none');
     
@@ -225,14 +262,11 @@ function submitAnswer() {
     
     ans.push({
         n:step+1,
-        qs:q.q.substring(0,40)+'...',
+        qs:q.q.substring(0,40),
         sel:q.a[selectedAnswer],
         cor:q.a[currentQuestionCorrect],
         ok:ok
     });
-    
-    const id=`${nm} ${sn} (${ct})`;
-    saveToSupabase('logs', {user_id:id, action:`В${step+1}: ${ok?'✅':'❌'} ${q.a[selectedAnswer].substring(0,25)}`});
     
     step++;
     selectedAnswer = null;
@@ -240,8 +274,7 @@ function submitAnswer() {
     if(step < questions.length){
         render();
         setTimeout(() => {
-            const newBtns = document.querySelectorAll('#options-area button');
-            newBtns.forEach(btn => btn.style.pointerEvents = '');
+            document.querySelectorAll('#options-area button').forEach(btn => btn.style.pointerEvents = '');
         }, 100);
     } else {
         finish();
@@ -251,102 +284,109 @@ function submitAnswer() {
 function finish() {
     const id = `${nm} ${sn} (${ct})`;
     const p = Math.round(sc/questions.length*100);
-    
-    const sbg = document.getElementById('final-score');
-    sbg.innerText = `${sc} из ${questions.length} (${p}%)`;
-    sbg.className = `badge score-badge ${p>=80?'bg-success':p>=50?'bg-warning':'bg-danger'}`;
+    document.getElementById('final-score').innerText = `${sc} из ${questions.length} (${p}%)`;
     
     document.getElementById('quiz-screen').classList.add('hidden');
     document.getElementById('result-screen').classList.remove('hidden');
     
-    const resultData = {
-        user_id: id,
-        name: nm,
-        surname: sn,
-        city: ct,
-        score: sc,
-        total: questions.length,
-        answers: ans,
+    saveToSupabase('results', {
+        user_id: id, name: nm, surname: sn, city: ct,
+        score: sc, total: questions.length, answers: ans,
         created_at: new Date().toISOString()
-    };
-    
-    saveToSupabase('results', resultData);
-    saveToSupabase('logs', {user_id:id, action:`🏁 Завершил: ${sc}/${questions.length}`});
+    });
 }
 
-function initRealtime() {
-    if(realtimeSubscription) return;
-    
-    realtimeSubscription = sb
-        .channel('results-channel')
-        .on('postgres_changes', 
-            { event: 'INSERT', schema: 'public', table: 'results' },
-            (payload) => {
-                console.log('Новый результат:', payload.new);
-                addResultToAdmin(payload.new);
-                updateResultsCount();
-            }
-        )
-        .subscribe((status) => {
-            console.log('Realtime статус:', status);
-            const statusEl = document.getElementById('realtime-status');
-            if(statusEl) {
-                if(status === 'SUBSCRIBED') {
-                    statusEl.innerHTML = '🟢 Live';
-                    statusEl.className = 'badge bg-success me-2';
-                } else if(status === 'CHANNEL_ERROR') {
-                    statusEl.innerHTML = '🔴 Ошибка';
-                    statusEl.className = 'badge bg-danger me-2';
-                } else {
-                    statusEl.innerHTML = '🟡 Подключение...';
-                    statusEl.className = 'badge bg-warning me-2';
-                }
-            }
-        });
-}
-
-function addResultToAdmin(result) {
+function renderResults() {
     const area = document.getElementById('results-area');
     if(!area) return;
     
-    if(area.innerHTML.includes('Пока нет результатов') || area.innerHTML.includes('Ожидание данных')) {
-        area.innerHTML = '';
+    let filtered = [...allResults];
+    const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
+    const cityFilter = document.getElementById('city-filter')?.value.toLowerCase() || '';
+    
+    if(searchTerm) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(searchTerm));
+    if(cityFilter) filtered = filtered.filter(r => r.city && r.city.toLowerCase().includes(cityFilter));
+    
+    const sortBy = document.getElementById('sort-select')?.value || 'date-desc';
+    filtered.sort((a,b) => {
+        if(sortBy === 'date-desc') return new Date(b.created_at) - new Date(a.created_at);
+        if(sortBy === 'date-asc') return new Date(a.created_at) - new Date(b.created_at);
+        if(sortBy === 'score-desc') return (b.score/b.total) - (a.score/a.total);
+        return (a.score/a.total) - (b.score/b.total);
+    });
+    
+    if(filtered.length === 0){
+        area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>';
+        document.getElementById('results-count').innerText = '0';
+        return;
     }
     
-    const p = Math.round(result.score/result.total*100);
-    let ah = '';
+    area.innerHTML='';
+    filtered.forEach((r, idx) => {
+        const p = Math.round(r.score/r.total*100);
+        let ah = '';
+        if(r.answers) {
+            r.answers.forEach((a,i) => {
+                const isCorrect = a.ok === true;
+                ah += `<div class="small mb-2 ps-2">
+                    <strong>В${i+1}:</strong> ${isCorrect ? '✅' : '❌'} 
+                    <span class="${isCorrect ? 'correct' : 'wrong'}">${isCorrect ? 'Верно' : 'Неверно'}</span>
+                    ${!isCorrect ? `<div class="text-muted ms-3 mt-1">✖ Выбрано: ${a.sel}<br>✔ Правильно: ${a.cor}</div>` : ''}
+                </div>`;
+            });
+        }
+        
+        const clr = p>=80?'success':p>=50?'warning':'danger';
+        const ts = new Date(r.created_at).toLocaleString('ru-RU');
+        const fullName = `${r.surname || ''} ${r.name || ''}`.trim() || r.user_id;
+        
+        area.innerHTML += `
+            <div class="user-log" onclick="toggleDetails(${idx})">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="user-name">${escapeHtml(fullName)}</span>
+                        <span class="user-city">📍 ${escapeHtml(r.city || 'не указан')}</span>
+                        <span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span>
+                    </div>
+                    <div>
+                        <small class="text-muted me-2">${ts}</small>
+                        <i class="bi bi-chevron-down expand-icon"></i>
+                    </div>
+                </div>
+                <div id="details-${idx}" class="answer-details mt-2">
+                    <div class="bg-light p-3 rounded">${ah}</div>
+                </div>
+            </div>
+        `;
+    });
+    document.getElementById('results-count').innerText = filtered.length;
     
-    if(result.answers && Array.isArray(result.answers)){
-        result.answers.forEach((a,i) => {
-            const isCorrect = a.ok === true;
-            const cl = isCorrect ? 'correct' : 'wrong';
-            const ic = isCorrect ? '✅' : '❌';
-            ah += `<div class="small mb-2 ps-2"><strong>В${i+1}:</strong> ${ic} <span class="${cl}">${isCorrect ? 'Верно' : 'Неверно'}</span>${!isCorrect ? `<div class="text-muted ms-3">Выбрано: ${a.sel}<br>Правильно: ${a.cor}</div>` : ''}</div>`;
-        });
-    } else {
-        ah = '<div class="small text-muted">Нет детальной информации</div>';
+    // Статистика
+    const total = allResults.length;
+    if(total > 0) {
+        const totalScore = allResults.reduce((sum, r) => sum + (r.score/r.total), 0);
+        const avg = Math.round((totalScore / total) * 100);
+        const excellent = allResults.filter(r => (r.score/r.total) >= 0.8).length;
+        document.getElementById('total-count').innerText = total;
+        document.getElementById('avg-score').innerText = `${avg}%`;
+        document.getElementById('excellent-count').innerText = excellent;
     }
-    
-    const clr = p>=80?'success':p>=50?'warning':'danger';
-    const ts = new Date(result.created_at).toLocaleString('ru-RU');
-    
-    const c=document.createElement('div');
-    c.className='user-log user-log-new';
-    c.innerHTML = `<div class="d-flex justify-content-between align-items-start">
-        <div>
-            <strong class="fs-5">${escapeHtml(result.user_id)}</strong>
-            <span class="badge bg-${clr} ms-2 fs-6">${result.score}/${result.total} (${p}%)</span>
-        </div>
-        <small class="text-muted">${ts}</small>
-    </div>
-    <div class="mt-2"><small class="text-muted">📍 Город: ${escapeHtml(result.city)}</small></div>
-    <div class="mt-2 border-top pt-2 bg-white rounded">${ah}</div>`;
-    
-    area.insertBefore(c, area.firstChild);
-    
-    setTimeout(() => {
-        c.classList.remove('user-log-new');
-    }, 500);
+}
+
+function toggleDetails(idx) {
+    const el = document.getElementById(`details-${idx}`);
+    if(el) {
+        el.classList.toggle('show');
+        const parent = el.closest('.user-log');
+        if(parent) parent.classList.toggle('expanded');
+    }
+}
+
+function resetFilters() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('city-filter').value = '';
+    document.getElementById('sort-select').value = 'date-desc';
+    renderResults();
 }
 
 function escapeHtml(str) {
@@ -359,81 +399,27 @@ function escapeHtml(str) {
     });
 }
 
-function updateResultsCount() {
-    const count = document.querySelectorAll('#results-area .user-log').length;
-    const countBadge = document.getElementById('results-count');
-    if(countBadge) countBadge.innerText = count;
-}
-
 async function loadAdmin(){
-    const area=document.getElementById('results-area');
-    if(!area) return;
+    const {data} = await sb.from('results').select('*').order('created_at',{ascending:false});
+    allResults = data || [];
+    renderResults();
     
-    area.innerHTML = '<div class="text-center py-4 text-muted">⏳ Загрузка...</div>';
-    
-    try {
-        const {data,error} = await sb.from('results').select('*').order('created_at',{ascending:false});
-        
-        if(error) {
-            console.error('Ошибка загрузки:', error);
-            area.innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
-            return;
-        }
-        
-        if(!data || data.length === 0){
-            area.innerHTML='<div class="text-center py-4 text-muted">📭 Пока нет результатов. Пройдите тест, чтобы увидеть данные здесь.</div>';
-            updateResultsCount();
-            return;
-        }
-        
-        area.innerHTML='';
-        data.forEach(r => {
-            const p = Math.round(r.score/r.total*100);
-            let ah = '';
-            
-            if(r.answers && Array.isArray(r.answers)){
-                r.answers.forEach((a,i) => {
-                    const isCorrect = a.ok === true;
-                    const cl = isCorrect ? 'correct' : 'wrong';
-                    const ic = isCorrect ? '✅' : '❌';
-                    ah += `<div class="small mb-2 ps-2"><strong>В${i+1}:</strong> ${ic} <span class="${cl}">${isCorrect ? 'Верно' : 'Неверно'}</span>${!isCorrect ? `<div class="text-muted ms-3">Выбрано: ${a.sel}<br>Правильно: ${a.cor}</div>` : ''}</div>`;
-                });
-            } else {
-                ah = '<div class="small text-muted">Нет детальной информации</div>';
-            }
-            
-            const clr = p>=80?'success':p>=50?'warning':'danger';
-            const ts = new Date(r.created_at).toLocaleString('ru-RU');
-            
-            const c=document.createElement('div');
-            c.className='user-log';
-            c.innerHTML = `<div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <strong class="fs-5">${escapeHtml(r.user_id)}</strong>
-                    <span class="badge bg-${clr} ms-2 fs-6">${r.score}/${r.total} (${p}%)</span>
-                </div>
-                <small class="text-muted">${ts}</small>
-            </div>
-            <div class="mt-2"><small class="text-muted">📍 Город: ${escapeHtml(r.city)}</small></div>
-            <div class="mt-2 border-top pt-2 bg-white rounded">${ah}</div>`;
-            area.appendChild(c);
-        });
-        
-        updateResultsCount();
-        
-    } catch(e) {
-        console.error('Ошибка:', e);
-        area.innerHTML='<div class="alert alert-danger">Ошибка подключения к базе данных</div>';
-    }
+    // Realtime
+    sb.channel('results-channel')
+        .on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'results'}, 
+            (payload) => { allResults.unshift(payload.new); renderResults(); })
+        .subscribe();
 }
 
-// Добавляем обработчик для кнопки "Ответить"
 document.addEventListener('DOMContentLoaded', function() {
-    const submitBtn = document.getElementById('submit-btn');
-    if(submitBtn) {
-        submitBtn.onclick = submitAnswer;
-    }
+    document.getElementById('submit-btn').onclick = submitAnswer;
+    document.getElementById('search-input')?.addEventListener('input', () => renderResults());
+    document.getElementById('city-filter')?.addEventListener('input', () => renderResults());
+    document.getElementById('sort-select')?.addEventListener('change', () => renderResults());
 });
+
+window.toggleDetails = toggleDetails;
+window.resetFilters = resetFilters;
 </script>
 </body>
 </html>
