@@ -45,28 +45,30 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div class="online-badge" id="online-badge">🟢 Онлайн</div>
 <div class="container mt-4"><div class="row justify-content-center"><div class="col-md-10">
 
-<!-- Обычный тест (для сотрудников) -->
-<div id="login-screen" class="hidden"><div class="card p-4 shadow">
-<h2 class="text-center mb-3">📊 Тест: Стандарты Продаж</h2>
-<p class="text-center text-muted">Заполните данные для начала</p>
-<div class="mb-3"><label class="form-label fw-bold">Имя</label><input type="text" id="name-input" class="form-control form-control-lg" placeholder="Иван"></div>
-<div class="mb-3"><label class="form-label fw-bold">Фамилия</label><input type="text" id="surname-input" class="form-control form-control-lg" placeholder="Иванов"></div>
-<div class="mb-3"><label class="form-label fw-bold">Город работы</label><input type="text" id="city-input" class="form-control form-control-lg" placeholder="Москва"></div>
-<button onclick="startQuiz()" class="btn btn-primary w-100 btn-lg" id="start-btn">▶ Начать тест</button>
-</div></div>
+<!-- Обычный тест (для сотрудников) - будет виден только когда НЕ админ -->
+<div id="user-test-area">
+    <div id="login-screen"><div class="card p-4 shadow">
+    <h2 class="text-center mb-3">📊 Тест: Стандарты Продаж</h2>
+    <p class="text-center text-muted">Заполните данные для начала</p>
+    <div class="mb-3"><label class="form-label fw-bold">Имя</label><input type="text" id="name-input" class="form-control form-control-lg" placeholder="Иван"></div>
+    <div class="mb-3"><label class="form-label fw-bold">Фамилия</label><input type="text" id="surname-input" class="form-control form-control-lg" placeholder="Иванов"></div>
+    <div class="mb-3"><label class="form-label fw-bold">Город работы</label><input type="text" id="city-input" class="form-control form-control-lg" placeholder="Москва"></div>
+    <button onclick="startQuiz()" class="btn btn-primary w-100 btn-lg" id="start-btn">▶ Начать тест</button>
+    </div></div>
 
-<div id="quiz-screen" class="hidden"><div class="card p-4 shadow">
-<div class="d-flex justify-content-between mb-3"><span class="text-muted small" id="user-display"></span><span class="badge bg-primary fs-6" id="progress-badge">Вопрос 1 из 7</span></div>
-<h4 id="question-text" class="mb-4 fw-normal">Загрузка...</h4>
-<div id="options-area" class="d-grid gap-2"></div>
-<button id="submit-btn" class="btn btn-primary btn-submit w-100" disabled>📝 Ответить</button>
-</div></div>
+    <div id="quiz-screen" class="hidden"><div class="card p-4 shadow">
+    <div class="d-flex justify-content-between mb-3"><span class="text-muted small" id="user-display"></span><span class="badge bg-primary fs-6" id="progress-badge">Вопрос 1 из 7</span></div>
+    <h4 id="question-text" class="mb-4 fw-normal">Загрузка...</h4>
+    <div id="options-area" class="d-grid gap-2"></div>
+    <button id="submit-btn" class="btn btn-primary btn-submit w-100" disabled>📝 Ответить</button>
+    </div></div>
 
-<div id="result-screen" class="hidden"><div class="card p-5 shadow text-center">
-<h1 class="mb-3">🎉 Готово!</h1><div class="mb-4"><span id="final-score" class="badge bg-success score-badge"></span></div>
-<p class="text-muted">Спасибо за прохождение теста!</p>
-<button onclick="location.reload()" class="btn btn-outline-primary">Пройти заново</button>
-</div></div>
+    <div id="result-screen" class="hidden"><div class="card p-5 shadow text-center">
+    <h1 class="mb-3">🎉 Готово!</h1><div class="mb-4"><span id="final-score" class="badge bg-success score-badge"></span></div>
+    <p class="text-muted">Спасибо за прохождение теста!</p>
+    <button onclick="location.reload()" class="btn btn-outline-primary">Пройти заново</button>
+    </div></div>
+</div>
 
 <!-- АДМИНКА -->
 <div id="admin-screen" class="hidden">
@@ -199,7 +201,6 @@ window.addEventListener('load', function() {
             splash.style.opacity = '0';
             setTimeout(() => {
                 splash.style.display = 'none';
-                document.getElementById('login-screen').classList.remove('hidden');
             }, 500);
         }
     }, 300);
@@ -209,9 +210,11 @@ const urlParams = new URLSearchParams(location.search);
 if(urlParams.get('mode') === 'admin'){
     const splash = document.getElementById('splash');
     if(splash) splash.style.display = 'none';
-    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('user-test-area').classList.add('hidden');
     document.getElementById('admin-screen').classList.remove('hidden');
     loadAdmin();
+} else {
+    document.getElementById('user-test-area').classList.remove('hidden');
 }
 
 // Открыть тест в модальном окне
