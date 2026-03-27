@@ -44,6 +44,8 @@ body{background:#f5f7fa;font-family:sans-serif}
 
 <div class="online-badge" id="online-badge">🟢 Онлайн</div>
 <div class="container mt-4"><div class="row justify-content-center"><div class="col-md-10">
+
+<!-- Обычный тест (для сотрудников) -->
 <div id="login-screen" class="hidden"><div class="card p-4 shadow">
 <h2 class="text-center mb-3">📊 Тест: Стандарты Продаж</h2>
 <p class="text-center text-muted">Заполните данные для начала</p>
@@ -52,12 +54,14 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div class="mb-3"><label class="form-label fw-bold">Город работы</label><input type="text" id="city-input" class="form-control form-control-lg" placeholder="Москва"></div>
 <button onclick="startQuiz()" class="btn btn-primary w-100 btn-lg" id="start-btn">▶ Начать тест</button>
 </div></div>
+
 <div id="quiz-screen" class="hidden"><div class="card p-4 shadow">
 <div class="d-flex justify-content-between mb-3"><span class="text-muted small" id="user-display"></span><span class="badge bg-primary fs-6" id="progress-badge">Вопрос 1 из 7</span></div>
 <h4 id="question-text" class="mb-4 fw-normal">Загрузка...</h4>
 <div id="options-area" class="d-grid gap-2"></div>
 <button id="submit-btn" class="btn btn-primary btn-submit w-100" disabled>📝 Ответить</button>
 </div></div>
+
 <div id="result-screen" class="hidden"><div class="card p-5 shadow text-center">
 <h1 class="mb-3">🎉 Готово!</h1><div class="mb-4"><span id="final-score" class="badge bg-success score-badge"></span></div>
 <p class="text-muted">Спасибо за прохождение теста!</p>
@@ -183,7 +187,6 @@ let realtimeSubscription = null;
 let selectedAnswer = null;
 let currentQuestionCorrect = null;
 let allResults = [];
-let modalQuizActive = false;
 
 function saveToSupabase(table, data) {
     sb.from(table).insert([data]).catch(e => console.error('Ошибка:', e));
@@ -215,9 +218,7 @@ if(urlParams.get('mode') === 'admin'){
 function openTestModal() {
     const modalBody = document.getElementById('modal-body');
     modalBody.innerHTML = `
-        <div class="card p-4 shadow border-0">
-            <h4 class="text-center mb-3">📊 Тест: Стандарты Продаж</h4>
-            <p class="text-center text-muted">Заполните данные для начала</p>
+        <div class="p-3">
             <div class="mb-3">
                 <label class="form-label fw-bold">Имя</label>
                 <input type="text" id="modal-name" class="form-control" placeholder="Иван">
@@ -257,7 +258,6 @@ function startModalQuiz() {
     sc = 0;
     ans = [];
     selectedAnswer = null;
-    modalQuizActive = true;
     
     renderModalQuiz();
 }
@@ -368,7 +368,6 @@ function finishModalQuiz() {
 function closeModalAndRefresh() {
     const modal = bootstrap.Modal.getInstance(document.getElementById('testModal'));
     modal.hide();
-    // Обновляем админку
     loadAdmin();
 }
 
@@ -480,7 +479,6 @@ async function loadAdmin(){
     allResults = data || [];
     renderResults();
     
-    // Realtime
     if(realtimeSubscription) realtimeSubscription.unsubscribe();
     realtimeSubscription = sb.channel('results-channel')
         .on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'results'}, 
@@ -505,6 +503,118 @@ window.resetFilters = resetFilters;
 window.openTestModal = openTestModal;
 window.startModalQuiz = startModalQuiz;
 window.closeModalAndRefresh = closeModalAndRefresh;
+
+// Функции для обычного теста (для сотрудников)
+async function startQuiz(){
+    nm=document.getElementById('name-input').value.trim();
+    sn=document.getElementById('surname-input').value.trim();
+    ct=document.getElementById('city-input').value.trim();
+    if(!nm||!sn||!ct)return alert("⚠️ Заполните все поля!");
+    
+    const startBtn = document.getElementById('start-btn');
+    startBtn.disabled = true;
+    startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Загрузка...';
+    
+    const id=`${nm} ${sn} (${ct})`;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    document.getElementById('user-display').innerText=id;
+    qs=[...questions].sort(()=>Math.random()-.5);
+    step=0;
+    sc=0;
+    ans=[];
+    selectedAnswer=null;
+    
+    renderQuiz();
+    startBtn.disabled = false;
+    startBtn.innerHTML = '▶ Начать тест';
+}
+
+function renderQuiz(){
+    const q=qs[step];
+    currentQuestionCorrect = q.c;
+    document.getElementById('question-text').innerText=`${step+1}. ${q.q}`;
+    document.getElementById('progress-badge').innerText=`Вопрос ${step+1} из ${questions.length}`;
+    const area=document.getElementById('options-area');
+    area.innerHTML='';
+    selectedAnswer=null;
+    
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    
+    const indices = [0,1,2,3].sort(()=>Math.random()-.5);
+    indices.forEach(i=>{
+        const b=document.createElement('button');
+        b.className='btn btn-outline-dark btn-answer p-3 m-1';
+        b.innerText=q.a[i];
+        b.onclick=() => selectAnswer(b, i);
+        area.appendChild(b);
+    });
+}
+
+function selectAnswer(button, answerIndex) {
+    const allBtns = document.querySelectorAll('#options-area button');
+    allBtns.forEach(btn => {
+        btn.classList.remove('selected');
+        btn.classList.add('btn-outline-dark');
+    });
+    button.classList.add('selected');
+    button.classList.remove('btn-outline-dark');
+    selectedAnswer = answerIndex;
+    document.getElementById('submit-btn').disabled = false;
+}
+
+function submitAnswer() {
+    if(selectedAnswer === null) {
+        alert('Выберите вариант ответа');
+        return;
+    }
+    
+    document.getElementById('submit-btn').disabled = true;
+    const btns = document.querySelectorAll('#options-area button');
+    btns.forEach(btn => btn.style.pointerEvents = 'none');
+    
+    const q=qs[step];
+    const ok = selectedAnswer === currentQuestionCorrect;
+    if(ok) sc++;
+    
+    ans.push({
+        n:step+1,
+        qs:q.q.substring(0,40),
+        sel:q.a[selectedAnswer],
+        cor:q.a[currentQuestionCorrect],
+        ok:ok
+    });
+    
+    step++;
+    selectedAnswer=null;
+    
+    if(step < questions.length){
+        renderQuiz();
+        setTimeout(() => {
+            document.querySelectorAll('#options-area button').forEach(btn => btn.style.pointerEvents = '');
+        }, 100);
+    } else {
+        finishQuiz();
+    }
+}
+
+function finishQuiz() {
+    const id = `${nm} ${sn} (${ct})`;
+    const p = Math.round(sc/questions.length*100);
+    document.getElementById('final-score').innerText = `${sc} из ${questions.length} (${p}%)`;
+    
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.remove('hidden');
+    
+    saveToSupabase('results', {
+        user_id: id, name: nm, surname: sn, city: ct,
+        score: sc, total: questions.length, answers: ans,
+        created_at: new Date().toISOString()
+    });
+}
+
+document.getElementById('submit-btn').onclick = submitAnswer;
 </script>
 </body>
 </html>
