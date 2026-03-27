@@ -23,17 +23,9 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             max-width: 400px;
         }
-        .qr-code {
+        .qr-container {
             margin: 20px 0;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-        }
-        canvas {
-            width: 250px;
-            height: 250px;
-            margin: 0 auto;
-            display: block;
+            padding: 10px;
         }
         button {
             background: #667eea;
@@ -47,12 +39,6 @@
         }
         button:hover {
             background: #5a67d8;
-        }
-        a {
-            color: #667eea;
-            display: inline-block;
-            margin-top: 15px;
-            text-decoration: none;
         }
         .link {
             background: #f5f5f5;
@@ -69,9 +55,7 @@
         <h2>📱 QR-код</h2>
         <p>Отсканируйте, чтобы открыть документ</p>
         
-        <div class="qr-code">
-            <canvas id="qrcode-canvas"></canvas>
-        </div>
+        <div class="qr-container" id="qrcode"></div>
         
         <div class="link">
             https://wetalsfinx.github.io/Test/лич.html
@@ -87,34 +71,35 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        // Создаем QR-код на canvas
-        function generateQRCode() {
-            const canvas = document.getElementById('qrcode-canvas');
-            const text = 'https://wetalsfinx.github.io/Test/лич.html';
-            const size = 250;
-            
-            // Используем API Google Charts для создания QR-кода
-            const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=${size}x${size}&chl=${encodeURIComponent(text)}&choe=UTF-8`;
-            
-            const img = new Image();
-            img.onload = function() {
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, size, size);
-            };
-            img.src = qrUrl;
-        }
+        // Создаем QR-код
+        new QRCode(document.getElementById("qrcode"), {
+            text: "https://wetalsfinx.github.io/Test/лич.html",
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
         
         function downloadQR() {
-            const canvas = document.getElementById('qrcode-canvas');
-            const link = document.createElement('a');
-            link.download = 'qr-code.png';
-            link.href = canvas.toDataURL();
-            link.click();
+            // Находим canvas с QR-кодом
+            const canvas = document.querySelector('#qrcode canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = 'qr-code.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            } else {
+                // Если canvas не найден, ищем img
+                const img = document.querySelector('#qrcode img');
+                if (img) {
+                    const link = document.createElement('a');
+                    link.download = 'qr-code.png';
+                    link.href = img.src;
+                    link.click();
+                }
+            }
         }
-        
-        generateQRCode();
     </script>
 </body>
 </html>
