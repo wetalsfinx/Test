@@ -6,7 +6,7 @@
 <title>Тест: Стандарты Продаж</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-body{background:#f5f7fa;font-family:sans-serif}.card{margin-top:20px;border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}.hidden{display:none!important}#admin-panel{background:#fff;padding:20px;border-radius:10px;max-height:80vh;overflow-y:auto}.user-log{border-left:4px solid #0d6efd;padding:12px;background:#f8f9fa;margin-bottom:12px;border-radius:0 5px 5px 0;transition:all 0.3s ease}.user-log-new{animation:highlight 0.5s ease}.correct{color:#198754;font-weight:600}.wrong{color:#dc3545;font-weight:600}.score-badge{font-size:1.3em;padding:8px 20px}.btn-answer{text-align:left;white-space:normal}@keyframes highlight{0%{background:#d4edda;border-left-color:#28a745}100%{background:#f8f9fa;border-left-color:#0d6efd}}.online-badge{position:fixed;top:10px;right:10px;background:#28a745;color:white;padding:5px 10px;border-radius:20px;font-size:12px;z-index:1000}.splash-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:#f5f7fa;display:flex;justify-content:center;align-items:center;z-index:10000;transition:opacity 0.5s}.splash-spinner{width:50px;height:50px;border:4px solid #e9ecef;border-top-color:#0d6efd;border-radius:50%;animation:spin 0.8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+body{background:#f5f7fa;font-family:sans-serif}.card{margin-top:20px;border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}.hidden{display:none!important}#admin-panel{background:#fff;padding:20px;border-radius:10px;max-height:80vh;overflow-y:auto}.user-log{border-left:4px solid #0d6efd;padding:12px;background:#f8f9fa;margin-bottom:12px;border-radius:0 5px 5px 0;transition:all 0.3s ease}.user-log-new{animation:highlight 0.5s ease}.correct{color:#198754;font-weight:600}.wrong{color:#dc3545;font-weight:600}.score-badge{font-size:1.3em;padding:8px 20px}.btn-answer{text-align:left;white-space:normal;transition:all 0.2s}.btn-answer.selected{background-color:#0d6efd;color:white;border-color:#0d6efd}.btn-submit{font-size:1.1em;padding:12px;margin-top:15px}.online-badge{position:fixed;top:10px;right:10px;background:#28a745;color:white;padding:5px 10px;border-radius:20px;font-size:12px;z-index:1000}.splash-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:#f5f7fa;display:flex;justify-content:center;align-items:center;z-index:10000;transition:opacity 0.5s}.splash-spinner{width:50px;height:50px;border:4px solid #e9ecef;border-top-color:#0d6efd;border-radius:50%;animation:spin 0.8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -29,7 +29,9 @@ body{background:#f5f7fa;font-family:sans-serif}.card{margin-top:20px;border:none
 </div></div>
 <div id="quiz-screen" class="hidden"><div class="card p-4 shadow">
 <div class="d-flex justify-content-between mb-3"><span class="text-muted small" id="user-display"></span><span class="badge bg-primary fs-6" id="progress-badge">Вопрос 1 из 7</span></div>
-<h4 id="question-text" class="mb-4 fw-normal">Загрузка...</h4><div id="options-area" class="d-grid gap-2"></div>
+<h4 id="question-text" class="mb-4 fw-normal">Загрузка...</h4>
+<div id="options-area" class="d-grid gap-2"></div>
+<button id="submit-btn" class="btn btn-primary btn-submit w-100" disabled>📝 Ответить</button>
 </div></div>
 <div id="result-screen" class="hidden"><div class="card p-5 shadow text-center">
 <h1 class="mb-3">🎉 Готово!</h1><div class="mb-4"><span id="final-score" class="badge bg-success score-badge"></span></div>
@@ -39,7 +41,12 @@ body{background:#f5f7fa;font-family:sans-serif}.card{margin-top:20px;border:none
 <div id="admin-screen" class="hidden"><div class="d-flex justify-content-between align-items-center mb-3">
 <h3>👨‍💼 Панель Администратора</h3>
 <div><span id="realtime-status" class="badge bg-warning me-2">🔄 Подключение...</span><a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a></div>
-</div><div id="admin-panel" class="shadow-sm"><h5 class="mb-3">📈 Результаты сотрудников <span id="results-count" class="badge bg-secondary"></span></h5><div id="results-area"><div class="text-center py-4 text-muted">⏳ Ожидание данных...</div></div></div></div>
+</div>
+<div id="admin-panel" class="shadow-sm">
+    <h5 class="mb-3">📈 Результаты сотрудников <span id="results-count" class="badge bg-secondary"></span></h5>
+    <div id="results-area"><div class="text-center py-4 text-muted">⏳ Ожидание данных...</div></div>
+</div>
+</div>
 </div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -60,28 +67,9 @@ const questions=[
 
 let step=0,nm="",sn="",ct="",ans=[],sc=0,qs=[];
 let realtimeSubscription = null;
+let selectedAnswer = null; // Хранит выбранный ответ
+let currentQuestionCorrect = null; // Хранит правильный ответ текущего вопроса
 
-// Функция для создания таблиц, если их нет
-async function initTables() {
-    try {
-        // Проверяем, есть ли таблица results, пытаясь получить 1 запись
-        const { error } = await sb.from('results').select('*').limit(1);
-        
-        if (error && error.message.includes('does not exist')) {
-            console.log('Таблицы не найдены, создаем через SQL...');
-            // Показываем сообщение о необходимости создать таблицы
-            const adminScreen = document.getElementById('admin-screen');
-            if (adminScreen && !adminScreen.classList.contains('hidden')) {
-                const area = document.getElementById('results-area');
-                area.innerHTML = '<div class="alert alert-warning">⚠️ Таблицы в Supabase не созданы. Перейдите в Supabase → SQL Editor и выполните SQL код из консоли браузера (F12).</div>';
-            }
-        }
-    } catch(e) {
-        console.log('Ошибка проверки таблиц:', e);
-    }
-}
-
-// Функция отправки без ожидания
 function saveToSupabase(table, data) {
     sb.from(table).insert([data]).then(() => {
         console.log(`Сохранено в ${table}`);
@@ -128,9 +116,6 @@ window.addEventListener('load', function() {
             }, 500);
         }
     }, 300);
-    
-    // Проверяем таблицы
-    initTables();
 });
 
 const urlParams = new URLSearchParams(location.search);
@@ -141,7 +126,6 @@ if(urlParams.get('mode') === 'admin'){
     document.getElementById('admin-screen').classList.remove('hidden');
     initRealtime();
     loadAdmin();
-    initTables();
 }
 
 async function startQuiz(){
@@ -162,6 +146,7 @@ async function startQuiz(){
     step=0;
     sc=0;
     ans=[];
+    selectedAnswer = null;
     
     saveToSupabase('logs', {user_id:id, action:'🟢 Начал тест'});
     
@@ -172,41 +157,85 @@ async function startQuiz(){
 
 function render(){
     const q=qs[step];
+    currentQuestionCorrect = q.c; // Сохраняем правильный ответ
     document.getElementById('question-text').innerText=`${step+1}. ${q.q}`;
     document.getElementById('progress-badge').innerText=`Вопрос ${step+1} из ${questions.length}`;
     const area=document.getElementById('options-area');
     area.innerHTML='';
+    selectedAnswer = null;
     
+    // Блокируем кнопку "Ответить"
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.classList.remove('btn-primary');
+    submitBtn.classList.add('btn-secondary');
+    
+    // Перемешиваем варианты ответов
     const indices = [0,1,2,3].sort(()=>Math.random()-.5);
     indices.forEach(i=>{
         const b=document.createElement('button');
         b.className='btn btn-outline-dark btn-answer p-3 m-1';
         b.innerText=q.a[i];
-        b.onclick=() => handle(i, q.c);
+        b.setAttribute('data-value', i);
+        b.onclick=() => selectAnswer(b, i);
         area.appendChild(b);
     });
 }
 
-function handle(sel,corr){
+function selectAnswer(button, answerIndex) {
+    // Убираем выделение со всех кнопок
+    const allBtns = document.querySelectorAll('#options-area button');
+    allBtns.forEach(btn => {
+        btn.classList.remove('selected');
+        btn.classList.add('btn-outline-dark');
+    });
+    
+    // Выделяем выбранную кнопку
+    button.classList.add('selected');
+    button.classList.remove('btn-outline-dark');
+    
+    // Сохраняем выбранный ответ
+    selectedAnswer = answerIndex;
+    
+    // Активируем кнопку "Ответить"
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('btn-secondary');
+    submitBtn.classList.add('btn-primary');
+}
+
+function submitAnswer() {
+    if(selectedAnswer === null) {
+        alert('Пожалуйста, выберите вариант ответа');
+        return;
+    }
+    
+    // Блокируем кнопки, чтобы нельзя было ответить дважды
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.classList.remove('btn-primary');
+    submitBtn.classList.add('btn-secondary');
+    
     const btns = document.querySelectorAll('#options-area button');
     btns.forEach(btn => btn.style.pointerEvents = 'none');
     
     const q=qs[step];
-    const ok=sel===corr;
-    if(ok)sc++;
+    const ok = selectedAnswer === currentQuestionCorrect;
+    if(ok) sc++;
     
     ans.push({
         n:step+1,
         qs:q.q.substring(0,40)+'...',
-        sel:q.a[sel],
-        cor:q.a[corr],
+        sel:q.a[selectedAnswer],
+        cor:q.a[currentQuestionCorrect],
         ok:ok
     });
     
     const id=`${nm} ${sn} (${ct})`;
-    saveToSupabase('logs', {user_id:id, action:`В${step+1}: ${ok?'✅':'❌'} ${q.a[sel].substring(0,25)}`});
+    saveToSupabase('logs', {user_id:id, action:`В${step+1}: ${ok?'✅':'❌'} ${q.a[selectedAnswer].substring(0,25)}`});
     
     step++;
+    selectedAnswer = null;
     
     if(step < questions.length){
         render();
@@ -347,7 +376,7 @@ async function loadAdmin(){
         
         if(error) {
             console.error('Ошибка загрузки:', error);
-            area.innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}. Проверьте, создана ли таблица "results" в Supabase.</div>`;
+            area.innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
             return;
         }
         
@@ -397,6 +426,14 @@ async function loadAdmin(){
         area.innerHTML='<div class="alert alert-danger">Ошибка подключения к базе данных</div>';
     }
 }
+
+// Добавляем обработчик для кнопки "Ответить"
+document.addEventListener('DOMContentLoaded', function() {
+    const submitBtn = document.getElementById('submit-btn');
+    if(submitBtn) {
+        submitBtn.onclick = submitAnswer;
+    }
+});
 </script>
 </body>
 </html>
