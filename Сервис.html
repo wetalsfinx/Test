@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сервис с человеческим лицом | 585GOLD</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.4;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-top: 5px solid #E30613;
+        }
+        h1 {
+            text-align: center;
+            color: #E30613;
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        .print-btn {
+            display: block;
+            margin: 0 auto 15px auto;
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #E30613 0%, #c41c2a 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .print-btn:hover {
+            background: linear-gradient(135deg, #c41c2a 0%, #E30613 100%);
+            transform: translateY(-2px);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 6px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: linear-gradient(135deg, #E30613 0%, #c41c2a 100%);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            font-size: 11px;
+        }
+        td:first-child {
+            font-weight: 600;
+            width: 18%;
+            color: #E30613;
+        }
+        td:nth-child(2) {
+            width: 20%;
+            color: #333;
+        }
+        td:nth-child(3) {
+            width: 28%;
+            color: #444;
+        }
+        td:nth-child(4) {
+            width: 34%;
+            font-style: italic;
+            color: #555;
+        }
+        tr:nth-child(even) {
+            background-color: #fffafa;
+        }
+        tr:hover {
+            background-color: #ffecec;
+        }
+        .reminder {
+            background: linear-gradient(135deg, #E30613 0%, #c41c2a 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-style: italic;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #ddd;
+            color: #999;
+            font-size: 10px;
+        }
+        
+        @media print {
+            body { margin: 0; background-color: white; }
+            .container {
+                box-shadow: none;
+                padding: 12px;
+                width: 100%;
+                max-width: 100%;
+                border-top: 3px solid #E30613;
+            }
+            .print-btn, .footer { display: none; }
+            h1 { font-size: 16px; margin-bottom: 4px; }
+            .subtitle { font-size: 11px; margin-bottom: 10px; }
+            table { font-size: 9px; margin-bottom: 12px; }
+            th, td { padding: 5px 4px; }
+            th {
+                background: #E30613 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            tr:nth-child(even) {
+                background-color: #f5f5f5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .reminder {
+                padding: 10px;
+                font-size: 10px;
+                background: #E30613 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        @media (max-width: 768px) {
+            body { margin: 10px; }
+            .container { padding: 12px; }
+            table { font-size: 10px; }
+            td:first-child { width: 20%; }
+            td:nth-child(2) { width: 22%; }
+            td:nth-child(3) { width: 26%; }
+            td:nth-child(4) { width: 32%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🤝 СЕРВИС С ЧЕЛОВЕЧЕСКИМ ЛИЦОМ</h1>
+    <p class="subtitle">Инструменты формирования лояльности | 585GOLD</p>
+    
+    <button class="print-btn" onclick="window.print()">🖨️ Распечатать памятку</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Инструмент</th>
+                <th>Суть</th>
+                <th>Конкретное действие</th>
+                <th>Пример фразы / Поведение</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Обращение по имени-отчеству</td>
+                <td>Клиент чувствует себя значимым</td>
+                <td>Узнав имя — использовать его в диалоге</td>
+                <td>«Анна Петровна, вы говорили, что любите минимализм — у нас как раз пришла новая коллекция в этом стиле»</td>
+            </tr>
+            <tr>
+                <td>Искренний интерес, не допрос</td>
+                <td>Диалог, а не анкетирование</td>
+                <td>Задавать открытые вопросы с паузами, слушать ответ, реагировать</td>
+                <td>«Что для вас важно в украшении?» → выслушать → «Понимаю, значит, акцент сделаем на…»</td>
+            </tr>
+            <tr>
+                <td>Эмпатия вместо шаблона</td>
+                <td>Показать, что вы «на стороне» клиента</td>
+                <td>Отразить эмоцию клиента, прежде чем предлагать решение</td>
+                <td>«Понимаю, выбрать подарок маме — это так волнительно. Давайте найдём то, что точно её тронет»</td>
+            </tr>
+            <tr>
+                <td>Честность, даже если это «не продаёт»</td>
+                <td>Доверие важнее сиюминутной выгоды</td>
+                <td>Если товар не подходит — сказать прямо и предложить альтернативу</td>
+                <td>«Этот камень красивый, но для повседневной носки он может быть хрупким. Давайте посмотрим более практичный вариант»</td>
+            </tr>
+            <tr>
+                <td>Маленькие жесты внимания</td>
+                <td>Эмоции запоминаются лучше, чем скидки</td>
+                <td>Помочь с примеркой, сделать комплимент не про покупку</td>
+                <td>«Давайте я поправлю застёжку — так будет удобнее» / «У вас очень красивый маникюр, к нему идеально подойдёт это кольцо»</td>
+            </tr>
+            <tr>
+                <td>Гибкость в рамках стандартов</td>
+                <td>Показать, что вы видите человека, а не чек</td>
+                <td>Если клиент торопится — ускориться; если сомневается — дать время</td>
+                <td>«Вижу, вы спешите — давайте я быстро покажу три лучших варианта»</td>
+            </tr>
+            <tr>
+                <td>Личное завершение контакта</td>
+                <td>Оставить «якорь» для возвращения</td>
+                <td>Завершить диалог не шаблоном, а персональным пожеланием</td>
+                <td>«Мария, было приятно помочь! Если будете выбирать подарок для подруги — заходите, вместе найдём что-то особенное»</td>
+            </tr>
+            <tr>
+                <td>Проактивная помощь без запроса</td>
+                <td>Предвосхищать потребности</td>
+                <td>Заметить, что клиент ищет размер / сравнивает / не решается — мягко помочь</td>
+                <td>«Вижу, вы сравниваете два кулона. Давайте я покажу их при разном свете — так проще выбрать»</td>
+            </tr>
+            <tr>
+                <td>«Вы — не просто покупатель»</td>
+                <td>Сместить фокус с транзакции на отношения</td>
+                <td>Подчеркнуть, что вы рады клиенту независимо от покупки</td>
+                <td>«Спасибо, что зашли! Даже если сегодня не выбрали — я рада, что вы увидели наши новинки. Заходите. Будем вам рады»</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="reminder">
+        💎 «Клиент не помнит, что вы сказали. Он помнит, как вы заставили его себя чувствовать»
+    </div>
+
+    <div class="footer">
+        585GOLD | Стандарты сервиса 2026
+    </div>
+</div>
+
+</body>
+</html>
