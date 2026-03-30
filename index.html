@@ -110,14 +110,14 @@ const SUPABASE_URL='https://qtostraaqrnjbxiydlip.supabase.co';
 const SUPABASE_KEY='sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const questions=[
-{q:"Клиент ищет советское украшение, которого нет в ассортименте. Вы предложили альтернативу в ретро-стиле — не понравилось. Согласно технике переориентации, что делаете ДАЛЬШЕ?",a:["Предлагаете самые бюджетные аналоги — возможно, дело в цене","Показываете электронный каталог с изделиями на заказ в похожем стиле","Говорите, что советских украшений больше не будет, и завершаете диалог","Предлагаете отложить визит до поступления новой винтажной коллекции"],c:1},
-{q:"Клиент сказал «Я подумаю» после примерки кольца за 45 000 ₽. Вы выяснили, что сомнение в цене. Согласно иерархии работы с возражениями, что предлагаете В ПЕРВУЮ ОЧЕРЕДЬ?",a:["Более бюджетный вариант за 25 000 ₽","Рассрочку или Яндекс Сплит, не меняя изделие","Отложить изделие на 24 часа для принятия решения","Дополнительную скидку через руководителя"],c:1},
-{q:"Клиент из ломбарда рассматривает витрину 40 секунд, не подходит к консультанту. Согласно стандарту работы с трафиком, каково ваше следующее действие?",a:["Ждёте ещё 20 секунд — если не подойдёт сам, значит, не заинтересован","Сразу подходите с вопросом о потребностях, как с любым потенциальным покупателем","Сначала наблюдаете, к какой категории изделий тяготеет взгляд, затем подходите с предложением из этой категории","Не подходите — клиенты из ломбарда приходят по другим вопросам, это нецелевой трафик"],c:1},
-{q:"Клиент купил кольцо, вы предложили серьги — отказался. Согласно стандарту завершения сделки, что вы делаете ДАЛЬШЕ?",a:["Завершаете продажу, провожаете с теплотой","Предлагаете каталог на заказ — возможно, там найдутся серьги, которые понравятся","Предлагаете футляр и чистящее средство, затем завершаете сделку","Спрашиваете причину отказа, чтобы отработать возражение"],c:2},
-{q:"Как правильно предложить футляр и чистящее средство?",a:["Спросить: «Футляр нужен?»","Предложить как опцию после оплаты","Сказать: «Давайте добавим футляр и средство по уходу за изделиями. Выбирайте!»","Показать только если клиент спросит об уходе"],c:2},
-{q:"Клиент говорит: «Дорого». Согласно нашей методике, как правильно отработать это возражение?",a:["«У нас есть изделия дешевле, давайте посмотрим»","«Это цена за качество, вы же хотите хорошее украшение?»","«Понимаю. Обратите внимание на чистоту камня и гарантию — это вложение на годы»","«Можем оформить рассрочку, это решит проблему»"],c:2},
-{q:"Клиентка выбирает цепочку, вы показали 3 варианта в рамках бюджета. Она говорит: «Все красивые, не знаю, что выбрать». Согласно технике «Альтернативный выбор», как вы помогаете принять решение?",a:["«Давайте я выберу за вас — я эксперт, мне виднее»","«Выберите ту, которая больше откликается — все варианты достойные»","«Давайте сузим выбор: вы хотите цепочку для кулона или как самостоятельное украшение?»","«Возьмите обе — одна для повседневной носки, вторая для особых случаев»"],c:2}
+const questions = [
+    {text:"Клиент ищет советское украшение, которого нет в ассортименте. Вы предложили альтернативу в ретро-стиле — не понравилось. Согласно технике переориентации, что делаете ДАЛЬШЕ?", options:["Предлагаете самые бюджетные аналоги — возможно, дело в цене","Показываете электронный каталог с изделиями на заказ в похожем стиле","Говорите, что советских украшений больше не будет, и завершаете диалог","Предлагаете отложить визит до поступления новой винтажной коллекции"], correct:1},
+    {text:"Клиент сказал «Я подумаю» после примерки кольца за 45 000 ₽. Вы выяснили, что сомнение в цене. Согласно иерархии работы с возражениями, что предлагаете В ПЕРВУЮ ОЧЕРЕДЬ?", options:["Более бюджетный вариант за 25 000 ₽","Рассрочку или Яндекс Сплит, не меняя изделие","Отложить изделие на 24 часа для принятия решения","Дополнительную скидку через руководителя"], correct:1},
+    {text:"Клиент из ломбарда рассматривает витрину 40 секунд, не подходит к консультанту. Согласно стандарту работы с трафиком, каково ваше следующее действие?", options:["Ждёте ещё 20 секунд — если не подойдёт сам, значит, не заинтересован","Сразу подходите с вопросом о потребностях, как с любым потенциальным покупателем","Сначала наблюдаете, к какой категории изделий тяготеет взгляд, затем подходите с предложением из этой категории","Не подходите — клиенты из ломбарда приходят по другим вопросам, это нецелевой трафик"], correct:1},
+    {text:"Клиент купил кольцо, вы предложили серьги — отказался. Согласно стандарту завершения сделки, что вы делаете ДАЛЬШЕ?", options:["Завершаете продажу, провожаете с теплотой","Предлагаете каталог на заказ — возможно, там найдутся серьги, которые понравятся","Предлагаете футляр и чистящее средство, затем завершаете сделку","Спрашиваете причину отказа, чтобы отработать возражение"], correct:2},
+    {text:"Как правильно предложить футляр и чистящее средство?", options:["Спросить: «Футляр нужен?»","Предложить как опцию после оплаты","Сказать: «Давайте добавим футляр и средство по уходу за изделиями. Выбирайте!»","Показать только если клиент спросит об уходе"], correct:2},
+    {text:"Клиент говорит: «Дорого». Согласно нашей методике, как правильно отработать это возражение?", options:["«У нас есть изделия дешевле, давайте посмотрим»","«Это цена за качество, вы же хотите хорошее украшение?»","«Понимаю. Обратите внимание на чистоту камня и гарантию — это вложение на годы»","«Можем оформить рассрочку, это решит проблему»"], correct:2},
+    {text:"Клиентка выбирает цепочку, вы показали 3 варианта в рамках бюджета. Она говорит: «Все красивые, не знаю, что выбрать». Согласно технике «Альтернативный выбор», как вы помогаете принять решение?", options:["«Давайте я выберу за вас — я эксперт, мне виднее»","«Выберите ту, которая больше откликается — все варианты достойные»","«Давайте сузим выбор: вы хотите цепочку для кулона или как самостоятельное украшение?»","«Возьмите обе — одна для повседневной носки, вторая для особых случаев»"], correct:2}
 ];
 
 let allResults = [];
@@ -303,7 +303,7 @@ function initRealtime() {
     document.getElementById('realtime-status').className = 'badge bg-success me-2';
 }
 
-// Тест в модальном окне
+// ========== МОДАЛЬНОЕ ОКНО ==========
 function openTestModal() {
     const modalBody = document.getElementById('modal-body');
     modalBody.innerHTML = `<div class="p-3"><div class="mb-3"><label class="form-label">Имя</label><input type="text" id="modal-name" class="form-control"></div><div class="mb-3"><label class="form-label">Фамилия</label><input type="text" id="modal-surname" class="form-control"></div><div class="mb-3"><label class="form-label">Город</label><input type="text" id="modal-city" class="form-control"></div><button onclick="startModalQuiz()" class="btn btn-primary w-100">▶ Начать тест</button></div><div id="modal-quiz-area"></div>`;
@@ -317,21 +317,21 @@ function startModalQuiz() {
     modalSn = document.getElementById('modal-surname').value.trim();
     modalCt = document.getElementById('modal-city').value.trim();
     if(!modalNm || !modalSn || !modalCt) { alert("Заполните все поля"); return; }
-    modalQs = [...questions].sort(()=>Math.random()-.5);
+    modalQs = [...questions];
     modalStep = 0; modalSc = 0; modalAns = []; modalSelected = null;
     renderModalQuiz();
 }
 
 function renderModalQuiz() {
     const q = modalQs[modalStep];
-    modalCorrect = q.c;
-    const html = `<div class="card p-3"><div class="d-flex justify-content-between"><span>${modalNm} ${modalSn} (${modalCt})</span><span class="badge bg-primary">Вопрос ${modalStep+1}/${questions.length}</span></div><h5 class="mt-2">${modalStep+1}. ${q.q}</h5><div id="modal-options-area" class="d-grid gap-2 mt-3"></div><button id="modal-submit" class="btn btn-primary mt-3" disabled>Ответить</button></div>`;
+    modalCorrect = q.correct;
+    const html = `<div class="card p-3"><div class="d-flex justify-content-between"><span>${modalNm} ${modalSn} (${modalCt})</span><span class="badge bg-primary">Вопрос ${modalStep+1}/${questions.length}</span></div><h5 class="mt-2">${modalStep+1}. ${q.text}</h5><div id="modal-options-area" class="d-grid gap-2 mt-3"></div><button id="modal-submit" class="btn btn-primary mt-3" disabled>Ответить</button></div>`;
     document.getElementById('modal-quiz-area').innerHTML = html;
     const area = document.getElementById('modal-options-area');
-    [0,1,2,3].sort(()=>Math.random()-.5).forEach(i=>{
+    [0,1,2,3].forEach(i=>{
         const btn = document.createElement('button');
         btn.className = 'btn btn-outline-dark btn-answer';
-        btn.innerText = q.a[i];
+        btn.innerText = q.options[i];
         btn.onclick = () => { document.querySelectorAll('#modal-options-area button').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); modalSelected=i; document.getElementById('modal-submit').disabled=false; };
         area.appendChild(btn);
     });
@@ -342,7 +342,7 @@ function submitModalAnswer() {
     if(modalSelected === null) return;
     const ok = modalSelected === modalCorrect;
     if(ok) modalSc++;
-    modalAns.push({n:modalStep+1, sel:modalQs[modalStep].a[modalSelected], cor:modalQs[modalStep].a[modalCorrect], ok:ok});
+    modalAns.push({n:modalStep+1, sel:modalQs[modalStep].options[modalSelected], cor:modalQs[modalStep].options[modalCorrect], ok:ok});
     modalStep++;
     if(modalStep < questions.length) renderModalQuiz();
     else finishModalQuiz();
@@ -355,57 +355,63 @@ function finishModalQuiz() {
     setTimeout(() => { loadAdmin(); }, 1000);
 }
 
-// ========== ОСНОВНОЙ ТЕСТ (ИСПРАВЛЕН) ==========
+// ========== ОСНОВНОЙ ТЕСТ ==========
 let quizStep=0, quizNm="", quizSn="", quizCt="", quizAns=[], quizSc=0, quizQs=[], quizSelected=null, quizCorrect=null;
 
-async function startQuiz(){
+function startQuiz(){
     quizNm=document.getElementById('name-input').value.trim();
     quizSn=document.getElementById('surname-input').value.trim();
     quizCt=document.getElementById('city-input').value.trim();
-    if(!quizNm||!quizSn||!quizCt) return alert("Заполните все поля!");
+    if(!quizNm||!quizSn||!quizCt) { alert("Заполните все поля!"); return; }
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('quiz-screen').classList.remove('hidden');
-    document.getElementById('user-display').innerText=`${quizNm} ${quizSn} (${quizCt})`;
-    quizQs=[...questions].sort(()=>Math.random()-.5);
-    quizStep=0; quizSc=0; quizAns=[]; quizSelected=null;
+    document.getElementById('user-display').innerHTML = `${quizNm} ${quizSn} (${quizCt})`;
+    quizQs = [...questions];
+    quizStep = 0; quizSc = 0; quizAns = []; quizSelected = null;
     renderQuiz();
 }
 
 function renderQuiz(){
-    const q=quizQs[quizStep];
-    quizCorrect=q.c;
-    document.getElementById('question-text').innerText=`${quizStep+1}. ${q.q}`;
-    document.getElementById('progress-badge').innerText=`Вопрос ${quizStep+1} из ${questions.length}`;
-    const area=document.getElementById('options-area');
-    area.innerHTML='';
-    quizSelected=null;
-    document.getElementById('submit-btn').disabled=true;
-    [0,1,2,3].sort(()=>Math.random()-.5).forEach(i=>{
-        const b=document.createElement('button');
-        b.className='btn btn-outline-dark btn-answer p-3 m-1';
-        b.innerText=q.a[i];
-        b.onclick=()=>{ 
-            document.querySelectorAll('#options-area button').forEach(btn=>btn.classList.remove('selected')); 
-            b.classList.add('selected'); 
-            quizSelected=i; 
-            document.getElementById('submit-btn').disabled=false; 
+    const q = quizQs[quizStep];
+    quizCorrect = q.correct;
+    document.getElementById('question-text').innerHTML = `${quizStep+1}. ${q.text}`;
+    document.getElementById('progress-badge').innerHTML = `Вопрос ${quizStep+1} из ${questions.length}`;
+    const area = document.getElementById('options-area');
+    area.innerHTML = '';
+    quizSelected = null;
+    document.getElementById('submit-btn').disabled = true;
+    
+    for(let i = 0; i < q.options.length; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-dark btn-answer p-3 m-1';
+        btn.innerHTML = q.options[i];
+        btn.onclick = function() {
+            document.querySelectorAll('#options-area button').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            quizSelected = i;
+            document.getElementById('submit-btn').disabled = false;
         };
-        area.appendChild(b);
-    });
+        area.appendChild(btn);
+    }
 }
 
 function submitQuizAnswer(){
-    if(quizSelected===null) {
+    if(quizSelected === null) {
         alert('Выберите вариант ответа');
         return;
     }
-    const ok=quizSelected===quizCorrect;
-    if(ok) quizSc++;
-    quizAns.push({n:quizStep+1, sel:quizQs[quizStep].a[quizSelected], cor:quizQs[quizStep].a[quizCorrect], ok:ok});
-    quizStep++;
-    quizSelected = null;
     
-    // ПЕРЕХОД К СЛЕДУЮЩЕМУ ВОПРОСУ ИЛИ ЗАВЕРШЕНИЕ
+    const ok = (quizSelected === quizCorrect);
+    if(ok) quizSc++;
+    quizAns.push({
+        n: quizStep+1,
+        sel: quizQs[quizStep].options[quizSelected],
+        cor: quizQs[quizStep].options[quizCorrect],
+        ok: ok
+    });
+    
+    quizStep++;
+    
     if(quizStep < questions.length) {
         renderQuiz();
     } else {
@@ -414,26 +420,32 @@ function submitQuizAnswer(){
 }
 
 function finishQuiz(){
-    const id=`${quizNm} ${quizSn} (${quizCt})`;
-    saveToSupabase('results', {user_id:id, name:quizNm, surname:quizSn, city:quizCt, score:quizSc, total:questions.length, answers:quizAns, created_at:new Date().toISOString()});
+    const id = `${quizNm} ${quizSn} (${quizCt})`;
+    saveToSupabase('results', {
+        user_id: id,
+        name: quizNm,
+        surname: quizSn,
+        city: quizCt,
+        score: quizSc,
+        total: questions.length,
+        answers: quizAns,
+        created_at: new Date().toISOString()
+    });
     
-    // Показываем экран результатов
     document.getElementById('quiz-screen').classList.add('hidden');
     document.getElementById('result-screen').classList.remove('hidden');
     
-    const percent = Math.round(quizSc/questions.length*100);
-    const scoreElement = document.getElementById('final-score');
-    scoreElement.innerText = `${quizSc} из ${questions.length} (${percent}%)`;
+    const percent = Math.round(quizSc / questions.length * 100);
+    const scoreEl = document.getElementById('final-score');
+    scoreEl.innerHTML = `${quizSc} из ${questions.length} (${percent}%)`;
     
-    if(percent >= 80) scoreElement.className = 'badge bg-success score-badge';
-    else if(percent >= 50) scoreElement.className = 'badge bg-warning score-badge';
-    else scoreElement.className = 'badge bg-danger score-badge';
+    if(percent >= 80) scoreEl.className = 'badge bg-success score-badge';
+    else if(percent >= 50) scoreEl.className = 'badge bg-warning score-badge';
+    else scoreEl.className = 'badge bg-danger score-badge';
 }
 
-// Подключаем кнопку
 document.getElementById('submit-btn').onclick = submitQuizAnswer;
 
-// Глобальные функции
 window.toggleDetails = toggleDetails;
 window.resetFilters = resetFilters;
 window.openTestModal = openTestModal;
