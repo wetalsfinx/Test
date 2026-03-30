@@ -183,13 +183,30 @@ function renderQuiz(){
 }
 
 function submitQuizAnswer(){
-    if(quizSelected === null) return alert('Выберите ответ');
+    if(quizSelected === null) {
+        alert('Выберите вариант ответа');
+        return;
+    }
+    
+    // Сохраняем ответ
     const ok = (quizSelected === quizCorrect);
     if(ok) quizSc++;
-    quizAns.push({n:quizStep+1, sel:quizQs[quizStep].options[quizSelected], cor:quizQs[quizStep].options[quizCorrect], ok:ok});
+    quizAns.push({
+        n: quizStep + 1,
+        sel: quizQs[quizStep].options[quizSelected],
+        cor: quizQs[quizStep].options[quizCorrect],
+        ok: ok
+    });
+    
+    // Переходим к следующему вопросу
     quizStep++;
-    if(quizStep < questions.length) renderQuiz();
-    else finishQuiz();
+    
+    // Проверяем, есть ли еще вопросы
+    if(quizStep < questions.length) {
+        renderQuiz();
+    } else {
+        finishQuiz();
+    }
 }
 
 function finishQuiz(){
