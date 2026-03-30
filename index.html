@@ -355,8 +355,8 @@ function finishModalQuiz() {
     setTimeout(() => { loadAdmin(); }, 1000);
 }
 
-// Основной тест
-let quizActive = false, quizStep=0, quizNm="", quizSn="", quizCt="", quizAns=[], quizSc=0, quizQs=[], quizSelected=null, quizCorrect=null;
+// ========== ОСНОВНОЙ ТЕСТ (ИСПРАВЛЕН) ==========
+let quizStep=0, quizNm="", quizSn="", quizCt="", quizAns=[], quizSc=0, quizQs=[], quizSelected=null, quizCorrect=null;
 
 async function startQuiz(){
     quizNm=document.getElementById('name-input').value.trim();
@@ -405,6 +405,7 @@ function submitQuizAnswer(){
     quizStep++;
     quizSelected = null;
     
+    // ПЕРЕХОД К СЛЕДУЮЩЕМУ ВОПРОСУ ИЛИ ЗАВЕРШЕНИЕ
     if(quizStep < questions.length) {
         renderQuiz();
     } else {
@@ -415,12 +416,24 @@ function submitQuizAnswer(){
 function finishQuiz(){
     const id=`${quizNm} ${quizSn} (${quizCt})`;
     saveToSupabase('results', {user_id:id, name:quizNm, surname:quizSn, city:quizCt, score:quizSc, total:questions.length, answers:quizAns, created_at:new Date().toISOString()});
+    
+    // Показываем экран результатов
     document.getElementById('quiz-screen').classList.add('hidden');
     document.getElementById('result-screen').classList.remove('hidden');
-    document.getElementById('final-score').innerText=`${quizSc} из ${questions.length} (${Math.round(quizSc/questions.length*100)}%)`;
+    
+    const percent = Math.round(quizSc/questions.length*100);
+    const scoreElement = document.getElementById('final-score');
+    scoreElement.innerText = `${quizSc} из ${questions.length} (${percent}%)`;
+    
+    if(percent >= 80) scoreElement.className = 'badge bg-success score-badge';
+    else if(percent >= 50) scoreElement.className = 'badge bg-warning score-badge';
+    else scoreElement.className = 'badge bg-danger score-badge';
 }
 
+// Подключаем кнопку
 document.getElementById('submit-btn').onclick = submitQuizAnswer;
+
+// Глобальные функции
 window.toggleDetails = toggleDetails;
 window.resetFilters = resetFilters;
 window.openTestModal = openTestModal;
