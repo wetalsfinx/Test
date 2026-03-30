@@ -470,7 +470,31 @@ function renderResults() {
 function toggleDetails(idx) { const el = document.getElementById(`details-${idx}`); if(el) { el.classList.toggle('show'); const parent = el.closest('.user-log'); if(parent) parent.classList.toggle('expanded'); } }
 function resetFilters() { document.getElementById('search-input').value = ''; document.getElementById('city-filter').value = ''; document.getElementById('sort-select').value = 'date-desc'; renderResults(); }
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
-async function loadAdmin(){ const {data} = await sb.from('results').select('*').order('created_at',{ascending:false}); allResults = data || []; renderResults(); if(realtimeSubscription) realtimeSubscription.unsubscribe(); realtimeSubscription = sb.channel('results-channel').on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'results'}, (payload) => { allResults.unshift(payload.new); renderResults(); }).subscribe(); const statusEl = document.getElementById('realtime-status'); if(statusEl) { statusEl.innerHTML = '🟢 Live'; statusEl.className = 'badge bg-success me-2'; } }
+async function loadAdmin(){
+    console.log('🔍 Загружаю админку...');
+    try {
+        const {data, error} = await sb.from('results').select('*').order('created_at',{ascending:false});
+        
+        console.log('📊 Результат запроса:', {dataCount: data?.length, error});
+        
+        if(error) {
+            console.error('❌ Ошибка Supabase:', error);
+            document.getElementById('results-area').innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
+            return;
+        }
+        
+        allResults = data || [];
+        console.log('✅ Загружено записей:', allResults.length);
+        
+        renderResults();
+        updateStats();
+        updateCharts();
+        
+    } catch(e) {
+        console.error('🔥 Критическая ошибка:', e);
+        document.getElementById('results-area').innerHTML = '<div class="alert alert-danger">Ошибка подключения</div>';
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('search-input')?.addEventListener('input', () => renderResults());
