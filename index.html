@@ -239,7 +239,32 @@ if(urlParams.get('mode') === 'admin'){
     if(splash) splash.style.display = 'none';
     document.getElementById('user-test-area').classList.add('hidden');
     document.getElementById('admin-screen').classList.remove('hidden');
-    loadAdmin();
+   async function loadAdmin(){
+    console.log('🔍 Загружаю админку...');
+    try {
+        const {data, error} = await sb.from('results').select('*').order('created_at',{ascending:false});
+        
+        console.log('📊 Результат запроса:', {dataCount: data?.length, error});
+        
+        if(error) {
+            console.error('❌ Ошибка Supabase:', error);
+            document.getElementById('results-area').innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
+            return;
+        }
+        
+        allResults = data || [];
+        console.log('✅ Загружено записей:', allResults.length);
+        
+        renderResults();
+        updateStats();
+        
+        if(typeof updateCharts === 'function') updateCharts();
+        
+    } catch(e) {
+        console.error('🔥 Критическая ошибка:', e);
+        document.getElementById('results-area').innerHTML = '<div class="alert alert-danger">Ошибка подключения</div>';
+    }
+}
 } else {
     document.getElementById('user-test-area').classList.remove('hidden');
 }
@@ -428,7 +453,69 @@ function finishModalQuiz() {
 
 function closeModalAndRefresh() { bootstrap.Modal.getInstance(document.getElementById('testModal')).hide(); loadAdmin(); }
 
-function renderResults() {
+function renderResults() function updateStats() {
+    const total = allResults.length;
+    if(total === 0) {
+        document.getElementById('total-count').innerText = '0';
+        document.getElementById('avg-score').innerText = '0%';
+        document.getElementById('excellent-count').innerText = '0';
+        return;
+    }
+    
+    const totalScore = allResults.reduce((sum, r) => sum + (r.score / r.total), 0);
+    const avgPercent = Math.round((totalScore / total) * 100);
+    const excellent = allResults.filter(r => (r.score / r.total) >= 0.8).length;
+    
+    document.getElementById('total-count').innerText = total;
+    document.getElementById('avg-score').innerText = `${avgPercent}%`;
+    document.getElementById('excellent-count').innerText = excellent;
+}
+
+function updateCharts() {
+    // Функция для диаграмм (если есть)
+    if(allResults.length === 0) return;
+    
+    // Обновляем круговую диаграмму
+    const categories = {
+        'Отлично (80-100%)': 0,
+        'Хорошо (60-79%)': 0,
+        'Удовлетворительно (40-59%)': 0,
+        'Плохо (0-39%)': 0
+    };
+    
+    allResults.forEach(r => {
+        const p = (r.score / r.total) * 100;
+        if(p >= 80) categories['Отлично (80-100%)']++;
+        else if(p >= 60) categories['Хорошо (60-79%)']++;
+        else if(p >= 40) categories['Удовлетворительно (40-59%)']++;
+        else categories['Плохо (0-39%)']++;
+    });
+    
+    const ctx1 = document.getElementById('scoreDistributionChart');
+    if(ctx1 && window.scoreChart) {
+        window.scoreChart.data.datasets[0].data = Object.values(categories);
+        window.scoreChart.update();
+    }
+    
+    // Обновляем диаграмму по городам
+    const cityStats = {};
+    allResults.forEach(r => {
+        const city = r.city || 'Не указан';
+        if(!cityStats[city]) cityStats[city] = { total: 0, count: 0 };
+        cityStats[city].total += (r.score / r.total);
+        cityStats[city].count++;
+    });
+    
+    const cities = Object.keys(cityStats);
+    const avgScores = cities.map(c => Math.round((cityStats[c].total / cityStats[c].count) * 100));
+    
+    const ctx2 = document.getElementById('cityChart');
+    if(ctx2 && window.cityChart) {
+        window.cityChart.data.labels = cities;
+        window.cityChart.data.datasets[0].data = avgScores;
+        window.cityChart.update();
+    }
+}
     const area = document.getElementById('results-area');
     if(!area) return;
     let filtered = [...allResults];
