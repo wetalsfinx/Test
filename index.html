@@ -121,7 +121,17 @@ body{background:#f5f7fa;font-family:sans-serif}
         <div class="filter-bar">
             <div class="row g-3">
                 <div class="col-md-4"><input type="text" id="test2-search" class="form-control" placeholder="🔍 Поиск по имени..."></div>
-                <div class="col-md-3"><input type="text" id="test2-city-filter" class="form-control" placeholder="🏙️ Фильтр по городу"></div>
+                <div class="col-md-3"><select id="test2-city-filter" class="form-select">
+    <option value="">Все города</option>
+    <option value="Тверь">Тверь</option>
+    <option value="Санкт-Петербург">Санкт-Петербург</option>
+    <option value="Ульяновск">Ульяновск</option>
+    <option value="Архангельск">Архангельск</option>
+    <option value="Черкесск">Черкесск</option>
+    <option value="Нижний Тагил">Нижний Тагил</option>
+    <option value="Ярославль">Ярославль</option>
+</select>
+                </div>
                 <div class="col-md-3"><select id="test2-sort" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="score-desc">⭐ Сначала высокий балл</option></select></div>
                 <div class="col-md-2"><button class="btn btn-outline-secondary w-100" onclick="resetTest2Filters()">Сброс</button></div>
             </div>
@@ -232,7 +242,7 @@ function resetTest1Filters() {
 function renderTest2() {
     let filtered = [...test2Data];
     const search = document.getElementById('test2-search')?.value.toLowerCase() || '';
-    const cityF = document.getElementById('test2-city-filter')?.value.toLowerCase() || '';
+    const cityF = document.getElementById('test2-city-filter')?.value || '';
     if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
     if(cityF) filtered = filtered.filter(r => r.city && r.city.toLowerCase().includes(cityF));
     const sortBy = document.getElementById('test2-sort')?.value || 'date-desc';
