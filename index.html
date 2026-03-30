@@ -297,11 +297,16 @@ function updateTest2Charts() {
 }
 
 function resetTest2Filters() {
-    document.getElementById('test2-search').value = '';
-    document.getElementById('test2-city-filter').value = '';
-    document.getElementById('test2-sort').value = 'date-desc';
+    // Добавляем обработчики для фильтров второго теста
+document.getElementById('test2-search').addEventListener('input', function() {
     renderTest2();
-}
+});
+document.getElementById('test2-city-filter').addEventListener('change', function() {
+    renderTest2();
+});
+document.getElementById('test2-sort').addEventListener('change', function() {
+    renderTest2();
+});
 
 function exportTestToExcel(testId) {
     const data = testId === 'test1' ? test1Data : test2Data;
