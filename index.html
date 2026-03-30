@@ -183,6 +183,36 @@ function renderQuiz(){
 }
 
 function submitQuizAnswer(){
+    console.log("Кнопка нажата, quizSelected =", quizSelected);
+    
+    if(quizSelected === null) {
+        alert('Выберите вариант ответа');
+        return;
+    }
+    
+    // Сохраняем ответ
+    const ok = (quizSelected === quizCorrect);
+    if(ok) quizSc++;
+    quizAns.push({
+        n: quizStep + 1,
+        sel: quizQs[quizStep].options[quizSelected],
+        cor: quizQs[quizStep].options[quizCorrect],
+        ok: ok
+    });
+    
+    // Переходим к следующему вопросу
+    quizStep++;
+    console.log("Теперь quizStep =", quizStep, "Всего вопросов =", questions.length);
+    
+    // Проверяем, есть ли еще вопросы
+    if(quizStep < questions.length) {
+        console.log("Загружаем следующий вопрос");
+        renderQuiz();
+    } else {
+        console.log("ЗАВЕРШАЕМ ТЕСТ!");
+        finishQuiz();
+    }
+}
     if(quizSelected === null) {
         alert('Выберите вариант ответа');
         return;
