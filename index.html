@@ -243,10 +243,12 @@ function renderTest2() {
     let filtered = [...test2Data];
     const search = document.getElementById('test2-search')?.value.toLowerCase() || '';
     const cityF = document.getElementById('test2-city-filter')?.value || '';
+    
     if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
     if(cityF) filtered = filtered.filter(r => r.city && r.city === cityF);
+    
     const sortBy = document.getElementById('test2-sort')?.value || 'date-desc';
-    filtered.sort((a,b) => sortBy==='date-desc' ? new Date(b.created_at)-new Date(a.created_at) : (b.score/b.total)-(a.score/a.total));
+    filtered.sort((a,b) => sortBy === 'date-desc' ? new Date(b.created_at) - new Date(a.created_at) : (b.score/b.total) - (a.score/a.total));
     
     document.getElementById('test2-count').innerText = test2Data.length;
     
