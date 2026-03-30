@@ -7,7 +7,6 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 body{background:#f5f7fa;font-family:sans-serif}
 .card{margin-top:20px;border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}
@@ -49,7 +48,6 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div class="online-badge" id="online-badge">🟢 Онлайн</div>
 <div class="container mt-4"><div class="row justify-content-center"><div class="col-md-10">
 
-<!-- Обычный тест (для сотрудников) -->
 <div id="user-test-area">
     <div id="login-screen"><div class="card p-4 shadow">
     <h2 class="text-center mb-3">📊 Тест: Стандарты Продаж</h2>
@@ -74,126 +72,39 @@ body{background:#f5f7fa;font-family:sans-serif}
     </div></div>
 </div>
 
-<!-- АДМИНКА -->
 <div id="admin-screen" class="hidden">
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <h3 class="mb-0">👨‍💼 Панель Администратора</h3>
     <div>
-        <button class="btn btn-success me-2" onclick="exportToExcel()">
-            <i class="bi bi-file-excel"></i> Экспорт в Excel
-        </button>
-        <button class="btn btn-primary me-2" onclick="openTestModal()">
-            <i class="bi bi-play-circle"></i> Пройти тест
-        </button>
+        <button class="btn btn-success me-2" onclick="exportToExcel()"><i class="bi bi-file-excel"></i> Экспорт в Excel</button>
+        <button class="btn btn-primary me-2" onclick="openTestModal()"><i class="bi bi-play-circle"></i> Пройти тест</button>
         <span id="realtime-status" class="badge bg-warning me-2">🔄 Подключение...</span>
         <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
     </div>
 </div>
 
-<!-- Статистика -->
-<div class="row mb-4" id="stats-panel">
-    <div class="col-md-4">
-        <div class="stats-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="small opacity-75">Всего прошло</div>
-                    <div class="h3 mb-0" id="total-count">0</div>
-                </div>
-                <i class="bi bi-people fs-1 opacity-50"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="small opacity-75">Средний балл</div>
-                    <div class="h3 mb-0" id="avg-score">0%</div>
-                </div>
-                <i class="bi bi-graph-up fs-1 opacity-50"></i>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="small opacity-75">Отлично (≥80%)</div>
-                    <div class="h3 mb-0" id="excellent-count">0</div>
-                </div>
-                <i class="bi bi-star fs-1 opacity-50"></i>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Диаграммы -->
 <div class="row mb-4">
-    <div class="col-md-6">
-        <div class="chart-card">
-            <h6 class="mb-3"><i class="bi bi-pie-chart"></i> Распределение баллов</h6>
-            <div class="chart-container">
-                <canvas id="scoreDistributionChart"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="chart-card">
-            <h6 class="mb-3"><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6>
-            <div class="chart-container">
-                <canvas id="cityChart"></canvas>
-            </div>
-        </div>
-    </div>
+    <div class="col-md-4"><div class="stats-card"><div class="d-flex justify-content-between"><div><div class="small opacity-75">Всего прошло</div><div class="h3 mb-0" id="total-count">0</div></div><i class="bi bi-people fs-1 opacity-50"></i></div></div></div>
+    <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="d-flex justify-content-between"><div><div class="small opacity-75">Средний балл</div><div class="h3 mb-0" id="avg-score">0%</div></div><i class="bi bi-graph-up fs-1 opacity-50"></i></div></div></div>
+    <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="d-flex justify-content-between"><div><div class="small opacity-75">Отлично (≥80%)</div><div class="h3 mb-0" id="excellent-count">0</div></div><i class="bi bi-star fs-1 opacity-50"></i></div></div></div>
 </div>
 
-<!-- Фильтры и сортировка -->
-<div class="filter-bar">
-    <div class="row g-3">
-        <div class="col-md-4">
-            <input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени...">
-        </div>
-        <div class="col-md-3">
-            <input type="text" id="city-filter" class="form-control" placeholder="🏙️ Фильтр по городу...">
-        </div>
-        <div class="col-md-3">
-            <select id="sort-select" class="form-select">
-                <option value="date-desc">📅 Сначала новые</option>
-                <option value="date-asc">📅 Сначала старые</option>
-                <option value="score-desc">⭐ Сначала высокий балл</option>
-                <option value="score-asc">⭐ Сначала низкий балл</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
-                <i class="bi bi-arrow-repeat"></i> Сброс
-            </button>
-        </div>
-    </div>
+<div class="row mb-4">
+    <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-pie-chart"></i> Распределение баллов</h6><div class="chart-container"><canvas id="scoreDistributionChart"></canvas></div></div></div>
+    <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6><div class="chart-container"><canvas id="cityChart"></canvas></div></div></div>
 </div>
 
-<div id="admin-panel" class="shadow-sm">
-    <h5 class="mb-3">📈 Результаты сотрудников <span id="results-count" class="badge bg-secondary"></span></h5>
-    <div id="results-area"><div class="text-center py-4 text-muted">⏳ Загрузка...</div></div>
-</div>
+<div class="filter-bar"><div class="row g-3"><div class="col-md-4"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div><div class="col-md-3"><input type="text" id="city-filter" class="form-control" placeholder="🏙️ Фильтр по городу..."></div><div class="col-md-3"><select id="sort-select" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="date-asc">📅 Сначала старые</option><option value="score-desc">⭐ Сначала высокий балл</option><option value="score-asc">⭐ Сначала низкий балл</option></select></div><div class="col-md-2"><button class="btn btn-outline-secondary w-100" onclick="resetFilters()"><i class="bi bi-arrow-repeat"></i> Сброс</button></div></div></div>
+
+<div id="admin-panel"><h5 class="mb-3">📈 Результаты сотрудников <span id="results-count" class="badge bg-secondary"></span></h5><div id="results-area"><div class="text-center py-4 text-muted">⏳ Загрузка...</div></div></div>
 </div>
 </div></div></div>
 
-<!-- Модальное окно для теста -->
-<div class="modal fade" id="testModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-test modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">📊 Тест: Стандарты Продаж</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="modal-body"></div>
-        </div>
-    </div>
-</div>
+<div class="modal fade" id="testModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-test modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">📊 Тест: Стандарты Продаж</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="modal-body"></div></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <script>
 const SUPABASE_URL='https://qtostraaqrnjbxiydlip.supabase.co';
 const SUPABASE_KEY='sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
@@ -209,10 +120,6 @@ const questions=[
 {q:"Клиентка выбирает цепочку, вы показали 3 варианта в рамках бюджета. Она говорит: «Все красивые, не знаю, что выбрать». Согласно технике «Альтернативный выбор», как вы помогаете принять решение?",a:["«Давайте я выберу за вас — я эксперт, мне виднее»","«Выберите ту, которая больше откликается — все варианты достойные»","«Давайте сузим выбор: вы хотите цепочку для кулона или как самостоятельное украшение?»","«Возьмите обе — одна для повседневной носки, вторая для особых случаев»"],c:2}
 ];
 
-let step=0,nm="",sn="",ct="",ans=[],sc=0,qs=[];
-let realtimeSubscription = null;
-let selectedAnswer = null;
-let currentQuestionCorrect = null;
 let allResults = [];
 let scoreChart = null;
 let cityChart = null;
@@ -235,294 +142,40 @@ window.addEventListener('load', function() {
 
 const urlParams = new URLSearchParams(location.search);
 if(urlParams.get('mode') === 'admin'){
-    const splash = document.getElementById('splash');
-    if(splash) splash.style.display = 'none';
+    document.getElementById('splash').style.display = 'none';
     document.getElementById('user-test-area').classList.add('hidden');
     document.getElementById('admin-screen').classList.remove('hidden');
-   async function loadAdmin(){
-    console.log('🔍 Загружаю админку...');
-    try {
-        const {data, error} = await sb.from('results').select('*').order('created_at',{ascending:false});
-        
-        console.log('📊 Результат запроса:', {dataCount: data?.length, error});
-        
-        if(error) {
-            console.error('❌ Ошибка Supabase:', error);
-            document.getElementById('results-area').innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
-            return;
-        }
-        
-        allResults = data || [];
-        console.log('✅ Загружено записей:', allResults.length);
-        
-        renderResults();
-        updateStats();
-        
-        if(typeof updateCharts === 'function') updateCharts();
-        
-    } catch(e) {
-        console.error('🔥 Критическая ошибка:', e);
-        document.getElementById('results-area').innerHTML = '<div class="alert alert-danger">Ошибка подключения</div>';
-    }
-}
+    loadAdmin();
+    initRealtime();
 } else {
     document.getElementById('user-test-area').classList.remove('hidden');
 }
 
-// Экспорт в Excel
 function exportToExcel() {
-    if(allResults.length === 0) {
-        alert("Нет данных для экспорта");
-        return;
-    }
-    
-    const data = allResults.map(r => {
-        const p = Math.round(r.score/r.total*100);
-        let wrongAnswers = [];
-        if(r.answers) {
-            wrongAnswers = r.answers.filter(a => !a.ok).map(a => a.qs);
-        }
-        
-        return {
-            'ФИО': `${r.surname || ''} ${r.name || ''}`.trim(),
-            'Город': r.city || '',
-            'Баллы': `${r.score}/${r.total}`,
-            'Процент': `${p}%`,
-            'Ошибки': wrongAnswers.join('; ') || 'нет',
-            'Дата': new Date(r.created_at).toLocaleString('ru-RU')
-        };
-    });
-    
+    if(allResults.length === 0) { alert("Нет данных"); return; }
+    const data = allResults.map(r => ({
+        'ФИО': `${r.surname || ''} ${r.name || ''}`.trim(),
+        'Город': r.city || '',
+        'Баллы': `${r.score}/${r.total}`,
+        'Процент': `${Math.round(r.score/r.total*100)}%`,
+        'Дата': new Date(r.created_at).toLocaleString('ru-RU')
+    }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Результаты теста');
-    XLSX.writeFile(wb, `Результаты_теста_${new Date().toLocaleDateString()}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, 'Результаты');
+    XLSX.writeFile(wb, `результаты_${new Date().toLocaleDateString()}.xlsx`);
 }
 
-// Обновление диаграмм
-function updateCharts() {
-    if(allResults.length === 0) return;
-    
-    // Диаграмма 1: Распределение баллов (по категориям)
-    const categories = {
-        'Отлично (80-100%)': 0,
-        'Хорошо (60-79%)': 0,
-        'Удовлетворительно (40-59%)': 0,
-        'Плохо (0-39%)': 0
-    };
-    
-    allResults.forEach(r => {
-        const p = r.score/r.total * 100;
-        if(p >= 80) categories['Отлично (80-100%)']++;
-        else if(p >= 60) categories['Хорошо (60-79%)']++;
-        else if(p >= 40) categories['Удовлетворительно (40-59%)']++;
-        else categories['Плохо (0-39%)']++;
-    });
-    
-    const ctx1 = document.getElementById('scoreDistributionChart').getContext('2d');
-    if(scoreChart) scoreChart.destroy();
-    scoreChart = new Chart(ctx1, {
-        type: 'pie',
-        data: {
-            labels: Object.keys(categories),
-            datasets: [{
-                data: Object.values(categories),
-                backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#dc3545'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: { position: 'bottom', labels: { font: { size: 11 } } }
-            }
-        }
-    });
-    
-    // Диаграмма 2: Успеваемость по городам
-    const cityStats = {};
-    allResults.forEach(r => {
-        const city = r.city || 'Не указан';
-        if(!cityStats[city]) {
-            cityStats[city] = { total: 0, count: 0 };
-        }
-        cityStats[city].total += (r.score / r.total);
-        cityStats[city].count++;
-    });
-    
-    const cities = Object.keys(cityStats);
-    const avgScores = cities.map(c => Math.round((cityStats[c].total / cityStats[c].count) * 100));
-    
-    const ctx2 = document.getElementById('cityChart').getContext('2d');
-    if(cityChart) cityChart.destroy();
-    cityChart = new Chart(ctx2, {
-        type: 'bar',
-        data: {
-            labels: cities,
-            datasets: [{
-                label: 'Средний балл (%)',
-                data: avgScores,
-                backgroundColor: '#667eea',
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: { min: 0, max: 100, title: { display: true, text: '%' } }
-            },
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
-}
-
-// Остальные функции (те же, что были)
-function openTestModal() {
-    const modalBody = document.getElementById('modal-body');
-    modalBody.innerHTML = `
-        <div class="p-3">
-            <div class="mb-3"><label class="form-label fw-bold">Имя</label><input type="text" id="modal-name" class="form-control" placeholder="Иван"></div>
-            <div class="mb-3"><label class="form-label fw-bold">Фамилия</label><input type="text" id="modal-surname" class="form-control" placeholder="Иванов"></div>
-            <div class="mb-3"><label class="form-label fw-bold">Город работы</label><input type="text" id="modal-city" class="form-control" placeholder="Москва"></div>
-            <button onclick="startModalQuiz()" class="btn btn-primary w-100 btn-lg">▶ Начать тест</button>
-        </div>
-        <div id="modal-quiz-area" class="mt-3"></div>
-    `;
-    const modal = new bootstrap.Modal(document.getElementById('testModal'));
-    modal.show();
-}
-
-function startModalQuiz() {
-    const name = document.getElementById('modal-name').value.trim();
-    const surname = document.getElementById('modal-surname').value.trim();
-    const city = document.getElementById('modal-city').value.trim();
-    if(!name || !surname || !city) { alert("⚠️ Заполните все поля!"); return; }
-    nm = name; sn = surname; ct = city;
-    qs = [...questions].sort(()=>Math.random()-.5);
-    step = 0; sc = 0; ans = []; selectedAnswer = null;
-    renderModalQuiz();
-}
-
-function renderModalQuiz() {
-    const q = qs[step];
-    currentQuestionCorrect = q.c;
-    const html = `<div class="card p-4 shadow"><div class="d-flex justify-content-between mb-3"><span class="text-muted small">${nm} ${sn} (${ct})</span><span class="badge bg-primary fs-6">Вопрос ${step+1} из ${questions.length}</span></div><h4 class="mb-4 fw-normal">${step+1}. ${q.q}</h4><div id="modal-options-area" class="d-grid gap-2"></div><button id="modal-submit-btn" class="btn btn-primary btn-submit w-100 mt-3" disabled>📝 Ответить</button></div>`;
-    document.getElementById('modal-quiz-area').innerHTML = html;
-    const area = document.getElementById('modal-options-area');
-    const indices = [0,1,2,3].sort(()=>Math.random()-.5);
-    indices.forEach(i=>{
-        const b = document.createElement('button');
-        b.className = 'btn btn-outline-dark btn-answer p-3 m-1';
-        b.innerText = q.a[i];
-        b.onclick = () => selectModalAnswer(b, i);
-        area.appendChild(b);
-    });
-    document.getElementById('modal-submit-btn').onclick = submitModalAnswer;
-}
-
-function selectModalAnswer(button, answerIndex) {
-    document.querySelectorAll('#modal-options-area button').forEach(btn => { btn.classList.remove('selected'); btn.classList.add('btn-outline-dark'); });
-    button.classList.add('selected'); button.classList.remove('btn-outline-dark');
-    selectedAnswer = answerIndex;
-    document.getElementById('modal-submit-btn').disabled = false;
-}
-
-function submitModalAnswer() {
-    if(selectedAnswer === null) { alert('Выберите вариант ответа'); return; }
-    document.getElementById('modal-submit-btn').disabled = true;
-    document.querySelectorAll('#modal-options-area button').forEach(btn => btn.style.pointerEvents = 'none');
-    const q = qs[step];
-    const ok = selectedAnswer === currentQuestionCorrect;
-    if(ok) sc++;
-    ans.push({ n: step+1, qs: q.q.substring(0,40), sel: q.a[selectedAnswer], cor: q.a[currentQuestionCorrect], ok: ok });
-    step++; selectedAnswer = null;
-    if(step < questions.length){ renderModalQuiz(); setTimeout(() => { document.querySelectorAll('#modal-options-area button').forEach(btn => btn.style.pointerEvents = ''); }, 100); }
-    else { finishModalQuiz(); }
-}
-
-function finishModalQuiz() {
-    const id = `${nm} ${sn} (${ct})`;
-    const p = Math.round(sc/questions.length*100);
-    document.getElementById('modal-body').innerHTML = `<div class="text-center py-4"><h1 class="mb-3">🎉 Готово!</h1><div class="mb-4"><span class="badge ${p>=80?'bg-success':p>=50?'bg-warning':'bg-danger'} score-badge">${sc} из ${questions.length} (${p}%)</span></div><p class="text-muted">Спасибо за прохождение теста!</p><button onclick="closeModalAndRefresh()" class="btn btn-outline-primary">Закрыть</button></div>`;
-    saveToSupabase('results', { user_id: id, name: nm, surname: sn, city: ct, score: sc, total: questions.length, answers: ans, created_at: new Date().toISOString() });
-}
-
-function closeModalAndRefresh() { bootstrap.Modal.getInstance(document.getElementById('testModal')).hide(); loadAdmin(); }
-
-function renderResults() function updateStats() {
-    const total = allResults.length;
-    if(total === 0) {
-        document.getElementById('total-count').innerText = '0';
-        document.getElementById('avg-score').innerText = '0%';
-        document.getElementById('excellent-count').innerText = '0';
-        return;
-    }
-    
-    const totalScore = allResults.reduce((sum, r) => sum + (r.score / r.total), 0);
-    const avgPercent = Math.round((totalScore / total) * 100);
-    const excellent = allResults.filter(r => (r.score / r.total) >= 0.8).length;
-    
-    document.getElementById('total-count').innerText = total;
-    document.getElementById('avg-score').innerText = `${avgPercent}%`;
-    document.getElementById('excellent-count').innerText = excellent;
-}
-
-function updateCharts() {
-    // Функция для диаграмм (если есть)
-    if(allResults.length === 0) return;
-    
-    // Обновляем круговую диаграмму
-    const categories = {
-        'Отлично (80-100%)': 0,
-        'Хорошо (60-79%)': 0,
-        'Удовлетворительно (40-59%)': 0,
-        'Плохо (0-39%)': 0
-    };
-    
-    allResults.forEach(r => {
-        const p = (r.score / r.total) * 100;
-        if(p >= 80) categories['Отлично (80-100%)']++;
-        else if(p >= 60) categories['Хорошо (60-79%)']++;
-        else if(p >= 40) categories['Удовлетворительно (40-59%)']++;
-        else categories['Плохо (0-39%)']++;
-    });
-    
-    const ctx1 = document.getElementById('scoreDistributionChart');
-    if(ctx1 && window.scoreChart) {
-        window.scoreChart.data.datasets[0].data = Object.values(categories);
-        window.scoreChart.update();
-    }
-    
-    // Обновляем диаграмму по городам
-    const cityStats = {};
-    allResults.forEach(r => {
-        const city = r.city || 'Не указан';
-        if(!cityStats[city]) cityStats[city] = { total: 0, count: 0 };
-        cityStats[city].total += (r.score / r.total);
-        cityStats[city].count++;
-    });
-    
-    const cities = Object.keys(cityStats);
-    const avgScores = cities.map(c => Math.round((cityStats[c].total / cityStats[c].count) * 100));
-    
-    const ctx2 = document.getElementById('cityChart');
-    if(ctx2 && window.cityChart) {
-        window.cityChart.data.labels = cities;
-        window.cityChart.data.datasets[0].data = avgScores;
-        window.cityChart.update();
-    }
-}
+function renderResults() {
     const area = document.getElementById('results-area');
     if(!area) return;
+    
     let filtered = [...allResults];
     const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
     const cityFilter = document.getElementById('city-filter')?.value.toLowerCase() || '';
     if(searchTerm) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(searchTerm));
     if(cityFilter) filtered = filtered.filter(r => r.city && r.city.toLowerCase().includes(cityFilter));
+    
     const sortBy = document.getElementById('sort-select')?.value || 'date-desc';
     filtered.sort((a,b) => {
         if(sortBy === 'date-desc') return new Date(b.created_at) - new Date(a.created_at);
@@ -530,18 +183,30 @@ function updateCharts() {
         if(sortBy === 'score-desc') return (b.score/b.total) - (a.score/a.total);
         return (a.score/a.total) - (b.score/b.total);
     });
-    if(filtered.length === 0){ area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; document.getElementById('results-count').innerText = '0'; return; }
-    area.innerHTML='';
+    
+    if(filtered.length === 0) {
+        area.innerHTML = '<div class="text-center py-4 text-muted">📭 Нет результатов</div>';
+        document.getElementById('results-count').innerText = '0';
+        return;
+    }
+    
+    area.innerHTML = '';
     filtered.forEach((r, idx) => {
         const p = Math.round(r.score/r.total*100);
         let ah = '';
-        if(r.answers) { r.answers.forEach((a,i) => { const isCorrect = a.ok === true; ah += `<div class="small mb-2 ps-2"><strong>В${i+1}:</strong> ${isCorrect ? '✅' : '❌'} <span class="${isCorrect ? 'correct' : 'wrong'}">${isCorrect ? 'Верно' : 'Неверно'}</span>${!isCorrect ? `<div class="text-muted ms-3 mt-1">✖ Выбрано: ${a.sel}<br>✔ Правильно: ${a.cor}</div>` : ''}</div>`; }); }
+        if(r.answers) {
+            r.answers.forEach((a,i) => {
+                const isCorrect = a.ok === true;
+                ah += `<div class="small mb-2 ps-2"><strong>В${i+1}:</strong> ${isCorrect ? '✅' : '❌'} <span class="${isCorrect ? 'correct' : 'wrong'}">${isCorrect ? 'Верно' : 'Неверно'}</span>${!isCorrect ? `<div class="text-muted ms-3 mt-1">✖ Выбрано: ${a.sel}<br>✔ Правильно: ${a.cor}</div>` : ''}</div>`;
+            });
+        }
         const clr = p>=80?'success':p>=50?'warning':'danger';
         const ts = new Date(r.created_at).toLocaleString('ru-RU');
         const fullName = `${r.surname || ''} ${r.name || ''}`.trim() || r.user_id;
-        area.innerHTML += `<div class="user-log" onclick="toggleDetails(${idx})"><div class="d-flex justify-content-between align-items-start"><div><span class="user-name">${escapeHtml(fullName)}</span><span class="user-city">📍 ${escapeHtml(r.city || 'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div><div><small class="text-muted me-2">${ts}</small><i class="bi bi-chevron-down expand-icon"></i></div></div><div id="details-${idx}" class="answer-details mt-2"><div class="bg-light p-3 rounded">${ah}</div></div></div>`;
+        area.innerHTML += `<div class="user-log" onclick="toggleDetails(this, ${idx})"><div class="d-flex justify-content-between"><div><span class="user-name">${escapeHtml(fullName)}</span><span class="user-city">📍 ${escapeHtml(r.city || 'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div><div><small class="text-muted">${ts}</small><i class="bi bi-chevron-down expand-icon"></i></div></div><div class="answer-details mt-2"><div class="bg-light p-3 rounded">${ah}</div></div></div>`;
     });
     document.getElementById('results-count').innerText = filtered.length;
+    
     const total = allResults.length;
     if(total > 0) {
         const totalScore = allResults.reduce((sum, r) => sum + (r.score/r.total), 0);
@@ -554,57 +219,201 @@ function updateCharts() {
     updateCharts();
 }
 
-function toggleDetails(idx) { const el = document.getElementById(`details-${idx}`); if(el) { el.classList.toggle('show'); const parent = el.closest('.user-log'); if(parent) parent.classList.toggle('expanded'); } }
-function resetFilters() { document.getElementById('search-input').value = ''; document.getElementById('city-filter').value = ''; document.getElementById('sort-select').value = 'date-desc'; renderResults(); }
-function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
-async function loadAdmin(){
-    console.log('🔍 Загружаю админку...');
-    try {
-        const {data, error} = await sb.from('results').select('*').order('created_at',{ascending:false});
-        
-        console.log('📊 Результат запроса:', {dataCount: data?.length, error});
-        
-        if(error) {
-            console.error('❌ Ошибка Supabase:', error);
-            document.getElementById('results-area').innerHTML = `<div class="alert alert-danger">Ошибка: ${error.message}</div>`;
-            return;
-        }
-        
-        allResults = data || [];
-        console.log('✅ Загружено записей:', allResults.length);
-        
-        renderResults();
-        updateStats();
-        updateCharts();
-        
-    } catch(e) {
-        console.error('🔥 Критическая ошибка:', e);
-        document.getElementById('results-area').innerHTML = '<div class="alert alert-danger">Ошибка подключения</div>';
+function toggleDetails(el, idx) {
+    const details = el.querySelector('.answer-details');
+    if(details) {
+        details.classList.toggle('show');
+        el.classList.toggle('expanded');
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('search-input')?.addEventListener('input', () => renderResults());
-    document.getElementById('city-filter')?.addEventListener('input', () => renderResults());
-    document.getElementById('sort-select')?.addEventListener('change', () => renderResults());
-});
-
-// Функции для обычного теста
-async function startQuiz(){
-    nm=document.getElementById('name-input').value.trim(); sn=document.getElementById('surname-input').value.trim(); ct=document.getElementById('city-input').value.trim();
-    if(!nm||!sn||!ct)return alert("⚠️ Заполните все поля!");
-    const startBtn = document.getElementById('start-btn'); startBtn.disabled = true; startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Загрузка...';
-    const id=`${nm} ${sn} (${ct})`; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('quiz-screen').classList.remove('hidden'); document.getElementById('user-display').innerText=id;
-    qs=[...questions].sort(()=>Math.random()-.5); step=0; sc=0; ans=[]; selectedAnswer=null;
-    renderQuiz(); startBtn.disabled = false; startBtn.innerHTML = '▶ Начать тест';
+function resetFilters() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('city-filter').value = '';
+    document.getElementById('sort-select').value = 'date-desc';
+    renderResults();
 }
-function renderQuiz(){ const q=qs[step]; currentQuestionCorrect = q.c; document.getElementById('question-text').innerText=`${step+1}. ${q.q}`; document.getElementById('progress-badge').innerText=`Вопрос ${step+1} из ${questions.length}`; const area=document.getElementById('options-area'); area.innerHTML=''; selectedAnswer=null; document.getElementById('submit-btn').disabled = true; const indices = [0,1,2,3].sort(()=>Math.random()-.5); indices.forEach(i=>{ const b=document.createElement('button'); b.className='btn btn-outline-dark btn-answer p-3 m-1'; b.innerText=q.a[i]; b.onclick=() => selectAnswer(b, i); area.appendChild(b); }); }
-function selectAnswer(button, answerIndex){ document.querySelectorAll('#options-area button').forEach(btn => { btn.classList.remove('selected'); btn.classList.add('btn-outline-dark'); }); button.classList.add('selected'); button.classList.remove('btn-outline-dark'); selectedAnswer = answerIndex; document.getElementById('submit-btn').disabled = false; }
-function submitAnswer(){ if(selectedAnswer === null) { alert('Выберите вариант ответа'); return; } document.getElementById('submit-btn').disabled = true; document.querySelectorAll('#options-area button').forEach(btn => btn.style.pointerEvents = 'none'); const q=qs[step]; const ok = selectedAnswer === currentQuestionCorrect; if(ok) sc++; ans.push({ n:step+1, qs:q.q.substring(0,40), sel:q.a[selectedAnswer], cor:q.a[currentQuestionCorrect], ok:ok }); step++; selectedAnswer=null; if(step < questions.length){ renderQuiz(); setTimeout(() => { document.querySelectorAll('#options-area button').forEach(btn => btn.style.pointerEvents = ''); }, 100); } else { finishQuiz(); } }
-function finishQuiz(){ const id = `${nm} ${sn} (${ct})`; const p = Math.round(sc/questions.length*100); document.getElementById('final-score').innerText = `${sc} из ${questions.length} (${p}%)`; document.getElementById('quiz-screen').classList.add('hidden'); document.getElementById('result-screen').classList.remove('hidden'); saveToSupabase('results', { user_id: id, name: nm, surname: sn, city: ct, score: sc, total: questions.length, answers: ans, created_at: new Date().toISOString() }); }
 
-document.getElementById('submit-btn').onclick = submitAnswer;
-window.toggleDetails = toggleDetails; window.resetFilters = resetFilters; window.openTestModal = openTestModal; window.startModalQuiz = startModalQuiz; window.closeModalAndRefresh = closeModalAndRefresh; window.exportToExcel = exportToExcel;
+function escapeHtml(str) {
+    if(!str) return '';
+    return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;');
+}
+
+function updateCharts() {
+    if(allResults.length === 0) return;
+    
+    const categories = {'Отлично (80-100%)':0, 'Хорошо (60-79%)':0, 'Удовлетворительно (40-59%)':0, 'Плохо (0-39%)':0};
+    allResults.forEach(r => {
+        const p = (r.score/r.total)*100;
+        if(p>=80) categories['Отлично (80-100%)']++;
+        else if(p>=60) categories['Хорошо (60-79%)']++;
+        else if(p>=40) categories['Удовлетворительно (40-59%)']++;
+        else categories['Плохо (0-39%)']++;
+    });
+    
+    const ctx1 = document.getElementById('scoreDistributionChart');
+    if(ctx1) {
+        if(scoreChart) scoreChart.destroy();
+        scoreChart = new Chart(ctx1, {
+            type: 'pie',
+            data: { labels: Object.keys(categories), datasets: [{ data: Object.values(categories), backgroundColor: ['#28a745','#17a2b8','#ffc107','#dc3545'] }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+    
+    const cityStats = {};
+    allResults.forEach(r => {
+        const city = r.city || 'Не указан';
+        if(!cityStats[city]) cityStats[city] = { total: 0, count: 0 };
+        cityStats[city].total += (r.score/r.total);
+        cityStats[city].count++;
+    });
+    
+    const cities = Object.keys(cityStats);
+    const avgScores = cities.map(c => Math.round((cityStats[c].total / cityStats[c].count) * 100));
+    
+    const ctx2 = document.getElementById('cityChart');
+    if(ctx2) {
+        if(cityChart) cityChart.destroy();
+        cityChart = new Chart(ctx2, {
+            type: 'bar',
+            data: { labels: cities, datasets: [{ label: 'Средний балл (%)', data: avgScores, backgroundColor: '#667eea', borderRadius: 8 }] },
+            options: { responsive: true, maintainAspectRatio: true, scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
+        });
+    }
+}
+
+async function loadAdmin() {
+    const {data, error} = await sb.from('results').select('*').order('created_at',{ascending:false});
+    if(!error && data) {
+        allResults = data;
+        renderResults();
+        updateCharts();
+    }
+}
+
+function initRealtime() {
+    const channel = sb.channel('results-channel');
+    channel.on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'results'}, payload => {
+        allResults.unshift(payload.new);
+        renderResults();
+        updateCharts();
+    }).subscribe();
+    document.getElementById('realtime-status').innerHTML = '🟢 Live';
+    document.getElementById('realtime-status').className = 'badge bg-success me-2';
+}
+
+// Тест в модальном окне
+function openTestModal() {
+    const modalBody = document.getElementById('modal-body');
+    modalBody.innerHTML = `<div class="p-3"><div class="mb-3"><label class="form-label">Имя</label><input type="text" id="modal-name" class="form-control"></div><div class="mb-3"><label class="form-label">Фамилия</label><input type="text" id="modal-surname" class="form-control"></div><div class="mb-3"><label class="form-label">Город</label><input type="text" id="modal-city" class="form-control"></div><button onclick="startModalQuiz()" class="btn btn-primary w-100">▶ Начать тест</button></div><div id="modal-quiz-area"></div>`;
+    new bootstrap.Modal(document.getElementById('testModal')).show();
+}
+
+let modalStep=0, modalNm="", modalSn="", modalCt="", modalAns=[], modalSc=0, modalQs=[], modalSelected=null, modalCorrect=null;
+
+function startModalQuiz() {
+    modalNm = document.getElementById('modal-name').value.trim();
+    modalSn = document.getElementById('modal-surname').value.trim();
+    modalCt = document.getElementById('modal-city').value.trim();
+    if(!modalNm || !modalSn || !modalCt) { alert("Заполните все поля"); return; }
+    modalQs = [...questions].sort(()=>Math.random()-.5);
+    modalStep = 0; modalSc = 0; modalAns = []; modalSelected = null;
+    renderModalQuiz();
+}
+
+function renderModalQuiz() {
+    const q = modalQs[modalStep];
+    modalCorrect = q.c;
+    const html = `<div class="card p-3"><div class="d-flex justify-content-between"><span>${modalNm} ${modalSn} (${modalCt})</span><span class="badge bg-primary">Вопрос ${modalStep+1}/${questions.length}</span></div><h5 class="mt-2">${modalStep+1}. ${q.q}</h5><div id="modal-options-area" class="d-grid gap-2 mt-3"></div><button id="modal-submit" class="btn btn-primary mt-3" disabled>Ответить</button></div>`;
+    document.getElementById('modal-quiz-area').innerHTML = html;
+    const area = document.getElementById('modal-options-area');
+    [0,1,2,3].sort(()=>Math.random()-.5).forEach(i=>{
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-dark btn-answer';
+        btn.innerText = q.a[i];
+        btn.onclick = () => { document.querySelectorAll('#modal-options-area button').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); modalSelected=i; document.getElementById('modal-submit').disabled=false; };
+        area.appendChild(btn);
+    });
+    document.getElementById('modal-submit').onclick = submitModalAnswer;
+}
+
+function submitModalAnswer() {
+    if(modalSelected === null) return;
+    const ok = modalSelected === modalCorrect;
+    if(ok) modalSc++;
+    modalAns.push({n:modalStep+1, sel:modalQs[modalStep].a[modalSelected], cor:modalQs[modalStep].a[modalCorrect], ok:ok});
+    modalStep++;
+    if(modalStep < questions.length) renderModalQuiz();
+    else finishModalQuiz();
+}
+
+function finishModalQuiz() {
+    const id = `${modalNm} ${modalSn} (${modalCt})`;
+    saveToSupabase('results', {user_id:id, name:modalNm, surname:modalSn, city:modalCt, score:modalSc, total:questions.length, answers:modalAns, created_at:new Date().toISOString()});
+    document.getElementById('modal-body').innerHTML = `<div class="text-center py-4"><h3>🎉 Готово!</h3><div class="badge bg-success fs-4 my-3">${modalSc}/${questions.length}</div><button onclick="location.reload()" class="btn btn-primary">Закрыть</button></div>`;
+    setTimeout(() => { loadAdmin(); }, 1000);
+}
+
+// Основной тест
+let quizActive = false, quizStep=0, quizNm="", quizSn="", quizCt="", quizAns=[], quizSc=0, quizQs=[], quizSelected=null, quizCorrect=null;
+
+async function startQuiz(){
+    quizNm=document.getElementById('name-input').value.trim();
+    quizSn=document.getElementById('surname-input').value.trim();
+    quizCt=document.getElementById('city-input').value.trim();
+    if(!quizNm||!quizSn||!quizCt) return alert("Заполните все поля!");
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    document.getElementById('user-display').innerText=`${quizNm} ${quizSn} (${quizCt})`;
+    quizQs=[...questions].sort(()=>Math.random()-.5);
+    quizStep=0; quizSc=0; quizAns=[]; quizSelected=null;
+    renderQuiz();
+}
+
+function renderQuiz(){
+    const q=quizQs[quizStep];
+    quizCorrect=q.c;
+    document.getElementById('question-text').innerText=`${quizStep+1}. ${q.q}`;
+    document.getElementById('progress-badge').innerText=`Вопрос ${quizStep+1} из ${questions.length}`;
+    const area=document.getElementById('options-area');
+    area.innerHTML='';
+    quizSelected=null;
+    document.getElementById('submit-btn').disabled=true;
+    [0,1,2,3].sort(()=>Math.random()-.5).forEach(i=>{
+        const b=document.createElement('button');
+        b.className='btn btn-outline-dark btn-answer p-3 m-1';
+        b.innerText=q.a[i];
+        b.onclick=()=>{ document.querySelectorAll('#options-area button').forEach(btn=>btn.classList.remove('selected')); b.classList.add('selected'); quizSelected=i; document.getElementById('submit-btn').disabled=false; };
+        area.appendChild(b);
+    });
+}
+
+function submitQuizAnswer(){
+    if(quizSelected===null) return;
+    const ok=quizSelected===quizCorrect;
+    if(ok) quizSc++;
+    quizAns.push({n:quizStep+1, sel:quizQs[quizStep].a[quizSelected], cor:quizQs[quizStep].a[quizCorrect], ok:ok});
+    quizStep++;
+    if(quizStep<questions.length) renderQuiz();
+    else finishQuiz();
+}
+
+function finishQuiz(){
+    const id=`${quizNm} ${quizSn} (${quizCt})`;
+    saveToSupabase('results', {user_id:id, name:quizNm, surname:quizSn, city:quizCt, score:quizSc, total:questions.length, answers:quizAns, created_at:new Date().toISOString()});
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.remove('hidden');
+    document.getElementById('final-score').innerText=`${quizSc} из ${questions.length} (${Math.round(quizSc/questions.length*100)}%)`;
+}
+
+document.getElementById('submit-btn').onclick = submitQuizAnswer;
+window.toggleDetails = toggleDetails;
+window.resetFilters = resetFilters;
+window.openTestModal = openTestModal;
+window.startModalQuiz = startModalQuiz;
+window.exportToExcel = exportToExcel;
+window.startQuiz = startQuiz;
 </script>
 </body>
 </html>
