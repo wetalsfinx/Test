@@ -88,6 +88,11 @@ function startTest() {
 }
 
 function renderQuestion() {
+    if(step >= questions.length) {
+        finishTest();
+        return;
+    }
+    
     const q = questions[step];
     currentCorrect = q.correct;
     
@@ -144,7 +149,7 @@ function finishTest() {
     const percent = Math.round(score / questions.length * 100);
     
     // Сохраняем в Supabase
-    sb.from('results').insert([{
+    sb.from('results').insert({
         user_id: userId,
         name: userName,
         surname: userSurname,
@@ -153,7 +158,11 @@ function finishTest() {
         total: questions.length,
         answers: answers,
         created_at: new Date().toISOString()
-    }]).catch(e => console.log('Ошибка сохранения:', e));
+    }).then(() => {
+        console.log('Сохранено!');
+    }).catch(e => {
+        console.log('Ошибка сохранения:', e);
+    });
     
     // Показываем результат
     document.getElementById('quiz-screen').classList.add('hidden');
