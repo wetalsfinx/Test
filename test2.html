@@ -21,7 +21,16 @@ body{background:#f5f7fa;font-family:sans-serif;padding:20px}
             <p class="text-center text-muted">Заполните данные</p>
             <input type="text" id="name" class="form-control mb-2" placeholder="Имя">
             <input type="text" id="surname" class="form-control mb-2" placeholder="Фамилия">
-            <input type="text" id="city" class="form-control mb-3" placeholder="Город">
+            <select id="city" class="form-control mb-3">
+    <option value="">Выберите город</option>
+    <option value="Тверь">Тверь</option>
+    <option value="Санкт-Петербург">Санкт-Петербург</option>
+    <option value="Ульяновск">Ульяновск</option>
+    <option value="Архангельск">Архангельск</option>
+    <option value="Черкесск">Черкесск</option>
+    <option value="Нижний Тагил">Нижний Тагил</option>
+    <option value="Ярославль">Ярославль</option>
+</select>
             <button onclick="startTest()" class="btn btn-primary w-100">▶ Начать тест</button>
         </div>
         
@@ -100,7 +109,7 @@ function startTest() {
     userSurname = document.getElementById('surname').value.trim();
     userCity = document.getElementById('city').value.trim();
     if(!userName || !userSurname || !userCity) {
-        alert("Заполните все поля!");
+        alert("Заполните все поля!Выберите город из списка");
         return;
     }
     
