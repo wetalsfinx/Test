@@ -384,7 +384,12 @@ function renderQuiz(){
         const b=document.createElement('button');
         b.className='btn btn-outline-dark btn-answer p-3 m-1';
         b.innerText=q.a[i];
-        b.onclick=()=>{ document.querySelectorAll('#options-area button').forEach(btn=>btn.classList.remove('selected')); b.classList.add('selected'); quizSelected=i; document.getElementById('submit-btn').disabled=false; };
+        b.onclick=()=>{ 
+            document.querySelectorAll('#options-area button').forEach(btn=>btn.classList.remove('selected')); 
+            b.classList.add('selected'); 
+            quizSelected=i; 
+            document.getElementById('submit-btn').disabled=false; 
+        };
         area.appendChild(b);
     });
 }
@@ -401,39 +406,10 @@ function submitQuizAnswer(){
     quizSelected = null;
     
     if(quizStep < questions.length) {
-        function renderQuiz(){
-    const q=quizQs[quizStep];
-    quizCorrect=q.c;
-    document.getElementById('question-text').innerText=`${quizStep+1}. ${q.q}`;
-    document.getElementById('progress-badge').innerText=`Вопрос ${quizStep+1} из ${questions.length}`;
-    const area=document.getElementById('options-area');
-    area.innerHTML='';
-    quizSelected=null;
-    document.getElementById('submit-btn').disabled=true;
-    [0,1,2,3].sort(()=>Math.random()-.5).forEach(i=>{
-        const b=document.createElement('button');
-        b.className='btn btn-outline-dark btn-answer p-3 m-1';
-        b.innerText=q.a[i];
-        b.onclick=()=>{ 
-            document.querySelectorAll('#options-area button').forEach(btn=>btn.classList.remove('selected')); 
-            b.classList.add('selected'); 
-            quizSelected=i; 
-            document.getElementById('submit-btn').disabled=false; 
-        };
-        area.appendChild(b);
-    });
-}
+        renderQuiz();
     } else {
         finishQuiz();
     }
-}
-    if(quizSelected===null) return;
-    const ok=quizSelected===quizCorrect;
-    if(ok) quizSc++;
-    quizAns.push({n:quizStep+1, sel:quizQs[quizStep].a[quizSelected], cor:quizQs[quizStep].a[quizCorrect], ok:ok});
-    quizStep++;
-    if(quizStep<questions.length) renderQuiz();
-    else finishQuiz();
 }
 
 function finishQuiz(){
