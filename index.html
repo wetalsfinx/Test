@@ -7,7 +7,6 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 body{background:#f5f7fa;font-family:sans-serif}
 .card{margin-top:20px;border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}
@@ -308,7 +307,7 @@ async function clearAllResults(testId) {
     else { if(testId === 'test1') { test1Data = []; renderTest1(); } else { test2Data = []; renderTest2(); } alert(`✅ Результаты ${name} удалены!`); }
 }
 
-async function generateUserReport(resultId, testId) {
+function generateUserReport(resultId, testId) {
     const userData = testId === 'test1' ? test1Data.find(r => r.id == resultId) : test2Data.find(r => r.id == resultId);
     if(!userData) { alert('Данные не найдены'); return; }
     
@@ -327,9 +326,9 @@ async function generateUserReport(resultId, testId) {
             
             answersHtml += `<div style="margin-bottom:20px;padding:12px;background:${isCorrect?'#e8f5e9':'#ffebee'};border-radius:8px;border-left:4px solid ${isCorrect?'#4caf50':'#f44336'}">
                 <div style="font-weight:bold;margin-bottom:8px;">Вопрос ${i+1}</div>
-                <div style="margin-bottom:8px;color:#555;">${questionText}</div>
-                <div><span style="color:#d32f2f;">✖ Ваш ответ:</span> <span style="background:#ffebee;padding:2px 8px;border-radius:4px;">${userAnswer}</span></div>
-                <div><span style="color:#2e7d32;">✓ Правильный ответ:</span> <span style="background:#e8f5e9;padding:2px 8px;border-radius:4px;">${correctAnswer}</span></div>
+                <div style="margin-bottom:8px;color:#555;">${escapeHtml(questionText)}</div>
+                <div><span style="color:#d32f2f;">✖ Ваш ответ:</span> <span style="background:#ffebee;padding:2px 8px;border-radius:4px;">${escapeHtml(userAnswer)}</span></div>
+                <div><span style="color:#2e7d32;">✓ Правильный ответ:</span> <span style="background:#e8f5e9;padding:2px 8px;border-radius:4px;">${escapeHtml(correctAnswer)}</span></div>
                 ${!isCorrect ? '<div style="margin-top:8px;font-size:12px;color:#666;">💡 Совет: обратите внимание на правильный вариант</div>' : ''}
             </div>`;
         });
@@ -337,7 +336,6 @@ async function generateUserReport(resultId, testId) {
         answersHtml = '<div style="color:#999;">Нет детальной информации по ответам</div>';
     }
     
-    // Создаём новое окно с отчётом (для печати или сохранения)
     const reportWindow = window.open('', '_blank');
     reportWindow.document.write(`
         <!DOCTYPE html>
@@ -350,30 +348,34 @@ async function generateUserReport(resultId, testId) {
             .info{background:#f5f7fa;padding:15px;border-radius:8px;margin-bottom:30px}
             .info table{width:100%}
             .info td{padding:5px}
-            .score{display:inline-block;padding:5px 15px;border-radius:20px;font-weight:bold}
+            .score{display:inline-block;padding:5px 15px;border-radius:20px;font-weight:bold;margin-top:10px}
             .score-good{background:#4caf50;color:white}
             .score-normal{background:#ff9800;color:white}
             .score-bad{background:#f44336;color:white}
             .answers-title{font-size:18px;font-weight:bold;margin:20px 0}
             .footer{margin-top:40px;text-align:center;font-size:12px;color:#999;border-top:1px solid #eee;padding-top:20px}
+            .btn-print{background:#0d6efd;color:white;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;margin-bottom:10px}
+            .btn-print:hover{opacity:0.8}
             @media print {
-                button { display: none; }
+                .no-print { display: none; }
             }
         </style>
         </head>
         <body>
-            <div style="text-align:right; margin-bottom:10px;">
-                <button onclick="window.print()" style="padding:8px 16px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer;">🖨️ Распечатать / Сохранить PDF</button>
+            <div class="no-print" style="text-align:right; margin-bottom:10px;">
+                <button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button>
             </div>
             <div class="header">
                 <h1>📊 Отчёт по тесту</h1>
                 <h2>«${testName}»</h2>
             </div>
             <div class="info">
-                <table><tr><td>Сотрудник:</td><td><strong>${fullName}</strong></td></tr>
-                <tr><td>Город:</td><td><strong>${userData.city || 'не указан'}</strong></td></tr>
-                <tr><td>Дата:</td><td><strong>${new Date(userData.created_at).toLocaleString()}</strong></td></tr>
-                <tr><td>Результат:</td><td><strong>${userData.score} из ${userData.total} (${percent}%)</strong></td></tr></table>
+                <table>
+                    <tr><td>Сотрудник:</td><td><strong>${fullName}</strong></td></tr>
+                    <tr><td>Город:</td><td><strong>${userData.city || 'не указан'}</strong></td></tr>
+                    <tr><td>Дата:</td><td><strong>${new Date(userData.created_at).toLocaleString()}</strong></td></tr>
+                    <tr><td>Результат:</td><td><strong>${userData.score} из ${userData.total} (${percent}%)</strong></td></tr>
+                </table>
                 <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">
                     ${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хорошо, но есть над чем работать':'📚 Требуется изучение материалов'}
                 </div>
