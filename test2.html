@@ -153,6 +153,7 @@ function submitAnswer() {
     const isCorrect = (selectedAnswer === q.shuffledCorrect);
     if(isCorrect) score++;
     
+    // СОХРАНЯЕМ С ТЕКСТОМ ВОПРОСА
     answers.push({
         num: step+1,
         question: q.text,
@@ -173,6 +174,8 @@ function submitAnswer() {
 function finishTest() {
     const userId = `${userName} ${userSurname} (${userCity})`;
     const percent = Math.round(score / questions.length * 100);
+    
+    console.log('Отправляемые ответы:', answers); // Для отладки
     
     sb.from('results').insert({
         user_id: userId,
