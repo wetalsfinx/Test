@@ -311,16 +311,21 @@ async function clearAllResults(testId) {
 async function generateUserReport(resultId, testId) {
     const userData = testId === 'test1' ? test1Data.find(r => r.id == resultId) : test2Data.find(r => r.id == resultId);
     if(!userData) { alert('Данные не найдены'); return; }
+    
     const testName = testId === 'test1' ? 'Стандарты продаж' : 'Стандарты обслуживания';
     const fullName = `${userData.surname || ''} ${userData.name || ''}`.trim();
     const percent = Math.round(userData.score / userData.total * 100);
+    
     let answersHtml = '';
-    if(userData.answers) {
+    if(userData.answers && userData.answers.length > 0) {
         userData.answers.forEach((a, i) => {
             const isCorrect = a.isCorrect === true || a.ok === true;
-            const userAnswer = a.selected || a.sel;
-            const correctAnswer = a.correct || a.cor;
-            const questionText = a.question || `Вопрос ${i+1}`;
+            const userAnswer = a.selected || a.sel || 'Не указан';
+            const correctAnswer = a.correct || a.cor || 'Не указан';
+            // Пробуем получить вопрос из разных полей
+            let questionText = a.question || a.qs || `Вопрос ${i+1}`;
+            if(questionText.length > 200) questionText = questionText.substring(0,200);
+            
             answersHtml += `<div style="margin-bottom:20px;padding:12px;background:${isCorrect?'#e8f5e9':'#ffebee'};border-radius:8px;border-left:4px solid ${isCorrect?'#4caf50':'#f44336'}">
                 <div style="font-weight:bold;margin-bottom:8px;">Вопрос ${i+1}</div>
                 <div style="margin-bottom:8px;color:#555;">${questionText}</div>
@@ -329,19 +334,26 @@ async function generateUserReport(resultId, testId) {
                 ${!isCorrect ? '<div style="margin-top:8px;font-size:12px;color:#666;">💡 Совет: обратите внимание на правильный вариант</div>' : ''}
             </div>`;
         });
+    } else {
+        answersHtml = '<div style="color:#999;">Нет детальной информации по ответам</div>';
     }
+    
     const reportHtml = `<!DOCTYPE html>
     <html><head><meta charset="UTF-8"><title>Отчёт: ${fullName}</title>
     <style>body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px}.header{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #0d6efd}.header h1{color:#0d6efd;margin:0}.info{background:#f5f7fa;padding:15px;border-radius:8px;margin-bottom:30px}.info table{width:100%}.info td{padding:5px}.score{display:inline-block;padding:5px 15px;border-radius:20px;font-weight:bold}.score-good{background:#4caf50;color:white}.score-normal{background:#ff9800;color:white}.score-bad{background:#f44336;color:white}.answers-title{font-size:18px;font-weight:bold;margin:20px 0}.footer{margin-top:40px;text-align:center;font-size:12px;color:#999;border-top:1px solid #eee;padding-top:20px}</style>
     </head><body>
     <div class="header"><h1>📊 Отчёт по тесту</h1><h2>«${testName}»</h2></div>
-    <div class="info"><table><tr><td>Сотрудник:</td><td><strong>${fullName}</strong></td></tr><tr><td>Город:</td><td><strong>${userData.city || 'не указан'}</strong></td></tr><tr><td>Дата:</td><td><strong>${new Date(userData.created_at).toLocaleString()}</strong></td></tr><tr><td>Результат:</td><td><strong>${userData.score} из ${userData.total} (${percent}%)</strong></tr></table>
+    <div class="info"><table><tr><td>Сотрудник:</td><td><strong>${fullName}</strong></td></tr>
+    <tr><td>Город:</td><td><strong>${userData.city || 'не указан'}</strong></td></tr>
+    <tr><td>Дата:</td><td><strong>${new Date(userData.created_at).toLocaleString()}</strong></td></tr>
+    <tr><td>Результат:</td><td><strong>${userData.score} из ${userData.total} (${percent}%)</strong></td></tr>
     <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хорошо, но есть над чем работать':'📚 Требуется изучение материалов'}</div></div>
     <div class="answers-title">📝 Детальный разбор ответов:</div>${answersHtml}
     <div class="footer">Отчёт сгенерирован автоматически</div></body></html>`;
+    
     const opt = { margin: [10,10,10,10], filename: `Отчёт_${fullName}_${testName}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
     const element = document.createElement('div'); element.innerHTML = reportHtml; element.style.position = 'absolute'; element.style.left = '-9999px'; document.body.appendChild(element);
-    html2pdf().set(opt).from(element).save().then(() => document.body.removeChild(element)).catch(() => { alert('Ошибка PDF'); document.body.removeChild(element); });
+    html2pdf().set(opt).from(element).save().then(() => document.body.removeChild(element)).catch((err) => { console.error(err); alert('Ошибка PDF'); document.body.removeChild(element); });
 }
 
 function exportTestToExcel(testId) {
