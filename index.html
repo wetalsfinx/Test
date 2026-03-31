@@ -68,6 +68,9 @@ body{background:#f5f7fa;font-family:sans-serif}
             <button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test1')">
                 <i class="bi bi-file-excel"></i> Экспорт
             </button>
+            <button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test1')">
+                <i class="bi bi-trash"></i> Очистить всё
+            </button>
             <i class="bi bi-chevron-down collapse-icon"></i>
         </div>
     </div>
@@ -83,10 +86,12 @@ body{background:#f5f7fa;font-family:sans-serif}
         </div>
         <div class="filter-bar">
             <div class="row g-3">
-                <div class="col-md-4"><input type="text" id="test1-search" class="form-control" placeholder="🔍 Поиск по имени..."></div>
-                <div class="col-md-3"><input type="text" id="test1-city-filter" class="form-control" placeholder="🏙️ Фильтр по городу"></div>
-                <div class="col-md-3"><select id="test1-sort" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="score-desc">⭐ Сначала высокий балл</option></select></div>
-                <div class="col-md-2"><button class="btn btn-outline-secondary w-100" onclick="resetTest1Filters()">Сброс</button></div>
+                <div class="col-md-3"><input type="text" id="test1-search" class="form-control" placeholder="🔍 Поиск по имени..."></div>
+                <div class="col-md-2"><input type="text" id="test1-city-filter" class="form-control" placeholder="🏙️ Город"></div>
+                <div class="col-md-2"><input type="date" id="test1-date-from" class="form-control" placeholder="Дата от"></div>
+                <div class="col-md-2"><input type="date" id="test1-date-to" class="form-control" placeholder="Дата до"></div>
+                <div class="col-md-2"><select id="test1-sort" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="score-desc">⭐ Сначала высокий балл</option></select></div>
+                <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetTest1Filters()">Сброс</button></div>
             </div>
         </div>
         <div id="test1-results-area"><div class="text-center py-4">⏳ Загрузка...</div></div>
@@ -98,12 +103,15 @@ body{background:#f5f7fa;font-family:sans-serif}
     <div class="test-header" onclick="toggleTest('test2')">
         <div class="test-title">
             <i class="bi bi-chat-heart-fill" style="color:#e83e8c"></i>
-            🎯 Тест 2: Сервисные навыки (11 вопросов)
+            🎯 Тест 2: Стандарты обслуживания (11 вопросов)
             <span class="badge bg-primary ms-2" id="test2-count">0</span>
         </div>
         <div>
             <button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test2')">
                 <i class="bi bi-file-excel"></i> Экспорт
+            </button>
+            <button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test2')">
+                <i class="bi bi-trash"></i> Очистить всё
             </button>
             <i class="bi bi-chevron-down collapse-icon"></i>
         </div>
@@ -120,8 +128,8 @@ body{background:#f5f7fa;font-family:sans-serif}
         </div>
         <div class="filter-bar">
             <div class="row g-3">
-                <div class="col-md-4"><input type="text" id="test2-search" class="form-control" placeholder="🔍 Поиск по имени..."></div>
-                <div class="col-md-3"><select id="test2-city-filter" class="form-select">
+                <div class="col-md-3"><input type="text" id="test2-search" class="form-control" placeholder="🔍 Поиск по имени..."></div>
+                <div class="col-md-2"><select id="test2-city-filter" class="form-select">
                     <option value="">Все города</option>
                     <option value="Тверь">Тверь</option>
                     <option value="Санкт-Петербург">Санкт-Петербург</option>
@@ -131,8 +139,10 @@ body{background:#f5f7fa;font-family:sans-serif}
                     <option value="Нижний Тагил">Нижний Тагил</option>
                     <option value="Ярославль">Ярославль</option>
                 </select></div>
-                <div class="col-md-3"><select id="test2-sort" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="score-desc">⭐ Сначала высокий балл</option></select></div>
-                <div class="col-md-2"><button class="btn btn-outline-secondary w-100" onclick="resetTest2Filters()">Сброс</button></div>
+                <div class="col-md-2"><input type="date" id="test2-date-from" class="form-control" placeholder="Дата от"></div>
+                <div class="col-md-2"><input type="date" id="test2-date-to" class="form-control" placeholder="Дата до"></div>
+                <div class="col-md-2"><select id="test2-sort" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="score-desc">⭐ Сначала высокий балл</option></select></div>
+                <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetTest2Filters()">Сброс</button></div>
             </div>
         </div>
         <div id="test2-results-area"><div class="text-center py-4">⏳ Загрузка...</div></div>
@@ -165,15 +175,19 @@ window.addEventListener('load', () => {
     loadAllData();
     initRealtime();
     
-    // Добавляем обработчики событий для фильтров второго теста
-    document.getElementById('test2-search').addEventListener('input', function() { renderTest2(); });
-    document.getElementById('test2-city-filter').addEventListener('change', function() { renderTest2(); });
-    document.getElementById('test2-sort').addEventListener('change', function() { renderTest2(); });
+    // Обработчики для теста 1
+    document.getElementById('test1-search').addEventListener('input', () => renderTest1());
+    document.getElementById('test1-city-filter').addEventListener('input', () => renderTest1());
+    document.getElementById('test1-date-from').addEventListener('change', () => renderTest1());
+    document.getElementById('test1-date-to').addEventListener('change', () => renderTest1());
+    document.getElementById('test1-sort').addEventListener('change', () => renderTest1());
     
-    // Для первого теста тоже добавим
-    document.getElementById('test1-search').addEventListener('input', function() { renderTest1(); });
-    document.getElementById('test1-city-filter').addEventListener('input', function() { renderTest1(); });
-    document.getElementById('test1-sort').addEventListener('change', function() { renderTest1(); });
+    // Обработчики для теста 2
+    document.getElementById('test2-search').addEventListener('input', () => renderTest2());
+    document.getElementById('test2-city-filter').addEventListener('change', () => renderTest2());
+    document.getElementById('test2-date-from').addEventListener('change', () => renderTest2());
+    document.getElementById('test2-date-to').addEventListener('change', () => renderTest2());
+    document.getElementById('test2-sort').addEventListener('change', () => renderTest2());
 });
 
 async function loadAllData() {
@@ -186,12 +200,27 @@ async function loadAllData() {
     }
 }
 
+// Функции для теста 1
 function renderTest1() {
     let filtered = [...test1Data];
     const search = document.getElementById('test1-search')?.value.toLowerCase() || '';
     const cityF = document.getElementById('test1-city-filter')?.value.toLowerCase() || '';
+    const dateFrom = document.getElementById('test1-date-from')?.value;
+    const dateTo = document.getElementById('test1-date-to')?.value;
+    
     if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
     if(cityF) filtered = filtered.filter(r => r.city && r.city.toLowerCase().includes(cityF));
+    if(dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0,0,0,0);
+        filtered = filtered.filter(r => new Date(r.created_at) >= fromDate);
+    }
+    if(dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23,59,59,999);
+        filtered = filtered.filter(r => new Date(r.created_at) <= toDate);
+    }
+    
     const sortBy = document.getElementById('test1-sort')?.value || 'date-desc';
     filtered.sort((a,b) => sortBy==='date-desc' ? new Date(b.created_at)-new Date(a.created_at) : (b.score/b.total)-(a.score/a.total));
     
@@ -209,7 +238,7 @@ function renderTest1() {
     const area = document.getElementById('test1-results-area');
     if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; return; }
     area.innerHTML = '';
-    filtered.forEach((r, idx) => {
+    filtered.forEach((r) => {
         const p = Math.round(r.score/r.total*100);
         let details = '';
         if(r.answers) r.answers.forEach((a,i) => {
@@ -217,8 +246,21 @@ function renderTest1() {
             details += `<div class="small mb-2"><strong>В${i+1}:</strong> ${ok?'✅':'❌'} <span class="${ok?'correct':'wrong'}">${ok?'Верно':'Неверно'}</span>${!ok?`<div class="text-muted ms-3">✖ ${a.selected || a.sel}<br>✔ ${a.correct || a.cor}</div>`:''}</div>`;
         });
         const clr = p>=80?'success':p>=50?'warning':'danger';
-        area.innerHTML += `<div class="user-log" onclick="this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
-            <div class="d-flex justify-content-between"><div><span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span><span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div><div><small>${new Date(r.created_at).toLocaleString()}</small><i class="bi bi-chevron-down expand-icon ms-2"></i></div></div>
+        area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span>
+                    <span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span>
+                    <span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <small>${new Date(r.created_at).toLocaleString()}</small>
+                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteSingleResult('${r.id}', 'test1')" style="padding:2px 8px">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    <i class="bi bi-chevron-down expand-icon ms-2"></i>
+                </div>
+            </div>
             <div class="answer-details mt-2"><div class="bg-light p-2 rounded">${details}</div></div>
         </div>`;
     });
@@ -244,22 +286,32 @@ function updateTest1Charts() {
 function resetTest1Filters() {
     document.getElementById('test1-search').value = '';
     document.getElementById('test1-city-filter').value = '';
+    document.getElementById('test1-date-from').value = '';
+    document.getElementById('test1-date-to').value = '';
     document.getElementById('test1-sort').value = 'date-desc';
     renderTest1();
 }
 
+// Функции для теста 2
 function renderTest2() {
-    console.log('=== renderTest2 вызвана ===');
     let filtered = [...test2Data];
     const search = document.getElementById('test2-search')?.value.toLowerCase() || '';
     const cityF = document.getElementById('test2-city-filter')?.value || '';
-    
-    console.log('Выбранный город в фильтре:', cityF);
+    const dateFrom = document.getElementById('test2-date-from')?.value;
+    const dateTo = document.getElementById('test2-date-to')?.value;
     
     if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
     if(cityF) filtered = filtered.filter(r => r.city && r.city === cityF);
-    
-    console.log('После фильтра по городу осталось:', filtered.length);
+    if(dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0,0,0,0);
+        filtered = filtered.filter(r => new Date(r.created_at) >= fromDate);
+    }
+    if(dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23,59,59,999);
+        filtered = filtered.filter(r => new Date(r.created_at) <= toDate);
+    }
     
     const sortBy = document.getElementById('test2-sort')?.value || 'date-desc';
     filtered.sort((a,b) => sortBy === 'date-desc' ? new Date(b.created_at) - new Date(a.created_at) : (b.score/b.total) - (a.score/a.total));
@@ -278,7 +330,7 @@ function renderTest2() {
     const area = document.getElementById('test2-results-area');
     if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; return; }
     area.innerHTML = '';
-    filtered.forEach((r, idx) => {
+    filtered.forEach((r) => {
         const p = Math.round(r.score/r.total*100);
         let details = '';
         if(r.answers) r.answers.forEach((a,i) => {
@@ -286,8 +338,21 @@ function renderTest2() {
             details += `<div class="small mb-2"><strong>В${i+1}:</strong> ${ok?'✅':'❌'} <span class="${ok?'correct':'wrong'}">${ok?'Верно':'Неверно'}</span>${!ok?`<div class="text-muted ms-3">✖ ${a.selected || a.sel}<br>✔ ${a.correct || a.cor}</div>`:''}</div>`;
         });
         const clr = p>=80?'success':p>=50?'warning':'danger';
-        area.innerHTML += `<div class="user-log" onclick="this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
-            <div class="d-flex justify-content-between"><div><span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span><span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div><div><small>${new Date(r.created_at).toLocaleString()}</small><i class="bi bi-chevron-down expand-icon ms-2"></i></div></div>
+        area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span>
+                    <span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span>
+                    <span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <small>${new Date(r.created_at).toLocaleString()}</small>
+                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteSingleResult('${r.id}', 'test2')" style="padding:2px 8px">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    <i class="bi bi-chevron-down expand-icon ms-2"></i>
+                </div>
+            </div>
             <div class="answer-details mt-2"><div class="bg-light p-2 rounded">${details}</div></div>
         </div>`;
     });
@@ -313,14 +378,66 @@ function updateTest2Charts() {
 function resetTest2Filters() {
     document.getElementById('test2-search').value = '';
     document.getElementById('test2-city-filter').value = '';
+    document.getElementById('test2-date-from').value = '';
+    document.getElementById('test2-date-to').value = '';
     document.getElementById('test2-sort').value = 'date-desc';
     renderTest2();
+}
+
+// Удаление одной записи
+async function deleteSingleResult(resultId, testId) {
+    const confirmDelete = confirm(`🗑️ Удалить этот результат? Отменить нельзя.`);
+    if(!confirmDelete) return;
+    
+    const {error} = await sb.from('results').delete().eq('id', resultId);
+    
+    if(error) {
+        alert('Ошибка удаления: ' + error.message);
+    } else {
+        if(testId === 'test1') {
+            test1Data = test1Data.filter(r => r.id !== resultId);
+            renderTest1();
+        } else {
+            test2Data = test2Data.filter(r => r.id !== resultId);
+            renderTest2();
+        }
+    }
+}
+
+// Удаление всех результатов теста
+async function clearAllResults(testId) {
+    const testName = testId === 'test1' ? 'Тест 1: Стандарты продаж' : 'Тест 2: Стандарты обслуживания';
+    const confirmDelete = confirm(`⚠️ ВНИМАНИЕ! Вы уверены, что хотите удалить ВСЕ результаты теста "${testName}"?\n\nЭто действие нельзя отменить!`);
+    
+    if(!confirmDelete) return;
+    
+    let query;
+    if(testId === 'test1') {
+        query = sb.from('results').delete().or('test_type.is.null,test_type.eq.test1');
+    } else {
+        query = sb.from('results').delete().eq('test_type', 'test2');
+    }
+    
+    const {error} = await query;
+    
+    if(error) {
+        alert('Ошибка при удалении: ' + error.message);
+    } else {
+        alert(`✅ Все результаты теста "${testName}" удалены!`);
+        if(testId === 'test1') {
+            test1Data = [];
+            renderTest1();
+        } else {
+            test2Data = [];
+            renderTest2();
+        }
+    }
 }
 
 function exportTestToExcel(testId) {
     const data = testId === 'test1' ? test1Data : test2Data;
     if(!data.length) return alert("Нет данных");
-    const testName = testId === 'test1' ? 'Стандарты_продаж' : 'Сервисные_навыки';
+    const testName = testId === 'test1' ? 'Стандарты_продаж' : 'Стандарты_обслуживания';
     const excelData = data.map(r => ({
         'ФИО': `${r.surname||''} ${r.name||''}`.trim(),
         'Город': r.city||'',
@@ -360,6 +477,8 @@ window.toggleTest = toggleTest;
 window.exportTestToExcel = exportTestToExcel;
 window.resetTest1Filters = resetTest1Filters;
 window.resetTest2Filters = resetTest2Filters;
+window.deleteSingleResult = deleteSingleResult;
+window.clearAllResults = clearAllResults;
 </script>
 </body>
 </html>
