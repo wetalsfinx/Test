@@ -178,6 +178,11 @@ body{background:#f5f7fa;font-family:sans-serif}
                         <i class="bi bi-plus"></i> Добавить вопрос
                     </button>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">GitHub токен (только при первом сохранении)</label>
+                    <input type="password" id="github-token" class="form-control" placeholder="Вставьте GitHub токен">
+                    <small class="text-muted">Токен нужен для автоматического создания файла теста. Сохранится в браузере.</small>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
@@ -199,7 +204,9 @@ let test1Data = [], test2Data = [], dynamicTestsData = [];
 let test1ChartPie = null, test1ChartBar = null, test2ChartPie = null, test2ChartBar = null;
 let allTests = [];
 let currentQuestions = [];
-let dynamicTestBlocks = {};
+
+// Сохраняем токен в localStorage
+let GITHUB_TOKEN = localStorage.getItem('github_token') || '';
 
 window.addEventListener('load', () => {
     setTimeout(() => { const splash = document.getElementById('splash'); if(splash) { splash.style.opacity = '0'; setTimeout(() => splash.style.display = 'none', 500); } }, 300);
@@ -208,6 +215,9 @@ window.addEventListener('load', () => {
     loadAllData();
     initRealtime();
     loadTests();
+    
+    // Восстанавливаем токен
+    if(GITHUB_TOKEN) document.getElementById('github-token').value = GITHUB_TOKEN;
     
     document.getElementById('test1-search').addEventListener('input', () => renderTest1());
     document.getElementById('test1-city-filter').addEventListener('input', () => renderTest1());
@@ -427,6 +437,7 @@ async function saveTest() {
     const testId = document.getElementById('edit-test-id').value;
     const name = document.getElementById('test-name').value.trim();
     const description = document.getElementById('test-description').value.trim();
+    const token = document.getElementById('github-token').value.trim();
     
     if(!name) {
         alert('Введите название теста');
@@ -437,16 +448,23 @@ async function saveTest() {
         return;
     }
     
+    // Сохраняем токен
+    if(token) {
+        GITHUB_TOKEN = token;
+        localStorage.setItem('github_token', token);
+    }
+    
+    if(!GITHUB_TOKEN) {
+        alert('Введите GitHub токен для автоматического создания файла теста');
+        return;
+    }
+    
     // Генерируем slug
     let slug = name.toLowerCase()
         .replace(/[^а-яёa-z0-9]/g, '-')
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '');
     if(!slug) slug = `test_${Date.now()}`;
-    if(testId) {
-        const existing = await sb.from('tests').select('slug').eq('id', testId).single();
-        slug = existing.data?.slug || slug;
-    }
     
     const testData = {
         name: name,
@@ -473,7 +491,7 @@ async function saveTest() {
         
         bootstrap.Modal.getInstance(document.getElementById('testModal')).hide();
         loadTests();
-        alert(testId ? 'Тест обновлён!' : 'Тест создан!');
+        alert(testId ? 'Тест обновлён!' : 'Тест создан! Файл загружен в GitHub.');
     }
 }
 
@@ -677,13 +695,6 @@ document.getElementById('submit-btn').onclick = submitAnswer;
 }
 
 async function createTestFile(slug, content) {
-    // Создаём файл в репозитории через GitHub API
-    const token = prompt('Для автоматического создания файла теста нужен GitHub токен. Создайте его в GitHub Settings -> Developer settings -> Personal access tokens -> Tokens (classic). Вставьте токен сюда:');
-    if(!token) {
-        alert('Файл не создан. Вы можете создать его вручную в репозитории.');
-        return;
-    }
-    
     const repo = 'wetalsfinx/Test';
     const path = `${slug}.html`;
     const url = `https://api.github.com/repos/${repo}/contents/${path}`;
@@ -691,7 +702,7 @@ async function createTestFile(slug, content) {
     const response = await fetch(url, {
         method: 'PUT',
         headers: {
-            'Authorization': `token ${token}`,
+            'Authorization': `token ${GITHUB_TOKEN}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -701,10 +712,73 @@ async function createTestFile(slug, content) {
     });
     
     if(response.ok) {
-        alert(`Файл теста создан! Ссылка: https://wetalsfinx.github.io/Test/${slug}.html`);
+        console.log(`Файл ${slug}.html создан`);
     } else {
         const error = await response.json();
         alert(`Ошибка создания файла: ${error.message}`);
+        throw new Error(error.message);
+    }
+}
+
+async function deleteTestFile(slug) {
+    const repo = 'wetalsfinx/Test';
+    const path = `${slug}.html`;
+    const url = `https://api.github.com/repos/${repo}/contents/${path}`;
+    
+    // Сначала получаем SHA файла
+    const getResponse = await fetch(url, {
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+    });
+    
+    if(getResponse.ok) {
+        const fileData = await getResponse.json();
+        const deleteResponse = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Delete test: ${slug}`,
+                sha: fileData.sha
+            })
+        });
+        
+        if(!deleteResponse.ok) {
+            console.log('Не удалось удалить файл');
+        }
+    }
+}
+
+async function deleteTest(testId) {
+    const test = allTests.find(t => t.id === testId);
+    if(!test) return;
+    
+    if(!confirm(`Удалить тест "${test.name}"? Все результаты по этому тесту тоже будут удалены!`)) return;
+    
+    // Удаляем файл из GitHub
+    if(test.slug && GITHUB_TOKEN) {
+        await deleteTestFile(test.slug);
+    }
+    
+    // Удаляем из Supabase
+    const {error} = await sb.from('tests').delete().eq('id', testId);
+    if(error) {
+        alert('Ошибка: ' + error.message);
+    } else {
+        await sb.from('results').delete().eq('test_slug', test.slug);
+        loadTests();
+        loadAllData();
+        alert(`Тест "${test.name}" удалён!`);
+    }
+}
+
+async function toggleTestStatus(testId, newStatus) {
+    const {error} = await sb.from('tests').update({is_active: newStatus}).eq('id', testId);
+    if(error) {
+        alert('Ошибка: ' + error.message);
+    } else {
+        loadTests();
     }
 }
 
@@ -745,7 +819,6 @@ function renderDynamicTestBlocks() {
             </div>
         `;
         
-        // Загружаем данные для этого теста
         loadDynamicTestResults(test);
     });
 }
@@ -754,10 +827,8 @@ function loadDynamicTestResults(test) {
     const testId = `dynamic-${test.id}`;
     const testSlug = test.slug;
     
-    // Фильтруем результаты по test_slug
     const results = dynamicTestsData.filter(r => r.test_slug === testSlug);
     
-    // Обновляем статистику
     const total = results.length;
     if(total > 0) {
         const avg = Math.round(results.reduce((s,r)=>s+(r.score/r.total),0)/total*100);
@@ -768,7 +839,6 @@ function loadDynamicTestResults(test) {
         document.getElementById(`${testId}-count`).innerText = total;
     }
     
-    // Рендерим результаты (упрощённо)
     const area = document.getElementById(`${testId}-results-area`);
     if(!results.length) {
         area.innerHTML = '<div class="text-center py-4 text-muted">📭 Нет результатов</div>';
@@ -806,7 +876,6 @@ function resetDynamicFilters(testId) {
     document.getElementById(`${testId}-search`).value = '';
     document.getElementById(`${testId}-city-filter`).value = '';
     document.getElementById(`${testId}-sort`).value = 'date-desc';
-    // Перезагружаем данные
     const test = allTests.find(t => `dynamic-${t.id}` === testId);
     if(test) loadDynamicTestResults(test);
 }
@@ -818,7 +887,6 @@ async function loadAllData() {
         test2Data = data.filter(r => r.test_type === 'test2');
         dynamicTestsData = data.filter(r => r.test_type === 'dynamic');
         renderTest1(); renderTest2();
-        // Обновляем динамические блоки
         if(allTests.length) renderDynamicTestBlocks();
     }
 }
