@@ -25,7 +25,7 @@ async function loadTests() {
     const container = document.getElementById('testsList');
     
     if (error) {
-        container.innerHTML = '<div class="alert alert-danger">Ошибка: ' + error.message + '</div>';
+        container.innerHTML = '<div class="alert alert-danger">Ошибка</div>';
         return;
     }
     
@@ -37,9 +37,21 @@ async function loadTests() {
     let html = '';
     for (let i = 0; i < data.length; i++) {
         const test = data[i];
-        html += '<div class="card mb-2 p-2">' + test.name + '</div>';
+        html += '<div class="card mb-2 p-2">';
+        html += '<div class="d-flex justify-content-between align-items-center">';
+        html += '<div>' + test.name + '</div>';
+        html += '<button class="btn btn-sm btn-danger" onclick="deleteTest(' + test.id + ')">Удалить</button>';
+        html += '</div></div>';
     }
     container.innerHTML = html;
+}
+
+async function deleteTest(testId) {
+    if (!confirm('Удалить тест?')) return;
+    const { error } = await sb.from('tests').delete().eq('id', testId);
+    if (error) { alert('Ошибка: ' + error.message); return; }
+    alert('Тест удалён');
+    loadTests();
 }
 
 loadTests();
