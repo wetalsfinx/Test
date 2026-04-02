@@ -9,6 +9,14 @@
 <body>
 <div class="container mt-4">
     <h2>⚙️ Управление тестами</h2>
+    
+    <div class="alert alert-info">
+        <strong>GitHub токен:</strong>
+        <input type="password" id="tokenInput" class="form-control mt-1" placeholder="Вставьте GitHub токен">
+        <button class="btn btn-sm btn-primary mt-1" onclick="saveToken()">Сохранить токен</button>
+        <small class="text-muted d-block mt-1">Токен нужен для создания файлов тестов</small>
+    </div>
+    
     <div id="testsList">Загрузка...</div>
     <hr>
     <a href="?mode=admin" class="btn btn-outline-secondary">← Вернуться к админке</a>
@@ -39,6 +47,20 @@ let currentTestId = null;
 let currentTestSlug = null;
 let currentQuestions = [];
 
+// Заполняем поле токена при загрузке
+if (GITHUB_TOKEN) document.getElementById('tokenInput').value = GITHUB_TOKEN;
+
+function saveToken() {
+    const token = document.getElementById('tokenInput').value.trim();
+    if (token) {
+        GITHUB_TOKEN = token;
+        localStorage.setItem('github_token', token);
+        alert('Токен сохранён!');
+    } else {
+        alert('Введите токен');
+    }
+}
+
 async function loadTests() {
     const { data, error } = await sb.from('tests').select('*');
     const container = document.getElementById('testsList');
@@ -51,11 +73,13 @@ async function loadTests() {
         const qCount = test.questions ? test.questions.length : 0;
         const slug = test.slug || 'test_' + test.id;
         html += '<div class="card mb-2 p-2">';
-        html += '<div class="d-flex justify-content-between align-items-center">';
+        html += '<div class="d-flex justify-content-between align-items-center flex-wrap">';
         html += '<div><strong>' + test.name + '</strong> <span class="badge bg-secondary">' + qCount + ' вопросов</span><br><small>' + slug + '</small></div>';
-        html += '<div>';
+        html += '<div class="mt-1">';
         html += '<button class="btn btn-sm btn-primary me-1" onclick="openQuestions(' + test.id + ', \'' + test.name.replace(/'/g, "\\'") + '\', \'' + slug + '\')">✏️ Вопросы</button>';
-        html += '<button class="btn btn-sm btn-success" onclick="generateTestFile(' + test.id + ', \'' + slug + '\')">📄 Создать файл</button>';
+        if (qCount > 0) {
+            html += '<button class="btn btn-sm btn-success" onclick="generateTestFile(' + test.id + ', \'' + slug + '\')">📄 Создать файл</button>';
+        }
         html += '</div></div></div>';
     }
     container.innerHTML = html;
@@ -153,27 +177,21 @@ async function saveQuestions() {
 }
 
 async function generateTestFile(testId, slug) {
-    // Получаем данные теста
+    if (!GITHUB_TOKEN) {
+        alert('Сначала сохраните GitHub токен в поле выше');
+        return;
+    }
+    
     const { data: test } = await sb.from('tests').select('*').eq('id', testId).single();
     if (!test || !test.questions || test.questions.length === 0) {
         alert('Сначала добавьте вопросы к тесту');
         return;
     }
     
-    if (!GITHUB_TOKEN) {
-        const token = prompt('Введите GitHub токен (один раз):');
-        if (token) {
-            GITHUB_TOKEN = token;
-            localStorage.setItem('github_token', token);
-        } else {
-            alert('Токен не введён');
-            return;
-        }
-    }
-    
     const testHtml = generateTestHTML(test.name, test.description || '', test.questions, slug);
     await createFile(slug, testHtml);
     alert('Файл теста создан! Ссылка: https://wetalsfinx.github.io/Test/' + slug + '.html');
+    loadTests();
 }
 
 function generateTestHTML(name, desc, questions, slug) {
@@ -202,11 +220,6 @@ function escapeHtml(str) {
         if (m === '>') return '&gt;';
         return m;
     });
-}
-
-// Загружаем токен из localStorage
-if (localStorage.getItem('github_token')) {
-    GITHUB_TOKEN = localStorage.getItem('github_token');
 }
 
 loadTests();
