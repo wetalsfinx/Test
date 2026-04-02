@@ -9,11 +9,50 @@
 <body>
 <div class="container mt-4">
     <h2>⚙️ Управление тестами</h2>
-    <div class="alert alert-success">
-        <p>✅ Страница восстановлена.</p>
-        <p>Функции управления тестами будут добавлены снова.</p>
+    
+    <div class="d-flex justify-content-between align-items-center my-3">
+        <h4>📋 Список тестов</h4>
+        <button class="btn btn-primary" onclick="testMessage()">➕ Создать тест</button>
     </div>
-    <a href="?mode=admin" class="btn btn-primary">Вернуться к админке</a>
+    
+    <div id="tests-list">Загрузка...</div>
+    
+    <hr>
+    <a href="?mode=admin" class="btn btn-outline-secondary">← Вернуться к админке</a>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function testMessage() {
+    alert('Форма создания будет добавлена в следующем шаге');
+}
+
+async function loadTests() {
+    const { data, error } = await sb.from('tests').select('*');
+    const container = document.getElementById('tests-list');
+    
+    if (error) {
+        container.innerHTML = '<div class="alert alert-danger">Ошибка загрузки</div>';
+        return;
+    }
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">Нет созданных тестов. Нажмите "Создать тест"</div>';
+        return;
+    }
+    
+    let html = '';
+    for (const test of data) {
+        html += `<div class="card mb-2 p-2">✅ ${test.name}</div>`;
+    }
+    container.innerHTML = html;
+}
+
+loadTests();
+</script>
 </body>
 </html>
