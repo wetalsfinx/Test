@@ -5,22 +5,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 <div class="container mt-4">
     <h2>⚙️ Управление тестами</h2>
+    
+    <div class="d-flex justify-content-between align-items-center my-3">
+        <h4>📋 Список тестов</h4>
+        <button class="btn btn-primary" onclick="showCreateForm()">➕ Создать тест</button>
+    </div>
+    
+    <div id="createForm" style="display:none" class="card mb-3 p-3">
+        <h5>Новый тест</h5>
+        <input type="text" id="testName" class="form-control mb-2" placeholder="Название теста">
+        <textarea id="testDesc" class="form-control mb-2" rows="2" placeholder="Описание"></textarea>
+        <div class="mb-2">
+            <label>GitHub токен (нужен для создания файла)</label>
+            <input type="password" id="githubToken" class="form-control" placeholder="Вставьте GitHub токен">
+            <small class="text-muted">Токен сохранится в браузере</small>
+        </div>
+        <button class="btn btn-success" onclick="createTest()">Сохранить</button>
+        <button class="btn btn-secondary" onclick="hideCreateForm()">Отмена</button>
+    </div>
+    
     <div id="testsList">Загрузка...</div>
+    
     <hr>
     <a href="?mode=admin" class="btn btn-outline-secondary">← Вернуться к админке</a>
 </div>
 
 <!-- Модальное окно для вопросов -->
-<div id="questionModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000">
-    <div style="max-width:500px; margin:50px auto; background:white; border-radius:10px; padding:20px">
-        <h4 id="modalTitle">Вопросы</h4>
+<div id="questionModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; overflow:auto">
+    <div style="max-width:600px; margin:50px auto; background:white; border-radius:10px; padding:20px">
+        <h4 id="modalTitle">Редактирование вопросов</h4>
         <input type="hidden" id="currentTestId">
+        <input type="hidden" id="currentTestSlug">
         <div id="questionsArea"></div>
-        <button class="btn btn-sm btn-outline-primary mt-2" onclick="addQuestionField()">+ Добавить вопрос</button>
+        <button class="btn btn-sm btn-outline-primary mt-2" onclick="addQuestion()">+ Добавить вопрос</button>
         <div class="mt-3">
             <button class="btn btn-success" onclick="saveQuestions()">Сохранить</button>
             <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
@@ -34,46 +56,59 @@ const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let GITHUB_TOKEN = localStorage.getItem('github_token') || '';
 let currentTestId = null;
+let currentTestSlug = null;
 let currentQuestions = [];
 
-async function loadTests() {
-    const { data, error } = await sb.from('tests').select('*');
-    const container = document.getElementById('testsList');
-    
-    if (error) {
-        container.innerHTML = '<div class="alert alert-danger">Ошибка</div>';
-        return;
-    }
-    
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div class="alert alert-info">Нет тестов</div>';
-        return;
-    }
-    
-    let html = '';
-    for (let i = 0; i < data.length; i++) {
-        const test = data[i];
-        const qCount = test.questions ? test.questions.length : 0;
-        html += '<div class="card mb-2 p-2">';
-        html += '<div class="d-flex justify-content-between align-items-center">';
-        html += '<div><strong>' + test.name + '</strong> <span class="badge bg-secondary">' + qCount + ' вопросов</span></div>';
-        html += '<div>';
-        html += '<button class="btn btn-sm btn-primary me-1" onclick="openQuestions(' + test.id + ', \'' + test.name.replace(/'/g, "\\'") + '\')">✏️ Вопросы</button>';
-        html += '<button class="btn btn-sm btn-danger" onclick="deleteTest(' + test.id + ')">Удалить</button>';
-        html += '</div></div></div>';
-    }
-    container.innerHTML = html;
+function showCreateForm() {
+    document.getElementById('createForm').style.display = 'block';
+    if (GITHUB_TOKEN) document.getElementById('githubToken').value = GITHUB_TOKEN;
+}
+function hideCreateForm() {
+    document.getElementById('createForm').style.display = 'none';
+    document.getElementById('testName').value = '';
+    document.getElementById('testDesc').value = '';
 }
 
-async function openQuestions(testId, testName) {
-    currentTestId = testId;
+async function createTest() {
+    const name = document.getElementById('testName').value.trim();
+    const desc = document.getElementById('testDesc').value.trim();
+    const token = document.getElementById('githubToken').value.trim();
     
-    // Загружаем существующие вопросы
+    if (!name) { alert('Введите название'); return; }
+    if (token) { GITHUB_TOKEN = token; localStorage.setItem('github_token', token); }
+    if (!GITHUB_TOKEN) { alert('Введите GitHub токен'); return; }
+    
+    let slug = name.toLowerCase().replace(/[^а-яёa-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    if (!slug) slug = 'test_' + Date.now();
+    
+    const { error } = await sb.from('tests').insert({
+        name: name,
+        description: desc,
+        questions: [],
+        slug: slug,
+        is_active: true,
+        created_at: new Date().toISOString()
+    });
+    
+    if (error) { alert('Ошибка: ' + error.message); return; }
+    
+    alert('Тест создан! Теперь добавьте вопросы.');
+    hideCreateForm();
+    loadTests();
+}
+
+async function openQuestions(testId, testName, testSlug) {
+    currentTestId = testId;
+    currentTestSlug = testSlug;
+    
     const { data } = await sb.from('tests').select('questions').eq('id', testId).single();
     currentQuestions = data?.questions || [];
     
     document.getElementById('modalTitle').innerHTML = 'Вопросы: ' + testName;
+    document.getElementById('currentTestId').value = testId;
+    document.getElementById('currentTestSlug').value = testSlug;
     renderQuestions();
     document.getElementById('questionModal').style.display = 'block';
 }
@@ -81,7 +116,7 @@ async function openQuestions(testId, testName) {
 function renderQuestions() {
     const container = document.getElementById('questionsArea');
     if (!currentQuestions.length) {
-        container.innerHTML = '<div class="text-muted">Нет вопросов</div>';
+        container.innerHTML = '<div class="text-muted">Нет вопросов. Нажмите "Добавить вопрос"</div>';
         return;
     }
     
@@ -110,7 +145,7 @@ function renderQuestions() {
     container.innerHTML = html;
 }
 
-function addQuestionField() {
+function addQuestion() {
     currentQuestions.push({ text: 'Новый вопрос', options: ['Вариант 1', 'Вариант 2', 'Вариант 3', 'Вариант 4'], correct: 0 });
     renderQuestions();
 }
@@ -149,39 +184,106 @@ async function saveQuestions() {
         }
     }
     
+    // Сохраняем в Supabase
     const { error } = await sb.from('tests').update({ questions: currentQuestions }).eq('id', currentTestId);
     if (error) {
         alert('Ошибка: ' + error.message);
+        return;
+    }
+    
+    // Получаем данные теста
+    const { data: test } = await sb.from('tests').select('*').eq('id', currentTestId).single();
+    
+    if (test && currentQuestions.length > 0 && GITHUB_TOKEN) {
+        const testHtml = generateTestHTML(test.name, test.description || '', currentQuestions, test.slug);
+        await createFile(test.slug, testHtml);
+        alert('Вопросы сохранены! Тест доступен: https://wetalsfinx.github.io/Test/' + test.slug + '.html');
+    } else if (!GITHUB_TOKEN) {
+        alert('Вопросы сохранены, но файл не создан. Введите токен в поле "GitHub токен" при создании теста.');
     } else {
         alert('Вопросы сохранены!');
-        closeModal();
-        loadTests();
     }
+    
+    closeModal();
+    loadTests();
 }
 
-function closeModal() {
-    document.getElementById('questionModal').style.display = 'none';
-    currentTestId = null;
-    currentQuestions = [];
+function generateTestHTML(name, desc, questions, slug) {
+    return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Тест: ' + escapeHtml(name) + '</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{background:#f5f7fa;padding:20px}.card{max-width:700px;margin:0 auto}.hidden{display:none}</style></head><body><div class="container"><div class="card p-4"><h2>📋 ' + escapeHtml(name) + '</h2>' + (desc ? '<p>' + escapeHtml(desc) + '</p>' : '') + '<input id="name" placeholder="Имя" class="form-control mb-2"><input id="surname" placeholder="Фамилия" class="form-control mb-2"><select id="city" class="form-control mb-3"><option value="">Город</option><option value="Тверь">Тверь</option><option value="Санкт-Петербург">Санкт-Петербург</option><option value="Ульяновск">Ульяновск</option><option value="Архангельск">Архангельск</option><option value="Черкесск">Черкесск</option><option value="Нижний Тагил">Нижний Тагил</option><option value="Ярославль">Ярославль</option></select><button onclick="start()" class="btn btn-primary">▶ Начать</button><div id="quiz" class="hidden mt-3"></div><div id="result" class="hidden text-center"><h3>Результат</h3><h2 id="score"></h2></div></div></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>const SUPABASE_URL="' + SUPABASE_URL + '";const SUPABASE_KEY="' + SUPABASE_KEY + '";const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const questions=' + JSON.stringify(questions) + ';let step=0,userName,userSurname,userCity,answers=[],score=0,selected=null;function start(){userName=document.getElementById("name").value.trim();userSurname=document.getElementById("surname").value.trim();userCity=document.getElementById("city").value;if(!userName||!userSurname||!userCity)return alert("Заполните все поля");step=0;score=0;answers=[];selected=null;document.getElementById("quiz").classList.remove("hidden");document.getElementById("result").classList.add("hidden");renderQuestion();}function renderQuestion(){if(step>=questions.length)return finish();const q=questions[step];let opts=[...q.options];for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}const correctIdx=opts.indexOf(q.options[q.correct]);document.getElementById("quiz").innerHTML="<div class=\"mb-2\">Вопрос "+(step+1)+"/"+questions.length+"</div><div class=\"mb-2\">"+q.text+"</div><div id=\"opts\" class=\"d-grid gap-2\"></div><button id=\"submit\" class=\"btn btn-primary mt-2\" disabled>Ответить</button>";const area=document.getElementById("opts");opts.forEach((opt,i)=>{const btn=document.createElement("button");btn.className="btn btn-outline-secondary";btn.innerText=opt;btn.onclick=()=>{document.querySelectorAll("#opts button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");selected=i;document.getElementById("submit").disabled=false;};area.appendChild(btn);});document.getElementById("submit").onclick=()=>{if(selected===null)return;const isCorrect=(selected===correctIdx);if(isCorrect)score++;answers.push({num:step+1,selected:opts[selected],correct:q.options[q.correct],isCorrect});step++;renderQuestion();};}function finish(){const userId=userName+" "+userSurname+" ("+userCity+")";sb.from("results").insert({user_id:userId,name:userName,surname:userSurname,city:userCity,score:score,total:questions.length,test_type:"dynamic",test_name:"' + escapeHtml(name) + '",test_slug:"' + slug + '",answers:answers,created_at:new Date().toISOString()}).then(()=>{});document.getElementById("quiz").classList.add("hidden");document.getElementById("result").classList.remove("hidden");document.getElementById("score").innerHTML=score+" aus "+questions.length+" ("+Math.round(score/questions.length*100)+"%)";}</script></body></html>';
 }
 
-async function deleteTest(testId) {
-    if (!confirm('Удалить тест?')) return;
+async function createFile(slug, content) {
+    const url = 'https://api.github.com/repos/wetalsfinx/Test/contents/' + slug + '.html';
+    const res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Add test: ' + slug, content: btoa(unescape(encodeURIComponent(content))) })
+    });
+    if (!res.ok) { const err = await res.json(); alert('Ошибка создания файла: ' + err.message); }
+}
+
+async function deleteTest(testId, testSlug) {
+    if (!confirm('Удалить тест? Все результаты тоже будут удалены!')) return;
+    
+    if (testSlug && GITHUB_TOKEN) {
+        const url = 'https://api.github.com/repos/wetalsfinx/Test/contents/' + testSlug + '.html';
+        const getRes = await fetch(url, { headers: { 'Authorization': 'token ' + GITHUB_TOKEN } });
+        if (getRes.ok) {
+            const file = await getRes.json();
+            await fetch(url, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: 'Delete ' + testSlug, sha: file.sha })
+            });
+        }
+    }
+    
     const { error } = await sb.from('tests').delete().eq('id', testId);
     if (error) { alert('Ошибка: ' + error.message); return; }
+    
+    await sb.from('results').delete().eq('test_slug', testSlug);
     alert('Тест удалён');
     loadTests();
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
+async function toggleTestStatus(testId, newStatus) {
+    await sb.from('tests').update({ is_active: newStatus }).eq('id', testId);
+    loadTests();
 }
+
+async function loadTests() {
+    const { data, error } = await sb.from('tests').select('*').order('created_at', { ascending: false });
+    const container = document.getElementById('testsList');
+    
+    if (error) { container.innerHTML = '<div class="alert alert-danger">Ошибка загрузки</div>'; return; }
+    if (!data || data.length === 0) { container.innerHTML = '<div class="alert alert-info">Нет созданных тестов</div>'; return; }
+    
+    let html = '';
+    for (let i = 0; i < data.length; i++) {
+        const test = data[i];
+        const qCount = test.questions ? test.questions.length : 0;
+        const slug = test.slug || 'test_' + test.id;
+        const url = 'https://wetalsfinx.github.io/Test/' + slug + '.html';
+        const isActive = test.is_active !== false;
+        
+        html += '<div class="card mb-2 p-2">';
+        html += '<div class="d-flex justify-content-between align-items-center flex-wrap">';
+        html += '<div><strong>' + escapeHtml(test.name) + '</strong> <span class="badge bg-secondary">' + qCount + ' вопросов</span><br><small class="text-muted">' + url + '</small></div>';
+        html += '<div class="mt-2 mt-sm-0">';
+        html += '<button class="btn btn-sm btn-primary me-1" onclick="openQuestions(' + test.id + ', \'' + escapeHtml(test.name).replace(/'/g, "\\'") + '\', \'' + slug + '\')">✏️ Вопросы</button>';
+        html += '<button class="btn btn-sm btn-danger me-1" onclick="deleteTest(' + test.id + ', \'' + slug + '\')">🗑️ Удалить</button>';
+        html += '<button class="btn btn-sm btn-secondary me-1" onclick="toggleTestStatus(' + test.id + ', ' + !isActive + ')">' + (isActive ? '🔴 Отключить' : '🟢 Включить') + '</button>';
+        html += '<button class="btn btn-sm btn-outline-info me-1" onclick="copyLink(\'' + url + '\')">📋 Копировать ссылку</button>';
+        html += '<button class="btn btn-sm btn-outline-success" onclick="generateQR(\'' + url + '\')">📱 QR-код</button>';
+        html += '</div></div></div>';
+    }
+    container.innerHTML = html;
+}
+
+function copyLink(url) { navigator.clipboard.writeText(url); alert('Ссылка скопирована!'); }
+function generateQR(url) { window.open('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(url), '_blank'); }
+function closeModal() { document.getElementById('questionModal').style.display = 'none'; }
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
 loadTests();
 </script>
