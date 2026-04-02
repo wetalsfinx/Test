@@ -32,7 +32,6 @@ body{background:#f5f7fa;font-family:sans-serif;padding:20px}
         <div class="card">
             <h4>Результаты тестов</h4>
             <p><a href="?mode=admin" class="btn btn-primary">Перейти к старой админке с результатами</a></p>
-            <p class="text-muted">Скоро результаты появятся и здесь</p>
         </div>
     </div>
     
@@ -46,7 +45,7 @@ body{background:#f5f7fa;font-family:sans-serif;padding:20px}
 </div>
 
 <!-- Модальное окно -->
-<div id="testModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000">
+<div id="testModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; overflow:auto">
     <div style="max-width:600px; margin:50px auto; background:white; border-radius:10px; padding:20px">
         <h4 id="modalTitle">Создание теста</h4>
         <input type="hidden" id="test-id">
@@ -81,13 +80,17 @@ function switchTab(tab){
     if(tab === 'results'){
         resultsTab.classList.remove('hidden');
         testsTab.classList.add('hidden');
-        btnResults.classList.add('active'); btnResults.classList.remove('inactive');
-        btnTests.classList.add('inactive'); btnTests.classList.remove('active');
+        btnResults.classList.add('active');
+        btnResults.classList.remove('inactive');
+        btnTests.classList.add('inactive');
+        btnTests.classList.remove('active');
     } else {
         resultsTab.classList.add('hidden');
         testsTab.classList.remove('hidden');
-        btnTests.classList.add('active'); btnTests.classList.remove('inactive');
-        btnResults.classList.add('inactive'); btnResults.classList.remove('active');
+        btnTests.classList.add('active');
+        btnTests.classList.remove('inactive');
+        btnResults.classList.add('inactive');
+        btnResults.classList.remove('active');
         loadTests();
     }
 }
@@ -133,7 +136,7 @@ function renderTestsList(){
 }
 
 function copyLink(url){ navigator.clipboard.writeText(url); alert('Ссылка скопирована!'); }
-function generateQR(url){ window.open(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`); }
+function generateQR(url){ window.open(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`, '_blank'); }
 
 function showCreateModal(){
     document.getElementById('modalTitle').innerText = 'Создание теста';
