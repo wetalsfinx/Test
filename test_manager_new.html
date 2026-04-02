@@ -29,11 +29,28 @@
     <a href="?mode=admin" class="btn btn-outline-secondary">← Вернуться к админке</a>
 </div>
 
+<!-- Модальное окно для вопросов -->
+<div id="questionModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000">
+    <div style="max-width:500px; margin:50px auto; background:white; border-radius:10px; padding:20px">
+        <h4 id="modalTitle">Вопросы</h4>
+        <input type="hidden" id="currentTestId">
+        <div id="questionsArea"></div>
+        <button class="btn btn-sm btn-outline-primary mt-2" onclick="addQuestion()">+ Добавить вопрос</button>
+        <div class="mt-3">
+            <button class="btn btn-success" onclick="saveQuestions()">Сохранить</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentTestId = null;
+let currentQuestions = [];
 
 function showCreateForm() {
     document.getElementById('createForm').style.display = 'block';
@@ -70,9 +87,103 @@ async function createTest() {
         return;
     }
     
-    alert('Тест создан! Теперь добавьте вопросы.');
+    alert('Тест создан!');
     hideCreateForm();
     loadTests();
+}
+
+async function openQuestions(testId, testName) {
+    currentTestId = testId;
+    const { data } = await sb.from('tests').select('questions').eq('id', testId).single();
+    currentQuestions = data?.questions || [];
+    
+    document.getElementById('modalTitle').innerHTML = 'Вопросы: ' + testName;
+    renderQuestions();
+    document.getElementById('questionModal').style.display = 'block';
+}
+
+function renderQuestions() {
+    const container = document.getElementById('questionsArea');
+    if (!currentQuestions.length) {
+        container.innerHTML = '<div class="text-muted">Нет вопросов</div>';
+        return;
+    }
+    
+    let html = '';
+    for (let i = 0; i < currentQuestions.length; i++) {
+        const q = currentQuestions[i];
+        html += '<div class="card mb-2 p-2">';
+        html += '<div class="d-flex justify-content-between">';
+        html += '<strong>Вопрос ' + (i+1) + '</strong>';
+        html += '<button class="btn btn-sm btn-outline-danger" onclick="removeQuestion(' + i + ')">🗑️</button>';
+        html += '</div>';
+        html += '<input class="form-control mb-1" id="qtext_' + i + '" value="' + escapeHtml(q.text) + '" placeholder="Текст вопроса">';
+        html += '<div class="small">Варианты:</div>';
+        
+        for (let j = 0; j < q.options.length; j++) {
+            html += '<div class="input-group input-group-sm mb-1">';
+            html += '<div class="input-group-text"><input type="radio" name="correct_' + i + '" ' + (j === q.correct ? 'checked' : '') + ' onclick="setCorrect(' + i + ', ' + j + ')"></div>';
+            html += '<input class="form-control" id="qopt_' + i + '_' + j + '" value="' + escapeHtml(q.options[j]) + '" placeholder="Вариант ' + (j+1) + '">';
+            html += '<button class="btn btn-outline-danger" onclick="removeOption(' + i + ', ' + j + ')">✖</button>';
+            html += '</div>';
+        }
+        
+        html += '<button class="btn btn-sm btn-outline-secondary mt-1" onclick="addOption(' + i + ')">+ Добавить вариант</button>';
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function addQuestion() {
+    currentQuestions.push({ text: 'Новый вопрос', options: ['Вариант 1', 'Вариант 2', 'Вариант 3', 'Вариант 4'], correct: 0 });
+    renderQuestions();
+}
+
+function removeQuestion(idx) {
+    currentQuestions.splice(idx, 1);
+    renderQuestions();
+}
+
+function setCorrect(qIdx, optIdx) {
+    currentQuestions[qIdx].correct = optIdx;
+}
+
+function addOption(qIdx) {
+    currentQuestions[qIdx].options.push('Новый вариант');
+    renderQuestions();
+}
+
+function removeOption(qIdx, optIdx) {
+    currentQuestions[qIdx].options.splice(optIdx, 1);
+    if (currentQuestions[qIdx].correct >= currentQuestions[qIdx].options.length) {
+        currentQuestions[qIdx].correct = 0;
+    }
+    renderQuestions();
+}
+
+async function saveQuestions() {
+    for (let i = 0; i < currentQuestions.length; i++) {
+        const textInput = document.getElementById('qtext_' + i);
+        if (textInput) currentQuestions[i].text = textInput.value;
+        
+        for (let j = 0; j < currentQuestions[i].options.length; j++) {
+            const optInput = document.getElementById('qopt_' + i + '_' + j);
+            if (optInput) currentQuestions[i].options[j] = optInput.value;
+        }
+    }
+    
+    const { error } = await sb.from('tests').update({ questions: currentQuestions }).eq('id', currentTestId);
+    if (error) {
+        alert('Ошибка: ' + error.message);
+    } else {
+        alert('Вопросы сохранены!');
+        closeModal();
+        loadTests();
+    }
+}
+
+function closeModal() {
+    document.getElementById('questionModal').style.display = 'none';
 }
 
 async function loadTests() {
@@ -96,9 +207,20 @@ async function loadTests() {
         html += '<div class="card mb-2 p-2">';
         html += '<div class="d-flex justify-content-between align-items-center">';
         html += '<div><strong>' + test.name + '</strong> <span class="badge bg-secondary">' + qCount + ' вопросов</span></div>';
+        html += '<button class="btn btn-sm btn-primary" onclick="openQuestions(' + test.id + ', \'' + test.name.replace(/'/g, "\\'") + '\')">✏️ Вопросы</button>';
         html += '</div></div>';
     }
     container.innerHTML = html;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
 loadTests();
