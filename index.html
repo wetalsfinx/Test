@@ -112,6 +112,34 @@ body{background:#f5f7fa;font-family:sans-serif}
     </div>
 </div>
 
+<!-- Блок ТЕСТ 3 -->
+<div id="test3-block" class="test-block collapsed">
+    <div class="test-header" onclick="toggleTest('test3')">
+        <div class="test-title"><i class="bi bi-stars" style="color:#fd7e14"></i>🌟 Тест 3: Стандарты продаж (продвинутый) (11 вопросов)<span class="badge bg-primary ms-2" id="test3-count">0</span></div>
+        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test3')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test3')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
+    </div>
+    <div class="test-content">
+        <div class="row mb-4">
+            <div class="col-md-4"><div class="stats-card"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="test3-total">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
+            <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="test3-avg">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
+            <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="d-flex justify-content-between"><div><div class="small">Отлично (≥80%)</div><div class="h3 mb-0" id="test3-excellent">0</div></div><i class="bi bi-star fs-1"></i></div></div></div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-pie-chart"></i> Распределение баллов</h6><div class="chart-container"><canvas id="test3-pie"></canvas></div></div></div>
+            <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6><div class="chart-container"><canvas id="test3-bar"></canvas></div></div></div>
+        </div>
+        <div class="filter-bar"><div class="row g-3">
+            <div class="col-md-3"><input type="text" id="test3-search" class="form-control" placeholder="🔍 Поиск по имени..."></div>
+            <div class="col-md-2"><select id="test3-city-filter" class="form-select"><option value="">Все города</option><option value="Тверь">Тверь</option><option value="Санкт-Петербург">Санкт-Петербург</option><option value="Ульяновск">Ульяновск</option><option value="Архангельск">Архангельск</option><option value="Черкесск">Черкесск</option><option value="Нижний Тагил">Нижний Тагил</option><option value="Ярославль">Ярославль</option></select></div>
+            <div class="col-md-2"><input type="date" id="test3-date-from" class="form-control"></div>
+            <div class="col-md-2"><input type="date" id="test3-date-to" class="form-control"></div>
+            <div class="col-md-2"><select id="test3-sort" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="score-desc">⭐ Сначала высокий балл</option></select></div>
+            <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetTest3Filters()">Сброс</button></div>
+        </div></div>
+        <div id="test3-results-area"><div class="text-center py-4">⏳ Загрузка...</div></div>
+    </div>
+</div>
+
 </div>
 </div></div></div>
 
@@ -123,8 +151,10 @@ const SUPABASE_URL='https://qtostraaqrnjbxiydlip.supabase.co';
 const SUPABASE_KEY='sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let test1Data = [], test2Data = [];
-let test1ChartPie = null, test1ChartBar = null, test2ChartPie = null, test2ChartBar = null;
+let test1Data = [], test2Data = [], test3Data = [];
+let test1ChartPie = null, test1ChartBar = null;
+let test2ChartPie = null, test2ChartBar = null;
+let test3ChartPie = null, test3ChartBar = null;
 
 window.addEventListener('load', () => {
     setTimeout(() => { const splash = document.getElementById('splash'); if(splash) { splash.style.opacity = '0'; setTimeout(() => splash.style.display = 'none', 500); } }, 300);
@@ -138,22 +168,31 @@ window.addEventListener('load', () => {
     document.getElementById('test1-date-from').addEventListener('change', () => renderTest1());
     document.getElementById('test1-date-to').addEventListener('change', () => renderTest1());
     document.getElementById('test1-sort').addEventListener('change', () => renderTest1());
+    
     document.getElementById('test2-search').addEventListener('input', () => renderTest2());
     document.getElementById('test2-city-filter').addEventListener('change', () => renderTest2());
     document.getElementById('test2-date-from').addEventListener('change', () => renderTest2());
     document.getElementById('test2-date-to').addEventListener('change', () => renderTest2());
     document.getElementById('test2-sort').addEventListener('change', () => renderTest2());
+    
+    document.getElementById('test3-search').addEventListener('input', () => renderTest3());
+    document.getElementById('test3-city-filter').addEventListener('change', () => renderTest3());
+    document.getElementById('test3-date-from').addEventListener('change', () => renderTest3());
+    document.getElementById('test3-date-to').addEventListener('change', () => renderTest3());
+    document.getElementById('test3-sort').addEventListener('change', () => renderTest3());
 });
 
 async function loadAllData() {
     const {data} = await sb.from('results').select('*').order('created_at',{ascending:false});
     if(data) {
-        test1Data = data.filter(r => !r.test_type || r.test_type === 'test1');
+        test1Data = data.filter(r => r.test_type === 'test1');
         test2Data = data.filter(r => r.test_type === 'test2');
-        renderTest1(); renderTest2();
+        test3Data = data.filter(r => r.test_type === 'test3');
+        renderTest1(); renderTest2(); renderTest3();
     }
 }
 
+// ========== ТЕСТ 1 ==========
 function renderTest1() {
     let filtered = [...test1Data];
     const search = document.getElementById('test1-search')?.value.toLowerCase() || '';
@@ -223,6 +262,7 @@ function resetTest1Filters() {
     renderTest1();
 }
 
+// ========== ТЕСТ 2 ==========
 function renderTest2() {
     let filtered = [...test2Data];
     const search = document.getElementById('test2-search')?.value.toLowerCase() || '';
@@ -292,27 +332,115 @@ function resetTest2Filters() {
     renderTest2();
 }
 
+// ========== ТЕСТ 3 ==========
+function renderTest3() {
+    let filtered = [...test3Data];
+    const search = document.getElementById('test3-search')?.value.toLowerCase() || '';
+    const cityF = document.getElementById('test3-city-filter')?.value || '';
+    const dateFrom = document.getElementById('test3-date-from')?.value;
+    const dateTo = document.getElementById('test3-date-to')?.value;
+    if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
+    if(cityF) filtered = filtered.filter(r => r.city && r.city === cityF);
+    if(dateFrom) { const d = new Date(dateFrom); d.setHours(0,0,0,0); filtered = filtered.filter(r => new Date(r.created_at) >= d); }
+    if(dateTo) { const d = new Date(dateTo); d.setHours(23,59,59,999); filtered = filtered.filter(r => new Date(r.created_at) <= d); }
+    const sortBy = document.getElementById('test3-sort')?.value || 'date-desc';
+    filtered.sort((a,b) => sortBy === 'date-desc' ? new Date(b.created_at) - new Date(a.created_at) : (b.score/b.total) - (a.score/a.total));
+    document.getElementById('test3-count').innerText = test3Data.length;
+    const total = test3Data.length;
+    if(total > 0) {
+        document.getElementById('test3-total').innerText = total;
+        document.getElementById('test3-avg').innerText = `${Math.round(test3Data.reduce((s,r)=>s+(r.score/r.total),0)/total*100)}%`;
+        document.getElementById('test3-excellent').innerText = test3Data.filter(r=>(r.score/r.total)>=0.8).length;
+    }
+    const area = document.getElementById('test3-results-area');
+    if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; return; }
+    area.innerHTML = '';
+    filtered.forEach(r => {
+        const p = Math.round(r.score/r.total*100);
+        let details = '';
+        if(r.answers) r.answers.forEach((a,i) => {
+            const ok = a.isCorrect === true || a.ok === true;
+            details += `<div class="small mb-2"><strong>В${i+1}:</strong> ${ok?'✅':'❌'} <span class="${ok?'correct':'wrong'}">${ok?'Верно':'Неверно'}</span>${!ok?`<div class="text-muted ms-3">✖ ${a.selected || a.sel}<br>✔ ${a.correct || a.cor}</div>`:''}</div>`;
+        });
+        const clr = p>=80?'success':p>=50?'warning':'danger';
+        area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
+            <div class="d-flex justify-content-between align-items-start">
+                <div><span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span><span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div>
+                <div class="d-flex align-items-center gap-2">
+                    <small>${new Date(r.created_at).toLocaleString()}</small>
+                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); generateUserReport('${r.id}', 'test3')" style="padding:2px 8px" title="Отчёт"><i class="bi bi-file-text"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteSingleResult('${r.id}', 'test3')" style="padding:2px 8px"><i class="bi bi-trash"></i></button>
+                    <i class="bi bi-chevron-down expand-icon ms-2"></i>
+                </div>
+            </div>
+            <div class="answer-details mt-2"><div class="bg-light p-2 rounded">${details}</div></div>
+        </div>`;
+    });
+    updateTest3Charts();
+}
+
+function updateTest3Charts() {
+    if(!test3Data.length) return;
+    const cats = {'Отлично (80-100%)':0, 'Хорошо (60-79%)':0, 'Удовлетворительно (40-59%)':0, 'Плохо (0-39%)':0};
+    test3Data.forEach(r => { let p = r.score/r.total*100; if(p>=80) cats['Отлично (80-100%)']++; else if(p>=60) cats['Хорошо (60-79%)']++; else if(p>=40) cats['Удовлетворительно (40-59%)']++; else cats['Плохо (0-39%)']++; });
+    const ctx1 = document.getElementById('test3-pie');
+    if(ctx1){ if(test3ChartPie) test3ChartPie.destroy(); test3ChartPie = new Chart(ctx1, {type:'pie', data:{labels:Object.keys(cats), datasets:[{data:Object.values(cats), backgroundColor:['#28a745','#17a2b8','#ffc107','#dc3545']}]}, options:{responsive:true}}); }
+    const cityStats = {};
+    test3Data.forEach(r => { let city = r.city||'Не указан'; if(!cityStats[city]) cityStats[city]={total:0,count:0}; cityStats[city].total+=r.score/r.total; cityStats[city].count++; });
+    const cities = Object.keys(cityStats);
+    const avgScores = cities.map(c=>Math.round(cityStats[c].total/cityStats[c].count*100));
+    const ctx2 = document.getElementById('test3-bar');
+    if(ctx2){ if(test3ChartBar) test3ChartBar.destroy(); test3ChartBar = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#fd7e14'}]}, options:{responsive:true, scales:{y:{min:0,max:100}}}}); }
+}
+
+function resetTest3Filters() {
+    document.getElementById('test3-search').value = '';
+    document.getElementById('test3-city-filter').value = '';
+    document.getElementById('test3-date-from').value = '';
+    document.getElementById('test3-date-to').value = '';
+    document.getElementById('test3-sort').value = 'date-desc';
+    renderTest3();
+}
+
+// ========== ОБЩИЕ ФУНКЦИИ ==========
 async function deleteSingleResult(resultId, testId) {
     if(!confirm('🗑️ Удалить этот результат?')) return;
     const {error} = await sb.from('results').delete().eq('id', resultId);
     if(error) alert('Ошибка: ' + error.message);
-    else { if(testId === 'test1') { test1Data = test1Data.filter(r => r.id !== resultId); renderTest1(); } else { test2Data = test2Data.filter(r => r.id !== resultId); renderTest2(); } loadAllData(); }
+    else {
+        if(testId === 'test1') { test1Data = test1Data.filter(r => r.id !== resultId); renderTest1(); }
+        else if(testId === 'test2') { test2Data = test2Data.filter(r => r.id !== resultId); renderTest2(); }
+        else { test3Data = test3Data.filter(r => r.id !== resultId); renderTest3(); }
+        loadAllData();
+    }
 }
 
 async function clearAllResults(testId) {
-    const name = testId === 'test1' ? 'Тест 1' : 'Тест 2';
+    let name = '';
+    if(testId === 'test1') name = 'Тест 1';
+    else if(testId === 'test2') name = 'Тест 2';
+    else name = 'Тест 3';
     if(!confirm(`⚠️ Удалить ВСЕ результаты ${name}?`)) return;
-    const query = testId === 'test1' ? sb.from('results').delete().or('test_type.is.null,test_type.eq.test1') : sb.from('results').delete().eq('test_type', 'test2');
+    const query = sb.from('results').delete().eq('test_type', testId);
     const {error} = await query;
     if(error) alert('Ошибка: ' + error.message);
-    else { if(testId === 'test1') { test1Data = []; renderTest1(); } else { test2Data = []; renderTest2(); } loadAllData(); alert(`✅ Результаты ${name} удалены!`); }
+    else {
+        if(testId === 'test1') { test1Data = []; renderTest1(); }
+        else if(testId === 'test2') { test2Data = []; renderTest2(); }
+        else { test3Data = []; renderTest3(); }
+        alert(`✅ Результаты ${name} удалены!`);
+    }
 }
 
 function generateUserReport(resultId, testId) {
-    const userData = testId === 'test1' ? test1Data.find(r => r.id == resultId) : test2Data.find(r => r.id == resultId);
+    let userData = null;
+    let testName = '';
+    if(testId === 'test1') { userData = test1Data.find(r => r.id == resultId); testName = 'Стандарты продаж'; }
+    else if(testId === 'test2') { userData = test2Data.find(r => r.id == resultId); testName = 'Стандарты обслуживания'; }
+    else { userData = test3Data.find(r => r.id == resultId); testName = 'Стандарты продаж (продвинутый)'; }
+    
     if(!userData) { alert('Данные не найдены'); return; }
     
-    const testName = testId === 'test1' ? 'Стандарты продаж' : 'Стандарты обслуживания';
     const fullName = `${userData.surname || ''} ${userData.name || ''}`.trim();
     const percent = Math.round(userData.score / userData.total * 100);
     
@@ -369,13 +497,12 @@ function generateUserReport(resultId, testId) {
                 <h2>«${testName}»</h2>
             </div>
             <div class="info">
-                <tr>
+                <table>
                     <tr><td>Сотрудник:</td><td><strong>${fullName}</strong></td>
-                     </tr>
-                    <tr><td>Город:</td><td><strong>${userData.city || 'не указан'}</strong></td></tr>
-                    <tr><td>Дата:</td><td><strong>${new Date(userData.created_at).toLocaleString()}</strong></td></tr>
-                    <tr><td>Результат:</td><td><strong>${userData.score} из ${userData.total} (${percent}%)</strong></td></tr>
-                 </table>
+                    <tr><td>Город:</td><td><strong>${userData.city || 'не указан'}</strong></td>
+                    <tr><td>Дата:</td><td><strong>${new Date(userData.created_at).toLocaleString()}</strong></td>
+                    <tr><td>Результат:</td><td><strong>${userData.score} из ${userData.total} (${percent}%)</strong></td>
+                </table>
                 <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">
                     ${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хорошо, но есть над чем работать':'📚 Требуется изучение материалов'}
                 </div>
@@ -390,21 +517,25 @@ function generateUserReport(resultId, testId) {
 }
 
 function exportTestToExcel(testId) {
-    const data = testId === 'test1' ? test1Data : test2Data;
+    let data = [];
+    let name = '';
+    if(testId === 'test1') { data = test1Data; name = 'Стандарты_продаж'; }
+    else if(testId === 'test2') { data = test2Data; name = 'Стандарты_обслуживания'; }
+    else { data = test3Data; name = 'Стандарты_продаж_продвинутый'; }
     if(!data.length) return alert("Нет данных");
-    const name = testId === 'test1' ? 'Стандарты_продаж' : 'Стандарты_обслуживания';
     const excelData = data.map(r => ({ 'ФИО': `${r.surname||''} ${r.name||''}`.trim(), 'Город': r.city||'', 'Баллы': `${r.score}/${r.total}`, 'Процент': `${Math.round(r.score/r.total*100)}%`, 'Дата': new Date(r.created_at).toLocaleString() }));
     const ws = XLSX.utils.json_to_sheet(excelData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, name); XLSX.writeFile(wb, `${name}_${new Date().toLocaleDateString()}.xlsx`);
 }
 
 function toggleTest(id) { document.getElementById(`${id}-block`).classList.toggle('collapsed'); }
-function initRealtime() { sb.channel('results-channel').on('postgres_changes', {event:'INSERT', schema:'public', table:'results'}, payload => { const n = payload.new; if(!n.test_type || n.test_type === 'test1') { test1Data.unshift(n); renderTest1(); } else if(n.test_type === 'test2') { test2Data.unshift(n); renderTest2(); } }).subscribe(); document.getElementById('realtime-status').innerHTML = '🟢 Live'; document.getElementById('realtime-status').className = 'badge bg-success'; }
+function initRealtime() { sb.channel('results-channel').on('postgres_changes', {event:'INSERT', schema:'public', table:'results'}, payload => { const n = payload.new; if(n.test_type === 'test1') { test1Data.unshift(n); renderTest1(); } else if(n.test_type === 'test2') { test2Data.unshift(n); renderTest2(); } else if(n.test_type === 'test3') { test3Data.unshift(n); renderTest3(); } }).subscribe(); document.getElementById('realtime-status').innerHTML = '🟢 Live'; document.getElementById('realtime-status').className = 'badge bg-success'; }
 function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
 
 window.toggleTest = toggleTest;
 window.exportTestToExcel = exportTestToExcel;
 window.resetTest1Filters = resetTest1Filters;
 window.resetTest2Filters = resetTest2Filters;
+window.resetTest3Filters = resetTest3Filters;
 window.deleteSingleResult = deleteSingleResult;
 window.clearAllResults = clearAllResults;
 window.generateUserReport = generateUserReport;
