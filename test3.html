@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Тест 3: Стандарты продаж (продвинутый)</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body{background:#f5f7fa;font-family:sans-serif;padding:20px}
+.card{max-width:700px;margin:0 auto;border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+.hidden{display:none!important}
+.btn-answer{text-align:left;white-space:normal}
+.btn-answer.selected{background-color:#0d6efd;color:white}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="card p-4">
+        <div id="login-screen">
+            <h2 class="text-center mb-3">📋 Тест 3: Стандарты продаж (продвинутый)</h2>
+            <p class="text-center text-muted">Заполните данные</p>
+            <input type="text" id="name" class="form-control mb-2" placeholder="Имя">
+            <input type="text" id="surname" class="form-control mb-2" placeholder="Фамилия">
+            <select id="city" class="form-control mb-3">
+                <option value="">Выберите город</option>
+                <option value="Тверь">Тверь</option>
+                <option value="Санкт-Петербург">Санкт-Петербург</option>
+                <option value="Ульяновск">Ульяновск</option>
+                <option value="Архангельск">Архангельск</option>
+                <option value="Черкесск">Черкесск</option>
+                <option value="Нижний Тагил">Нижний Тагил</option>
+                <option value="Ярославль">Ярославль</option>
+            </select>
+            <button onclick="startTest()" class="btn btn-primary w-100">▶ Начать тест</button>
+        </div>
+        
+        <div id="quiz-screen" class="hidden">
+            <div class="d-flex justify-content-between mb-3">
+                <span id="user-name"></span>
+                <span class="badge bg-primary" id="q-counter">Вопрос 1 из 11</span>
+            </div>
+            <h4 id="question-text" class="mb-3"></h4>
+            <div id="options-area" class="d-grid gap-2"></div>
+            <button id="submit-btn" class="btn btn-primary mt-3" disabled>📝 Ответить</button>
+        </div>
+        
+        <div id="result-screen" class="hidden text-center">
+            <h1>🎉 Готово!</h1>
+            <h2 id="final-score" class="mt-3"></h2>
+            <button onclick="location.reload()" class="btn btn-outline-primary mt-3">Пройти заново</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://qtostraaqrnjbxiydlip.supabase.co';
+const SUPABASE_KEY='sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const allQuestions = [
+    {text:"Клиент заходит в магазин в обеденный перерыв, смотрит на часы и быстро идёт к витрине. Вы подходите. Что говорите?", options:["«Добрый день! У нас сегодня специальные условия: скидка до 30% и оплата бонусами»","«Здравствуйте! Вижу, вы торопитесь — давайте я быстро покажу то, что может подойти»","«Добрый день! Подбираете что-то конкретное или просто смотрите?»","«Здравствуйте! Чем могу помочь?»"], correct:0},
+    {text:"Клиентка с ребёнком рассматривает витрину с детскими серьгами. Ребёнок тянет маму дальше. Что делаете?", options:["Ждёте, пока мама сама обратится за помощью","Говорите издалека: «Если будут вопросы по размерам — обращайтесь»","Подходите и спрашиваете: «Подбираете первые серёжки? Давайте я покажу самые безопасные варианты с надёжной застёжкой»","Показываете на витрину и говорите: «Вот у нас есть детские модели»"], correct:2},
+    {text:"Молодой человек говорит: «Нужно что-то на день рождения подруге, бюджет около 15 тысяч». Что делаете?", options:["Сразу показываете 3-4 варианта в пределах бюджета","Спрашиваете: «А какой стиль она предпочитает: минимализм, классика или что-то яркое?»","Показываете сначала вариант за 20 000 ₽, затем за 15 000 ₽","Спрашиваете: «А может, рассмотрим подарочный сертификат?»"], correct:1},
+    {text:"Клиентка выбирает кулон в подарок дочери на выпускной. Вы показали вариант, она говорит: «Красиво». Что вы добавите?", options:["«Этот кулон очень популярный среди выпускниц»","«Этот кулон станет символом нового этапа в её жизни — каждый раз, надевая его, она будет вспоминать этот важный день»","«У нас на эту коллекцию сейчас акция»","«Можем сразу упаковать как подарок»"], correct:1},
+    {text:"Клиент купил цепочку за 20 000 ₽. Вы:", options:["«Не хотите посмотреть ещё что-то?»","«Давайте к этой цепочке подберём кулон — так вы уйдёте с законченным образом»","«Если денег не хватит, у нас есть рассрочка на 6 месяцев»","«Может, браслет в том же стиле?»"], correct:1},
+    {text:"Клиентка купила кольцо за 70 000 ₽. Когда предлагаете футляр и средство для ухода?", options:["До того, как она приняла окончательное решение о покупке","После того, как она согласилась на цену, но до оплаты","После оплаты, при упаковке","Не предлагаете — клиент купил дорогое изделие, и так всё ясно"], correct:1},
+    {text:"Клиент выбрал серьги за 55 000 ₽, но говорит: «Не уверен, что сейчас готов потратить такую сумму». Что делаете?", options:["«У нас есть серьги за 30 000 ₽, давайте посмотрим»","«Понимаю. Давайте оформим Яндекс Сплит — 4 платежа без переплат, это займёт 2 минуты»","«Это серьги с бриллиантами, поэтому цена выше»","«Может, отложим до зарплаты?»"], correct:1},
+    {text:"Клиент ищет кольцо с изумрудом 585 пробы, которого нет в наличии. Альтернатива с фианитом не подошла. Что делаете?", options:["«К сожалению, изумрудов 585 пробы сейчас нет»","«Давайте я покажу каталог на заказ — там есть модели с изумрудами, которые не представлены на витринах наших магазинов»","«Можем привезти из другого магазина — но это займёт неделю»","«А зачем Вам с изумрудом? Может без камней посмотрим?»"], correct:1},
+    {text:"Клиентка рассматривает браслет на витрине. Вы:", options:["Ждёте, пока клиентка сама попросит примерить","«Хотите примерить, чтобы оценить, как сидит на руке?»","«Давайте примерим — так вы сразу почувствуете, ваш это вариант или нет»","«А вы знаете, что этот браслет регулируется по размеру, очень удобный?»"], correct:2},
+    {text:"Клиентка говорит: «Красиво, но я не уверена, что это моё». Что отвечаете?", options:["«Давайте посмотрим другие варианты»","«Понимаю. А что именно смущает: дизайн, размер или что-то ещё?»","«Это хит продаж, многим нравится»","«Можем отложить, чтобы вы подумали»"], correct:1},
+    {text:"Клиентка рассматривает витрину с кольцами около 2 минут. Вы поздоровались, рассказали про акцию, она кивнула и продолжила смотреть. Что делаете?", options:["Ждёте, пока клиентка сама попросит показать кольцо","Говорите издалека: «Если будут вопросы по размерам — обращайтесь»","Подходите и спрашиваете: «Давайте я покажу несколько колец в вашем стиле — для себя подбираете или в подарок?»","«У нас сейчас акция на кольца — скидки до 30%»"], correct:2}
+];
+
+let questions = [];
+let step = 0;
+let userName = "", userSurname = "", userCity = "";
+let answers = [];
+let score = 0;
+let selectedAnswer = null;
+let currentCorrect = null;
+
+function startTest() {
+    userName = document.getElementById('name').value.trim();
+    userSurname = document.getElementById('surname').value.trim();
+    userCity = document.getElementById('city').value;
+    if(!userName || !userSurname || !userCity) {
+        alert("Заполните все поля! Выберите город из списка");
+        return;
+    }
+    
+    questions = [...allQuestions].sort(() => Math.random() - 0.5);
+    step = 0;
+    score = 0;
+    answers = [];
+    selectedAnswer = null;
+    
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    document.getElementById('user-name').innerHTML = `${userName} ${userSurname} (${userCity})`;
+    
+    renderQuestion();
+}
+
+function renderQuestion() {
+    if(step >= questions.length) {
+        finishTest();
+        return;
+    }
+    
+    const q = questions[step];
+    currentCorrect = q.correct;
+    
+    const shuffledOptions = [...q.options];
+    for(let i = shuffledOptions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+    }
+    const newCorrectIndex = shuffledOptions.indexOf(q.options[q.correct]);
+    currentCorrect = newCorrectIndex;
+    q.shuffledOptions = shuffledOptions;
+    q.shuffledCorrect = newCorrectIndex;
+    
+    document.getElementById('question-text').innerHTML = `${step+1}. ${q.text}`;
+    document.getElementById('q-counter').innerHTML = `Вопрос ${step+1} из ${questions.length}`;
+    
+    const area = document.getElementById('options-area');
+    area.innerHTML = '';
+    selectedAnswer = null;
+    document.getElementById('submit-btn').disabled = true;
+    
+    for(let i = 0; i < shuffledOptions.length; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-dark btn-answer p-3 m-1';
+        btn.innerHTML = shuffledOptions[i];
+        btn.onclick = function() {
+            document.querySelectorAll('#options-area button').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedAnswer = i;
+            document.getElementById('submit-btn').disabled = false;
+        };
+        area.appendChild(btn);
+    }
+}
+
+function submitAnswer() {
+    if(selectedAnswer === null) {
+        alert('Выберите вариант ответа');
+        return;
+    }
+    
+    const q = questions[step];
+    const isCorrect = (selectedAnswer === q.shuffledCorrect);
+    if(isCorrect) score++;
+    
+    answers.push({
+        num: step+1,
+        question: q.text,
+        selected: q.shuffledOptions[selectedAnswer],
+        correct: q.options[q.correct],
+        isCorrect: isCorrect
+    });
+    
+    step++;
+    
+    if(step < questions.length) {
+        renderQuestion();
+    } else {
+        finishTest();
+    }
+}
+
+function finishTest() {
+    const userId = `${userName} ${userSurname} (${userCity})`;
+    const percent = Math.round(score / questions.length * 100);
+    
+    sb.from('results').insert({
+        user_id: userId,
+        name: userName,
+        surname: userSurname,
+        city: userCity,
+        score: score,
+        total: questions.length,
+        test_type: "test3",
+        test_name: "Стандарты продаж (продвинутый)",
+        answers: answers,
+        created_at: new Date().toISOString()
+    }).then(() => {
+        console.log('Сохранено!');
+    }).catch(e => {
+        console.log('Ошибка сохранения:', e);
+    });
+    
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.remove('hidden');
+    const scoreEl = document.getElementById('final-score');
+    scoreEl.innerHTML = `${score} из ${questions.length} (${percent}%)`;
+    if(percent >= 80) scoreEl.className = 'badge bg-success fs-3 p-3';
+    else if(percent >= 50) scoreEl.className = 'badge bg-warning fs-3 p-3';
+    else scoreEl.className = 'badge bg-danger fs-3 p-3';
+}
+
+document.getElementById('submit-btn').onclick = submitAnswer;
+</script>
+</body>
+</html>
