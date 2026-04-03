@@ -115,7 +115,7 @@ body{background:#f5f7fa;font-family:sans-serif}
 <!-- Блок ТЕСТ 3 -->
 <div id="test3-block" class="test-block collapsed">
     <div class="test-header" onclick="toggleTest('test3')">
-        <div class="test-title"><i class="bi bi-stars" style="color:#fd7e14"></i>🌟 Тест 3: Стандарты продаж (продвинутый) (11 вопросов)<span class="badge bg-primary ms-2" id="test3-count">0</span></div>
+        <div class="test-title"><i class="bi bi-stars" style="color:#fd7e14"></i>🌟 Продажи. Входной тест. (11 вопросов)<span class="badge bg-primary ms-2" id="test3-count">0</span></div>
         <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test3')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test3')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
     </div>
     <div class="test-content">
@@ -437,7 +437,7 @@ function generateUserReport(resultId, testId) {
     let testName = '';
     if(testId === 'test1') { userData = test1Data.find(r => r.id == resultId); testName = 'Стандарты продаж'; }
     else if(testId === 'test2') { userData = test2Data.find(r => r.id == resultId); testName = 'Стандарты обслуживания'; }
-    else { userData = test3Data.find(r => r.id == resultId); testName = 'Стандарты продаж (продвинутый)'; }
+    else { userData = test3Data.find(r => r.id == resultId); testName = 'Продажи. Входной тест.'; }
     
     if(!userData) { alert('Данные не найдены'); return; }
     
@@ -521,7 +521,7 @@ function exportTestToExcel(testId) {
     let name = '';
     if(testId === 'test1') { data = test1Data; name = 'Стандарты_продаж'; }
     else if(testId === 'test2') { data = test2Data; name = 'Стандарты_обслуживания'; }
-    else { data = test3Data; name = 'Стандарты_продаж_продвинутый'; }
+    else { data = test3Data; name = 'Продажи. Входной тест'; }
     if(!data.length) return alert("Нет данных");
     const excelData = data.map(r => ({ 'ФИО': `${r.surname||''} ${r.name||''}`.trim(), 'Город': r.city||'', 'Баллы': `${r.score}/${r.total}`, 'Процент': `${Math.round(r.score/r.total*100)}%`, 'Дата': new Date(r.created_at).toLocaleString() }));
     const ws = XLSX.utils.json_to_sheet(excelData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, name); XLSX.writeFile(wb, `${name}_${new Date().toLocaleDateString()}.xlsx`);
