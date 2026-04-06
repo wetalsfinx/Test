@@ -36,7 +36,56 @@ body{background:#f5f7fa;font-family:sans-serif}
 .test-title{font-size:1.3rem;font-weight:bold;display:flex;align-items:center;gap:10px}
 .collapse-icon{font-size:1.2rem;transition:transform 0.3s}
 .test-block.collapsed .test-content{display:none}
-.test-block.collapsed .collapse-icon{transform:rotate(-90deg)}
+.test-block.collapsed .collapse-icon{transform:rotate(-90deg)}/* Мобильная версия */
+@media (max-width: 768px) {
+    .test-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+    .test-header > div:first-child {
+        width: 100%;
+    }
+    .test-header > div:last-child {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 5px;
+    }
+    .filter-bar .row {
+        flex-direction: column;
+    }
+    .filter-bar .col-md-3, 
+    .filter-bar .col-md-2, 
+    .filter-bar .col-md-1 {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .stats-card {
+        margin-bottom: 15px;
+    }
+    .chart-card {
+        margin-bottom: 20px;
+    }
+    .user-log {
+        padding: 10px;
+    }
+    .user-log .d-flex {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .user-log .d-flex .d-flex {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+    .test-title {
+        font-size: 1rem;
+    }
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
 </style>
 </head>
 <body>
