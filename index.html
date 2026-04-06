@@ -446,7 +446,110 @@ async function clearAllResults(testId) {
     }
 }
 
-// Функция генерации детального отчёта по сотруднику (с разбором ошибок) - ОБНОВЛЕНА
+// БАЗА ЗНАНИЙ ДЛЯ ТЕСТА 3 (привязка по тексту вопроса)
+const test3Knowledge = [
+    { question: "Клиент заходит в магазин в обеденный перерыв, смотрит на часы и быстро идёт к витрине. Вы подходите. Что говорите?",
+      zone: "Речевая пластинка про акции",
+      formula: "«Приветствие + Акция + Бонусы = Клиент слышит выгоду с первых секунд»",
+      correct: "«Добрый день! У нас сегодня специальные условия: скидка до 30% и оплата бонусами»",
+      whyBetter: "Сначала проговариваете акцию — клиент сразу слышит выгоду, упоминание бонусов — дополнительный стимул",
+      whyWorse: "Сразу задаёте вопрос — пропускаете этап «дать выгоду», клиент может не узнать об акции",
+      wrongExample: "«Здравствуйте! Вижу, вы торопитесь — давайте я быстро покажу то, что может подойти»",
+      goodExample: "«Добрый день! У нас сегодня специальные условия: скидка до 30% и оплата бонусами»",
+      practice: "Вместо «Чем могу помочь?» говорите: «Добрый день! У нас сегодня скидка 30% и оплата бонусами»" },
+    { question: "Клиентка с ребёнком рассматривает витрину с детскими серьгами. Ребёнок тянет маму дальше. Что делаете?",
+      zone: "Работа с отвлекающими факторами",
+      formula: "«Вижу ситуацию + Конкретное решение = Удерживаем внимание клиента»",
+      correct: "«Подходите и спрашиваете: «Подбираете первые серёжки? Давайте я покажу самые безопасные варианты с надёжной застёжкой»»",
+      whyBetter: "Проявляете инициативу, говорите о безопасности — снимаете главный страх мамы",
+      whyWorse: "Пассивное ожидание — клиентка уйдёт, не получив помощь",
+      wrongExample: "«Ждёте, пока мама сама обратится за помощью»",
+      goodExample: "«Подбираете первые серёжки? Давайте я покажу самые безопасные варианты с надёжной застёжкой»",
+      practice: "Вместо пассивного ожидания говорите: «Давайте я покажу безопасные варианты с надёжной застёжкой»" },
+    { question: "Молодой человек говорит: «Нужно что-то на день рождения подруге, бюджет около 15 тысяч». Что делаете?",
+      zone: "Выявление потребностей",
+      formula: "«Бюджет + Уточнение стиля = Точное попадание в цель»",
+      correct: "«Спрашиваете: «А какой стиль она предпочитает: минимализм, классика или что-то яркое?»»",
+      whyBetter: "Сначала выясняете стиль — сужаете поиск до релевантных вариантов",
+      whyWorse: "Сразу показываете варианты — рискуете показать не то, что нужно",
+      wrongExample: "«Сразу показываете 3-4 варианта в пределах бюджета»",
+      goodExample: "«А какой стиль она предпочитает: минимализм, классика или что-то яркое?»",
+      practice: "Вместо того чтобы сразу показывать варианты, спросите: «Какой стиль она предпочитает?»" },
+    { question: "Клиентка выбирает кулон в подарок дочери на выпускной. Вы показали вариант, она говорит: «Красиво». Что вы добавите?",
+      zone: "Эмоциональная связь",
+      formula: "«Покупка + Эмоция + Событие = Запоминается на всю жизнь»",
+      correct: "«Этот кулон станет символом нового этапа в её жизни — каждый раз, надевая его, она будет вспоминать этот важный день»",
+      whyBetter: "Создаёте образ и эмоцию, привязываете к событию",
+      whyWorse: "Говорите о популярности — не цепляет эмоционально",
+      wrongExample: "«Этот кулон очень популярный среди выпускниц»",
+      goodExample: "«Этот кулон станет символом нового этапа в её жизни — она будет вспоминать этот важный день»",
+      practice: "Вместо «это популярно» скажите: «Это станет символом важного события в её жизни»" },
+    { question: "Клиент купил цепочку за 20 000 ₽. Вы:",
+      zone: "Допродажа / Ансамбль",
+      formula: "«Покупка + Предложение ансамбля = Законченный образ»",
+      correct: "«Давайте к этой цепочке подберём кулон — так вы уйдёте с законченным образом»",
+      whyBetter: "Конкретное предложение, показываете результат — законченный образ",
+      whyWorse: "Общий вопрос — легко ответить «нет», нет конкретики",
+      wrongExample: "«Не хотите посмотреть ещё что-то?»",
+      goodExample: "«Давайте подберём кулон — получится законченный образ»",
+      practice: "Вместо «может, что-то ещё?» скажите: «Давайте подберём кулон — получится законченный образ»" },
+    { question: "Клиентка купила кольцо за 70 000 ₽. Когда предлагаете футляр и средство для ухода?",
+      zone: "Завершение сделки / Футляр и средство",
+      formula: "«Согласие на цену + Предложение аксессуаров = Дополнительная продажа без усилий»",
+      correct: "«После того, как она согласилась на цену, но до оплаты»",
+      whyBetter: "Предлагаете в момент согласия — клиент в плюсе, легче согласиться, можно включить в общий чек",
+      whyWorse: "Предлагаете после оплаты — клиент уже мысленно ушёл, легко отказаться",
+      wrongExample: "«После оплаты, при упаковке»",
+      goodExample: "«Отлично! Давайте добавим футляр и средство для ухода — сохраните украшение в идеальном состоянии»",
+      practice: "Предлагайте футляр и средство ДО оплаты, когда клиент уже согласился на цену" },
+    { question: "Клиент выбрал серьги за 55 000 ₽, но говорит: «Не уверен, что сейчас готов потратить такую сумму». Что делаете?",
+      zone: "Работа с возражениями / Рассрочка",
+      formula: "«Понимаю + Яндекс Сплит = Снимаем ценовой барьер без потери продажи»",
+      correct: "«Понимаю. Давайте оформим Яндекс Сплит — 4 платежа без переплат, это займёт 2 минуты»",
+      whyBetter: "Принимаете сомнение, предлагаете конкретное решение — рассрочка снимает ценовой барьер",
+      whyWorse: "Переключаете на дешёвый вариант — теряете продажу дорогого изделия",
+      wrongExample: "«У нас есть серьги за 30 000 ₽, давайте посмотрим»",
+      goodExample: "«Понимаю. Давайте оформим Яндекс Сплит — 4 платежа без переплат»",
+      practice: "Вместо «давайте посмотрим дешевле» скажите: «Давайте оформим рассрочку — 4 платежа без переплат»" },
+    { question: "Клиент ищет кольцо с изумрудом 585 пробы, которого нет в наличии. Альтернатива с фианитом не подошла. Что делаете?",
+      zone: "Альтернатива / Каталог на заказ",
+      formula: "«Нет в наличии + Каталог на заказ = Клиент уходит с решением, а не с отказом»",
+      correct: "«Давайте я покажу каталог на заказ — там есть модели с изумрудами, которые не представлены на витринах наших магазинов»",
+      whyBetter: "Сразу предлагаете каталог, создаёте ощущение эксклюзива",
+      whyWorse: "Констатируете факт — клиент уходит без решения",
+      wrongExample: "«К сожалению, изумрудов 585 пробы сейчас нет»",
+      goodExample: "«Давайте посмотрим каталог на заказ — там больше редких моделей»",
+      practice: "Вместо «нет в наличии» скажите: «Давайте посмотрим каталог на заказ — там есть редкие модели»" },
+    { question: "Клиентка рассматривает браслет на витрине. Вы:",
+      zone: "Примерка",
+      formula: "«Сомневаетесь? + Давайте примерим = Снимаем риск неправильного выбора»",
+      correct: "«Давайте примерим — так вы сразу почувствуете, ваш это вариант или нет»",
+      whyBetter: "Проактивная помощь, объясняете пользу примерки",
+      whyWorse: "Пассивное ожидание — клиент может уйти без примерки",
+      wrongExample: "«Ждёте, пока клиентка сама попросит примерить»",
+      goodExample: "«Давайте примерим — так вы сразу почувствуете, ваш вариант или нет»",
+      practice: "Вместо того чтобы ждать, скажите: «Давайте примерим — так вы сразу поймёте, ваш вариант или нет»" },
+    { question: "Клиентка говорит: «Красиво, но я не уверена, что это моё». Что отвечаете?",
+      zone: "Работа с сомнениями",
+      formula: "«Понимаю + Уточняющий вопрос = Находим корень сомнения»",
+      correct: "«Понимаю. А что именно смущает: дизайн, размер или что-то ещё?»",
+      whyBetter: "Выясняете конкретную причину, можно точечно отработать возражение",
+      whyWorse: "Сразу переключаетесь — не выясняете причину сомнения",
+      wrongExample: "«Давайте посмотрим другие варианты»",
+      goodExample: "«Понимаю. Что именно смущает: дизайн, размер или что-то ещё?»",
+      practice: "Вместо «давайте другие посмотрим» спросите: «Что именно смущает: дизайн, размер или что-то ещё?»" },
+    { question: "Клиентка рассматривает витрину с кольцами около 2 минут. Вы поздоровались, рассказали про акцию, она кивнула и продолжила смотреть. Что делаете?",
+      zone: "Инициатива в диалоге",
+      formula: "«Акция + Предложение помощи = Активируем интерес клиента»",
+      correct: "«Подходите и спрашиваете: «Давайте я покажу несколько колец в вашем стиле — для себя подбираете или в подарок?»»",
+      whyBetter: "Предлагаете конкретную помощь, уточняете цель",
+      whyWorse: "Теряете инициативу — клиент может уйти без покупки",
+      wrongExample: "«Ждёте, пока клиентка сама попросит показать кольцо»",
+      goodExample: "«Давайте я покажу несколько вариантов в вашем стиле — для себя выбираете или в подарок?»",
+      practice: "Вместо «если что — обращайтесь» скажите: «Давайте я покажу несколько вариантов в вашем стиле»" }
+];
+
+// Функция генерации детального отчёта по сотруднику (с привязкой по тексту вопроса)
 async function generateUserReport(resultId, testId) {
     let userData = null;
     let testName = '';
@@ -454,6 +557,7 @@ async function generateUserReport(resultId, testId) {
     if(testId === 'test1') { 
         userData = test1Data.find(r => r.id == resultId); 
         testName = 'Стандарты продаж';
+        // Для теста 1 пока оставляем старый формат
     } else if(testId === 'test2') { 
         userData = test2Data.find(r => r.id == resultId); 
         testName = 'Стандарты обслуживания';
@@ -467,87 +571,75 @@ async function generateUserReport(resultId, testId) {
     const fullName = `${userData.surname || ''} ${userData.name || ''}`.trim();
     const percent = Math.round(userData.score / userData.total * 100);
     
-    // БАЗА ЗНАНИЙ ДЛЯ ТЕСТА 3 (11 вопросов)
-    const questionsKnowledge = {
-        0: { zone: "Речевая пластинка про акции", formula: "«Приветствие + Акция + Бонусы = Клиент слышит выгоду с первых секунд»", 
-            correct: "«Добрый день! У нас сегодня скидка 30% на бриллианты и можно оплатить бонусами до 80%»",
-            whyBetter: "Сначала проговариваете акцию — клиент сразу слышит выгоду, упоминание бонусов — дополнительный стимул",
-            whyWorse: "Сразу задаёте вопрос — пропускаете этап «дать выгоду», клиент может не узнать об акции",
-            wrongExample: "«Здравствуйте! Подбираете кольцо для себя или в подарок?»",
-            goodExample: "«Добрый день! У нас сегодня скидка 30% на бриллианты и можно оплатить бонусами до 80%»",
-            practice: "Вместо «Чем могу помочь?» говорите: «Добрый день! У нас сегодня скидка 30% на бриллианты и можно оплатить бонусами до 80%»" },
-        1: { zone: "Работа с отвлекающими факторами", formula: "«Вижу ситуацию + Конкретное решение = Удерживаем внимание клиента»",
-            correct: "«Подбираете первые серёжки? Давайте я покажу самые безопасные варианты с надёжной застёжкой»",
-            whyBetter: "Проявляете инициативу, говорите о безопасности — снимаете главный страх мамы",
-            whyWorse: "Пассивное ожидание — клиентка уйдёт, не получив помощь",
-            wrongExample: "«Ждёте, пока мама сама обратится за помощью»",
-            goodExample: "«Подбираете первые серёжки? Давайте я покажу самые безопасные варианты с надёжной застёжкой»",
-            practice: "Вместо пассивного ожидания говорите: «Давайте я покажу безопасные варианты с надёжной застёжкой»" },
-        2: { zone: "Выявление потребностей", formula: "«Бюджет + Уточнение стиля = Точное попадание в цель»",
-            correct: "«А какой стиль она предпочитает: минимализм, классика или что-то яркое?»",
-            whyBetter: "Сначала выясняете стиль — сужаете поиск до релевантных вариантов",
-            whyWorse: "Сразу показываете варианты — рискуете показать не то, что нужно",
-            wrongExample: "«Сразу показываете 3-4 варианта в пределах бюджета»",
-            goodExample: "«А какой стиль она предпочитает: минимализм, классика или что-то яркое?»",
-            practice: "Вместо того чтобы сразу показывать варианты, спросите: «Какой стиль она предпочитает?»" },
-        3: { zone: "Эмоциональная связь", formula: "«Покупка + Эмоция + Событие = Запоминается на всю жизнь»",
-            correct: "«Этот кулон станет символом нового этапа в её жизни — каждый раз, надевая его, она будет вспоминать этот важный день»",
-            whyBetter: "Создаёте образ и эмоцию, привязываете к событию",
-            whyWorse: "Говорите о популярности — не цепляет эмоционально",
-            wrongExample: "«Этот кулон очень популярный среди выпускниц»",
-            goodExample: "«Этот кулон станет символом нового этапа в её жизни — она будет вспоминать этот важный день»",
-            practice: "Вместо «это популярно» скажите: «Это станет символом важного события в её жизни»" },
-        4: { zone: "Допродажа / Ансамбль", formula: "«Покупка + Предложение ансамбля = Законченный образ»",
-            correct: "«Давайте к этой цепочке подберём кулон — так вы уйдёте с законченным образом»",
-            whyBetter: "Конкретное предложение, показываете результат — законченный образ",
-            whyWorse: "Общий вопрос — легко ответить «нет», нет конкретики",
-            wrongExample: "«Не хотите посмотреть ещё что-то?»",
-            goodExample: "«Давайте подберём кулон — получится законченный образ»",
-            practice: "Вместо «может, что-то ещё?» скажите: «Давайте подберём кулон — получится законченный образ»" },
-        5: { zone: "Завершение сделки / Футляр и средство", formula: "«Согласие на цену + Предложение аксессуаров = Дополнительная продажа без усилий»",
-            correct: "«После того, как она согласилась на цену, но до оплаты»",
-            whyBetter: "Предлагаете в момент согласия — клиент в плюсе, легче согласиться, можно включить в общий чек",
-            whyWorse: "Предлагаете после оплаты — клиент уже мысленно ушёл, легко отказаться",
-            wrongExample: "«После оплаты, при упаковке»",
-            goodExample: "«Отлично! Давайте добавим футляр и средство для ухода — сохраните украшение в идеальном состоянии»",
-            practice: "Предлагайте футляр и средство ДО оплаты, когда клиент уже согласился на цену" },
-        6: { zone: "Работа с возражениями / Рассрочка", formula: "«Понимаю + Яндекс Сплит = Снимаем ценовой барьер без потери продажи»",
-            correct: "«Понимаю. Давайте оформим Яндекс Сплит — 4 платежа без переплат, это займёт 2 минуты»",
-            whyBetter: "Принимаете сомнение, предлагаете конкретное решение — рассрочка снимает ценовой барьер",
-            whyWorse: "Переключаете на дешёвый вариант — теряете продажу дорогого изделия",
-            wrongExample: "«У нас есть серьги за 30 000 ₽, давайте посмотрим»",
-            goodExample: "«Понимаю. Давайте оформим Яндекс Сплит — 4 платежа без переплат»",
-            practice: "Вместо «давайте посмотрим дешевле» скажите: «Давайте оформим рассрочку — 4 платежа без переплат»" },
-        7: { zone: "Альтернатива / Каталог на заказ", formula: "«Нет в наличии + Каталог на заказ = Клиент уходит с решением, а не с отказом»",
-            correct: "«Давайте я покажу каталог на заказ — там есть модели с изумрудами, которые не представлены на витринах наших магазинов»",
-            whyBetter: "Сразу предлагаете каталог, создаёте ощущение эксклюзива",
-            whyWorse: "Констатируете факт — клиент уходит без решения",
-            wrongExample: "«К сожалению, изумрудов 585 пробы сейчас нет»",
-            goodExample: "«Давайте посмотрим каталог на заказ — там больше редких моделей»",
-            practice: "Вместо «нет в наличии» скажите: «Давайте посмотрим каталог на заказ — там есть редкие модели»" },
-        8: { zone: "Примерка", formula: "«Сомневаетесь? + Давайте примерим = Снимаем риск неправильного выбора»",
-            correct: "«Давайте примерим — так вы сразу почувствуете, ваш это вариант или нет»",
-            whyBetter: "Проактивная помощь, объясняете пользу примерки",
-            whyWorse: "Пассивное ожидание — клиент может уйти без примерки",
-            wrongExample: "«Ждёте, пока клиентка сама попросит примерить»",
-            goodExample: "«Давайте примерим — так вы сразу почувствуете, ваш вариант или нет»",
-            practice: "Вместо того чтобы ждать, скажите: «Давайте примерим — так вы сразу поймёте, ваш вариант или нет»" },
-        9: { zone: "Работа с сомнениями", formula: "«Понимаю + Уточняющий вопрос = Находим корень сомнения»",
-            correct: "«Понимаю. А что именно смущает: дизайн, размер или что-то ещё?»",
-            whyBetter: "Выясняете конкретную причину, можно точечно отработать возражение",
-            whyWorse: "Сразу переключаетесь — не выясняете причину сомнения",
-            wrongExample: "«Давайте посмотрим другие варианты»",
-            goodExample: "«Понимаю. Что именно смущает: дизайн, размер или что-то ещё?»",
-            practice: "Вместо «давайте другие посмотрим» спросите: «Что именно смущает: дизайн, размер или что-то ещё?»" },
-        10: { zone: "Инициатива в диалоге", formula: "«Акция + Предложение помощи = Активируем интерес клиента»",
-            correct: "«Давайте я покажу несколько колец в вашем стиле — для себя подбираете или в подарок?»",
-            whyBetter: "Предлагаете конкретную помощь, уточняете цель",
-            whyWorse: "Теряете инициативу — клиент может уйти без покупки",
-            wrongExample: "«Ждёте, пока клиентка сама попросит показать кольцо»",
-            goodExample: "«Давайте я покажу несколько вариантов в вашем стиле — для себя выбираете или в подарок?»",
-            practice: "Вместо «если что — обращайтесь» скажите: «Давайте я покажу несколько вариантов в вашем стиле»" }
-    };
+    // Для тестов 1 и 2 используем старую логику (простую)
+    if(testId !== 'test3') {
+        let answersHtml = '';
+        if(userData.answers && userData.answers.length > 0) {
+            userData.answers.forEach((a, i) => {
+                const isCorrect = a.isCorrect === true || a.ok === true;
+                const userAnswer = a.selected || a.sel || 'Не указан';
+                const correctAnswer = a.correct || a.cor || 'Не указан';
+                let questionText = a.question || a.qs || `Вопрос ${i+1}`;
+                if(questionText.length > 200) questionText = questionText.substring(0,200);
+                
+                answersHtml += `<div style="margin-bottom:20px;padding:12px;background:${isCorrect?'#e8f5e9':'#ffebee'};border-radius:8px;border-left:4px solid ${isCorrect?'#4caf50':'#f44336'}">
+                    <div style="font-weight:bold;margin-bottom:8px;">Вопрос ${i+1}</div>
+                    <div style="margin-bottom:8px;color:#555;">${escapeHtml(questionText)}</div>
+                    <div><span style="color:#d32f2f;">✖ Ваш ответ:</span> <span style="background:#ffebee;padding:2px 8px;border-radius:4px;">${escapeHtml(userAnswer)}</span></div>
+                    <div><span style="color:#2e7d32;">✓ Правильный ответ:</span> <span style="background:#e8f5e9;padding:2px 8px;border-radius:4px;">${escapeHtml(correctAnswer)}</span></div>
+                    ${!isCorrect ? '<div style="margin-top:8px;font-size:12px;color:#666;">💡 Совет: обратите внимание на правильный вариант</div>' : ''}
+                </div>`;
+            });
+        } else {
+            answersHtml = '<div style="color:#999;">Нет детальной информации по ответам</div>';
+        }
+        
+        const reportHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><title>Отчёт: ${fullName}</title>
+            <style>
+                body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px}
+                .header{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #0d6efd}
+                .header h1{color:#0d6efd;margin:0}
+                .info{background:#f5f7fa;padding:15px;border-radius:8px;margin-bottom:30px}
+                .score{display:inline-block;padding:5px 15px;border-radius:20px;font-weight:bold;margin-top:10px}
+                .score-good{background:#4caf50;color:white}
+                .score-normal{background:#ff9800;color:white}
+                .score-bad{background:#f44336;color:white}
+                .answers-title{font-size:18px;font-weight:bold;margin:20px 0}
+                .footer{margin-top:40px;text-align:center;font-size:12px;color:#999;border-top:1px solid #eee;padding-top:20px}
+                .btn-print{background:#0d6efd;color:white;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;margin-bottom:10px}
+                .btn-print:hover{opacity:0.8}
+                @media print { .no-print { display: none; } }
+            </style>
+            </head>
+            <body>
+                <div class="no-print" style="text-align:right; margin-bottom:10px;">
+                    <button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button>
+                </div>
+                <div class="header">
+                    <h1>📊 Персональный отчёт</h1>
+                    <h2>«${testName}»</h2>
+                </div>
+                <div class="info">
+                    <table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
+                    <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr></table>
+                    <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хороший результат':percent>=30?'📚 Есть над чем работать':'📚 Требуется изучение материалов'}</div>
+                </div>
+                <div class="answers-title">📝 Детальный разбор ответов:</div>
+                ${answersHtml}
+                <div class="footer">Отчёт сгенерирован автоматически</div>
+            </body>
+            </html>
+        `;
+        const reportWindow = window.open('', '_blank');
+        reportWindow.document.write(reportHtml);
+        reportWindow.document.close();
+        return;
+    }
     
+    // ДЛЯ ТЕСТА 3 — подробный разбор с привязкой по тексту вопроса
     let zonesHtml = '';
     let errorZones = [];
     
@@ -558,29 +650,40 @@ async function generateUserReport(resultId, testId) {
             const userAnswer = a.selected || a.sel || 'Не указан';
             const correctAnswer = a.correct || a.cor || 'Не указан';
             const questionText = a.question || a.qs || `Вопрос ${idx+1}`;
-            const qData = questionsKnowledge[idx] || { zone: "Общая зона развития", formula: "Изучите правильный подход", correct: correctAnswer,
-                whyBetter: "Этот подход лучше работает на практике", whyWorse: "Ваш вариант менее эффективен",
-                wrongExample: userAnswer, goodExample: correctAnswer, practice: "Потренируйтесь использовать правильный подход" };
             
-            if (!isCorrect) {
-                errorZones.push(qData.zone);
+            // Ищем знание по тексту вопроса
+            const knowledge = test3Knowledge.find(k => k.question === questionText);
+            
+            if (!isCorrect && knowledge) {
+                errorZones.push(knowledge.zone);
                 zonesHtml += `
                     <div style="margin-bottom:30px; padding:15px; background:#fff3cd; border-left:5px solid #ffc107; border-radius:8px;">
-                        <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: ${qData.zone}</div>
+                        <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: ${knowledge.zone}</div>
                         <div style="margin-top:10px;"><strong>📌 Ситуация из теста (Вопрос ${idx+1}):</strong><br>${escapeHtml(questionText)}</div>
                         <div style="margin-top:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
-                        <div style="margin-top:5px;"><span style="color:#2e7d32;">✅ Правильный подход:</span> ${escapeHtml(correctAnswer)}</div>
+                        <div style="margin-top:5px;"><span style="color:#2e7d32;">✅ Правильный подход:</span> ${escapeHtml(knowledge.correct)}</div>
                         <div style="margin-top:12px; background:white; padding:10px; border-radius:6px;">
                             <div style="font-weight:bold;">📊 В чём разница?</div>
                             <table style="width:100%; margin-top:8px; border-collapse:collapse;">
                                 <tr style="background:#f8d7da;"><td style="padding:8px; border:1px solid #ddd;"><strong>❌ Ваш вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это слабее</strong></td></tr>
-                                <tr><td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(qData.wrongExample.substring(0,80))}»</td><td style="padding:8px; border:1px solid #ddd;">${qData.whyWorse}</td></tr>
+                                <tr><td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(knowledge.wrongExample.substring(0,80))}»</td><td style="padding:8px; border:1px solid #ddd;">${knowledge.whyWorse}</td></tr>
                                 <tr style="background:#d4edda;"><td style="padding:8px; border:1px solid #ddd;"><strong>✅ Правильный вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это работает</strong></td></tr>
-                                <tr><td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(qData.goodExample.substring(0,80))}»</td><td style="padding:8px; border:1px solid #ddd;">${qData.whyBetter}</td></tr>
+                                <tr><td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(knowledge.goodExample.substring(0,80))}»</td><td style="padding:8px; border:1px solid #ddd;">${knowledge.whyBetter}</td></tr>
                             </table>
-                            <div style="margin-top:10px;"><strong>🛠️ Как применять на практике:</strong><br>${qData.practice}</div>
-                            <div style="margin-top:10px; padding:8px; background:#e8f5e9; border-radius:6px;"><strong>💡 Запомните формулу:</strong><br>${qData.formula}</div>
+                            <div style="margin-top:10px;"><strong>🛠️ Как применять на практике:</strong><br>${knowledge.practice}</div>
+                            <div style="margin-top:10px; padding:8px; background:#e8f5e9; border-radius:6px;"><strong>💡 Запомните формулу:</strong><br>${knowledge.formula}</div>
                         </div>
+                    </div>
+                `;
+            } else if (!isCorrect && !knowledge) {
+                // Если знание не найдено — показываем базовый разбор
+                zonesHtml += `
+                    <div style="margin-bottom:30px; padding:15px; background:#fff3cd; border-left:5px solid #ffc107; border-radius:8px;">
+                        <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: Общая рекомендация</div>
+                        <div style="margin-top:10px;"><strong>📌 Вопрос ${idx+1}:</strong><br>${escapeHtml(questionText)}</div>
+                        <div style="margin-top:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
+                        <div style="margin-top:5px;"><span style="color:#2e7d32;">✅ Правильный ответ:</span> ${escapeHtml(correctAnswer)}</div>
+                        <div style="margin-top:12px;"><strong>💡 Совет:</strong> Обратите внимание на правильный вариант и потренируйтесь применять его на практике.</div>
                     </div>
                 `;
             }
@@ -628,7 +731,8 @@ async function generateUserReport(resultId, testId) {
             </div>
             <div class="info">
                 <table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
-                <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr></table>
+                <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr>
+                </table>
                 <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${resultMessage}</div>
             </div>
             ${summaryZones}
