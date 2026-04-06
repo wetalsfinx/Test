@@ -206,7 +206,6 @@ async function loadAllData() {
     }
 }
 
-// ========== ТЕСТ 1 ==========
 function renderTest1() {
     let filtered = [...test1Data];
     const search = document.getElementById('test1-search')?.value.toLowerCase() || '';
@@ -276,7 +275,6 @@ function resetTest1Filters() {
     renderTest1();
 }
 
-// ========== ТЕСТ 2 ==========
 function renderTest2() {
     let filtered = [...test2Data];
     const search = document.getElementById('test2-search')?.value.toLowerCase() || '';
@@ -346,7 +344,6 @@ function resetTest2Filters() {
     renderTest2();
 }
 
-// ========== ТЕСТ 3 ==========
 function renderTest3() {
     let filtered = [...test3Data];
     const search = document.getElementById('test3-search')?.value.toLowerCase() || '';
@@ -416,7 +413,6 @@ function resetTest3Filters() {
     renderTest3();
 }
 
-// ========== ОБЩИЕ ФУНКЦИИ ==========
 async function deleteSingleResult(resultId, testId) {
     if(!confirm('🗑️ Удалить этот результат?')) return;
     const {error} = await sb.from('results').delete().eq('id', resultId);
@@ -446,7 +442,6 @@ async function clearAllResults(testId) {
     }
 }
 
-// БАЗА ЗНАНИЙ ДЛЯ ТЕСТА 3
 const test3Knowledge = [
     { question: "Клиент заходит в магазин в обеденный перерыв, смотрит на часы и быстро идёт к витрине. Вы подходите. Что говорите?",
       zone: "Речевая пластинка про акции", formula: "«Приветствие + Акция + Бонусы = Клиент слышит выгоду с первых секунд»",
@@ -538,7 +533,6 @@ const test3Knowledge = [
       practice: "Вместо «если что — обращайтесь» скажите: «Давайте я покажу несколько вариантов в вашем стиле»" }
 ];
 
-// Функция генерации отчёта по сотруднику (только ошибки в формате как у тебя)
 async function generateUserReport(resultId, testId) {
     let userData = null;
     let testName = '';
@@ -559,7 +553,6 @@ async function generateUserReport(resultId, testId) {
     const fullName = `${userData.surname || ''} ${userData.name || ''}`.trim();
     const percent = Math.round(userData.score / userData.total * 100);
     
-    // Для тестов 1 и 2 — простой отчёт
     if(testId !== 'test3') {
         let answersHtml = '';
         if(userData.answers && userData.answers.length > 0) {
@@ -590,12 +583,11 @@ async function generateUserReport(resultId, testId) {
             <body>
                 <div class="no-print" style="text-align:right;margin-bottom:10px"><button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button></div>
                 <div class="header"><h1>📊 Отчёт по тесту</h1><h2>«${testName}»</h2></div>
-                <div class="info"><table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
-                <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr></table>
+                <div class="info"><table style="width:100%"><tr><td>Сотрудник: <strong>${fullName}</strong></td><td>Город: <strong>${userData.city || 'не указан'}</strong></td></tr><tr><td>Дата: ${new Date(userData.created_at).toLocaleString()}</td><td>Результат: <strong>${userData.score} из ${userData.total} (${percent}%)</strong></td></tr></table>
                 <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хороший результат':'📚 Требуется изучение материалов'}</div></div>
                 <div style="margin:20px 0;"><strong>📝 Разбор ошибок:</strong></div>
                 ${answersHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
-                <div class="footer" style="margin-top:40px;text-align:center;font-size:12px;color:#999;">Отчёт сгенерирован автоматически</div>
+                <div class="footer">Отчёт сгенерирован автоматически</div>
             </body>
             </html>
         `;
@@ -605,7 +597,6 @@ async function generateUserReport(resultId, testId) {
         return;
     }
     
-    // ДЛЯ ТЕСТА 3 — ТОЛЬКО ОШИБКИ В ТВОЁМ ФОРМАТЕ
     let zonesHtml = '';
     let errorZones = [];
     
@@ -613,61 +604,42 @@ async function generateUserReport(resultId, testId) {
         for(let idx = 0; idx < userData.answers.length; idx++) {
             const a = userData.answers[idx];
             const isCorrect = a.isCorrect === true || a.ok === true;
-            
             if (isCorrect) continue;
             
             const userAnswer = a.selected || a.sel || 'Не указан';
             const correctAnswer = a.correct || a.cor || 'Не указан';
             const questionText = a.question || a.qs || `Вопрос ${idx+1}`;
-            
             const knowledge = test3Knowledge.find(k => k.question === questionText);
             
             if (knowledge) {
                 errorZones.push(knowledge.zone);
-                
                 zonesHtml += `
-                    <div style="margin-bottom:35px; padding:20px; background:#fff8e7; border-left:5px solid #ffc107; border-radius:10px;">
-                        <div style="font-size:18px; font-weight:bold; color:#856404; margin-bottom:12px;">🔍 Зона роста: ${knowledge.zone}</div>
-                        
-                        <div style="margin-bottom:12px;"><strong>📌 Ситуация из теста (Вопрос ${idx+1}):</strong><br>${escapeHtml(questionText)}</div>
-                        
-                        <div style="margin-bottom:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span><br>${escapeHtml(userAnswer)}</div>
-                        <div style="margin-bottom:15px;"><span style="color:#2e7d32;">✅ Правильный подход:</span><br>${escapeHtml(knowledge.correct)}</div>
-                        
-                        <div style="margin-bottom:15px;">
-                            <div style="font-weight:bold; margin-bottom:8px;">📊 В чём разница?</div>
+                    <div style="margin-bottom:30px; padding:15px; background:#fff3cd; border-left:5px solid #ffc107; border-radius:8px;">
+                        <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: ${knowledge.zone}</div>
+                        <div style="margin-top:10px;"><strong>📌 Ситуация из теста (Вопрос ${idx+1}):</strong><br>${escapeHtml(questionText)}</div>
+                        <div style="margin-top:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span><br>${escapeHtml(userAnswer)}</div>
+                        <div style="margin-top:5px;"><span style="color:#2e7d32;">✅ Правильный подход:</span><br>${escapeHtml(knowledge.correct)}</div>
+                        <div style="margin-top:12px; background:white; padding:10px; border-radius:6px;">
+                            <div style="font-weight:bold;">📊 В чём разница?</div>
                             <table style="width:100%; border-collapse:collapse;">
-                                <tr style="background:#f8d7da;">
-                                    <td style="padding:8px; border:1px solid #ddd; width:45%;"><strong>❌ Ваш вариант</strong></td>
-                                    <td style="padding:8px; border:1px solid #ddd;"><strong>Почему это слабее</strong></td>
-                                </tr>
-                                <tr style="background:#f8d7da;">
-                                    <td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(userAnswer.substring(0,80))}»</td>
-                                    <td style="padding:8px; border:1px solid #ddd;">${knowledge.whyWorse}</td>
-                                </tr>
-                                <tr style="background:#d4edda;">
-                                    <td style="padding:8px; border:1px solid #ddd;"><strong>✅ Правильный вариант</strong></td>
-                                    <td style="padding:8px; border:1px solid #ddd;"><strong>Почему это работает</strong></td>
-                                </tr>
-                                <tr style="background:#d4edda;">
-                                    <td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(knowledge.goodExample.substring(0,80))}»</td>
-                                    <td style="padding:8px; border:1px solid #ddd;">${knowledge.whyBetter}</td>
-                                </tr>
+                                <tr style="background:#f8d7da;"><td style="padding:8px; border:1px solid #ddd;"><strong>❌ Ваш вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это слабее</strong></td></tr>
+                                <tr style="background:#f8d7da;"><td style="padding:8px; border:1px solid #ddd;">${escapeHtml(userAnswer)}</td><td style="padding:8px; border:1px solid #ddd;">${knowledge.whyWorse}</td></tr>
+                                <tr style="background:#d4edda;"><td style="padding:8px; border:1px solid #ddd;"><strong>✅ Правильный вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это работает</strong></td></tr>
+                                <tr style="background:#d4edda;"><td style="padding:8px; border:1px solid #ddd;">${escapeHtml(knowledge.goodExample)}</td><td style="padding:8px; border:1px solid #ddd;">${knowledge.whyBetter}</td></tr>
                             </table>
                         </div>
-                        
-                        <div style="margin-bottom:10px;"><strong>🛠️ Как применять на практике:</strong><br>${knowledge.practice}</div>
-                        <div style="padding:10px; background:#e8f5e9; border-radius:8px;"><strong>💡 Запомните формулу:</strong><br>${knowledge.formula}</div>
+                        <div style="margin-top:12px;"><strong>🛠️ Как применять на практике:</strong><br>${knowledge.practice}</div>
+                        <div style="margin-top:10px; padding:8px; background:#e8f5e9; border-radius:6px;"><strong>💡 Запомните формулу:</strong><br>${knowledge.formula}</div>
                     </div>
                 `;
             } else {
                 zonesHtml += `
-                    <div style="margin-bottom:35px; padding:20px; background:#fff8e7; border-left:5px solid #ffc107; border-radius:10px;">
-                        <div style="font-size:18px; font-weight:bold; color:#856404; margin-bottom:12px;">🔍 Зона роста: Общая рекомендация</div>
-                        <div style="margin-bottom:12px;"><strong>📌 Вопрос ${idx+1}:</strong><br>${escapeHtml(questionText)}</div>
-                        <div style="margin-bottom:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span><br>${escapeHtml(userAnswer)}</div>
-                        <div style="margin-bottom:15px;"><span style="color:#2e7d32;">✅ Правильный ответ:</span><br>${escapeHtml(correctAnswer)}</div>
-                        <div><strong>💡 Совет:</strong> Обратите внимание на правильный вариант и потренируйтесь применять его на практике.</div>
+                    <div style="margin-bottom:30px; padding:15px; background:#fff3cd; border-left:5px solid #ffc107; border-radius:8px;">
+                        <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: Общая рекомендация</div>
+                        <div style="margin-top:10px;"><strong>📌 Вопрос ${idx+1}:</strong><br>${escapeHtml(questionText)}</div>
+                        <div style="margin-top:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span><br>${escapeHtml(userAnswer)}</div>
+                        <div style="margin-top:5px;"><span style="color:#2e7d32;">✅ Правильный ответ:</span><br>${escapeHtml(correctAnswer)}</div>
+                        <div style="margin-top:12px;"><strong>💡 Совет:</strong> Обратите внимание на правильный вариант и потренируйтесь применять его на практике.</div>
                     </div>
                 `;
             }
@@ -717,15 +689,13 @@ async function generateUserReport(resultId, testId) {
                 <h2>«${testName}»</h2>
             </div>
             <div class="info">
-                <table style="width:100%"><tr><td style="padding:5px;"><strong>Сотрудник:</strong> ${fullName}</td><td style="padding:5px;"><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
-                <tr><td style="padding:5px;"><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td style="padding:5px;"><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr>
-                </table>
+                <table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr><tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr></table>
                 <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${resultMessage}</div>
             </div>
             ${summaryZones}
             <div style="margin:20px 0;"><strong>📝 Детальный разбор ошибок:</strong></div>
             ${zonesHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
-            <div class="footer" style="margin-top:40px; text-align:center; font-size:12px; color:#999; border-top:1px solid #eee; padding-top:20px;">Отчёт сгенерирован автоматически</div>
+            <div class="footer" style="margin-top:40px; text-align:center; font-size:12px; color:#999;">Отчёт сгенерирован автоматически</div>
         </body>
         </html>
     `;
@@ -735,7 +705,6 @@ async function generateUserReport(resultId, testId) {
     reportWindow.document.close();
 }
 
-// Функция генерации общего резюме
 function generateSummaryReport(testId) {
     let data = [];
     let testName = '';
@@ -750,80 +719,6 @@ function generateSummaryReport(testId) {
     const excellent = data.filter(r => (r.score / r.total) >= 0.8).length;
     const good = data.filter(r => (r.score / r.total) >= 0.6 && (r.score / r.total) < 0.8).length;
     const poor = data.filter(r => (r.score / r.total) < 0.6).length;
-    
-    // Анализ по городам
-    const cityStats = {};
-    data.forEach(r => {
-        const city = r.city || 'Не указан';
-        if (!cityStats[city]) {
-            cityStats[city] = { total: 0, count: 0, scores: [] };
-        }
-        cityStats[city].total += (r.score / r.total);
-        cityStats[city].count++;
-        cityStats[city].scores.push(r.score / r.total);
-    });
-    
-    let cityAnalysisHtml = '<h3>🏙️ Анализ по городам</h3><table style="width:100%; border-collapse:collapse; margin-bottom:20px;"><thead><tr style="background:#0d6efd; color:white;"><th style="padding:8px; border:1px solid #ddd;">Город</th><th style="padding:8px; border:1px solid #ddd;">Прошло</th><th style="padding:8px; border:1px solid #ddd;">Средний балл</th><th style="padding:8px; border:1px solid #ddd;">Оценка</th><th style="padding:8px; border:1px solid #ddd;">Рекомендации</th><tr></thead><tbody>';
-    
-    for (const [city, stats] of Object.entries(cityStats)) {
-        const cityAvg = Math.round(stats.total / stats.count * 100);
-        let grade = '';
-        let gradeColor = '';
-        if (cityAvg >= 80) { grade = '🟢 Отлично'; gradeColor = '#d4edda'; }
-        else if (cityAvg >= 60) { grade = '🟡 Хорошо'; gradeColor = '#fff3cd'; }
-        else if (cityAvg >= 40) { grade = '🟠 Средне'; gradeColor = '#ffe0b3'; }
-        else { grade = '🔴 Требует внимания'; gradeColor = '#f8d7da'; }
-        
-        let recommendations = '';
-        if (cityAvg < 60) {
-            recommendations = '📚 Рекомендуется повторное обучение по всем темам';
-        } else if (cityAvg < 80) {
-            recommendations = '📈 Рекомендуется усиление по темам, вызвавшим трудности';
-        } else {
-            recommendations = '✅ Держать уровень, закреплять практикой';
-        }
-        
-        cityAnalysisHtml += `<tr style="background:${gradeColor}"><td style="padding:8px; border:1px solid #ddd;"><strong>${escapeHtml(city)}</strong></td><td style="padding:8px; border:1px solid #ddd;">${stats.count}</td><td style="padding:8px; border:1px solid #ddd;">${cityAvg}%</td><td style="padding:8px; border:1px solid #ddd;">${grade}</td><td style="padding:8px; border:1px solid #ddd;">${recommendations}</td></table>`;
-    }
-    cityAnalysisHtml += '</tbody></table>';
-    
-    // Слабые вопросы
-    let weakQuestionsHtml = '';
-    if (testId === 'test3') {
-        const questionStats = {};
-        data.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    const isCorrect = a.isCorrect === true || a.ok === true;
-                    const qText = a.question || a.qs || `Вопрос ${idx+1}`;
-                    if (!questionStats[qText]) {
-                        questionStats[qText] = { total: 0, correct: 0, zone: '' };
-                    }
-                    questionStats[qText].total++;
-                    if (isCorrect) questionStats[qText].correct++;
-                    
-                    const knowledge = test3Knowledge.find(k => k.question === qText);
-                    if (knowledge && !questionStats[qText].zone) {
-                        questionStats[qText].zone = knowledge.zone;
-                    }
-                });
-            }
-        });
-        
-        const weakQuestions = Object.entries(questionStats)
-            .map(([q, stats]) => ({ q, percent: Math.round(stats.correct / stats.total * 100), total: stats.total, zone: stats.zone }))
-            .filter(item => item.percent < 60)
-            .sort((a, b) => a.percent - b.percent);
-        
-        if (weakQuestions.length > 0) {
-            weakQuestionsHtml = '<h3>📉 Вопросы, вызвавшие наибольшие трудности (менее 60% верных ответов)</h3><table style="width:100%; border-collapse:collapse; margin-bottom:20px;"><thead><tr style="background:#dc3545; color:white;"><th style="padding:8px;">Зона роста</th><th style="padding:8px;">Вопрос</th><th style="padding:8px;">Верных ответов</th><th style="padding:8px;">% верных</th></tr></thead><tbody>';
-            weakQuestions.forEach(wq => {
-                let shortQuestion = wq.q.length > 60 ? wq.q.substring(0, 60) + '…' : wq.q;
-                weakQuestionsHtml += `<tr><td style="padding:8px;"><strong>🔍 ${escapeHtml(wq.zone || 'Общая')}</strong></td><td style="padding:8px;">${escapeHtml(shortQuestion)}</td><td style="padding:8px;">${Math.round(wq.percent * wq.total / 100)}/${wq.total}</td><td style="padding:8px; ${wq.percent < 40 ? 'color:#dc3545; font-weight:bold;' : ''}">${wq.percent}%</td></tr>`;
-            });
-            weakQuestionsHtml += '</tbody></table>';
-        }
-    }
     
     let rowsHtml = '';
     data.forEach(r => {
@@ -858,8 +753,6 @@ function generateSummaryReport(testId) {
                 <div class="stat-card">✅ Хорошо (60-79%)<br><span class="stat-number">${good}</span></div>
                 <div class="stat-card">📚 Требуют внимания (<60%)<br><span class="stat-number">${poor}</span></div>
             </div>
-            ${cityAnalysisHtml}
-            ${weakQuestionsHtml}
             <h3>📋 Список сотрудников</h3>
             <table style="width:100%;"><thead><tr style="background:#0d6efd; color:white;"><th>Сотрудник</th><th>Город</th><th>Баллы</th><th>Процент</th></tr></thead><tbody>${rowsHtml}</tbody></table>
             <div class="footer" style="margin-top:30px; text-align:center; font-size:12px; color:#999;">Отчёт сгенерирован автоматически</div>
