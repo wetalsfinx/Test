@@ -36,56 +36,21 @@ body{background:#f5f7fa;font-family:sans-serif}
 .test-title{font-size:1.3rem;font-weight:bold;display:flex;align-items:center;gap:10px}
 .collapse-icon{font-size:1.2rem;transition:transform 0.3s}
 .test-block.collapsed .test-content{display:none}
-.test-block.collapsed .collapse-icon{transform:rotate(-90deg)}/* Мобильная версия */
+.test-block.collapsed .collapse-icon{transform:rotate(-90deg)}
 @media (max-width: 768px) {
-    .test-header {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 10px;
-    }
-    .test-header > div:first-child {
-        width: 100%;
-    }
-    .test-header > div:last-child {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 5px;
-    }
-    .filter-bar .row {
-        flex-direction: column;
-    }
-    .filter-bar .col-md-3, 
-    .filter-bar .col-md-2, 
-    .filter-bar .col-md-1 {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-    .stats-card {
-        margin-bottom: 15px;
-    }
-    .chart-card {
-        margin-bottom: 20px;
-    }
-    .user-log {
-        padding: 10px;
-    }
-    .user-log .d-flex {
-        flex-direction: column;
-        gap: 8px;
-    }
-    .user-log .d-flex .d-flex {
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
-    }
-    .test-title {
-        font-size: 1rem;
-    }
-    .btn-sm {
-        padding: 4px 8px;
-        font-size: 11px;
-    }
+    .test-header { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+    .test-header > div:first-child { width: 100%; }
+    .test-header > div:last-child { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+    .filter-bar .row { flex-direction: column; }
+    .filter-bar .col-md-3, .filter-bar .col-md-2, .filter-bar .col-md-1 { width: 100%; margin-bottom: 10px; }
+    .stats-card { margin-bottom: 15px; }
+    .chart-card { margin-bottom: 20px; }
+    .user-log { padding: 10px; }
+    .user-log .d-flex { flex-direction: column; gap: 8px; }
+    .user-log .d-flex .d-flex { flex-direction: row; justify-content: space-between; width: 100%; }
+    .test-title { font-size: 1rem; }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
+}
 </style>
 </head>
 <body>
@@ -109,7 +74,7 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div id="test1-block" class="test-block collapsed">
     <div class="test-header" onclick="toggleTest('test1')">
         <div class="test-title"><i class="bi bi-journal-bookmark-fill" style="color:#0d6efd"></i>📊 Тест 1: Стандарты продаж (7 вопросов)<span class="badge bg-primary ms-2" id="test1-count">0</span></div>
-        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test1')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test1')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
+        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test1')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-info me-2" onclick="event.stopPropagation(); generateSummaryReport('test1')"><i class="bi bi-file-text"></i> Резюме</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test1')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
     </div>
     <div class="test-content">
         <div class="row mb-4">
@@ -137,7 +102,7 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div id="test2-block" class="test-block collapsed">
     <div class="test-header" onclick="toggleTest('test2')">
         <div class="test-title"><i class="bi bi-chat-heart-fill" style="color:#e83e8c"></i>🎯 Тест 2: Стандарты обслуживания (11 вопросов)<span class="badge bg-primary ms-2" id="test2-count">0</span></div>
-        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test2')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test2')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
+        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test2')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-info me-2" onclick="event.stopPropagation(); generateSummaryReport('test2')"><i class="bi bi-file-text"></i> Резюме</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test2')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
     </div>
     <div class="test-content">
         <div class="row mb-4">
@@ -164,8 +129,8 @@ body{background:#f5f7fa;font-family:sans-serif}
 <!-- Блок ТЕСТ 3 -->
 <div id="test3-block" class="test-block collapsed">
     <div class="test-header" onclick="toggleTest('test3')">
-        <div class="test-title"><i class="bi bi-stars" style="color:#fd7e14"></i>🌟 Продажи. Входной тест. (11 вопросов)<span class="badge bg-primary ms-2" id="test3-count">0</span></div>
-        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test3')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test3')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
+        <div class="test-title"><i class="bi bi-stars" style="color:#fd7e14"></i>🌟 Продажи. Входной тест (11 вопросов)<span class="badge bg-primary ms-2" id="test3-count">0</span></div>
+        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test3')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-info me-2" onclick="event.stopPropagation(); generateSummaryReport('test3')"><i class="bi bi-file-text"></i> Резюме</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test3')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
     </div>
     <div class="test-content">
         <div class="row mb-4">
@@ -481,41 +446,112 @@ async function clearAllResults(testId) {
     }
 }
 
-function generateUserReport(resultId, testId) {
+// Функция генерации детального отчёта по сотруднику (с разбором ошибок)
+async function generateUserReport(resultId, testId) {
     let userData = null;
     let testName = '';
-    if(testId === 'test1') { userData = test1Data.find(r => r.id == resultId); testName = 'Стандарты продаж'; }
-    else if(testId === 'test2') { userData = test2Data.find(r => r.id == resultId); testName = 'Стандарты обслуживания'; }
-    else { userData = test3Data.find(r => r.id == resultId); testName = 'Продажи. Входной тест.'; }
+    let questionsData = [];
+    
+    if(testId === 'test1') { 
+        userData = test1Data.find(r => r.id == resultId); 
+        testName = 'Стандарты продаж';
+        questionsData = [
+            {text:"Клиент ищет советское украшение...", zone:"Работа с альтернативой / Каталог на заказ", formula:"«Понимаю + Каталог на заказ = Конкретное решение»"},
+            {text:"Клиент сказал «Я подумаю»...", zone:"Работа с возражениями / Рассрочка", formula:"«Понимаю + Яндекс Сплит = Снимаем ценовой барьер»"},
+            {text:"Клиент из ломбарда...", zone:"Работа с трафиком / Наблюдение", formula:"«Наблюдение + Предложение из категории = Точечная помощь»"},
+            {text:"Клиент купил кольцо...", zone:"Допродажа / Ансамбль", formula:"«Покупка + Предложение ансамбля = Законченный образ»"},
+            {text:"Как предложить футляр...", zone:"Завершение сделки / Футляр", formula:"«Выбор сделан + Футляр и средство = Забота об изделии»"},
+            {text:"Клиент говорит «Дорого»...", zone:"Работа с возражениями / Ценность", formula:"«Понимаю + Ценность = Обоснование цены»"},
+            {text:"Клиентка выбирает цепочку...", zone:"Альтернативный выбор", formula:"«Сужаем выбор + Помогаем определиться = Клиенту легче решить»"}
+        ];
+    } else if(testId === 'test2') { 
+        userData = test2Data.find(r => r.id == resultId); 
+        testName = 'Стандарты обслуживания';
+        questionsData = [
+            {text:"Как правильно встретить клиента?", zone:"Приветствие / Улыбка", formula:"«Улыбка + Предложение помощи = Располагаем клиента»"},
+            {text:"Что делать, если клиент долго выбирает?", zone:"Помощь в выборе", formula:"«Наблюдение + Предложение помощи = Снимаем неуверенность»"},
+            {text:"Как правильно прощаться с клиентом?", zone:"Завершение контакта", formula:"«Благодарность + Приглашение возвращаться = Оставляем приятное впечатление»"},
+            {text:"Что делать, если товара нет в наличии?", zone:"Альтернатива / Заказ", formula:"«Нет в наличии + Каталог на заказ = Решаем проблему»"},
+            {text:"Как реагировать на «Дорого»?", zone:"Работа с возражениями", formula:"«Понимаю + Ценность = Обоснование»"}
+        ];
+    } else { 
+        userData = test3Data.find(r => r.id == resultId); 
+        testName = 'Продажи. Входной тест';
+        questionsData = [
+            {text:"Клиент в обеденный перерыв...", zone:"Речевая пластинка про акции", formula:"«Приветствие + Акция + Бонусы = Клиент слышит выгоду»"},
+            {text:"Клиентка с ребёнком...", zone:"Работа с отвлекающими факторами", formula:"«Вижу ситуацию + Конкретное решение = Удерживаем внимание»"},
+            {text:"Молодой человек подарок...", zone:"Выявление потребностей", formula:"«Бюджет + Стиль = Точное попадание»"},
+            {text:"Кулон на выпускной...", zone:"Эмоциональная связь", formula:"«Покупка + Эмоция = Запоминается надолго»"},
+            {text:"Клиент купил цепочку...", zone:"Допродажа", formula:"«Покупка + Ансамбль = Законченный образ»"},
+            {text:"Кольцо за 70 000 ₽...", zone:"Футляр и средство", formula:"«Согласие на цену + Предложение аксессуаров = Забота о покупке»"},
+            {text:"Серьги за 55 000 ₽...", zone:"Работа с возражениями / Рассрочка", formula:"«Понимаю + Яндекс Сплит = Снимаем ценовой барьер»"},
+            {text:"Кольцо с изумрудом...", zone:"Альтернатива / Каталог на заказ", formula:"«Нет в наличии + Каталог на заказ = Решаем проблему»"},
+            {text:"Браслет на витрине...", zone:"Примерка", formula:"«Сомневаетесь + Давайте примерим = Снижаем риск»"},
+            {text:"«Красиво, но не уверена»...", zone:"Работа с сомнениями", formula:"«Понимаю + Что именно смущает? = Находим корень сомнения»"},
+            {text:"Клиентка рассматривает кольца...", zone:"Инициатива в диалоге", formula:"«Акция + Предложение помощи = Активируем интерес»"}
+        ];
+    }
     
     if(!userData) { alert('Данные не найдены'); return; }
     
     const fullName = `${userData.surname || ''} ${userData.name || ''}`.trim();
     const percent = Math.round(userData.score / userData.total * 100);
     
-    let answersHtml = '';
+    let zonesHtml = '';
+    let errorZones = [];
+    
     if(userData.answers && userData.answers.length > 0) {
-        userData.answers.forEach((a, i) => {
+        userData.answers.forEach((a, idx) => {
             const isCorrect = a.isCorrect === true || a.ok === true;
             const userAnswer = a.selected || a.sel || 'Не указан';
             const correctAnswer = a.correct || a.cor || 'Не указан';
-            let questionText = a.question || a.qs || `Вопрос ${i+1}`;
-            if(questionText.length > 200) questionText = questionText.substring(0,200);
+            const questionText = a.question || a.qs || `Вопрос ${idx+1}`;
+            const qData = questionsData[idx] || {zone: "Общая зона развития", formula: "Изучите правильный подход"};
             
-            answersHtml += `<div style="margin-bottom:20px;padding:12px;background:${isCorrect?'#e8f5e9':'#ffebee'};border-radius:8px;border-left:4px solid ${isCorrect?'#4caf50':'#f44336'}">
-                <div style="font-weight:bold;margin-bottom:8px;">Вопрос ${i+1}</div>
-                <div style="margin-bottom:8px;color:#555;">${escapeHtml(questionText)}</div>
-                <div><span style="color:#d32f2f;">✖ Ваш ответ:</span> <span style="background:#ffebee;padding:2px 8px;border-radius:4px;">${escapeHtml(userAnswer)}</span></div>
-                <div><span style="color:#2e7d32;">✓ Правильный ответ:</span> <span style="background:#e8f5e9;padding:2px 8px;border-radius:4px;">${escapeHtml(correctAnswer)}</span></div>
-                ${!isCorrect ? '<div style="margin-top:8px;font-size:12px;color:#666;">💡 Совет: обратите внимание на правильный вариант</div>' : ''}
-            </div>`;
+            if (!isCorrect) {
+                errorZones.push(qData.zone);
+                zonesHtml += `
+                    <div style="margin-bottom:30px; padding:15px; background:#fff3cd; border-left:5px solid #ffc107; border-radius:8px;">
+                        <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: ${qData.zone}</div>
+                        <div style="margin-top:10px;"><strong>📌 Ситуация из теста (Вопрос ${idx+1}):</strong><br>${escapeHtml(questionText)}</div>
+                        <div style="margin-top:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
+                        <div style="margin-top:5px;"><span style="color:#2e7d32;">✅ Правильный подход:</span> ${escapeHtml(correctAnswer)}</div>
+                        <div style="margin-top:12px; background:white; padding:10px; border-radius:6px;">
+                            <div style="font-weight:bold;">📊 В чём разница?</div>
+                            <table style="width:100%; margin-top:8px; border-collapse:collapse;">
+                                <tr style="background:#f8d7da;"><td style="padding:8px; border:1px solid #ddd;"><strong>❌ Ваш вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это слабее</strong></td></tr>
+                                <tr><td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(userAnswer.substring(0,60))}»</td><td style="padding:8px; border:1px solid #ddd;">Не даёт конкретного решения</td></tr>
+                                <tr style="background:#d4edda;"><td style="padding:8px; border:1px solid #ddd;"><strong>✅ Правильный вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это работает</strong></td></tr>
+                                <tr><td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(correctAnswer.substring(0,60))}»</td><td style="padding:8px; border:1px solid #ddd;">Даёт клиенту надежду и конкретный путь</td></tr>
+                            </table>
+                            <div style="margin-top:10px;"><strong>🛠️ Как применять на практике:</strong><br>
+                            Вместо:<br>
+                            ❌ «${escapeHtml(userAnswer.substring(0,50))}»<br>
+                            Говорите:<br>
+                            ✅ «${escapeHtml(correctAnswer)}»</div>
+                            <div style="margin-top:10px; padding:8px; background:#e8f5e9; border-radius:6px;"><strong>💡 Запомните формулу:</strong><br>${qData.formula}</div>
+                        </div>
+                    </div>
+                `;
+            }
         });
-    } else {
-        answersHtml = '<div style="color:#999;">Нет детальной информации по ответам</div>';
     }
     
-    const reportWindow = window.open('', '_blank');
-    reportWindow.document.write(`
+    // Уникальные зоны роста
+    const uniqueZones = [...new Set(errorZones)];
+    let summaryZones = '';
+    if (uniqueZones.length > 0) {
+        summaryZones = `<div style="margin:20px 0; padding:15px; background:#e3f2fd; border-radius:8px;">
+            <strong>📌 Основные зоны развития:</strong> ${uniqueZones.map(z => `🔹 ${z}`).join(' ')}
+        </div>`;
+    }
+    
+    let resultMessage = '';
+    if (percent >= 80) resultMessage = `🎉 Отлично! ${percent}% — вы уверенно применяете инициативу в диалоге, выявление потребностей, работу с возражениями, предложение второго украшения и завершение сделки.`;
+    else if (percent >= 50) resultMessage = `📈 Хороший результат — ${percent}%. ${uniqueZones.length} зоны роста — это точки, где можно быстро усилить результат.`;
+    else resultMessage = `📚 ${percent}% — требуется изучение материалов. Обратите внимание на зоны развития: ${uniqueZones.map(z => `«${z}»`).join(', ')}.`;
+    
+    const reportHtml = `
         <!DOCTYPE html>
         <html>
         <head><meta charset="UTF-8"><title>Отчёт: ${fullName}</title>
@@ -524,14 +560,10 @@ function generateUserReport(resultId, testId) {
             .header{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #0d6efd}
             .header h1{color:#0d6efd;margin:0}
             .info{background:#f5f7fa;padding:15px;border-radius:8px;margin-bottom:30px}
-            .info table{width:100%}
-            .info td{padding:5px}
             .score{display:inline-block;padding:5px 15px;border-radius:20px;font-weight:bold;margin-top:10px}
             .score-good{background:#4caf50;color:white}
             .score-normal{background:#ff9800;color:white}
             .score-bad{background:#f44336;color:white}
-            .answers-title{font-size:18px;font-weight:bold;margin:20px 0}
-            .footer{margin-top:40px;text-align:center;font-size:12px;color:#999;border-top:1px solid #eee;padding-top:20px}
             .btn-print{background:#0d6efd;color:white;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;margin-bottom:10px}
             .btn-print:hover{opacity:0.8}
             @media print { .no-print { display: none; } }
@@ -542,27 +574,86 @@ function generateUserReport(resultId, testId) {
                 <button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button>
             </div>
             <div class="header">
-                <h1>📊 Отчёт по тесту</h1>
+                <h1>📊 Персональный отчёт</h1>
                 <h2>«${testName}»</h2>
             </div>
             <div class="info">
-                <table>
-                    <tr><td>Сотрудник:</td><td><strong>${fullName}</strong></td>
-                    <tr><td>Город:</td><td><strong>${userData.city || 'не указан'}</strong></td>
-                    <tr><td>Дата:</td><td><strong>${new Date(userData.created_at).toLocaleString()}</strong></td>
-                    <tr><td>Результат:</td><td><strong>${userData.score} из ${userData.total} (${percent}%)</strong></td>
-                </table>
-                <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">
-                    ${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хорошо, но есть над чем работать':'📚 Требуется изучение материалов'}
-                </div>
+                <table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
+                <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr></table>
+                <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${resultMessage}</div>
             </div>
-            <div class="answers-title">📝 Детальный разбор ответов:</div>
-            ${answersHtml}
-            <div class="footer">Отчёт сгенерирован автоматически</div>
+            ${summaryZones}
+            <div style="margin:20px 0;"><strong>📝 Детальный разбор ответов:</strong></div>
+            ${zonesHtml || '<div style="color:#999;">✅ Все ответы верны! Отличная работа!</div>'}
+            <div class="footer" style="margin-top:40px; text-align:center; font-size:12px; color:#999; border-top:1px solid #eee; padding-top:20px;">Отчёт сгенерирован автоматически</div>
         </body>
         </html>
-    `);
+    `;
+    
+    const reportWindow = window.open('', '_blank');
+    reportWindow.document.write(reportHtml);
     reportWindow.document.close();
+}
+
+// Функция генерации общего резюме
+function generateSummaryReport(testId) {
+    let data = [];
+    let testName = '';
+    if (testId === 'test1') { data = test1Data; testName = 'Стандарты продаж'; }
+    else if (testId === 'test2') { data = test2Data; testName = 'Стандарты обслуживания'; }
+    else { data = test3Data; testName = 'Продажи. Входной тест'; }
+    
+    if (!data.length) { alert('Нет данных'); return; }
+    
+    const total = data.length;
+    const avgPercent = Math.round(data.reduce((sum, r) => sum + (r.score / r.total), 0) / total * 100);
+    const excellent = data.filter(r => (r.score / r.total) >= 0.8).length;
+    const good = data.filter(r => (r.score / r.total) >= 0.6 && (r.score / r.total) < 0.8).length;
+    const poor = data.filter(r => (r.score / r.total) < 0.6).length;
+    
+    let rowsHtml = '';
+    data.forEach(r => {
+        const percent = Math.round(r.score / r.total * 100);
+        rowsHtml += `<tr><td>${escapeHtml(r.surname || '')} ${escapeHtml(r.name || '')}</td><td>${escapeHtml(r.city || '')}</td><td>${r.score}/${r.total}</td><td>${percent}%</td></tr>`;
+    });
+    
+    const reportHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><title>Резюме: ${testName}</title>
+        <style>
+            body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px}
+            h1{color:#0d6efd}
+            table{border-collapse:collapse;width:100%;margin:15px 0}
+            th,td{border:1px solid #ddd;padding:8px;text-align:left}
+            th{background:#0d6efd;color:white}
+            .stat-card{display:inline-block;width:150px;background:#f5f7fa;padding:10px;margin:10px;border-radius:8px;text-align:center}
+            .stat-number{font-size:28px;font-weight:bold;color:#0d6efd}
+            .btn-print{background:#0d6efd;color:white;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;margin-bottom:10px}
+            @media print{.no-print{display:none}}
+        </style>
+        </head>
+        <body>
+            <div class="no-print" style="text-align:right;margin-bottom:10px"><button class="btn-print" onclick="window.print()">🖨️ Печать / Сохранить PDF</button></div>
+            <h1>📊 Резюме по тесту «${testName}»</h1>
+            <p>Дата: ${new Date().toLocaleString()}</p>
+            <div>
+                <div class="stat-card">👥 Всего прошло<br><span class="stat-number">${total}</span></div>
+                <div class="stat-card">📈 Средний балл<br><span class="stat-number">${avgPercent}%</span></div>
+                <div class="stat-card">⭐ Отлично (≥80%)<br><span class="stat-number">${excellent}</span></div>
+                <div class="stat-card">✅ Хорошо (60-79%)<br><span class="stat-number">${good}</span></div>
+                <div class="stat-card">📚 Требуют внимания (<60%)<br><span class="stat-number">${poor}</span></div>
+            </div>
+            <h3>📋 Список сотрудников</h3>
+            <table><thead><tr><th>Сотрудник</th><th>Город</th><th>Баллы</th><th>Процент</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+            <div class="footer" style="margin-top:30px; text-align:center; font-size:12px; color:#999;">Отчёт сгенерирован автоматически</div>
+        </body>
+        </html>
+    `;
+    
+    const win = window.open('', '_blank');
+    win.document.write(reportHtml);
+    win.document.close();
 }
 
 function exportTestToExcel(testId) {
@@ -570,7 +661,7 @@ function exportTestToExcel(testId) {
     let name = '';
     if(testId === 'test1') { data = test1Data; name = 'Стандарты_продаж'; }
     else if(testId === 'test2') { data = test2Data; name = 'Стандарты_обслуживания'; }
-    else { data = test3Data; name = 'Продажи. Входной тест'; }
+    else { data = test3Data; name = 'Продажи_Входной_тест'; }
     if(!data.length) return alert("Нет данных");
     const excelData = data.map(r => ({ 'ФИО': `${r.surname||''} ${r.name||''}`.trim(), 'Город': r.city||'', 'Баллы': `${r.score}/${r.total}`, 'Процент': `${Math.round(r.score/r.total*100)}%`, 'Дата': new Date(r.created_at).toLocaleString() }));
     const ws = XLSX.utils.json_to_sheet(excelData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, name); XLSX.writeFile(wb, `${name}_${new Date().toLocaleDateString()}.xlsx`);
@@ -588,6 +679,7 @@ window.resetTest3Filters = resetTest3Filters;
 window.deleteSingleResult = deleteSingleResult;
 window.clearAllResults = clearAllResults;
 window.generateUserReport = generateUserReport;
+window.generateSummaryReport = generateSummaryReport;
 </script>
 </body>
 </html>
