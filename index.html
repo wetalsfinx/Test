@@ -565,7 +565,7 @@ async function generateUserReport(resultId, testId) {
         if(userData.answers && userData.answers.length > 0) {
             userData.answers.forEach((a, i) => {
                 const isCorrect = a.isCorrect === true || a.ok === true;
-                if (isCorrect) return; // пропускаем правильные ответы
+                if (isCorrect) return;
                 const userAnswer = a.selected || a.sel || 'Не указан';
                 const correctAnswer = a.correct || a.cor || 'Не указан';
                 let questionText = a.question || a.qs || `Вопрос ${i+1}`;
@@ -590,7 +590,8 @@ async function generateUserReport(resultId, testId) {
             <body>
                 <div class="no-print" style="text-align:right;margin-bottom:10px"><button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button></div>
                 <div class="header"><h1>📊 Отчёт по тесту</h1><h2>«${testName}»</h2></div>
-                <div class="info"><table style="width:100%"><tr><td>Сотрудник: <strong>${fullName}</strong></td><td>Город: <strong>${userData.city || 'не указан'}</strong></td></tr><tr><td>Дата: ${new Date(userData.created_at).toLocaleString()}</td><td>Результат: <strong>${userData.score} из ${userData.total} (${percent}%)</strong></td></tr></table>
+                <div class="info"><table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
+                <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr></table>
                 <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хороший результат':'📚 Требуется изучение материалов'}</div></div>
                 <div style="margin:20px 0;"><strong>📝 Разбор ошибок:</strong></div>
                 ${answersHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
@@ -604,24 +605,19 @@ async function generateUserReport(resultId, testId) {
         return;
     }
     
-    // ДЛЯ ТЕСТА 3 — подробный разбор только ошибок
+    // ДЛЯ ТЕСТА 3 — ТОЛЬКО ОШИБКИ В ТВОЁМ ФОРМАТЕ
     let zonesHtml = '';
     let errorZones = [];
-    let correctZones = [];
+    let totalErrors = 0;
     
     if(userData.answers && userData.answers.length > 0) {
         for(let idx = 0; idx < userData.answers.length; idx++) {
             const a = userData.answers[idx];
             const isCorrect = a.isCorrect === true || a.ok === true;
             
-            // Сохраняем правильные зоны для статистики, но не показываем
-            if (isCorrect) {
-                const questionText = a.question || a.qs;
-                const knowledge = test3Knowledge.find(k => k.question === questionText);
-                if (knowledge) correctZones.push(knowledge.zone);
-                continue; // пропускаем правильные ответы — не показываем в отчёте
-            }
+            if (isCorrect) continue; // пропускаем правильные ответы
             
+            totalErrors++;
             const userAnswer = a.selected || a.sel || 'Не указан';
             const correctAnswer = a.correct || a.cor || 'Не указан';
             const questionText = a.question || a.qs || `Вопрос ${idx+1}`;
@@ -630,30 +626,45 @@ async function generateUserReport(resultId, testId) {
             
             if (knowledge) {
                 errorZones.push(knowledge.zone);
+                
+                // Таблица сравнения
+                let comparisonTable = `
+                    <table style="width:100%; margin-top:10px; border-collapse:collapse;">
+                        <tr style="background:#f8d7da;">
+                            <td style="padding:8px; border:1px solid #ddd; width:50%;"><strong>❌ Ваш вариант</strong></td>
+                            <td style="padding:8px; border:1px solid #ddd;"><strong>Почему это слабее</strong></td>
+                         </tr>
+                        <tr style="background:#f8d7da;">
+                            <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(userAnswer)}</td>
+                            <td style="padding:8px; border:1px solid #ddd;">${knowledge.whyWorse}</td>
+                         </tr>
+                        <tr style="background:#d4edda;">
+                            <td style="padding:8px; border:1px solid #ddd;"><strong>✅ Правильный вариант</strong></td>
+                            <td style="padding:8px; border:1px solid #ddd;"><strong>Почему это работает</strong></td>
+                         </tr>
+                        <tr style="background:#d4edda;">
+                            <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(knowledge.goodExample)}</td>
+                            <td style="padding:8px; border:1px solid #ddd;">${knowledge.whyBetter}</td>
+                         </tr>
+                    </table>
+                `;
+                
                 zonesHtml += `
                     <div style="margin-bottom:30px; padding:15px; background:#fff3cd; border-left:5px solid #ffc107; border-radius:8px;">
                         <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: ${knowledge.zone}</div>
-                        <div style="margin-top:10px;"><strong>📌 Ситуация из теста:</strong><br>${escapeHtml(questionText)}</div>
+                        <div style="margin-top:10px;"><strong>📌 Ситуация из теста (Вопрос ${idx+1}):</strong><br>${escapeHtml(questionText)}</div>
                         <div style="margin-top:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
                         <div style="margin-top:5px;"><span style="color:#2e7d32;">✅ Правильный подход:</span> ${escapeHtml(knowledge.correct)}</div>
-                        <div style="margin-top:12px; background:white; padding:10px; border-radius:6px;">
-                            <div style="font-weight:bold;">📊 В чём разница?</div>
-                            <table style="width:100%; margin-top:8px; border-collapse:collapse;">
-                                <tr style="background:#f8d7da;"><td style="padding:8px; border:1px solid #ddd;"><strong>❌ Ваш вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это слабее</strong></td></tr>
-                                <tr><td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(knowledge.wrongExample.substring(0,80))}»</td><td style="padding:8px; border:1px solid #ddd;">${knowledge.whyWorse}</td></tr>
-                                <tr style="background:#d4edda;"><td style="padding:8px; border:1px solid #ddd;"><strong>✅ Правильный вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это работает</strong></td></tr>
-                                <tr><td style="padding:8px; border:1px solid #ddd;">«${escapeHtml(knowledge.goodExample.substring(0,80))}»</td><td style="padding:8px; border:1px solid #ddd;">${knowledge.whyBetter}</td></tr>
-                            </table>
-                            <div style="margin-top:10px;"><strong>🛠️ Как применять на практике:</strong><br>${knowledge.practice}</div>
-                            <div style="margin-top:10px; padding:8px; background:#e8f5e9; border-radius:6px;"><strong>💡 Запомните формулу:</strong><br>${knowledge.formula}</div>
-                        </div>
+                        ${comparisonTable}
+                        <div style="margin-top:12px;"><strong>🛠️ Как применять на практике:</strong><br>${knowledge.practice}</div>
+                        <div style="margin-top:10px; padding:8px; background:#e8f5e9; border-radius:6px;"><strong>💡 Запомните формулу:</strong><br>${knowledge.formula}</div>
                     </div>
                 `;
             } else {
                 zonesHtml += `
                     <div style="margin-bottom:30px; padding:15px; background:#fff3cd; border-left:5px solid #ffc107; border-radius:8px;">
                         <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: Общая рекомендация</div>
-                        <div style="margin-top:10px;"><strong>📌 Вопрос:</strong><br>${escapeHtml(questionText)}</div>
+                        <div style="margin-top:10px;"><strong>📌 Вопрос ${idx+1}:</strong><br>${escapeHtml(questionText)}</div>
                         <div style="margin-top:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
                         <div style="margin-top:5px;"><span style="color:#2e7d32;">✅ Правильный ответ:</span> ${escapeHtml(correctAnswer)}</div>
                         <div style="margin-top:12px;"><strong>💡 Совет:</strong> Обратите внимание на правильный вариант и потренируйтесь применять его на практике.</div>
@@ -664,26 +675,21 @@ async function generateUserReport(resultId, testId) {
     }
     
     const uniqueZones = [...new Set(errorZones)];
-    const uniqueStrengths = [...new Set(correctZones)];
-    
-    let strengthsHtml = '';
-    if (uniqueStrengths.length > 0) {
-        strengthsHtml = `<div style="margin:20px 0; padding:15px; background:#d4edda; border-radius:8px;">
-            <strong>✅ Сильные стороны (темы, где всё верно):</strong> ${uniqueStrengths.map(z => `🔹 ${z}`).join(' ')}
-        </div>`;
-    }
-    
     let summaryZones = '';
     if (uniqueZones.length > 0) {
         summaryZones = `<div style="margin:20px 0; padding:15px; background:#e3f2fd; border-radius:8px;">
-            <strong>📌 Зоны развития (требуют внимания):</strong> ${uniqueZones.map(z => `🔹 ${z}`).join(' ')}
+            <strong>📌 Основные зоны развития:</strong> ${uniqueZones.map(z => `🔹 ${z}`).join(' ')}
         </div>`;
     }
     
     let resultMessage = '';
-    if (percent >= 80) resultMessage = `🎉 Отлично! ${percent}% — вы уверенно применяете все техники.`;
-    else if (percent >= 50) resultMessage = `📈 Хороший результат — ${percent}%. ${uniqueZones.length} зоны роста — это точки, где можно быстро усилить результат.`;
-    else resultMessage = `📚 ${percent}% — требуется изучение материалов. Обратите внимание на зоны развития: ${uniqueZones.map(z => `«${z}»`).join(', ')}.`;
+    if (percent >= 80) {
+        resultMessage = `🎉 Отлично! ${fullName}, ${userData.score} из ${userData.total} — отличный результат! ${uniqueZones.length > 0 ? `Зоны роста — ${uniqueZones.map(z => `«${z}»`).join(', ')} — это точки, где можно быстро усилить результат.` : ''}`;
+    } else if (percent >= 50) {
+        resultMessage = `📈 Хороший результат — ${fullName}, ${userData.score} из ${userData.total} (${percent}%). ${uniqueZones.length} зоны роста — это точки, где можно быстро усилить результат.`;
+    } else {
+        resultMessage = `📚 ${fullName}, ${userData.score} из ${userData.total} (${percent}%) — требуется изучение материалов. Обратите внимание на зоны развития: ${uniqueZones.map(z => `«${z}»`).join(', ')}.`;
+    }
     
     const reportHtml = `
         <!DOCTYPE html>
@@ -713,11 +719,9 @@ async function generateUserReport(resultId, testId) {
             </div>
             <div class="info">
                 <table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
-                <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr>
-                </table>
+                <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr></table>
                 <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${resultMessage}</div>
             </div>
-            ${strengthsHtml}
             ${summaryZones}
             <div style="margin:20px 0;"><strong>📝 Детальный разбор ошибок:</strong></div>
             ${zonesHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
@@ -731,7 +735,7 @@ async function generateUserReport(resultId, testId) {
     reportWindow.document.close();
 }
 
-// Функция генерации общего резюме с рекомендациями по городам
+    // Функция генерации общего резюме с рекомендациями по городам
 function generateSummaryReport(testId) {
     let data = [];
     let testName = '';
