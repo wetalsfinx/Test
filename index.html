@@ -557,7 +557,6 @@ async function generateUserReport(resultId, testId) {
     if(testId === 'test1') { 
         userData = test1Data.find(r => r.id == resultId); 
         testName = 'Стандарты продаж';
-        // Для теста 1 пока оставляем старый формат
     } else if(testId === 'test2') { 
         userData = test2Data.find(r => r.id == resultId); 
         testName = 'Стандарты обслуживания';
@@ -624,7 +623,8 @@ async function generateUserReport(resultId, testId) {
                 </div>
                 <div class="info">
                     <table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
-                    <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr></table>
+                    <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr>
+                    </table>
                     <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хороший результат':percent>=30?'📚 Есть над чем работать':'📚 Требуется изучение материалов'}</div>
                 </div>
                 <div class="answers-title">📝 Детальный разбор ответов:</div>
@@ -642,6 +642,7 @@ async function generateUserReport(resultId, testId) {
     // ДЛЯ ТЕСТА 3 — подробный разбор с привязкой по тексту вопроса
     let zonesHtml = '';
     let errorZones = [];
+    let correctZones = [];
     
     if(userData.answers && userData.answers.length > 0) {
         for(let idx = 0; idx < userData.answers.length; idx++) {
@@ -651,10 +652,11 @@ async function generateUserReport(resultId, testId) {
             const correctAnswer = a.correct || a.cor || 'Не указан';
             const questionText = a.question || a.qs || `Вопрос ${idx+1}`;
             
-            // Ищем знание по тексту вопроса
             const knowledge = test3Knowledge.find(k => k.question === questionText);
             
-            if (!isCorrect && knowledge) {
+            if (isCorrect && knowledge) {
+                correctZones.push(knowledge.zone);
+            } else if (!isCorrect && knowledge) {
                 errorZones.push(knowledge.zone);
                 zonesHtml += `
                     <div style="margin-bottom:30px; padding:15px; background:#fff3cd; border-left:5px solid #ffc107; border-radius:8px;">
@@ -676,7 +678,6 @@ async function generateUserReport(resultId, testId) {
                     </div>
                 `;
             } else if (!isCorrect && !knowledge) {
-                // Если знание не найдено — показываем базовый разбор
                 zonesHtml += `
                     <div style="margin-bottom:30px; padding:15px; background:#fff3cd; border-left:5px solid #ffc107; border-radius:8px;">
                         <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: Общая рекомендация</div>
@@ -690,11 +691,23 @@ async function generateUserReport(resultId, testId) {
         }
     }
     
+    // Подсчёт зон роста для статистики
+    const zoneCounts = {};
+    errorZones.forEach(z => { zoneCounts[z] = (zoneCounts[z] || 0) + 1; });
+    
+    let strengthsHtml = '';
+    if (correctZones.length > 0) {
+        const uniqueStrengths = [...new Set(correctZones)];
+        strengthsHtml = `<div style="margin:20px 0; padding:15px; background:#d4edda; border-radius:8px;">
+            <strong>✅ Сильные стороны (правильные ответы по темам):</strong> ${uniqueStrengths.map(z => `🔹 ${z}`).join(' ')}
+        </div>`;
+    }
+    
     const uniqueZones = [...new Set(errorZones)];
     let summaryZones = '';
     if (uniqueZones.length > 0) {
         summaryZones = `<div style="margin:20px 0; padding:15px; background:#e3f2fd; border-radius:8px;">
-            <strong>📌 Основные зоны развития:</strong> ${uniqueZones.map(z => `🔹 ${z}`).join(' ')}
+            <strong>📌 Основные зоны развития (требуют внимания):</strong> ${uniqueZones.map(z => `🔹 ${z}`).join(' ')}
         </div>`;
     }
     
@@ -735,9 +748,10 @@ async function generateUserReport(resultId, testId) {
                 </table>
                 <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${resultMessage}</div>
             </div>
+            ${strengthsHtml}
             ${summaryZones}
-            <div style="margin:20px 0;"><strong>📝 Детальный разбор ответов:</strong></div>
-            ${zonesHtml || '<div style="color:#999;">✅ Все ответы верны! Отличная работа!</div>'}
+            <div style="margin:20px 0;"><strong>📝 Детальный разбор ошибок:</strong></div>
+            ${zonesHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
             <div class="footer" style="margin-top:40px; text-align:center; font-size:12px; color:#999; border-top:1px solid #eee; padding-top:20px;">Отчёт сгенерирован автоматически</div>
         </body>
         </html>
@@ -748,7 +762,7 @@ async function generateUserReport(resultId, testId) {
     reportWindow.document.close();
 }
 
-// Функция генерации общего резюме
+// Функция генерации общего резюме с анализом по городам
 function generateSummaryReport(testId) {
     let data = [];
     let testName = '';
@@ -764,10 +778,69 @@ function generateSummaryReport(testId) {
     const good = data.filter(r => (r.score / r.total) >= 0.6 && (r.score / r.total) < 0.8).length;
     const poor = data.filter(r => (r.score / r.total) < 0.6).length;
     
+    // Анализ по городам
+    const cityStats = {};
+    data.forEach(r => {
+        const city = r.city || 'Не указан';
+        if (!cityStats[city]) {
+            cityStats[city] = { total: 0, count: 0, scores: [] };
+        }
+        cityStats[city].total += (r.score / r.total);
+        cityStats[city].count++;
+        cityStats[city].scores.push(r.score / r.total);
+    });
+    
+    let cityAnalysisHtml = '<h3>🏙️ Анализ по городам</h3><table style="width:100%; border-collapse:collapse; margin-bottom:20px;"><thead><tr style="background:#0d6efd; color:white;"><th style="padding:8px; border:1px solid #ddd;">Город</th><th style="padding:8px; border:1px solid #ddd;">Всего прошло</th><th style="padding:8px; border:1px solid #ddd;">Средний балл</th><th style="padding:8px; border:1px solid #ddd;">Оценка</th></tr></thead><tbody>';
+    
+    for (const [city, stats] of Object.entries(cityStats)) {
+        const cityAvg = Math.round(stats.total / stats.count * 100);
+        let grade = '';
+        if (cityAvg >= 80) grade = '🟢 Отлично';
+        else if (cityAvg >= 60) grade = '🟡 Хорошо';
+        else if (cityAvg >= 40) grade = '🟠 Средне';
+        else grade = '🔴 Требует внимания';
+        cityAnalysisHtml += `<tr><td style="padding:8px; border:1px solid #ddd;">${escapeHtml(city)}</td><td style="padding:8px; border:1px solid #ddd;">${stats.count}</td><td style="padding:8px; border:1px solid #ddd;">${cityAvg}%</td><td style="padding:8px; border:1px solid #ddd;">${grade}</td></tr>`;
+    }
+    cityAnalysisHtml += '</tbody></table>';
+    
+    // Слабые вопросы (если есть данные)
+    let weakQuestionsHtml = '';
+    if (testId === 'test3') {
+        const questionStats = {};
+        data.forEach(r => {
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    const isCorrect = a.isCorrect === true || a.ok === true;
+                    const qText = a.question || a.qs || `Вопрос ${idx+1}`;
+                    if (!questionStats[qText]) {
+                        questionStats[qText] = { total: 0, correct: 0 };
+                    }
+                    questionStats[qText].total++;
+                    if (isCorrect) questionStats[qText].correct++;
+                });
+            }
+        });
+        
+        const weakQuestions = Object.entries(questionStats)
+            .map(([q, stats]) => ({ q, percent: Math.round(stats.correct / stats.total * 100), total: stats.total }))
+            .filter(item => item.percent < 60)
+            .sort((a, b) => a.percent - b.percent)
+            .slice(0, 5);
+        
+        if (weakQuestions.length > 0) {
+            weakQuestionsHtml = '<h3>📉 Вопросы, вызвавшие наибольшие трудности</h3><table style="width:100%; border-collapse:collapse; margin-bottom:20px;"><thead><tr style="background:#dc3545; color:white;"><th style="padding:8px; border:1px solid #ddd;">Вопрос</th><th style="padding:8px; border:1px solid #ddd;">Правильных ответов</th><th style="padding:8px; border:1px solid #ddd;">Процент верных</th></tr></thead><tbody>';
+            weakQuestions.forEach(wq => {
+                let shortQuestion = wq.q.length > 80 ? wq.q.substring(0, 80) + '…' : wq.q;
+                weakQuestionsHtml += `<tr><td style="padding:8px; border:1px solid #ddd;">${escapeHtml(shortQuestion)}</td><td style="padding:8px; border:1px solid #ddd;">${Math.round(wq.percent * wq.total / 100)}/${wq.total}</td><td style="padding:8px; border:1px solid #ddd;">${wq.percent}%</td></tr>`;
+            });
+            weakQuestionsHtml += '</tbody></table>';
+        }
+    }
+    
     let rowsHtml = '';
     data.forEach(r => {
         const percent = Math.round(r.score / r.total * 100);
-        rowsHtml += `<tr><td>${escapeHtml(r.surname || '')} ${escapeHtml(r.name || '')}</td><td>${escapeHtml(r.city || '')}</td><td>${r.score}/${r.total}</td><td>${percent}%</td></tr>`;
+        rowsHtml += `<tr><td style="padding:8px; border:1px solid #ddd;">${escapeHtml(r.surname || '')} ${escapeHtml(r.name || '')}</td><td style="padding:8px; border:1px solid #ddd;">${escapeHtml(r.city || '')}</td><td style="padding:8px; border:1px solid #ddd;">${r.score}/${r.total}</td><td style="padding:8px; border:1px solid #ddd;">${percent}%</td></tr>`;
     });
     
     const reportHtml = `
@@ -797,8 +870,10 @@ function generateSummaryReport(testId) {
                 <div class="stat-card">✅ Хорошо (60-79%)<br><span class="stat-number">${good}</span></div>
                 <div class="stat-card">📚 Требуют внимания (<60%)<br><span class="stat-number">${poor}</span></div>
             </div>
+            ${cityAnalysisHtml}
+            ${weakQuestionsHtml}
             <h3>📋 Список сотрудников</h3>
-            <table><thead><tr><th>Сотрудник</th><th>Город</th><th>Баллы</th><th>Процент</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+            <table style="width:100%; border-collapse:collapse;"><thead><tr style="background:#0d6efd; color:white;"><th style="padding:8px;">Сотрудник</th><th style="padding:8px;">Город</th><th style="padding:8px;">Баллы</th><th style="padding:8px;">Процент</th></tr></thead><tbody>${rowsHtml}</tbody></table>
             <div class="footer" style="margin-top:30px; text-align:center; font-size:12px; color:#999;">Отчёт сгенерирован автоматически</div>
         </body>
         </html>
