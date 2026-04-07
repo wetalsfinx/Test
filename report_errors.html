@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анализ ошибок тестирования</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .upload-area { border: 2px dashed #ccc; border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; background: white; }
+        .upload-area:hover { border-color: #0d6efd; background: #f8f9fa; }
+        .error-card { background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .error-header { background: #dc3545; color: white; padding: 12px 20px; border-radius: 10px 10px 0 0; cursor: pointer; }
+        .error-header.green { background: #198754; }
+        .error-body { padding: 20px; display: none; }
+        .error-body.show { display: block; }
+        .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 10px; border-radius: 5px; }
+        .badge-ok { background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 15px; font-size: 12px; }
+        .stats-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
+        .btn-print { background: #0d6efd; color: white; border: none; padding: 8px 20px; border-radius: 5px; margin-right: 10px; }
+        .btn-print:hover { background: #0b5ed7; }
+        @media print {
+            .no-print { display: none; }
+            .error-header { background: #dc3545 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .error-header.green { background: #198754 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .stats-card { background: #667eea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-file-text"></i> Анализ ошибок тестирования</h1>
+        <div class="no-print">
+            <button class="btn-print" onclick="window.print()"><i class="bi bi-printer"></i> Распечатать</button>
+            <a href="?mode=admin" class="btn btn-outline-secondary">← Админка</a>
+        </div>
+    </div>
+
+    <!-- Загрузка файла -->
+    <div class="upload-area no-print" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+        <i class="bi bi-file-excel fs-1"></i>
+        <p class="mt-2">Нажмите или перетащите файл Excel (.xlsx) с результатами</p>
+        <small class="text-muted">Экспортируйте из админки кнопкой "Экспорт"</small>
+        <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
+    </div>
+
+    <!-- Статистика -->
+    <div id="statsPanel" class="row mb-4" style="display:none">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="small opacity-75">Всего сотрудников</div>
+                <div class="h3 mb-0" id="totalCount">0</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="small opacity-75">Средний балл</div>
+                <div class="h3 mb-0" id="avgScore">0%</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="small opacity-75">Всего ошибок</div>
+                <div class="h3 mb-0" id="totalErrors">0</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="small opacity-75">Без ошибок</div>
+                <div class="h3 mb-0" id="perfectCount">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Результаты -->
+    <div id="resultsArea"></div>
+</div>
+
+<script>
+// База рекомендаций по ключевым словам в вопросах
+const recommendationsDB = [
+    { keywords: ["акци", "скидк", "бонус"], text: "Рекомендуется: всегда начинать диалог с упоминания текущих акций и специальных предложений. Это создаёт дополнительную ценность для клиента с первых секунд." },
+    { keywords: ["ребёнк", "детск", "малыш"], text: "Рекомендуется: проявлять инициативу и предлагать безопасные варианты. Говорите о надёжной застёжке и комфорте для ребёнка." },
+    { keywords: ["бюджет", "стиль", "подруге"], text: "Рекомендуется: сначала выяснить стиль и предпочтения, только потом показывать варианты. Это сужает поиск и повышает точность попадания." },
+    { keywords: ["выпускн", "подарок дочер", "эмоциональн"], text: "Рекомендуется: создавать эмоциональную связь через событие. Говорите о том, как украшение станет символом важного момента." },
+    { keywords: ["цепочк", "ансамбл", "законченн"], text: "Рекомендуется: предлагать дополнительные украшения для создания полного образа. Конкретное предложение работает лучше общего вопроса." },
+    { keywords: ["футляр", "средств", "уход"], text: "Рекомендуется: предлагать футляр и средство ДО оплаты, когда клиент уже согласился на цену. Это увеличивает чек." },
+    { keywords: ["дорог", "сумму", "тратить", "возража"], text: "Рекомендуется: использовать рассрочку или сплит-платежи. Это снимает ценовой барьер без потери продажи." },
+    { keywords: ["наличи", "каталог", "заказ"], text: "Рекомендуется: сразу предлагать каталог на заказ. Клиент уходит с решением, а не с отказом." },
+    { keywords: ["примерк", "браслет"], text: "Рекомендуется: предлагать примерить сразу. Это снимает страх неправильного выбора." },
+    { keywords: ["сомнени", "уверен", "смуща"], text: "Рекомендуется: выяснять конкретную причину сомнения (дизайн, размер, цена). Это помогает точечно отработать возражение." },
+    { keywords: ["витрин", "2 минут", "рассматр"], text: "Рекомендуется: проявлять инициативу, предлагать помощь и уточнять цель (для себя / в подарок)." }
+];
+
+function getRecommendation(questionText) {
+    const lowerText = questionText.toLowerCase();
+    for (let rec of recommendationsDB) {
+        for (let kw of rec.keywords) {
+            if (lowerText.includes(kw)) {
+                return rec.text;
+            }
+        }
+    }
+    return "Рекомендуется: внимательно изучить правильный ответ и потренироваться применять его на практике.";
+}
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet);
+        
+        processData(rows);
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+function processData(rows) {
+    const employees = {};
+    
+    for (let row of rows) {
+        const name = row['ФИО'] || '';
+        if (!name) continue;
+        
+        if (!employees[name]) {
+            employees[name] = {
+                name: name,
+                city: row['Город'] || '',
+                score: 0,
+                total: 0,
+                errors: []
+            };
+        }
+        
+        const scoreMatch = (row['Баллы'] || '').match(/(\d+)\/(\d+)/);
+        if (scoreMatch) {
+            employees[name].score = parseInt(scoreMatch[1]);
+            employees[name].total = parseInt(scoreMatch[2]);
+        }
+    }
+    
+    // Если нет детальных ошибок в Excel, показываем общую статистику
+    const total = Object.keys(employees).length;
+    const avgScore = total > 0 ? Math.round(Object.values(employees).reduce((s, e) => s + (e.score / e.total), 0) / total * 100) : 0;
+    const perfectCount = Object.values(employees).filter(e => e.score === e.total).length;
+    const totalErrors = Object.values(employees).reduce((s, e) => s + (e.total - e.score), 0);
+    
+    document.getElementById('statsPanel').style.display = 'flex';
+    document.getElementById('totalCount').innerText = total;
+    document.getElementById('avgScore').innerText = avgScore + '%';
+    document.getElementById('totalErrors').innerText = totalErrors;
+    document.getElementById('perfectCount').innerText = perfectCount;
+    
+    let html = '<h3 class="mb-3">📋 Результаты сотрудников</h3>';
+    
+    for (let emp of Object.values(employees)) {
+        const percent = Math.round(emp.score / emp.total * 100);
+        const errorCount = emp.total - emp.score;
+        
+        html += `
+            <div class="error-card">
+                <div class="error-header ${errorCount === 0 ? 'green' : ''}" onclick="toggleBody(this)">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${escapeHtml(emp.name)}</strong>
+                            <span class="badge bg-light text-dark ms-2">${emp.city}</span>
+                            <span class="badge ${percent >= 80 ? 'bg-success' : (percent >= 50 ? 'bg-warning' : 'bg-danger')} ms-2">${emp.score}/${emp.total} (${percent}%)</span>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary">Ошибок: ${errorCount}</span>
+                            <i class="bi bi-chevron-down ms-2"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="error-body">
+                    <p class="mb-2"><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)</p>
+                    ${errorCount === 0 ? 
+                        '<div class="alert alert-success">✅ Отлично! Нет ошибок.</div>' : 
+                        `<div class="alert alert-warning">⚠️ Количество ошибок: ${errorCount}. Рекомендуется повторить материалы по темам, где были ошибки.</div>`
+                    }
+                    <div class="recommendation">
+                        <strong>💡 Общая рекомендация:</strong><br>
+                        ${errorCount === 0 ? 'Продолжайте в том же духе!' : 'Обратите внимание на правильные ответы в вопросах, где были ошибки. Рекомендуется пройти тест повторно после изучения материалов.'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    document.getElementById('resultsArea').innerHTML = html;
+}
+
+function toggleBody(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle('show');
+    const icon = header.querySelector('.bi-chevron-down');
+    if (icon) icon.style.transform = body.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// Drag and drop
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#0d6efd';
+    uploadArea.style.background = '#f8f9fa';
+});
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#ccc';
+    uploadArea.style.background = 'white';
+});
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#ccc';
+    uploadArea.style.background = 'white';
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(firstSheet);
+            processData(rows);
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        alert('Пожалуйста, загрузите Excel файл (.xlsx или .xls)');
+    }
+});
+</script>
+</body>
+</html>
