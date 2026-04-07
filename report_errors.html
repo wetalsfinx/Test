@@ -209,12 +209,12 @@ function getRecommendationHTML(questionNum, userAnswer, correctAnswer) {
     `;
 }
 
-function generatePDF(empName, empCity, empScore, empTotal, empErrors) {
-    const percent = Math.round(empScore / empTotal * 100);
-    const errorCount = empErrors.length;
+function generatePDF(employee) {
+    const percent = Math.round(employee.score / employee.total * 100);
+    const errorCount = employee.errors.length;
     
     let errorsHtml = '';
-    for (const err of empErrors) {
+    for (const err of employee.errors) {
         errorsHtml += `
             <div style="margin-bottom: 25px; padding: 15px; background: #ffebee; border-radius: 8px; border-left: 4px solid #dc3545;">
                 <strong>❌ Вопрос ${err.num}:</strong><br>
@@ -231,7 +231,7 @@ function generatePDF(empName, empCity, empScore, empTotal, empErrors) {
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>Отчёт: ${escapeHtml(empName)}</title>
+            <title>Отчёт: ${employee.name}</title>
             <style>
                 body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; }
                 .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #0d6efd; }
@@ -255,8 +255,8 @@ function generatePDF(empName, empCity, empScore, empTotal, empErrors) {
             </div>
             <div class="info">
                 <table style="width:100%">
-                    <tr><td><strong>Сотрудник:</strong> ${escapeHtml(empName)}</td><td><strong>Город:</strong> ${escapeHtml(empCity)}</td></tr>
-                    <tr><td><strong>Дата:</strong> ${new Date().toLocaleString()}</td><td><strong>Результат:</strong> ${empScore} из ${empTotal} (${percent}%)</td></tr>
+                    <tr><td><strong>Сотрудник:</strong> ${escapeHtml(employee.name)}</td><td><strong>Город:</strong> ${escapeHtml(employee.city)}</td></tr>
+                    <tr><td><strong>Дата:</strong> ${new Date().toLocaleString()}</td><td><strong>Результат:</strong> ${employee.score} из ${employee.total} (${percent}%)</td></tr>
                 </table>
                 <div class="score ${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
                     ${percent >= 80 ? '🎉 Отлично!' : (percent >= 50 ? '📈 Хороший результат' : '📚 Требуется изучение материалов')}
@@ -271,7 +271,7 @@ function generatePDF(empName, empCity, empScore, empTotal, empErrors) {
     
     const opt = {
         margin: [10, 10, 10, 10],
-        filename: `Отчёт_${empName.replace(/[^а-яёa-z0-9]/gi, '_')}.pdf`,
+        filename: `Отчёт_${employee.name.replace(/[^а-яёa-z0-9]/gi, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -291,6 +291,21 @@ function generatePDF(empName, empCity, empScore, empTotal, empErrors) {
         document.body.removeChild(element);
     });
 }
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet);
+        processData(rows);
+    };
+    reader.readAsArrayBuffer(file);
+});
 
 function processData(rows) {
     const employees = [];
@@ -358,6 +373,9 @@ function processData(rows) {
             `;
         }
         
+        // Экранируем данные для передачи в функцию
+        const empJson = JSON.stringify(emp).replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+        
         html += `
             <div class="error-card">
                 <div class="error-header ${errorCount === 0 ? 'green' : ''}" onclick="toggleBody(this)">
@@ -369,7 +387,7 @@ function processData(rows) {
                         </div>
                         <div>
                             <span class="badge bg-secondary">Ошибок: ${errorCount}</span>
-                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); generatePDF('${escapeHtml(emp.name)}', '${escapeHtml(emp.city)}', ${emp.score}, ${emp.total}, ${JSON.stringify(emp.errors).replace(/"/g, '&quot;')})">📄 Скачать PDF</button>
+                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); generatePDF(${empJson})">📄 Скачать PDF</button>
                             <i class="bi bi-chevron-down ms-2"></i>
                         </div>
                     </div>
