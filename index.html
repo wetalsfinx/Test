@@ -74,7 +74,7 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div id="test1-block" class="test-block collapsed">
     <div class="test-header" onclick="toggleTest('test1')">
         <div class="test-title"><i class="bi bi-journal-bookmark-fill" style="color:#0d6efd"></i>📊 Тест 1: Стандарты продаж (7 вопросов)<span class="badge bg-primary ms-2" id="test1-count">0</span></div>
-        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test1')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test1')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
+        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test1')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-info me-2" onclick="event.stopPropagation(); exportDetailedTestToExcel('test1')"><i class="bi bi-file-text"></i> Детальный экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test1')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
     </div>
     <div class="test-content">
         <div class="row mb-4">
@@ -102,7 +102,7 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div id="test2-block" class="test-block collapsed">
     <div class="test-header" onclick="toggleTest('test2')">
         <div class="test-title"><i class="bi bi-chat-heart-fill" style="color:#e83e8c"></i>🎯 Тест 2: Стандарты обслуживания (11 вопросов)<span class="badge bg-primary ms-2" id="test2-count">0</span></div>
-        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test2')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test2')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
+        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test2')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-info me-2" onclick="event.stopPropagation(); exportDetailedTestToExcel('test2')"><i class="bi bi-file-text"></i> Детальный экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test2')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
     </div>
     <div class="test-content">
         <div class="row mb-4">
@@ -130,7 +130,7 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div id="test3-block" class="test-block collapsed">
     <div class="test-header" onclick="toggleTest('test3')">
         <div class="test-title"><i class="bi bi-stars" style="color:#fd7e14"></i>🌟 Тест 3: Продажи. Входной тест (11 вопросов)<span class="badge bg-primary ms-2" id="test3-count">0</span></div>
-        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test3')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test3')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
+        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test3')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-info me-2" onclick="event.stopPropagation(); exportDetailedTestToExcel('test3')"><i class="bi bi-file-text"></i> Детальный экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test3')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
     </div>
     <div class="test-content">
         <div class="row mb-4">
@@ -206,6 +206,7 @@ async function loadAllData() {
     }
 }
 
+// ========== ТЕСТ 1 ==========
 function renderTest1() {
     let filtered = [...test1Data];
     const search = document.getElementById('test1-search')?.value.toLowerCase() || '';
@@ -275,6 +276,7 @@ function resetTest1Filters() {
     renderTest1();
 }
 
+// ========== ТЕСТ 2 ==========
 function renderTest2() {
     let filtered = [...test2Data];
     const search = document.getElementById('test2-search')?.value.toLowerCase() || '';
@@ -344,6 +346,7 @@ function resetTest2Filters() {
     renderTest2();
 }
 
+// ========== ТЕСТ 3 ==========
 function renderTest3() {
     let filtered = [...test3Data];
     const search = document.getElementById('test3-search')?.value.toLowerCase() || '';
@@ -413,6 +416,7 @@ function resetTest3Filters() {
     renderTest3();
 }
 
+// ========== ОБЩИЕ ФУНКЦИИ ==========
 async function deleteSingleResult(resultId, testId) {
     if(!confirm('🗑️ Удалить этот результат?')) return;
     const {error} = await sb.from('results').delete().eq('id', resultId);
@@ -456,25 +460,42 @@ function generateUserReport(resultId, testId) {
     const percent = Math.round(userData.score / userData.total * 100);
     
     let answersHtml = '';
+    let correctCount = 0;
+    let wrongCount = 0;
+    
     if(userData.answers && userData.answers.length > 0) {
-        userData.answers.forEach((a, i) => {
+        for(let i = 0; i < userData.answers.length; i++) {
+            const a = userData.answers[i];
             const isCorrect = a.isCorrect === true || a.ok === true;
             const userAnswer = a.selected || a.sel || 'Не указан';
             const correctAnswer = a.correct || a.cor || 'Не указан';
             let questionText = a.question || a.qs || `Вопрос ${i+1}`;
             if(questionText.length > 200) questionText = questionText.substring(0,200);
             
-            if (!isCorrect) {
-                answersHtml += `<div style="margin-bottom:20px;padding:12px;background:#ffebee;border-radius:8px;border-left:4px solid #f44336">
-                    <div style="font-weight:bold;margin-bottom:8px;">❌ Ошибка в вопросе ${i+1}</div>
+            if (isCorrect) {
+                correctCount++;
+                answersHtml += `<div style="margin-bottom:20px;padding:12px;background:#e8f5e9;border-radius:8px;border-left:4px solid #4caf50;">
+                    <div style="font-weight:bold;margin-bottom:8px;">✅ Вопрос ${i+1} (верно)</div>
+                    <div style="margin-bottom:8px;color:#555;">${escapeHtml(questionText)}</div>
+                    <div><span style="color:#2e7d32;">✓ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
+                </div>`;
+            } else {
+                wrongCount++;
+                answersHtml += `<div style="margin-bottom:20px;padding:12px;background:#ffebee;border-radius:8px;border-left:4px solid #f44336;">
+                    <div style="font-weight:bold;margin-bottom:8px;">❌ Вопрос ${i+1} (ошибка)</div>
                     <div style="margin-bottom:8px;color:#555;">${escapeHtml(questionText)}</div>
                     <div><span style="color:#d32f2f;">✖ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
-                    <div><span style="color:#2e7d32;">✓ Правильный ответ:</span> ${escapeHtml(correctAnswer)}</div>
+                    <div style="margin-top:5px;"><span style="color:#2e7d32;">✓ Правильный ответ:</span> ${escapeHtml(correctAnswer)}</div>
                     <div style="margin-top:8px;font-size:12px;color:#666;">💡 Совет: обратите внимание на правильный вариант</div>
                 </div>`;
             }
-        });
+        }
     }
+    
+    let resultGrade = '';
+    if (percent >= 80) resultGrade = '🎉 Отлично!';
+    else if (percent >= 50) resultGrade = '📈 Хороший результат';
+    else resultGrade = '📚 Требуется изучение материалов';
     
     const reportHtml = `
         <!DOCTYPE html>
@@ -506,11 +527,11 @@ function generateUserReport(resultId, testId) {
                 <table style="width:100%"><tr><td style="padding:5px;"><strong>Сотрудник:</strong> ${fullName}</td><td style="padding:5px;"><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
                 <tr><td style="padding:5px;"><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td style="padding:5px;"><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr>
                 </table>
-                <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хороший результат':'📚 Требуется изучение материалов'}</div>
+                <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${resultGrade}</div>
             </div>
-            <div style="margin:20px 0;"><strong>📝 Разбор ошибок:</strong></div>
-            ${answersHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
-            <div class="footer" style="margin-top:40px; text-align:center; font-size:12px; color:#999; border-top:1px solid #eee; padding-top:20px;">Отчёт сгенерирован автоматически</div>
+            <div style="margin:20px 0; font-size:18px; font-weight:bold;">📝 Разбор ответов (правильных: ${correctCount}, ошибок: ${wrongCount}):</div>
+            ${answersHtml}
+            <div class="footer" style="margin-top:40px; text-align:center; font-size:12px; color:#999;">Отчёт сгенерирован автоматически</div>
         </body>
         </html>
     `;
@@ -518,6 +539,48 @@ function generateUserReport(resultId, testId) {
     const reportWindow = window.open('', '_blank');
     reportWindow.document.write(reportHtml);
     reportWindow.document.close();
+}
+
+// Новая функция детального экспорта
+function exportDetailedTestToExcel(testId) {
+    let data = [];
+    let name = '';
+    if(testId === 'test1') { data = test1Data; name = 'Стандарты_продаж_детально'; }
+    else if(testId === 'test2') { data = test2Data; name = 'Стандарты_обслуживания_детально'; }
+    else { data = test3Data; name = 'Продажи_Входной_тест_детально'; }
+    
+    if(!data.length) return alert("Нет данных");
+    
+    const excelData = [];
+    
+    for (const r of data) {
+        const row = {
+            'ФИО': `${r.surname || ''} ${r.name || ''}`.trim(),
+            'Город': r.city || '',
+            'Баллы': `${r.score}/${r.total}`,
+            'Процент': `${Math.round(r.score/r.total*100)}%`,
+            'Дата': new Date(r.created_at).toLocaleString()
+        };
+        
+        // Добавляем детальные ответы по каждому вопросу
+        if (r.answers && r.answers.length > 0) {
+            for (let i = 0; i < r.answers.length; i++) {
+                const a = r.answers[i];
+                const questionNum = i + 1;
+                row[`Вопрос ${questionNum}`] = a.question || a.qs || '';
+                row[`Ответ сотрудника ${questionNum}`] = a.selected || a.sel || '';
+                row[`Правильный ответ ${questionNum}`] = a.correct || a.cor || '';
+                row[`Результат ${questionNum}`] = (a.isCorrect === true || a.ok === true) ? 'Верно' : 'Ошибка';
+            }
+        }
+        
+        excelData.push(row);
+    }
+    
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, name);
+    XLSX.writeFile(wb, `${name}_${new Date().toLocaleDateString()}.xlsx`);
 }
 
 function exportTestToExcel(testId) {
@@ -537,6 +600,7 @@ function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?
 
 window.toggleTest = toggleTest;
 window.exportTestToExcel = exportTestToExcel;
+window.exportDetailedTestToExcel = exportDetailedTestToExcel;
 window.resetTest1Filters = resetTest1Filters;
 window.resetTest2Filters = resetTest2Filters;
 window.resetTest3Filters = resetTest3Filters;
