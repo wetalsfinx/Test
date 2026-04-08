@@ -9,7 +9,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         .upload-area { border: 2px dashed #ccc; border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; background: white; }
         .upload-area:hover { border-color: #0d6efd; background: #f8f9fa; }
         .error-card { background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -24,12 +24,19 @@
         .btn-print:hover { background: #0b5ed7; }
         .btn-pdf { background: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 5px; font-size: 12px; margin-left: 10px; cursor: pointer; }
         .btn-pdf:hover { background: #c82333; }
+        .btn-pdf-city { background: #198754; color: white; border: none; padding: 8px 20px; border-radius: 5px; margin-right: 10px; }
+        .btn-pdf-city:hover { background: #0d6efd; }
         .filter-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
         .city-stats { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .search-input { padding: 5px 10px; border: 1px solid #ddd; border-radius: 5px; width: 200px; }
         .top-errors { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .city-recommendations { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #0d6efd; }
         .zone-badge { display: inline-block; background: #e9ecef; padding: 3px 10px; border-radius: 15px; font-size: 12px; margin: 3px; }
+        .comparison-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .comparison-table th, .comparison-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+        .comparison-table th { background: #667eea; color: white; }
+        .chart-bar { height: 20px; background: #4caf50; border-radius: 10px; margin: 3px 0; }
+        .chart-container { background: #f0f0f0; border-radius: 10px; padding: 10px; margin-top: 10px; }
         @media print {
             body { background: white; padding: 0; margin: 0; }
             .no-print { display: none !important; }
@@ -48,6 +55,7 @@
         <h1><i class="bi bi-file-text"></i> Анализ ошибок тестирования</h1>
         <div class="no-print">
             <button class="btn-print" onclick="window.print()"><i class="bi bi-printer"></i> Распечатать всё</button>
+            <button id="pdfCityBtn" class="btn-pdf-city" style="display:none;"><i class="bi bi-file-pdf"></i> 📄 PDF по городу</button>
             <a href="?mode=admin" class="btn btn-outline-secondary">← Админка</a>
         </div>
     </div>
@@ -55,7 +63,7 @@
     <div class="upload-area no-print" id="uploadArea" onclick="document.getElementById('fileInput').click()">
         <i class="bi bi-file-excel fs-1"></i>
         <p class="mt-2">Нажмите или перетащите файл Excel (.xlsx) с результатами</p>
-        <small class="text-muted">Экспортируйте из админки кнопкой "Детальный экспорт"</small>
+        <small class="text-muted">Данные сохранятся в браузере. При обновлении страницы файл не нужно загружать заново.</small>
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
 
@@ -75,6 +83,18 @@
         <input type="text" id="searchInput" class="search-input" placeholder="Введите имя...">
         <button id="resetFilter" class="btn btn-secondary btn-sm">Сбросить</button>
         <span class="ms-auto text-muted" id="filteredCount"></span>
+    </div>
+
+    <!-- Сравнение городов (таблица) -->
+    <div id="comparisonBlock" class="city-stats no-print" style="display:none">
+        <h6><i class="bi bi-table"></i> Сравнение городов</h6>
+        <div id="comparisonTable"></div>
+    </div>
+
+    <!-- График распределения баллов -->
+    <div id="chartBlock" class="city-stats no-print" style="display:none">
+        <h6><i class="bi bi-bar-chart-steps"></i> Распределение баллов</h6>
+        <div id="chartContainer" class="chart-container"></div>
     </div>
 
     <div id="cityStats" class="city-stats no-print" style="display:none">
@@ -177,9 +197,7 @@ function getRecommendationHTML(userAnswer, correctAnswer) {
     
     let key = null;
     for (const [answerText, answerKey] of Object.entries(answerMap)) {
-        if (cleanAnswer === answerText || 
-            cleanAnswer.includes(answerText) || 
-            answerText.includes(cleanAnswer)) {
+        if (cleanAnswer === answerText || cleanAnswer.includes(answerText) || answerText.includes(cleanAnswer)) {
             key = answerKey;
             break;
         }
@@ -253,6 +271,27 @@ let employeeCounter = 0;
 let currentFilterCity = 'all';
 let currentSearchText = '';
 
+// Сохранение в localStorage
+function saveDataToLocalStorage() {
+    localStorage.setItem('reportData', JSON.stringify({
+        allEmployees: allEmployees,
+        employeeCounter: employeeCounter
+    }));
+}
+
+function loadDataFromLocalStorage() {
+    const saved = localStorage.getItem('reportData');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            allEmployees = data.allEmployees;
+            employeeCounter = data.employeeCounter;
+            return true;
+        } catch(e) { return false; }
+    }
+    return false;
+}
+
 function processData(rows) {
     allEmployees = [];
     employeeCounter = 0;
@@ -293,25 +332,66 @@ function processData(rows) {
         }
         allEmployees.push(employee);
     }
+    saveDataToLocalStorage();
     updateFiltersAndDisplay();
+}
+
+function getComparisonTable() {
+    const cityMap = {};
+    for (const emp of allEmployees) {
+        if (!cityMap[emp.city]) {
+            cityMap[emp.city] = { total: 0, sumPercent: 0, errorCount: 0, topError: {} };
+        }
+        const percent = emp.total > 0 ? (emp.score / emp.total * 100) : 0;
+        cityMap[emp.city].total++;
+        cityMap[emp.city].sumPercent += percent;
+        cityMap[emp.city].errorCount += emp.errors.length;
+        for (const err of emp.errors) {
+            cityMap[emp.city].topError[err.zone] = (cityMap[emp.city].topError[err.zone] || 0) + 1;
+        }
+    }
+    
+    let html = '<table class="comparison-table"><thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Всего ошибок</th><th>Топ-1 ошибка</th></tr></thead><tbody>';
+    for (const [city, data] of Object.entries(cityMap)) {
+        const avgPercent = (data.sumPercent / data.total).toFixed(1);
+        const topError = Object.entries(data.topError).sort((a,b) => b[1] - a[1])[0];
+        const topErrorName = topError ? `${topError[0]} (${topError[1]})` : '—';
+        html += `<tr><td><strong>${escapeHtml(city)}</strong></td><td>${data.total}</td><td>${avgPercent}%</td><td>${data.errorCount}</td><td>${escapeHtml(topErrorName)}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    return html;
+}
+
+function getChart() {
+    const ranges = { '0-49%': 0, '50-69%': 0, '70-89%': 0, '90-100%': 0 };
+    for (const emp of allEmployees) {
+        const percent = emp.total > 0 ? (emp.score / emp.total * 100) : 0;
+        if (percent < 50) ranges['0-49%']++;
+        else if (percent < 70) ranges['50-69%']++;
+        else if (percent < 90) ranges['70-89%']++;
+        else ranges['90-100%']++;
+    }
+    const total = allEmployees.length;
+    let html = '';
+    for (const [range, count] of Object.entries(ranges)) {
+        const percent = total > 0 ? (count / total * 100) : 0;
+        html += `<div><strong>${range}</strong>: ${count} чел (${percent.toFixed(0)}%)</div>
+                 <div class="chart-bar" style="width: ${percent}%; background: ${percent >= 70 ? '#4caf50' : (percent >= 50 ? '#ff9800' : '#f44336')};"></div>`;
+    }
+    return html;
 }
 
 function getTopErrorsByCity(city) {
     const cityEmployees = city === 'all' ? allEmployees : allEmployees.filter(e => e.city === city);
     const errorCount = {};
-    
     for (const emp of cityEmployees) {
         for (const err of emp.errors) {
-            const key = err.zone;
-            errorCount[key] = (errorCount[key] || 0) + 1;
+            errorCount[err.zone] = (errorCount[err.zone] || 0) + 1;
         }
     }
-    
     const sorted = Object.entries(errorCount).sort((a, b) => b[1] - a[1]);
     const top5 = sorted.slice(0, 5);
-    
     if (top5.length === 0) return '<div class="text-muted">Нет ошибок</div>';
-    
     let html = '<ol class="mb-0">';
     for (const [zone, count] of top5) {
         html += `<li><strong>${zone}</strong> — ${count} ошибок</li>`;
@@ -323,17 +403,13 @@ function getTopErrorsByCity(city) {
 function getCityRecommendations(city) {
     const cityEmployees = city === 'all' ? allEmployees : allEmployees.filter(e => e.city === city);
     const errorCount = {};
-    
     for (const emp of cityEmployees) {
         for (const err of emp.errors) {
-            const key = err.zone;
-            errorCount[key] = (errorCount[key] || 0) + 1;
+            errorCount[err.zone] = (errorCount[err.zone] || 0) + 1;
         }
     }
-    
     const sorted = Object.entries(errorCount).sort((a, b) => b[1] - a[1]);
     const top3 = sorted.slice(0, 3);
-    
     if (top3.length === 0) return '<div class="text-muted">🎉 Отлично! В этом городе нет ошибок.</div>';
     
     const recommendationsMap = {
@@ -353,23 +429,28 @@ function getCityRecommendations(city) {
     let html = '<ul class="mb-0">';
     for (const [zone, count] of top3) {
         const recommendation = recommendationsMap[zone] || 'Обратите внимание на эту зону роста. Проведите дополнительное обучение по данному навыку.';
-        html += `
-            <li style="margin-bottom: 12px;">
-                <strong>🔴 ${zone}</strong> (${count} ошибок)<br>
-                <span style="font-size: 13px; color: #0d6efd;">💡 ${recommendation}</span>
-            </li>
-        `;
+        html += `<li style="margin-bottom: 12px;"><strong>🔴 ${zone}</strong> (${count} ошибок)<br><span style="font-size: 13px; color: #0d6efd;">💡 ${recommendation}</span></li>`;
     }
     html += '</ul>';
     return html;
 }
 
 function updateFiltersAndDisplay() {
+    if (allEmployees.length === 0) return;
+    
     const cities = [...new Set(allEmployees.map(e => e.city))].filter(c => c);
     const citySelect = document.getElementById('cityFilter');
     citySelect.innerHTML = '<option value="all">Все города</option>';
     cities.forEach(c => { citySelect.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`; });
     citySelect.value = currentFilterCity;
+    
+    // Сравнение городов
+    document.getElementById('comparisonTable').innerHTML = getComparisonTable();
+    document.getElementById('comparisonBlock').style.display = 'block';
+    
+    // График
+    document.getElementById('chartContainer').innerHTML = getChart();
+    document.getElementById('chartBlock').style.display = 'block';
     
     const cityStatsMap = {};
     allEmployees.forEach(e => {
@@ -388,14 +469,10 @@ function updateFiltersAndDisplay() {
     document.getElementById('cityStatsList').innerHTML = cityStatsHtml;
     document.getElementById('cityStats').style.display = 'block';
     
-    // Топ-5 ошибок для выбранного города
-    const topErrorsHtml = getTopErrorsByCity(currentFilterCity);
-    document.getElementById('topErrorsList').innerHTML = topErrorsHtml;
+    document.getElementById('topErrorsList').innerHTML = getTopErrorsByCity(currentFilterCity);
     document.getElementById('topErrorsBlock').style.display = 'block';
     
-    // Рекомендации для города
-    const cityRecsHtml = getCityRecommendations(currentFilterCity);
-    document.getElementById('cityRecommendationsList').innerHTML = cityRecsHtml;
+    document.getElementById('cityRecommendationsList').innerHTML = getCityRecommendations(currentFilterCity);
     document.getElementById('cityRecommendationsBlock').style.display = 'block';
     
     let filtered = allEmployees.filter(e => {
@@ -404,6 +481,7 @@ function updateFiltersAndDisplay() {
         return true;
     });
     document.getElementById('filteredCount').innerText = `Показано: ${filtered.length} из ${allEmployees.length}`;
+    document.getElementById('pdfCityBtn').style.display = 'inline-block';
     
     const total = allEmployees.length;
     const avgScore = total > 0 ? Math.round(allEmployees.reduce((s, e) => s + (e.score / e.total), 0) / total * 100) : 0;
@@ -420,13 +498,9 @@ function updateFiltersAndDisplay() {
     for (const emp of filtered) {
         const percent = Math.round(emp.score / emp.total * 100);
         const errorCount = emp.errors.length;
-        
         const zoneSet = new Set();
-        for (const err of emp.errors) {
-            zoneSet.add(err.zone);
-        }
+        for (const err of emp.errors) zoneSet.add(err.zone);
         const zonesSummary = Array.from(zoneSet).map(z => `<span class="zone-badge">${escapeHtml(z)}</span>`).join('');
-        
         let errorsHtml = '';
         for (const err of emp.errors) {
             errorsHtml += `
@@ -439,7 +513,6 @@ function updateFiltersAndDisplay() {
                 </div>
             `;
         }
-        
         html += `
             <div id="emp-${emp.id}" class="error-card">
                 <div class="error-header ${errorCount === 0 ? 'green' : ''}" onclick="toggleBody(this)">
@@ -458,11 +531,7 @@ function updateFiltersAndDisplay() {
                 </div>
                 <div class="error-body">
                     <p><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)</p>
-                    ${errorCount === 0 ? 
-                        '<div class="alert alert-success">✅ Отлично! Нет ошибок.</div>' : 
-                        `<div class="alert alert-warning">⚠️ Ошибок: ${errorCount}</div>
-                         <div class="mt-2"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary || '—'}</div>`
-                    }
+                    ${errorCount === 0 ? '<div class="alert alert-success">✅ Отлично! Нет ошибок.</div>' : `<div class="alert alert-warning">⚠️ Ошибок: ${errorCount}</div><div class="mt-2"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary || '—'}</div>`}
                     ${errorsHtml}
                 </div>
             </div>
@@ -474,15 +543,10 @@ function updateFiltersAndDisplay() {
 function downloadEmployeePDF(employeeId) {
     const emp = allEmployees.find(e => e.id === employeeId);
     if (!emp) { alert('Сотрудник не найден'); return; }
-    
     const percent = Math.round(emp.score / emp.total * 100);
-    
     const zoneSet = new Set();
-    for (const err of emp.errors) {
-        zoneSet.add(err.zone);
-    }
+    for (const err of emp.errors) zoneSet.add(err.zone);
     const zonesSummary = Array.from(zoneSet).map(z => `• ${z}`).join('\n');
-    
     let errorsHtml = '';
     for (const err of emp.errors) {
         errorsHtml += `
@@ -494,40 +558,51 @@ function downloadEmployeePDF(employeeId) {
             </div>
         `;
     }
+    const pdfContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title><style>body{font-family:Arial;padding:20px}h1{color:#0d6efd}.info{background:#f5f7fa;padding:15px;margin-bottom:20px}.score-good{background:#4caf50;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-normal{background:#ff9800;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-bad{background:#f44336;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.recommendation{background:#fff3cd;border-left:4px solid #ffc107;padding:12px;margin-top:10px}.zone-summary{background:#e8f5e9;padding:10px;border-radius:8px;margin:15px 0}</style></head><body><h1>📊 Отчёт по тесту</h1><div class="info"><strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br><strong>Город:</strong> ${escapeHtml(emp.city)}<br><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br><div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}</div></div>${zonesSummary ? `<div class="zone-summary"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary.replace(/\n/g, '<br>')}</div>` : ''}<h3>Разбор ошибок (${emp.errors.length})</h3>${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}<p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p></body></html>`;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(pdfContent);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function downloadCityPDF() {
+    const filtered = allEmployees.filter(e => {
+        if (currentFilterCity !== 'all' && e.city !== currentFilterCity) return false;
+        if (currentSearchText && !e.name.toLowerCase().includes(currentSearchText.toLowerCase())) return false;
+        return true;
+    });
+    if (filtered.length === 0) { alert('Нет сотрудников для выгрузки'); return; }
     
-    const pdfContent = `
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title>
-        <style>
-            body { font-family: Arial; padding: 20px; }
-            h1 { color: #0d6efd; }
-            .info { background: #f5f7fa; padding: 15px; margin-bottom: 20px; }
-            .score-good { background: #4caf50; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; }
-            .zone-summary { background: #e8f5e9; padding: 10px; border-radius: 8px; margin: 15px 0; }
-        </style>
-        </head>
-        <body>
-            <h1>📊 Отчёт по тесту</h1>
-            <div class="info">
-                <strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br>
-                <strong>Город:</strong> ${escapeHtml(emp.city)}<br>
-                <strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
-                <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
-                    ${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}
+    let employeesHtml = '';
+    for (const emp of filtered) {
+        const percent = Math.round(emp.score / emp.total * 100);
+        const zoneSet = new Set();
+        for (const err of emp.errors) zoneSet.add(err.zone);
+        const zonesSummary = Array.from(zoneSet).map(z => `• ${z}`).join('\n');
+        let errorsHtml = '';
+        for (const err of emp.errors) {
+            errorsHtml += `
+                <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; page-break-inside: avoid;">
+                    <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br>
+                    <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br>
+                    <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br>
+                    ${getRecommendationHTML(err.userAnswer, err.correctAnswer)}
                 </div>
+            `;
+        }
+        employeesHtml += `
+            <div style="page-break-before: always; margin-top: 20px;">
+                <h2 style="color: #0d6efd;">${escapeHtml(emp.name)} (${escapeHtml(emp.city)})</h2>
+                <div class="info"><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
+                <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}" style="display:inline-block; padding:5px 15px; border-radius:20px;">${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}</div></div>
+                ${zonesSummary ? `<div class="zone-summary" style="background:#e8f5e9; padding:10px; border-radius:8px; margin:15px 0;"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary.replace(/\n/g, '<br>')}</div>` : ''}
+                <h3>Разбор ошибок (${emp.errors.length})</h3>
+                ${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}
             </div>
-            ${zonesSummary ? `<div class="zone-summary"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary.replace(/\n/g, '<br>')}</div>` : ''}
-            <h3>Разбор ошибок (${emp.errors.length})</h3>
-            ${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}
-            <p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p>
-        </body>
-        </html>
-    `;
-    
+        `;
+    }
+    const cityName = currentFilterCity === 'all' ? 'Все_города' : currentFilterCity;
+    const pdfContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт по городу: ${cityName}</title><style>body{font-family:Arial;padding:20px}h1{color:#0d6efd}.info{background:#f5f7fa;padding:15px;margin-bottom:20px}.score-good{background:#4caf50;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-normal{background:#ff9800;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-bad{background:#f44336;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.recommendation{background:#fff3cd;border-left:4px solid #ffc107;padding:12px;margin-top:10px}.zone-summary{background:#e8f5e9;padding:10px;border-radius:8px;margin:15px 0}</style></head><body><h1>📊 Отчёт по городу: ${cityName}</h1><p>Сгенерирован: ${new Date().toLocaleString()}</p>${employeesHtml}<p style="margin-top:40px; font-size:12px; color:#999;">Конец отчёта</p></body></html>`;
     const printWindow = window.open('', '_blank');
     printWindow.document.write(pdfContent);
     printWindow.document.close();
@@ -541,6 +616,7 @@ function toggleBody(header) {
 
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
 
+// Загрузка файла
 document.getElementById('fileInput').addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -554,16 +630,15 @@ document.getElementById('fileInput').addEventListener('change', e => {
     reader.readAsArrayBuffer(file);
 });
 
+// Фильтры
 document.getElementById('cityFilter').addEventListener('change', e => {
     currentFilterCity = e.target.value;
     updateFiltersAndDisplay();
 });
-
 document.getElementById('searchInput').addEventListener('input', e => {
     currentSearchText = e.target.value;
     updateFiltersAndDisplay();
 });
-
 document.getElementById('resetFilter').addEventListener('click', () => {
     currentFilterCity = 'all';
     currentSearchText = '';
@@ -571,7 +646,9 @@ document.getElementById('resetFilter').addEventListener('click', () => {
     document.getElementById('searchInput').value = '';
     updateFiltersAndDisplay();
 });
+document.getElementById('pdfCityBtn').addEventListener('click', () => downloadCityPDF());
 
+// Drag and drop
 const uploadArea = document.getElementById('uploadArea');
 uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#0d6efd'; });
 uploadArea.addEventListener('dragleave', e => { e.preventDefault(); uploadArea.style.borderColor = '#ccc'; });
@@ -590,6 +667,14 @@ uploadArea.addEventListener('drop', e => {
         reader.readAsArrayBuffer(file);
     } else alert('Загрузите Excel файл');
 });
+
+// Автозагрузка сохранённых данных
+if (loadDataFromLocalStorage() && allEmployees.length > 0) {
+    updateFiltersAndDisplay();
+    document.getElementById('statsPanel').style.display = 'flex';
+    document.getElementById('filterBar').style.display = 'flex';
+    document.getElementById('pdfCityBtn').style.display = 'inline-block';
+}
 </script>
 </body>
 </html>
