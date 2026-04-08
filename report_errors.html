@@ -26,6 +26,9 @@
         .btn-pdf:hover { background: #c82333; }
         .filter-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
         .city-stats { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .search-input { padding: 5px 10px; border: 1px solid #ddd; border-radius: 5px; width: 200px; }
+        .top-errors { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .zone-badge { display: inline-block; background: #e9ecef; padding: 3px 10px; border-radius: 15px; font-size: 12px; margin: 3px; }
         @media print {
             body { background: white; padding: 0; margin: 0; }
             .no-print { display: none !important; }
@@ -67,6 +70,8 @@
         <select id="cityFilter" class="form-select w-auto">
             <option value="all">Все города</option>
         </select>
+        <label><strong>Поиск по имени:</strong></label>
+        <input type="text" id="searchInput" class="search-input" placeholder="Введите имя...">
         <button id="resetFilter" class="btn btn-secondary btn-sm">Сбросить</button>
         <span class="ms-auto text-muted" id="filteredCount"></span>
     </div>
@@ -74,6 +79,11 @@
     <div id="cityStats" class="city-stats no-print" style="display:none">
         <h6><i class="bi bi-pie-chart"></i> Статистика по городам</h6>
         <div id="cityStatsList" class="small"></div>
+    </div>
+
+    <div id="topErrorsBlock" class="top-errors no-print" style="display:none">
+        <h6><i class="bi bi-bar-chart-steps"></i> Топ-5 частых ошибок</h6>
+        <div id="topErrorsList"></div>
     </div>
 
     <div id="resultsArea"></div>
@@ -185,9 +195,57 @@ function getRecommendationHTML(userAnswer, correctAnswer) {
     `;
 }
 
+function getZoneNameByAnswer(userAnswer) {
+    const answerMap = {
+        "«Здравствуйте! Вижу, вы торопитесь — давайте я быстро покажу то, что может подойти»": "Речевая пластинка про акции",
+        "Здравствуйте! Вижу, вы торопитесь — давайте я быстро покажу то, что может подойти": "Речевая пластинка про акции",
+        "«Добрый день! Подбираете что-то конкретное или просто смотрите?»": "Речевая пластинка про акции",
+        "«Здравствуйте! Чем могу помочь?»": "Речевая пластинка про акции",
+        "Ждёте, пока мама сама обратится за помощью": "Инициатива в диалоге",
+        "Говорите издалека: «Если будут вопросы по размерам — обращайтесь»": "Инициатива в диалоге",
+        "Показываете на витрину и говорите: «Вот у нас есть детские модели»": "Инициатива + Выявление потребностей",
+        "Сразу показываете 3-4 варианта в пределах бюджета": "Выявление потребностей",
+        "Показываете сначала вариант за 20 000 ₽, затем за 15 000 ₽": "Выявление потребностей",
+        "Спрашиваете: «А может, рассмотрим подарочный сертификат?»": "Выявление потребностей",
+        "«Этот кулон очень популярный среди выпускниц»": "Эмоциональная презентация",
+        "«У нас на эту коллекцию сейчас акция»": "Эмоциональная презентация",
+        "«Можем сразу упаковать как подарок»": "Эмоциональная презентация",
+        "«Не хотите посмотреть ещё что-то?»": "Предложение второго украшения",
+        "«Если денег не хватит, у нас есть рассрочка на 6 месяцев»": "Предложение второго украшения",
+        "«Может, браслет в том же стиле?»": "Предложение второго украшения",
+        "До того, как она приняла окончательное решение о покупке": "Аксессуары ухода",
+        "После оплаты, при упаковке": "Аксессуары ухода",
+        "Не предлагаете — клиент купил дорогое изделие, и так всё ясно": "Аксессуары ухода",
+        "«У нас есть серьги за 30 000 ₽, давайте посмотрим»": "Работа с возражениями (цена)",
+        "«Это серьги с бриллиантами, поэтому цена выше»": "Работа с возражениями (цена)",
+        "«Может, отложим до зарплаты?»": "Работа с возражениями (цена)",
+        "«К сожалению, изумрудов 585 пробы сейчас нет»": "Альтернатива / Каталог на заказ",
+        "«Можем привезти из другого магазина — но это займёт неделю»": "Альтернатива / Каталог на заказ",
+        "«А зачем Вам с изумрудом? Может без камней посмотрим?»": "Альтернатива / Каталог на заказ",
+        "Ждёте, пока клиентка сама попросит примерить": "Инициатива + Примерка",
+        "«Хотите примерить, чтобы оценить, как сидит на руке?»": "Инициатива + Примерка",
+        "«А вы знаете, что этот браслет регулируется по размеру, очень удобный?»": "Инициатива + Примерка",
+        "«Давайте посмотрим другие варианты»": "Работа с возражениями",
+        "«Это хит продаж, многим нравится»": "Работа с возражениями",
+        "«Можем отложить, чтобы вы подумали»": "Работа с возражениями",
+        "Ждёте, пока клиентка сама попросит показать кольцо": "Инициатива в диалоге",
+        "Говорите издалека: «Если будут вопросы по размерам — обращайтесь»": "Инициатива в диалоге",
+        "«У нас сейчас акция на кольца — скидки до 30%»": "Инициатива в диалоге"
+    };
+    
+    const cleanAnswer = userAnswer.trim();
+    for (const [answerText, zoneName] of Object.entries(answerMap)) {
+        if (cleanAnswer === answerText || cleanAnswer.includes(answerText) || answerText.includes(cleanAnswer)) {
+            return zoneName;
+        }
+    }
+    return "Другое";
+}
+
 let allEmployees = [];
 let employeeCounter = 0;
 let currentFilterCity = 'all';
+let currentSearchText = '';
 
 function processData(rows) {
     allEmployees = [];
@@ -222,13 +280,38 @@ function processData(rows) {
                 employee.errors.push({
                     question: questionText,
                     userAnswer: userAnswer,
-                    correctAnswer: correctAnswer
+                    correctAnswer: correctAnswer,
+                    zone: getZoneNameByAnswer(userAnswer)
                 });
             }
         }
         allEmployees.push(employee);
     }
     updateFiltersAndDisplay();
+}
+
+function getTopErrorsByCity(city) {
+    const cityEmployees = city === 'all' ? allEmployees : allEmployees.filter(e => e.city === city);
+    const errorCount = {};
+    
+    for (const emp of cityEmployees) {
+        for (const err of emp.errors) {
+            const key = err.zone;
+            errorCount[key] = (errorCount[key] || 0) + 1;
+        }
+    }
+    
+    const sorted = Object.entries(errorCount).sort((a, b) => b[1] - a[1]);
+    const top5 = sorted.slice(0, 5);
+    
+    if (top5.length === 0) return '<div class="text-muted">Нет ошибок</div>';
+    
+    let html = '<ol class="mb-0">';
+    for (const [zone, count] of top5) {
+        html += `<li><strong>${zone}</strong> — ${count} ошибок</li>`;
+    }
+    html += '</ol>';
+    return html;
 }
 
 function updateFiltersAndDisplay() {
@@ -255,7 +338,16 @@ function updateFiltersAndDisplay() {
     document.getElementById('cityStatsList').innerHTML = cityStatsHtml;
     document.getElementById('cityStats').style.display = 'block';
     
-    const filtered = currentFilterCity === 'all' ? allEmployees : allEmployees.filter(e => e.city === currentFilterCity);
+    // Топ-5 ошибок для выбранного города
+    const topErrorsHtml = getTopErrorsByCity(currentFilterCity);
+    document.getElementById('topErrorsList').innerHTML = topErrorsHtml;
+    document.getElementById('topErrorsBlock').style.display = 'block';
+    
+    let filtered = allEmployees.filter(e => {
+        if (currentFilterCity !== 'all' && e.city !== currentFilterCity) return false;
+        if (currentSearchText && !e.name.toLowerCase().includes(currentSearchText.toLowerCase())) return false;
+        return true;
+    });
     document.getElementById('filteredCount').innerText = `Показано: ${filtered.length} из ${allEmployees.length}`;
     
     const total = allEmployees.length;
@@ -273,6 +365,14 @@ function updateFiltersAndDisplay() {
     for (const emp of filtered) {
         const percent = Math.round(emp.score / emp.total * 100);
         const errorCount = emp.errors.length;
+        
+        // Собираем зоны роста для этого сотрудника
+        const zoneSet = new Set();
+        for (const err of emp.errors) {
+            zoneSet.add(err.zone);
+        }
+        const zonesSummary = Array.from(zoneSet).map(z => `<span class="zone-badge">${escapeHtml(z)}</span>`).join('');
+        
         let errorsHtml = '';
         for (const err of emp.errors) {
             errorsHtml += `
@@ -285,6 +385,7 @@ function updateFiltersAndDisplay() {
                 </div>
             `;
         }
+        
         html += `
             <div id="emp-${emp.id}" class="error-card">
                 <div class="error-header ${errorCount === 0 ? 'green' : ''}" onclick="toggleBody(this)">
@@ -303,7 +404,11 @@ function updateFiltersAndDisplay() {
                 </div>
                 <div class="error-body">
                     <p><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)</p>
-                    ${errorCount === 0 ? '<div class="alert alert-success">✅ Отлично! Нет ошибок.</div>' : `<div class="alert alert-warning">⚠️ Ошибок: ${errorCount}</div>`}
+                    ${errorCount === 0 ? 
+                        '<div class="alert alert-success">✅ Отлично! Нет ошибок.</div>' : 
+                        `<div class="alert alert-warning">⚠️ Ошибок: ${errorCount}</div>
+                         <div class="mt-2"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary || '—'}</div>`
+                    }
                     ${errorsHtml}
                 </div>
             </div>
@@ -317,6 +422,13 @@ function downloadEmployeePDF(employeeId) {
     if (!emp) { alert('Сотрудник не найден'); return; }
     
     const percent = Math.round(emp.score / emp.total * 100);
+    
+    const zoneSet = new Set();
+    for (const err of emp.errors) {
+        zoneSet.add(err.zone);
+    }
+    const zonesSummary = Array.from(zoneSet).map(z => `• ${z}`).join('\n');
+    
     let errorsHtml = '';
     for (const err of emp.errors) {
         errorsHtml += `
@@ -341,6 +453,7 @@ function downloadEmployeePDF(employeeId) {
             .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; }
+            .zone-summary { background: #e8f5e9; padding: 10px; border-radius: 8px; margin: 15px 0; }
         </style>
         </head>
         <body>
@@ -353,6 +466,7 @@ function downloadEmployeePDF(employeeId) {
                     ${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}
                 </div>
             </div>
+            ${zonesSummary ? `<div class="zone-summary"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary.replace(/\n/g, '<br>')}</div>` : ''}
             <h3>Разбор ошибок (${emp.errors.length})</h3>
             ${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}
             <p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p>
@@ -391,8 +505,16 @@ document.getElementById('cityFilter').addEventListener('change', e => {
     updateFiltersAndDisplay();
 });
 
+document.getElementById('searchInput').addEventListener('input', e => {
+    currentSearchText = e.target.value;
+    updateFiltersAndDisplay();
+});
+
 document.getElementById('resetFilter').addEventListener('click', () => {
     currentFilterCity = 'all';
+    currentSearchText = '';
+    document.getElementById('cityFilter').value = 'all';
+    document.getElementById('searchInput').value = '';
     updateFiltersAndDisplay();
 });
 
