@@ -28,6 +28,7 @@
         .city-stats { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .search-input { padding: 5px 10px; border: 1px solid #ddd; border-radius: 5px; width: 200px; }
         .top-errors { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .city-recommendations { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #0d6efd; }
         .zone-badge { display: inline-block; background: #e9ecef; padding: 3px 10px; border-radius: 15px; font-size: 12px; margin: 3px; }
         @media print {
             body { background: white; padding: 0; margin: 0; }
@@ -84,6 +85,11 @@
     <div id="topErrorsBlock" class="top-errors no-print" style="display:none">
         <h6><i class="bi bi-bar-chart-steps"></i> Топ-5 частых ошибок</h6>
         <div id="topErrorsList"></div>
+    </div>
+
+    <div id="cityRecommendationsBlock" class="city-recommendations no-print" style="display:none">
+        <h6><i class="bi bi-lightbulb"></i> Рекомендации для города</h6>
+        <div id="cityRecommendationsList"></div>
     </div>
 
     <div id="resultsArea"></div>
@@ -314,6 +320,50 @@ function getTopErrorsByCity(city) {
     return html;
 }
 
+function getCityRecommendations(city) {
+    const cityEmployees = city === 'all' ? allEmployees : allEmployees.filter(e => e.city === city);
+    const errorCount = {};
+    
+    for (const emp of cityEmployees) {
+        for (const err of emp.errors) {
+            const key = err.zone;
+            errorCount[key] = (errorCount[key] || 0) + 1;
+        }
+    }
+    
+    const sorted = Object.entries(errorCount).sort((a, b) => b[1] - a[1]);
+    const top3 = sorted.slice(0, 3);
+    
+    if (top3.length === 0) return '<div class="text-muted">🎉 Отлично! В этом городе нет ошибок.</div>';
+    
+    const recommendationsMap = {
+        "Речевая пластинка про акции": "Всегда начинайте диалог с выгоды: «Добрый день! У нас сегодня скидка до 30% и оплата бонусами». Не спрашивайте «Чем помочь?» — сразу давайте ценность.",
+        "Инициатива в диалоге": "Не ждите, пока клиент обратится. Подходите первым с конкретным вопросом по ассортименту, который рассматривает клиент.",
+        "Инициатива + Выявление потребностей": "Подходите и спрашивайте про потребность. Например: «Подбираете первые серёжки? Давайте покажу безопасные варианты».",
+        "Выявление потребностей": "Перед показом товара всегда уточняйте стиль, предпочтения, контекст. Не показывайте «вслепую».",
+        "Эмоциональная презентация": "Связывайте украшение с событием и эмоциями. Не говорите «хит продаж» — говорите о том, что это украшение станет символом важного момента.",
+        "Предложение второго украшения": "Используйте утверждение «Давайте подберём» вместо вопроса «Хотите ещё что-то?». Предлагайте логичную пару (цепочка → кулон).",
+        "Аксессуары ухода": "Предлагайте футляр и средство для ухода ТОЛЬКО после того, как клиент согласился на цену, но ДО оплаты.",
+        "Работа с возражениями (цена)": "При возражении «дорого» сначала присоединитесь: «Понимаю», затем предложите Яндекс Сплит. Не предлагайте более дешёвый вариант сразу.",
+        "Альтернатива / Каталог на заказ": "Если нет нужного товара — сразу предлагайте каталог на заказ. Не говорите просто «нет в наличии».",
+        "Инициатива + Примерка": "Предлагайте примерку утверждением «Давайте примерим», а не вопросом «Хотите примерить?».",
+        "Работа с возражениями": "При сомнениях клиента сначала присоединитесь: «Понимаю», затем уточните причину: «А что именно смущает?»"
+    };
+    
+    let html = '<ul class="mb-0">';
+    for (const [zone, count] of top3) {
+        const recommendation = recommendationsMap[zone] || 'Обратите внимание на эту зону роста. Проведите дополнительное обучение по данному навыку.';
+        html += `
+            <li style="margin-bottom: 12px;">
+                <strong>🔴 ${zone}</strong> (${count} ошибок)<br>
+                <span style="font-size: 13px; color: #0d6efd;">💡 ${recommendation}</span>
+            </li>
+        `;
+    }
+    html += '</ul>';
+    return html;
+}
+
 function updateFiltersAndDisplay() {
     const cities = [...new Set(allEmployees.map(e => e.city))].filter(c => c);
     const citySelect = document.getElementById('cityFilter');
@@ -343,6 +393,11 @@ function updateFiltersAndDisplay() {
     document.getElementById('topErrorsList').innerHTML = topErrorsHtml;
     document.getElementById('topErrorsBlock').style.display = 'block';
     
+    // Рекомендации для города
+    const cityRecsHtml = getCityRecommendations(currentFilterCity);
+    document.getElementById('cityRecommendationsList').innerHTML = cityRecsHtml;
+    document.getElementById('cityRecommendationsBlock').style.display = 'block';
+    
     let filtered = allEmployees.filter(e => {
         if (currentFilterCity !== 'all' && e.city !== currentFilterCity) return false;
         if (currentSearchText && !e.name.toLowerCase().includes(currentSearchText.toLowerCase())) return false;
@@ -366,7 +421,6 @@ function updateFiltersAndDisplay() {
         const percent = Math.round(emp.score / emp.total * 100);
         const errorCount = emp.errors.length;
         
-        // Собираем зоны роста для этого сотрудника
         const zoneSet = new Set();
         for (const err of emp.errors) {
             zoneSet.add(err.zone);
