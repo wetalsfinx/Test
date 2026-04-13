@@ -93,7 +93,7 @@ body{background:#f5f7fa;font-family:sans-serif}
     </div>
     <div class="filter-bar"><div class="row g-3">
         <div class="col-md-4"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div>
-        <div class="col-md-3"><input type="text" id="city-filter" class="form-control" placeholder="🏙️ Фильтр по городу"></div>
+        <div class="col-md-3"><select id="city-filter" class="form-select"><option value="">Все города</option></select></div>
         <div class="col-md-2"><input type="date" id="date-from" class="form-control" placeholder="Дата от"></div>
         <div class="col-md-2"><input type="date" id="date-to" class="form-control" placeholder="Дата до"></div>
         <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetFilters()">Сброс</button></div>
@@ -113,6 +113,7 @@ const SUPABASE_KEY='sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let currentTest = null;
+let currentTestData = null;
 let currentResults = [];
 let scoreChart = null;
 let cityChart = null;
@@ -125,7 +126,7 @@ window.addEventListener('load', () => {
     initRealtime();
     
     document.getElementById('search-input').addEventListener('input', () => renderResults());
-    document.getElementById('city-filter').addEventListener('input', () => renderResults());
+    document.getElementById('city-filter').addEventListener('change', () => renderResults());
     document.getElementById('date-from').addEventListener('change', () => renderResults());
     document.getElementById('date-to').addEventListener('change', () => renderResults());
 });
@@ -141,7 +142,7 @@ async function loadTests() {
     
     let options = '<option value="">-- Выберите тест --</option>';
     for (const test of data) {
-        options += `<option value="${test.slug}">${test.name} (${test.questions_count || '?'} вопросов)</option>`;
+        options += `<option value="${test.slug}" data-cities='${JSON.stringify(test.city_list || [])}'>${test.name} (${test.questions_count || '?'} вопросов)</option>`;
     }
     selector.innerHTML = options;
     
@@ -149,10 +150,24 @@ async function loadTests() {
         const slug = e.target.value;
         if (!slug) {
             currentTest = null;
+            currentTestData = null;
             document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('deleteTestBtn').style.display = 'none';
             return;
         }
-        currentTest = { slug, name: selector.options[selector.selectedIndex].text };
+        const selectedOption = selector.options[selector.selectedIndex];
+        const citiesJson = selectedOption.getAttribute('data-cities');
+        currentTestData = { slug, name: selectedOption.text, cities: JSON.parse(citiesJson || '[]') };
+        currentTest = currentTestData;
+        
+        // Обновляем выпадающий список городов
+        const cityFilter = document.getElementById('city-filter');
+        let cityOptions = '<option value="">Все города</option>';
+        for (const city of currentTestData.cities) {
+            cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
+        }
+        cityFilter.innerHTML = cityOptions;
+        
         document.getElementById('deleteTestBtn').style.display = 'inline-block';
         await loadResults(slug);
         document.getElementById('resultsContainer').style.display = 'block';
@@ -175,12 +190,12 @@ function renderResults() {
     
     let filtered = [...currentResults];
     const search = document.getElementById('search-input')?.value.toLowerCase() || '';
-    const cityF = document.getElementById('city-filter')?.value.toLowerCase() || '';
+    const cityF = document.getElementById('city-filter')?.value || '';
     const dateFrom = document.getElementById('date-from')?.value;
     const dateTo = document.getElementById('date-to')?.value;
     
     if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
-    if(cityF) filtered = filtered.filter(r => r.city && r.city.toLowerCase().includes(cityF));
+    if(cityF) filtered = filtered.filter(r => r.city && r.city === cityF);
     if(dateFrom) { const d = new Date(dateFrom); d.setHours(0,0,0,0); filtered = filtered.filter(r => new Date(r.created_at) >= d); }
     if(dateTo) { const d = new Date(dateTo); d.setHours(23,59,59,999); filtered = filtered.filter(r => new Date(r.created_at) <= d); }
     
@@ -317,8 +332,8 @@ function generateUserReport(resultId) {
         <body>
             <div class="no-print" style="text-align:right;margin-bottom:10px"><button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button></div>
             <div class="header"><h1>📊 Отчёт по тесту</h1><h2>«${currentTest?.name || ''}»</h2></div>
-            <div class="info"><table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
-            <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)<\/td><\/tr><\/table>
+            <div class="info"><table style="width:100%"><tr><td style="padding:5px;"><strong>Сотрудник:</strong> ${fullName}</td><td style="padding:5px;"><strong>Город:</strong> ${userData.city || 'не указан'}<\/td><\/tr>
+            <tr><td style="padding:5px;"><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}<\/td><td style="padding:5px;"><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)<\/td><\/tr><\/table>
             <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хороший результат':'📚 Требуется изучение материалов'}</div></div>
             <div style="margin:20px 0;"><strong>📝 Разбор ошибок:</strong></div>
             ${answersHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
