@@ -36,10 +36,10 @@
         </div>
         <div class="mb-3">
             <label class="form-label">Города (для выпадающего списка)</label>
-            <div id="citiesList"></div>
-            <div class="input-group mt-2">
+            <div id="citiesList" class="mb-2"></div>
+            <div class="input-group">
                 <input type="text" id="newCity" class="form-control" placeholder="Название города">
-                <button class="btn btn-outline-secondary" onclick="addCity()">+ Добавить город</button>
+                <button class="btn btn-outline-secondary" type="button" onclick="addCity()">+ Добавить город</button>
             </div>
         </div>
     </div>
@@ -48,21 +48,21 @@
     <div class="card">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>📝 Вопросы</h4>
-            <button class="btn btn-primary" onclick="addQuestion()"><i class="bi bi-plus"></i> Добавить вопрос</button>
+            <button class="btn btn-primary" type="button" onclick="addQuestion()"><i class="bi bi-plus"></i> Добавить вопрос</button>
         </div>
         <div id="questionsContainer"></div>
     </div>
 
     <!-- Кнопка генерации -->
     <div class="card text-center">
-        <button class="btn btn-success btn-lg" onclick="generateTest()"><i class="bi bi-file-code"></i> Сгенерировать HTML-код теста</button>
+        <button class="btn btn-success btn-lg" type="button" onclick="generateTest()"><i class="bi bi-file-code"></i> Сгенерировать HTML-код теста</button>
     </div>
 
     <!-- Результат -->
     <div id="resultContainer" class="card" style="display:none">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>📄 HTML-код теста</h4>
-            <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard()"><i class="bi bi-copy"></i> Копировать</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyToClipboard()"><i class="bi bi-copy"></i> Копировать</button>
         </div>
         <div id="generatedCode" class="result-code"></div>
         <div class="mt-3 alert alert-info">
@@ -84,21 +84,6 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let questions = [];
 let cities = [];
-
-// Загружаем города из Supabase (можно добавить свои)
-async function loadCities() {
-    const { data } = await sb.from('tests').select('city_list');
-    if (data && data.length) {
-        const allCities = new Set();
-        data.forEach(t => {
-            if (t.city_list && Array.isArray(t.city_list)) {
-                t.city_list.forEach(c => allCities.add(c));
-            }
-        });
-        cities = [...allCities];
-        renderCities();
-    }
-}
 
 function renderCities() {
     const container = document.getElementById('citiesList');
@@ -183,7 +168,7 @@ function renderQuestions() {
             <div class="question-card">
                 <div class="d-flex justify-content-between mb-2">
                     <strong>Вопрос ${qIdx + 1}</strong>
-                    <button class="btn btn-sm btn-outline-danger" onclick="removeQuestion(${qIdx})">🗑️ Удалить</button>
+                    <button class="btn btn-sm btn-outline-danger" type="button" onclick="removeQuestion(${qIdx})">🗑️ Удалить</button>
                 </div>
                 <input class="form-control mb-2" value="${escapeHtml(q.text)}" placeholder="Текст вопроса" onchange="updateQuestionText(${qIdx}, this.value)">
                 <div class="small fw-bold mb-1">Варианты ответов:</div>
@@ -195,12 +180,12 @@ function renderQuestions() {
                         <input class="form-check-input" type="radio" name="correct_${qIdx}" ${optIdx === q.correct ? 'checked' : ''} onchange="updateCorrect(${qIdx}, ${optIdx})">
                     </div>
                     <input class="form-control" value="${escapeHtml(q.options[optIdx])}" placeholder="Вариант ${optIdx+1}" onchange="updateOption(${qIdx}, ${optIdx}, this.value)">
-                    <button class="btn btn-sm btn-outline-danger" onclick="removeOption(${qIdx}, ${optIdx})">✖</button>
+                    <button class="btn btn-sm btn-outline-danger" type="button" onclick="removeOption(${qIdx}, ${optIdx})">✖</button>
                 </div>
             `;
         }
         html += `
-                <button class="btn btn-sm btn-outline-secondary mt-2" onclick="addOption(${qIdx})"><i class="bi bi-plus"></i> Добавить вариант</button>
+                <button class="btn btn-sm btn-outline-secondary mt-2" type="button" onclick="addOption(${qIdx})"><i class="bi bi-plus"></i> Добавить вариант</button>
             </div>
         `;
     }
@@ -432,22 +417,24 @@ document.getElementById('submit-btn').onclick = submitAnswer;
 }
 
 async function saveTestToSupabase(name, desc, slug, questionsCount, cities) {
-    const { error } = await sb.from('tests').insert({
-        name: name,
-        slug: slug,
-        questions_count: questionsCount,
-        city_list: cities,
-        description: desc,
-        questions: [],
-        created_at: new Date().toISOString()
-    }).on('conflict', (conflict) => {
-        console.log('Тест уже существует', conflict);
-    });
-    
-    if (error && error.code !== '23505') {
-        console.error('Ошибка сохранения:', error);
-    } else {
-        console.log('Тест сохранён в Supabase');
+    try {
+        const { error } = await sb.from('tests').insert({
+            name: name,
+            slug: slug,
+            questions_count: questionsCount,
+            city_list: cities,
+            description: desc || null,
+            questions: [],
+            created_at: new Date().toISOString()
+        });
+        
+        if (error) {
+            console.log('Ошибка сохранения (возможно, тест уже есть):', error.message);
+        } else {
+            console.log('Тест сохранён в Supabase');
+        }
+    } catch(e) {
+        console.log('Ошибка:', e);
     }
 }
 
@@ -468,7 +455,7 @@ function escapeHtml(str) {
 }
 
 // Инициализация
-loadCities();
+renderCities();
 addQuestion();
 </script>
 </body>
