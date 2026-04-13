@@ -6,9 +6,10 @@
     <title>Конструктор тестов</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         body { background: #f5f7fa; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 1000px; margin: 0 auto; }
         .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .question-card { background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #0d6efd; }
         .option-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
@@ -16,13 +17,30 @@
         .city-tag { display: inline-block; background: #e9ecef; padding: 4px 12px; border-radius: 20px; margin: 3px; font-size: 14px; }
         .remove-city { cursor: pointer; margin-left: 6px; color: #dc3545; }
         .result-code { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow: auto; }
+        .import-area { border: 2px dashed #ccc; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: #f8f9fa; margin-bottom: 20px; }
+        .import-area:hover { background: #e9ecef; border-color: #0d6efd; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1><i class="bi bi-tools"></i> Конструктор тестов</h1>
-    <p class="text-muted">Создайте новый тест, скопируйте готовый HTML-код и загрузите в репозиторий</p>
+    <p class="text-muted">Создайте новый тест: заполните форму или загрузите Excel-файл</p>
 
+    <!-- Импорт из Excel -->
+    <div class="card">
+        <h4><i class="bi bi-file-excel"></i> Импорт из Excel</h4>
+        <div class="import-area" id="importArea" onclick="document.getElementById('excelFile').click()">
+            <i class="bi bi-cloud-upload fs-1"></i>
+            <p class="mt-2">Нажмите или перетащите Excel-файл (.xlsx)</p>
+            <small class="text-muted">Формат: колонки "Вопрос", "А", "Б", "В", "Г", "Правильный" (А, Б, В или Г)</small>
+            <input type="file" id="excelFile" accept=".xlsx, .xls" style="display:none">
+        </div>
+        <div class="mt-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="downloadSample()"><i class="bi bi-download"></i> Скачать образец Excel</button>
+        </div>
+    </div>
+
+    <!-- Основная форма -->
     <div class="card">
         <h4>📋 Основная информация</h4>
         <div class="mb-3">
@@ -43,18 +61,24 @@
         </div>
     </div>
 
+    <!-- Вопросы -->
     <div class="card">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>📝 Вопросы</h4>
-            <button class="btn btn-primary" type="button" onclick="addQuestion()"><i class="bi bi-plus"></i> Добавить вопрос</button>
+            <div>
+                <button class="btn btn-outline-secondary me-2" type="button" onclick="clearQuestions()"><i class="bi bi-trash"></i> Очистить все</button>
+                <button class="btn btn-primary" type="button" onclick="addQuestion()"><i class="bi bi-plus"></i> Добавить вопрос</button>
+            </div>
         </div>
         <div id="questionsContainer"></div>
     </div>
 
+    <!-- Кнопка генерации -->
     <div class="card text-center">
         <button class="btn btn-success btn-lg" type="button" onclick="generateTest()"><i class="bi bi-file-code"></i> Сгенерировать HTML-код теста</button>
     </div>
 
+    <!-- Результат -->
     <div id="resultContainer" class="card" style="display:none">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>📄 HTML-код теста</h4>
@@ -101,13 +125,7 @@ function addCity() {
 }
 
 function removeCity(city) {
-    const newCities = [];
-    for (let i = 0; i < cities.length; i++) {
-        if (cities[i] !== city) {
-            newCities.push(cities[i]);
-        }
-    }
-    cities = newCities;
+    cities = cities.filter(c => c !== city);
     renderCities();
 }
 
@@ -120,14 +138,15 @@ function addQuestion() {
     renderQuestions();
 }
 
-function removeQuestion(idx) {
-    const newQuestions = [];
-    for (let i = 0; i < questions.length; i++) {
-        if (i !== idx) {
-            newQuestions.push(questions[i]);
-        }
+function clearQuestions() {
+    if (confirm('Удалить все вопросы?')) {
+        questions = [];
+        renderQuestions();
     }
-    questions = newQuestions;
+}
+
+function removeQuestion(idx) {
+    questions.splice(idx, 1);
     renderQuestions();
 }
 
@@ -149,13 +168,7 @@ function addOption(qIdx) {
 }
 
 function removeOption(qIdx, optIdx) {
-    const newOptions = [];
-    for (let i = 0; i < questions[qIdx].options.length; i++) {
-        if (i !== optIdx) {
-            newOptions.push(questions[qIdx].options[i]);
-        }
-    }
-    questions[qIdx].options = newOptions;
+    questions[qIdx].options.splice(optIdx, 1);
     if (questions[qIdx].correct >= questions[qIdx].options.length) {
         questions[qIdx].correct = 0;
     }
@@ -165,7 +178,7 @@ function removeOption(qIdx, optIdx) {
 function renderQuestions() {
     const container = document.getElementById('questionsContainer');
     if (questions.length === 0) {
-        container.innerHTML = '<div class="text-muted">Нет вопросов. Нажмите "Добавить вопрос"</div>';
+        container.innerHTML = '<div class="text-muted">Нет вопросов. Нажмите "Добавить вопрос" или загрузите Excel-файл</div>';
         return;
     }
     
@@ -194,6 +207,69 @@ function renderQuestions() {
         html += '</div>';
     }
     container.innerHTML = html;
+}
+
+// Импорт из Excel
+document.getElementById('excelFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+        
+        const newQuestions = [];
+        for (const row of rows) {
+            const questionText = row['Вопрос'] || '';
+            if (!questionText) continue;
+            
+            const options = [
+                row['А'] || '',
+                row['Б'] || '',
+                row['В'] || '',
+                row['Г'] || ''
+            ].filter(opt => opt !== '');
+            
+            let correct = 0;
+            const correctLetter = (row['Правильный'] || '').toString().trim().toUpperCase();
+            if (correctLetter === 'А') correct = 0;
+            else if (correctLetter === 'Б') correct = 1;
+            else if (correctLetter === 'В') correct = 2;
+            else if (correctLetter === 'Г') correct = 3;
+            
+            if (questionText && options.length >= 2) {
+                newQuestions.push({
+                    text: questionText,
+                    options: options,
+                    correct: correct
+                });
+            }
+        }
+        
+        if (newQuestions.length > 0) {
+            questions = newQuestions;
+            renderQuestions();
+            alert(`Загружено ${newQuestions.length} вопросов`);
+        } else {
+            alert('Не удалось загрузить вопросы. Проверьте формат файла.');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+function downloadSample() {
+    const sampleData = [
+        { 'Вопрос': 'Пример вопроса 1', 'А': 'Вариант А1', 'Б': 'Вариант Б1', 'В': 'Вариант В1', 'Г': 'Вариант Г1', 'Правильный': 'А' },
+        { 'Вопрос': 'Пример вопроса 2', 'А': 'Вариант А2', 'Б': 'Вариант Б2', 'В': 'Вариант В2', 'Г': 'Вариант Г2', 'Правильный': 'Б' },
+        { 'Вопрос': 'Пример вопроса 3', 'А': 'Вариант А3', 'Б': 'Вариант Б3', 'В': 'Вариант В3', 'Г': 'Вариант Г3', 'Правильный': 'В' }
+    ];
+    const ws = XLSX.utils.json_to_sheet(sampleData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Вопросы');
+    XLSX.writeFile(wb, 'образец_теста.xlsx');
 }
 
 function generateTest() {
@@ -248,6 +324,70 @@ function escapeHtml(str) {
         return m;
     });
 }
+
+// Drag and drop для Excel
+const importArea = document.getElementById('importArea');
+importArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    importArea.style.background = '#e9ecef';
+});
+importArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    importArea.style.background = '#f8f9fa';
+});
+importArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    importArea.style.background = '#f8f9fa';
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet);
+            
+            const newQuestions = [];
+            for (const row of rows) {
+                const questionText = row['Вопрос'] || '';
+                if (!questionText) continue;
+                
+                const options = [
+                    row['А'] || '',
+                    row['Б'] || '',
+                    row['В'] || '',
+                    row['Г'] || ''
+                ].filter(opt => opt !== '');
+                
+                let correct = 0;
+                const correctLetter = (row['Правильный'] || '').toString().trim().toUpperCase();
+                if (correctLetter === 'А') correct = 0;
+                else if (correctLetter === 'Б') correct = 1;
+                else if (correctLetter === 'В') correct = 2;
+                else if (correctLetter === 'Г') correct = 3;
+                
+                if (questionText && options.length >= 2) {
+                    newQuestions.push({
+                        text: questionText,
+                        options: options,
+                        correct: correct
+                    });
+                }
+            }
+            
+            if (newQuestions.length > 0) {
+                questions = newQuestions;
+                renderQuestions();
+                alert(`Загружено ${newQuestions.length} вопросов`);
+            } else {
+                alert('Не удалось загрузить вопросы. Проверьте формат файла.');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        alert('Пожалуйста, загрузите Excel файл (.xlsx или .xls)');
+    }
+});
 
 // Инициализация
 renderCities();
