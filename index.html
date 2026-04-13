@@ -30,17 +30,9 @@ body{background:#f5f7fa;font-family:sans-serif}
 .user-log.expanded .expand-icon{transform:rotate(180deg)}
 .chart-card{background:white;border-radius:10px;padding:15px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
 .chart-container{height:200px;position:relative}
-.test-block{background:white;border-radius:15px;padding:20px;margin-bottom:25px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.test-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;cursor:pointer;padding:10px;background:#f8f9fa;border-radius:10px}
-.test-header:hover{background:#e9ecef}
-.test-title{font-size:1.3rem;font-weight:bold;display:flex;align-items:center;gap:10px}
-.collapse-icon{font-size:1.2rem;transition:transform 0.3s}
-.test-block.collapsed .test-content{display:none}
-.test-block.collapsed .collapse-icon{transform:rotate(-90deg)}
+.test-selector { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,.05); }
+.test-selector select { max-width: 300px; }
 @media (max-width: 768px) {
-    .test-header { flex-direction: column; align-items: flex-start !important; gap: 10px; }
-    .test-header > div:first-child { width: 100%; }
-    .test-header > div:last-child { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
     .filter-bar .row { flex-direction: column; }
     .filter-bar .col-md-3, .filter-bar .col-md-2, .filter-bar .col-md-1 { width: 100%; margin-bottom: 10px; }
     .stats-card { margin-bottom: 15px; }
@@ -48,7 +40,6 @@ body{background:#f5f7fa;font-family:sans-serif}
     .user-log { padding: 10px; }
     .user-log .d-flex { flex-direction: column; gap: 8px; }
     .user-log .d-flex .d-flex { flex-direction: row; justify-content: space-between; width: 100%; }
-    .test-title { font-size: 1rem; }
     .btn-sm { padding: 4px 8px; font-size: 11px; }
 }
 </style>
@@ -70,88 +61,44 @@ body{background:#f5f7fa;font-family:sans-serif}
     </div>
 </div>
 
-<!-- Блок ТЕСТ 1 -->
-<div id="test1-block" class="test-block collapsed">
-    <div class="test-header" onclick="toggleTest('test1')">
-        <div class="test-title"><i class="bi bi-journal-bookmark-fill" style="color:#0d6efd"></i>📊 Тест 1: Стандарты продаж (7 вопросов)<span class="badge bg-primary ms-2" id="test1-count">0</span></div>
-        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test1')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-info me-2" onclick="event.stopPropagation(); exportDetailedTestToExcel('test1')"><i class="bi bi-file-text"></i> Детальный экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test1')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
-    </div>
-    <div class="test-content">
-        <div class="row mb-4">
-            <div class="col-md-4"><div class="stats-card"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="test1-total">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
-            <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="test1-avg">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
-            <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="d-flex justify-content-between"><div><div class="small">Отлично (≥80%)</div><div class="h3 mb-0" id="test1-excellent">0</div></div><i class="bi bi-star fs-1"></i></div></div></div>
+<!-- Выбор теста -->
+<div class="test-selector">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <label class="form-label fw-bold mb-0">📋 Выберите тест</label>
         </div>
-        <div class="row mb-4">
-            <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-pie-chart"></i> Распределение баллов</h6><div class="chart-container"><canvas id="test1-pie"></canvas></div></div></div>
-            <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6><div class="chart-container"><canvas id="test1-bar"></canvas></div></div></div>
+        <div class="col-md-5">
+            <select id="testSelector" class="form-select">
+                <option value="">Загрузка тестов...</option>
+            </select>
         </div>
-        <div class="filter-bar"><div class="row g-3">
-            <div class="col-md-3"><input type="text" id="test1-search" class="form-control" placeholder="🔍 Поиск по имени..."></div>
-            <div class="col-md-2"><input type="text" id="test1-city-filter" class="form-control" placeholder="🏙️ Город"></div>
-            <div class="col-md-2"><input type="date" id="test1-date-from" class="form-control"></div>
-            <div class="col-md-2"><input type="date" id="test1-date-to" class="form-control"></div>
-            <div class="col-md-2"><select id="test1-sort" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="score-desc">⭐ Сначала высокий балл</option></select></div>
-            <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetTest1Filters()">Сброс</button></div>
-        </div></div>
-        <div id="test1-results-area"><div class="text-center py-4">⏳ Загрузка...</div></div>
+        <div class="col-md-3 text-end">
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteCurrentTest()" id="deleteTestBtn" style="display:none">
+                <i class="bi bi-trash"></i> Удалить тест
+            </button>
+        </div>
     </div>
 </div>
 
-<!-- Блок ТЕСТ 2 -->
-<div id="test2-block" class="test-block collapsed">
-    <div class="test-header" onclick="toggleTest('test2')">
-        <div class="test-title"><i class="bi bi-chat-heart-fill" style="color:#e83e8c"></i>🎯 Тест 2: Стандарты обслуживания (11 вопросов)<span class="badge bg-primary ms-2" id="test2-count">0</span></div>
-        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test2')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-info me-2" onclick="event.stopPropagation(); exportDetailedTestToExcel('test2')"><i class="bi bi-file-text"></i> Детальный экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test2')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
+<!-- Блок результатов (динамический) -->
+<div id="resultsContainer" style="display:none">
+    <div class="row mb-4">
+        <div class="col-md-4"><div class="stats-card"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="total-count">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
+        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="avg-score">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
+        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="d-flex justify-content-between"><div><div class="small">Отлично (≥80%)</div><div class="h3 mb-0" id="excellent-count">0</div></div><i class="bi bi-star fs-1"></i></div></div></div>
     </div>
-    <div class="test-content">
-        <div class="row mb-4">
-            <div class="col-md-4"><div class="stats-card"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="test2-total">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
-            <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="test2-avg">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
-            <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="d-flex justify-content-between"><div><div class="small">Отлично (≥80%)</div><div class="h3 mb-0" id="test2-excellent">0</div></div><i class="bi bi-star fs-1"></i></div></div></div>
-        </div>
-        <div class="row mb-4">
-            <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-pie-chart"></i> Распределение баллов</h6><div class="chart-container"><canvas id="test2-pie"></canvas></div></div></div>
-            <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6><div class="chart-container"><canvas id="test2-bar"></canvas></div></div></div>
-        </div>
-        <div class="filter-bar"><div class="row g-3">
-            <div class="col-md-3"><input type="text" id="test2-search" class="form-control" placeholder="🔍 Поиск по имени..."></div>
-            <div class="col-md-2"><select id="test2-city-filter" class="form-select"><option value="">Все города</option><option value="Тверь">Тверь</option><option value="Санкт-Петербург">Санкт-Петербург</option><option value="Ульяновск">Ульяновск</option><option value="Архангельск">Архангельск</option><option value="Черкесск">Черкесск</option><option value="Нижний Тагил">Нижний Тагил</option><option value="Ярославль">Ярославль</option></select></div>
-            <div class="col-md-2"><input type="date" id="test2-date-from" class="form-control"></div>
-            <div class="col-md-2"><input type="date" id="test2-date-to" class="form-control"></div>
-            <div class="col-md-2"><select id="test2-sort" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="score-desc">⭐ Сначала высокий балл</option></select></div>
-            <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetTest2Filters()">Сброс</button></div>
-        </div></div>
-        <div id="test2-results-area"><div class="text-center py-4">⏳ Загрузка...</div></div>
+    <div class="row mb-4">
+        <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-pie-chart"></i> Распределение баллов</h6><div class="chart-container"><canvas id="scoreChart"></canvas></div></div></div>
+        <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6><div class="chart-container"><canvas id="cityChart"></canvas></div></div></div>
     </div>
-</div>
-
-<!-- Блок ТЕСТ 3 -->
-<div id="test3-block" class="test-block collapsed">
-    <div class="test-header" onclick="toggleTest('test3')">
-        <div class="test-title"><i class="bi bi-stars" style="color:#fd7e14"></i>🌟 Тест 3: Продажи. Входной тест (11 вопросов)<span class="badge bg-primary ms-2" id="test3-count">0</span></div>
-        <div><button class="btn btn-sm btn-outline-success me-2" onclick="event.stopPropagation(); exportTestToExcel('test3')"><i class="bi bi-file-excel"></i> Экспорт</button><button class="btn btn-sm btn-info me-2" onclick="event.stopPropagation(); exportDetailedTestToExcel('test3')"><i class="bi bi-file-text"></i> Детальный экспорт</button><button class="btn btn-sm btn-outline-danger me-2" onclick="event.stopPropagation(); clearAllResults('test3')"><i class="bi bi-trash"></i> Очистить всё</button><i class="bi bi-chevron-down collapse-icon"></i></div>
-    </div>
-    <div class="test-content">
-        <div class="row mb-4">
-            <div class="col-md-4"><div class="stats-card"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="test3-total">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
-            <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="test3-avg">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
-            <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="d-flex justify-content-between"><div><div class="small">Отлично (≥80%)</div><div class="h3 mb-0" id="test3-excellent">0</div></div><i class="bi bi-star fs-1"></i></div></div></div>
-        </div>
-        <div class="row mb-4">
-            <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-pie-chart"></i> Распределение баллов</h6><div class="chart-container"><canvas id="test3-pie"></canvas></div></div></div>
-            <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6><div class="chart-container"><canvas id="test3-bar"></canvas></div></div></div>
-        </div>
-        <div class="filter-bar"><div class="row g-3">
-            <div class="col-md-3"><input type="text" id="test3-search" class="form-control" placeholder="🔍 Поиск по имени..."></div>
-            <div class="col-md-2"><select id="test3-city-filter" class="form-select"><option value="">Все города</option><option value="Санкт-Петербург">Санкт-Петербург</option><option value="Тольятти">Тольятти</option><option value="Новоуральск">Новоуральск</option><option value="Прохладный">Прохладный</option><option value="Пермь">Пермь</option><option value="Москва">Москва</option></select></div>
-            <div class="col-md-2"><input type="date" id="test3-date-from" class="form-control"></div>
-            <div class="col-md-2"><input type="date" id="test3-date-to" class="form-control"></div>
-            <div class="col-md-2"><select id="test3-sort" class="form-select"><option value="date-desc">📅 Сначала новые</option><option value="score-desc">⭐ Сначала высокий балл</option></select></div>
-            <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetTest3Filters()">Сброс</button></div>
-        </div></div>
-        <div id="test3-results-area"><div class="text-center py-4">⏳ Загрузка...</div></div>
-    </div>
+    <div class="filter-bar"><div class="row g-3">
+        <div class="col-md-4"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div>
+        <div class="col-md-3"><input type="text" id="city-filter" class="form-control" placeholder="🏙️ Фильтр по городу"></div>
+        <div class="col-md-2"><input type="date" id="date-from" class="form-control" placeholder="Дата от"></div>
+        <div class="col-md-2"><input type="date" id="date-to" class="form-control" placeholder="Дата до"></div>
+        <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetFilters()">Сброс</button></div>
+    </div></div>
+    <div id="results-area"><div class="text-center py-4">⏳ Выберите тест</div></div>
 </div>
 
 </div>
@@ -165,337 +112,190 @@ const SUPABASE_URL='https://qtostraaqrnjbxiydlip.supabase.co';
 const SUPABASE_KEY='sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let test1Data = [], test2Data = [], test3Data = [];
-let test1ChartPie = null, test1ChartBar = null;
-let test2ChartPie = null, test2ChartBar = null;
-let test3ChartPie = null, test3ChartBar = null;
+let currentTest = null;
+let currentResults = [];
+let scoreChart = null;
+let cityChart = null;
 
 window.addEventListener('load', () => {
     setTimeout(() => { const splash = document.getElementById('splash'); if(splash) { splash.style.opacity = '0'; setTimeout(() => splash.style.display = 'none', 500); } }, 300);
     document.getElementById('splash').style.display = 'none';
     document.getElementById('admin-screen').classList.remove('hidden');
-    loadAllData();
+    loadTests();
     initRealtime();
     
-    document.getElementById('test1-search').addEventListener('input', () => renderTest1());
-    document.getElementById('test1-city-filter').addEventListener('input', () => renderTest1());
-    document.getElementById('test1-date-from').addEventListener('change', () => renderTest1());
-    document.getElementById('test1-date-to').addEventListener('change', () => renderTest1());
-    document.getElementById('test1-sort').addEventListener('change', () => renderTest1());
-    
-    document.getElementById('test2-search').addEventListener('input', () => renderTest2());
-    document.getElementById('test2-city-filter').addEventListener('change', () => renderTest2());
-    document.getElementById('test2-date-from').addEventListener('change', () => renderTest2());
-    document.getElementById('test2-date-to').addEventListener('change', () => renderTest2());
-    document.getElementById('test2-sort').addEventListener('change', () => renderTest2());
-    
-    document.getElementById('test3-search').addEventListener('input', () => renderTest3());
-    document.getElementById('test3-city-filter').addEventListener('change', () => renderTest3());
-    document.getElementById('test3-date-from').addEventListener('change', () => renderTest3());
-    document.getElementById('test3-date-to').addEventListener('change', () => renderTest3());
-    document.getElementById('test3-sort').addEventListener('change', () => renderTest3());
+    document.getElementById('search-input').addEventListener('input', () => renderResults());
+    document.getElementById('city-filter').addEventListener('input', () => renderResults());
+    document.getElementById('date-from').addEventListener('change', () => renderResults());
+    document.getElementById('date-to').addEventListener('change', () => renderResults());
 });
 
-async function loadAllData() {
-    const {data} = await sb.from('results').select('*').order('created_at',{ascending:false});
-    if(data) {
-        test1Data = data.filter(r => r.test_type === 'test1');
-        test2Data = data.filter(r => r.test_type === 'test2');
-        test3Data = data.filter(r => r.test_type === 'test3');
-        renderTest1(); renderTest2(); renderTest3();
+async function loadTests() {
+    const { data, error } = await sb.from('tests').select('*').order('created_at', { ascending: false });
+    const selector = document.getElementById('testSelector');
+    
+    if (error || !data || data.length === 0) {
+        selector.innerHTML = '<option value="">Нет тестов</option>';
+        return;
     }
+    
+    let options = '<option value="">-- Выберите тест --</option>';
+    for (const test of data) {
+        options += `<option value="${test.slug}">${test.name} (${test.questions_count || '?'} вопросов)</option>`;
+    }
+    selector.innerHTML = options;
+    
+    selector.addEventListener('change', async (e) => {
+        const slug = e.target.value;
+        if (!slug) {
+            currentTest = null;
+            document.getElementById('resultsContainer').style.display = 'none';
+            return;
+        }
+        currentTest = { slug, name: selector.options[selector.selectedIndex].text };
+        document.getElementById('deleteTestBtn').style.display = 'inline-block';
+        await loadResults(slug);
+        document.getElementById('resultsContainer').style.display = 'block';
+    });
 }
 
-// ========== ТЕСТ 1 ==========
-function renderTest1() {
-    let filtered = [...test1Data];
-    const search = document.getElementById('test1-search')?.value.toLowerCase() || '';
-    const cityF = document.getElementById('test1-city-filter')?.value.toLowerCase() || '';
-    const dateFrom = document.getElementById('test1-date-from')?.value;
-    const dateTo = document.getElementById('test1-date-to')?.value;
+async function loadResults(slug) {
+    const { data, error } = await sb.from('results').select('*').eq('test_type', slug).order('created_at', { ascending: false });
+    if (error) {
+        console.error(error);
+        currentResults = [];
+    } else {
+        currentResults = data || [];
+    }
+    renderResults();
+}
+
+function renderResults() {
+    if (!currentTest) return;
+    
+    let filtered = [...currentResults];
+    const search = document.getElementById('search-input')?.value.toLowerCase() || '';
+    const cityF = document.getElementById('city-filter')?.value.toLowerCase() || '';
+    const dateFrom = document.getElementById('date-from')?.value;
+    const dateTo = document.getElementById('date-to')?.value;
+    
     if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
     if(cityF) filtered = filtered.filter(r => r.city && r.city.toLowerCase().includes(cityF));
     if(dateFrom) { const d = new Date(dateFrom); d.setHours(0,0,0,0); filtered = filtered.filter(r => new Date(r.created_at) >= d); }
     if(dateTo) { const d = new Date(dateTo); d.setHours(23,59,59,999); filtered = filtered.filter(r => new Date(r.created_at) <= d); }
-    const sortBy = document.getElementById('test1-sort')?.value || 'date-desc';
-    filtered.sort((a,b) => sortBy==='date-desc' ? new Date(b.created_at)-new Date(a.created_at) : (b.score/b.total)-(a.score/a.total));
-    document.getElementById('test1-count').innerText = test1Data.length;
-    const total = test1Data.length;
-    if(total > 0) {
-        document.getElementById('test1-total').innerText = total;
-        document.getElementById('test1-avg').innerText = `${Math.round(test1Data.reduce((s,r)=>s+(r.score/r.total),0)/total*100)}%`;
-        document.getElementById('test1-excellent').innerText = test1Data.filter(r=>(r.score/r.total)>=0.8).length;
-    }
-    const area = document.getElementById('test1-results-area');
-    if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; return; }
-    area.innerHTML = '';
-    filtered.forEach(r => {
-        const p = Math.round(r.score/r.total*100);
-        let details = '';
-        if(r.answers) r.answers.forEach((a,i) => {
-            const ok = a.isCorrect === true || a.ok === true;
-            details += `<div class="small mb-2"><strong>В${i+1}:</strong> ${ok?'✅':'❌'} <span class="${ok?'correct':'wrong'}">${ok?'Верно':'Неверно'}</span>${!ok?`<div class="text-muted ms-3">✖ ${a.selected || a.sel}<br>✔ ${a.correct || a.cor}</div>`:''}</div>`;
-        });
-        const clr = p>=80?'success':p>=50?'warning':'danger';
-        area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
-            <div class="d-flex justify-content-between align-items-start">
-                <div><span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span><span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div>
-                <div class="d-flex align-items-center gap-2">
-                    <small>${new Date(r.created_at).toLocaleString()}</small>
-                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); generateUserReport('${r.id}', 'test1')" style="padding:2px 8px" title="Отчёт"><i class="bi bi-file-text"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteSingleResult('${r.id}', 'test1')" style="padding:2px 8px"><i class="bi bi-trash"></i></button>
-                    <i class="bi bi-chevron-down expand-icon ms-2"></i>
-                </div>
-            </div>
-            <div class="answer-details mt-2"><div class="bg-light p-2 rounded">${details}</div></div>
-        </div>`;
-    });
-    updateTest1Charts();
-}
-
-function updateTest1Charts() {
-    if(!test1Data.length) return;
-    const cats = {'Отлично (80-100%)':0, 'Хорошо (60-79%)':0, 'Удовлетворительно (40-59%)':0, 'Плохо (0-39%)':0};
-    test1Data.forEach(r => { let p = r.score/r.total*100; if(p>=80) cats['Отлично (80-100%)']++; else if(p>=60) cats['Хорошо (60-79%)']++; else if(p>=40) cats['Удовлетворительно (40-59%)']++; else cats['Плохо (0-39%)']++; });
-    const ctx1 = document.getElementById('test1-pie');
-    if(ctx1){ if(test1ChartPie) test1ChartPie.destroy(); test1ChartPie = new Chart(ctx1, {type:'pie', data:{labels:Object.keys(cats), datasets:[{data:Object.values(cats), backgroundColor:['#28a745','#17a2b8','#ffc107','#dc3545']}]}, options:{responsive:true}}); }
-    const cityStats = {};
-    test1Data.forEach(r => { let city = r.city||'Не указан'; if(!cityStats[city]) cityStats[city]={total:0,count:0}; cityStats[city].total+=r.score/r.total; cityStats[city].count++; });
-    const cities = Object.keys(cityStats);
-    const avgScores = cities.map(c=>Math.round(cityStats[c].total/cityStats[c].count*100));
-    const ctx2 = document.getElementById('test1-bar');
-    if(ctx2){ if(test1ChartBar) test1ChartBar.destroy(); test1ChartBar = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#667eea'}]}, options:{responsive:true, scales:{y:{min:0,max:100}}}}); }
-}
-
-function resetTest1Filters() {
-    document.getElementById('test1-search').value = '';
-    document.getElementById('test1-city-filter').value = '';
-    document.getElementById('test1-date-from').value = '';
-    document.getElementById('test1-date-to').value = '';
-    document.getElementById('test1-sort').value = 'date-desc';
-    renderTest1();
-}
-
-// ========== ТЕСТ 2 ==========
-function renderTest2() {
-    let filtered = [...test2Data];
-    const search = document.getElementById('test2-search')?.value.toLowerCase() || '';
-    const cityF = document.getElementById('test2-city-filter')?.value || '';
-    const dateFrom = document.getElementById('test2-date-from')?.value;
-    const dateTo = document.getElementById('test2-date-to')?.value;
-    if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
-    if(cityF) filtered = filtered.filter(r => r.city && r.city === cityF);
-    if(dateFrom) { const d = new Date(dateFrom); d.setHours(0,0,0,0); filtered = filtered.filter(r => new Date(r.created_at) >= d); }
-    if(dateTo) { const d = new Date(dateTo); d.setHours(23,59,59,999); filtered = filtered.filter(r => new Date(r.created_at) <= d); }
-    const sortBy = document.getElementById('test2-sort')?.value || 'date-desc';
-    filtered.sort((a,b) => sortBy === 'date-desc' ? new Date(b.created_at) - new Date(a.created_at) : (b.score/b.total) - (a.score/a.total));
-    document.getElementById('test2-count').innerText = test2Data.length;
-    const total = test2Data.length;
-    if(total > 0) {
-        document.getElementById('test2-total').innerText = total;
-        document.getElementById('test2-avg').innerText = `${Math.round(test2Data.reduce((s,r)=>s+(r.score/r.total),0)/total*100)}%`;
-        document.getElementById('test2-excellent').innerText = test2Data.filter(r=>(r.score/r.total)>=0.8).length;
-    }
-    const area = document.getElementById('test2-results-area');
-    if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; return; }
-    area.innerHTML = '';
-    filtered.forEach(r => {
-        const p = Math.round(r.score/r.total*100);
-        let details = '';
-        if(r.answers) r.answers.forEach((a,i) => {
-            const ok = a.isCorrect === true || a.ok === true;
-            details += `<div class="small mb-2"><strong>В${i+1}:</strong> ${ok?'✅':'❌'} <span class="${ok?'correct':'wrong'}">${ok?'Верно':'Неверно'}</span>${!ok?`<div class="text-muted ms-3">✖ ${a.selected || a.sel}<br>✔ ${a.correct || a.cor}</div>`:''}</div>`;
-        });
-        const clr = p>=80?'success':p>=50?'warning':'danger';
-        area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
-            <div class="d-flex justify-content-between align-items-start">
-                <div><span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span><span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div>
-                <div class="d-flex align-items-center gap-2">
-                    <small>${new Date(r.created_at).toLocaleString()}</small>
-                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); generateUserReport('${r.id}', 'test2')" style="padding:2px 8px" title="Отчёт"><i class="bi bi-file-text"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteSingleResult('${r.id}', 'test2')" style="padding:2px 8px"><i class="bi bi-trash"></i></button>
-                    <i class="bi bi-chevron-down expand-icon ms-2"></i>
-                </div>
-            </div>
-            <div class="answer-details mt-2"><div class="bg-light p-2 rounded">${details}</div></div>
-        </div>`;
-    });
-    updateTest2Charts();
-}
-
-function updateTest2Charts() {
-    if(!test2Data.length) return;
-    const cats = {'Отлично (80-100%)':0, 'Хорошо (60-79%)':0, 'Удовлетворительно (40-59%)':0, 'Плохо (0-39%)':0};
-    test2Data.forEach(r => { let p = r.score/r.total*100; if(p>=80) cats['Отлично (80-100%)']++; else if(p>=60) cats['Хорошо (60-79%)']++; else if(p>=40) cats['Удовлетворительно (40-59%)']++; else cats['Плохо (0-39%)']++; });
-    const ctx1 = document.getElementById('test2-pie');
-    if(ctx1){ if(test2ChartPie) test2ChartPie.destroy(); test2ChartPie = new Chart(ctx1, {type:'pie', data:{labels:Object.keys(cats), datasets:[{data:Object.values(cats), backgroundColor:['#28a745','#17a2b8','#ffc107','#dc3545']}]}, options:{responsive:true}}); }
-    const cityStats = {};
-    test2Data.forEach(r => { let city = r.city||'Не указан'; if(!cityStats[city]) cityStats[city]={total:0,count:0}; cityStats[city].total+=r.score/r.total; cityStats[city].count++; });
-    const cities = Object.keys(cityStats);
-    const avgScores = cities.map(c=>Math.round(cityStats[c].total/cityStats[c].count*100));
-    const ctx2 = document.getElementById('test2-bar');
-    if(ctx2){ if(test2ChartBar) test2ChartBar.destroy(); test2ChartBar = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#e83e8c'}]}, options:{responsive:true, scales:{y:{min:0,max:100}}}}); }
-}
-
-function resetTest2Filters() {
-    document.getElementById('test2-search').value = '';
-    document.getElementById('test2-city-filter').value = '';
-    document.getElementById('test2-date-from').value = '';
-    document.getElementById('test2-date-to').value = '';
-    document.getElementById('test2-sort').value = 'date-desc';
-    renderTest2();
-}
-
-// ========== ТЕСТ 3 ==========
-function renderTest3() {
-    let filtered = [...test3Data];
-    const search = document.getElementById('test3-search')?.value.toLowerCase() || '';
-    const cityF = document.getElementById('test3-city-filter')?.value || '';
-    const dateFrom = document.getElementById('test3-date-from')?.value;
-    const dateTo = document.getElementById('test3-date-to')?.value;
-    if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
-    if(cityF) filtered = filtered.filter(r => r.city && r.city === cityF);
-    if(dateFrom) { const d = new Date(dateFrom); d.setHours(0,0,0,0); filtered = filtered.filter(r => new Date(r.created_at) >= d); }
-    if(dateTo) { const d = new Date(dateTo); d.setHours(23,59,59,999); filtered = filtered.filter(r => new Date(r.created_at) <= d); }
-    const sortBy = document.getElementById('test3-sort')?.value || 'date-desc';
-    filtered.sort((a,b) => sortBy === 'date-desc' ? new Date(b.created_at) - new Date(a.created_at) : (b.score/b.total) - (a.score/a.total));
-    document.getElementById('test3-count').innerText = test3Data.length;
-    const total = test3Data.length;
-    if(total > 0) {
-        document.getElementById('test3-total').innerText = total;
-        document.getElementById('test3-avg').innerText = `${Math.round(test3Data.reduce((s,r)=>s+(r.score/r.total),0)/total*100)}%`;
-        document.getElementById('test3-excellent').innerText = test3Data.filter(r=>(r.score/r.total)>=0.8).length;
-    }
-    const area = document.getElementById('test3-results-area');
-    if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; return; }
-    area.innerHTML = '';
-    filtered.forEach(r => {
-        const p = Math.round(r.score/r.total*100);
-        let details = '';
-        if(r.answers) r.answers.forEach((a,i) => {
-            const ok = a.isCorrect === true || a.ok === true;
-            details += `<div class="small mb-2"><strong>В${i+1}:</strong> ${ok?'✅':'❌'} <span class="${ok?'correct':'wrong'}">${ok?'Верно':'Неверно'}</span>${!ok?`<div class="text-muted ms-3">✖ ${a.selected || a.sel}<br>✔ ${a.correct || a.cor}</div>`:''}</div>`;
-        });
-        const clr = p>=80?'success':p>=50?'warning':'danger';
-        area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
-            <div class="d-flex justify-content-between align-items-start">
-                <div><span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span><span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div>
-                <div class="d-flex align-items-center gap-2">
-                    <small>${new Date(r.created_at).toLocaleString()}</small>
-                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); generateUserReport('${r.id}', 'test3')" style="padding:2px 8px" title="Отчёт"><i class="bi bi-file-text"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteSingleResult('${r.id}', 'test3')" style="padding:2px 8px"><i class="bi bi-trash"></i></button>
-                    <i class="bi bi-chevron-down expand-icon ms-2"></i>
-                </div>
-            </div>
-            <div class="answer-details mt-2"><div class="bg-light p-2 rounded">${details}</div></div>
-        </div>`;
-    });
-    updateTest3Charts();
-}
-
-function updateTest3Charts() {
-    if(!test3Data.length) return;
-    const cats = {'Отлично (80-100%)':0, 'Хорошо (60-79%)':0, 'Удовлетворительно (40-59%)':0, 'Плохо (0-39%)':0};
-    test3Data.forEach(r => { let p = r.score/r.total*100; if(p>=80) cats['Отлично (80-100%)']++; else if(p>=60) cats['Хорошо (60-79%)']++; else if(p>=40) cats['Удовлетворительно (40-59%)']++; else cats['Плохо (0-39%)']++; });
-    const ctx1 = document.getElementById('test3-pie');
-    if(ctx1){ if(test3ChartPie) test3ChartPie.destroy(); test3ChartPie = new Chart(ctx1, {type:'pie', data:{labels:Object.keys(cats), datasets:[{data:Object.values(cats), backgroundColor:['#28a745','#17a2b8','#ffc107','#dc3545']}]}, options:{responsive:true}}); }
-    const cityStats = {};
-    test3Data.forEach(r => { let city = r.city||'Не указан'; if(!cityStats[city]) cityStats[city]={total:0,count:0}; cityStats[city].total+=r.score/r.total; cityStats[city].count++; });
-    const cities = Object.keys(cityStats);
-    const avgScores = cities.map(c=>Math.round(cityStats[c].total/cityStats[c].count*100));
-    const ctx2 = document.getElementById('test3-bar');
-    if(ctx2){ if(test3ChartBar) test3ChartBar.destroy(); test3ChartBar = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#fd7e14'}]}, options:{responsive:true, scales:{y:{min:0,max:100}}}}); }
-}
-
-function resetTest3Filters() {
-    document.getElementById('test3-search').value = '';
-    document.getElementById('test3-city-filter').value = '';
-    document.getElementById('test3-date-from').value = '';
-    document.getElementById('test3-date-to').value = '';
-    document.getElementById('test3-sort').value = 'date-desc';
-    renderTest3();
-}
-
-// ========== ОБЩИЕ ФУНКЦИИ ==========
-async function deleteSingleResult(resultId, testId) {
-    if(!confirm('🗑️ Удалить этот результат?')) return;
-    const {error} = await sb.from('results').delete().eq('id', resultId);
-    if(error) alert('Ошибка: ' + error.message);
-    else {
-        if(testId === 'test1') { test1Data = test1Data.filter(r => r.id !== resultId); renderTest1(); }
-        else if(testId === 'test2') { test2Data = test2Data.filter(r => r.id !== resultId); renderTest2(); }
-        else { test3Data = test3Data.filter(r => r.id !== resultId); renderTest3(); }
-        loadAllData();
-    }
-}
-
-async function clearAllResults(testId) {
-    let name = '';
-    if(testId === 'test1') name = 'Тест 1';
-    else if(testId === 'test2') name = 'Тест 2';
-    else name = 'Тест 3';
-    if(!confirm(`⚠️ Удалить ВСЕ результаты ${name}?`)) return;
-    const query = sb.from('results').delete().eq('test_type', testId);
-    const {error} = await query;
-    if(error) alert('Ошибка: ' + error.message);
-    else {
-        if(testId === 'test1') { test1Data = []; renderTest1(); }
-        else if(testId === 'test2') { test2Data = []; renderTest2(); }
-        else { test3Data = []; renderTest3(); }
-        alert(`✅ Результаты ${name} удалены!`);
-    }
-}
-
-function generateUserReport(resultId, testId) {
-    let userData = null;
-    let testName = '';
     
-    if(testId === 'test1') { userData = test1Data.find(r => r.id == resultId); testName = 'Стандарты продаж'; }
-    else if(testId === 'test2') { userData = test2Data.find(r => r.id == resultId); testName = 'Стандарты обслуживания'; }
-    else { userData = test3Data.find(r => r.id == resultId); testName = 'Продажи. Входной тест'; }
+    const total = currentResults.length;
+    if(total > 0) {
+        const avg = Math.round(currentResults.reduce((s,r)=>s+(r.score/r.total),0)/total*100);
+        const excellent = currentResults.filter(r=>(r.score/r.total)>=0.8).length;
+        document.getElementById('total-count').innerText = total;
+        document.getElementById('avg-score').innerText = `${avg}%`;
+        document.getElementById('excellent-count').innerText = excellent;
+    }
     
+    const area = document.getElementById('results-area');
+    if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; updateCharts(); return; }
+    
+    area.innerHTML = '';
+    filtered.forEach((r, idx) => {
+        const p = Math.round(r.score/r.total*100);
+        let details = '';
+        if(r.answers) r.answers.forEach((a,i) => {
+            const ok = a.isCorrect === true || a.ok === true;
+            details += `<div class="small mb-2"><strong>В${i+1}:</strong> ${ok?'✅':'❌'} <span class="${ok?'correct':'wrong'}">${ok?'Верно':'Неверно'}</span>${!ok?`<div class="text-muted ms-3">✖ ${a.selected || a.sel}<br>✔ ${a.correct || a.cor}</div>`:''}</div>`;
+        });
+        const clr = p>=80?'success':p>=50?'warning':'danger';
+        area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
+            <div class="d-flex justify-content-between align-items-start">
+                <div><span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span><span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div>
+                <div class="d-flex align-items-center gap-2">
+                    <small>${new Date(r.created_at).toLocaleString()}</small>
+                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); generateUserReport('${r.id}')" style="padding:2px 8px" title="Отчёт"><i class="bi bi-file-text"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteResult('${r.id}')" style="padding:2px 8px"><i class="bi bi-trash"></i></button>
+                    <i class="bi bi-chevron-down expand-icon ms-2"></i>
+                </div>
+            </div>
+            <div class="answer-details mt-2"><div class="bg-light p-2 rounded">${details}</div></div>
+        </div>`;
+    });
+    updateCharts();
+}
+
+async function deleteResult(resultId) {
+    if(!confirm('Удалить этот результат?')) return;
+    const { error } = await sb.from('results').delete().eq('id', resultId);
+    if(error) alert('Ошибка: ' + error.message);
+    else await loadResults(currentTest.slug);
+}
+
+async function deleteCurrentTest() {
+    if(!currentTest) return;
+    if(!confirm(`Удалить тест "${currentTest.name}" и ВСЕ его результаты? Это действие нельзя отменить!`)) return;
+    
+    const { error: resultsError } = await sb.from('results').delete().eq('test_type', currentTest.slug);
+    if(resultsError) alert('Ошибка удаления результатов: ' + resultsError.message);
+    
+    const { error: testError } = await sb.from('tests').delete().eq('slug', currentTest.slug);
+    if(testError) alert('Ошибка удаления теста: ' + testError.message);
+    
+    alert('Тест удалён');
+    await loadTests();
+    document.getElementById('resultsContainer').style.display = 'none';
+    currentTest = null;
+    document.getElementById('deleteTestBtn').style.display = 'none';
+}
+
+function resetFilters() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('city-filter').value = '';
+    document.getElementById('date-from').value = '';
+    document.getElementById('date-to').value = '';
+    renderResults();
+}
+
+function updateCharts() {
+    if(!currentResults.length) return;
+    
+    const cats = {'Отлично (80-100%)':0, 'Хорошо (60-79%)':0, 'Удовлетворительно (40-59%)':0, 'Плохо (0-39%)':0};
+    currentResults.forEach(r => { let p = r.score/r.total*100; if(p>=80) cats['Отлично (80-100%)']++; else if(p>=60) cats['Хорошо (60-79%)']++; else if(p>=40) cats['Удовлетворительно (40-59%)']++; else cats['Плохо (0-39%)']++; });
+    const ctx1 = document.getElementById('scoreChart');
+    if(ctx1){ if(scoreChart) scoreChart.destroy(); scoreChart = new Chart(ctx1, {type:'pie', data:{labels:Object.keys(cats), datasets:[{data:Object.values(cats), backgroundColor:['#28a745','#17a2b8','#ffc107','#dc3545']}]}, options:{responsive:true}}); }
+    
+    const cityStats = {};
+    currentResults.forEach(r => { let city = r.city||'Не указан'; if(!cityStats[city]) cityStats[city]={total:0,count:0}; cityStats[city].total+=r.score/r.total; cityStats[city].count++; });
+    const cities = Object.keys(cityStats);
+    const avgScores = cities.map(c=>Math.round(cityStats[c].total/cityStats[c].count*100));
+    const ctx2 = document.getElementById('cityChart');
+    if(ctx2){ if(cityChart) cityChart.destroy(); cityChart = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#667eea'}]}, options:{responsive:true, scales:{y:{min:0,max:100}}}}); }
+}
+
+function generateUserReport(resultId) {
+    const userData = currentResults.find(r => r.id == resultId);
     if(!userData) { alert('Данные не найдены'); return; }
     
     const fullName = `${userData.surname || ''} ${userData.name || ''}`.trim();
     const percent = Math.round(userData.score / userData.total * 100);
     
     let answersHtml = '';
-    let correctCount = 0;
-    let wrongCount = 0;
-    
     if(userData.answers && userData.answers.length > 0) {
-        for(let i = 0; i < userData.answers.length; i++) {
-            const a = userData.answers[i];
+        userData.answers.forEach((a, i) => {
             const isCorrect = a.isCorrect === true || a.ok === true;
             const userAnswer = a.selected || a.sel || 'Не указан';
             const correctAnswer = a.correct || a.cor || 'Не указан';
             let questionText = a.question || a.qs || `Вопрос ${i+1}`;
             if(questionText.length > 200) questionText = questionText.substring(0,200);
             
-            if (isCorrect) {
-                correctCount++;
-                answersHtml += `<div style="margin-bottom:20px;padding:12px;background:#e8f5e9;border-radius:8px;border-left:4px solid #4caf50;">
-                    <div style="font-weight:bold;margin-bottom:8px;">✅ Вопрос ${i+1} (верно)</div>
-                    <div style="margin-bottom:8px;color:#555;">${escapeHtml(questionText)}</div>
-                    <div><span style="color:#2e7d32;">✓ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
-                </div>`;
-            } else {
-                wrongCount++;
-                answersHtml += `<div style="margin-bottom:20px;padding:12px;background:#ffebee;border-radius:8px;border-left:4px solid #f44336;">
-                    <div style="font-weight:bold;margin-bottom:8px;">❌ Вопрос ${i+1} (ошибка)</div>
+            if (!isCorrect) {
+                answersHtml += `<div style="margin-bottom:20px;padding:12px;background:#ffebee;border-radius:8px;border-left:4px solid #f44336">
+                    <div style="font-weight:bold;margin-bottom:8px;">❌ Ошибка в вопросе ${i+1}</div>
                     <div style="margin-bottom:8px;color:#555;">${escapeHtml(questionText)}</div>
                     <div><span style="color:#d32f2f;">✖ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
-                    <div style="margin-top:5px;"><span style="color:#2e7d32;">✓ Правильный ответ:</span> ${escapeHtml(correctAnswer)}</div>
+                    <div><span style="color:#2e7d32;">✓ Правильный ответ:</span> ${escapeHtml(correctAnswer)}</div>
                     <div style="margin-top:8px;font-size:12px;color:#666;">💡 Совет: обратите внимание на правильный вариант</div>
                 </div>`;
             }
-        }
+        });
     }
-    
-    let resultGrade = '';
-    if (percent >= 80) resultGrade = '🎉 Отлично!';
-    else if (percent >= 50) resultGrade = '📈 Хороший результат';
-    else resultGrade = '📚 Требуется изучение материалов';
     
     const reportHtml = `
         <!DOCTYPE html>
@@ -511,102 +311,38 @@ function generateUserReport(resultId, testId) {
             .score-normal{background:#ff9800;color:white}
             .score-bad{background:#f44336;color:white}
             .btn-print{background:#0d6efd;color:white;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;margin-bottom:10px}
-            .btn-print:hover{opacity:0.8}
             @media print { .no-print { display: none; } }
         </style>
         </head>
         <body>
-            <div class="no-print" style="text-align:right; margin-bottom:10px;">
-                <button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button>
-            </div>
-            <div class="header">
-                <h1>📊 Отчёт по тесту</h1>
-                <h2>«${testName}»</h2>
-            </div>
-            <div class="info">
-                <table style="width:100%"><tr><td style="padding:5px;"><strong>Сотрудник:</strong> ${fullName}</td><td style="padding:5px;"><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
-                <tr><td style="padding:5px;"><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td style="padding:5px;"><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</td></tr>
-                </table>
-                <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${resultGrade}</div>
-            </div>
-            <div style="margin:20px 0; font-size:18px; font-weight:bold;">📝 Разбор ответов (правильных: ${correctCount}, ошибок: ${wrongCount}):</div>
-            ${answersHtml}
-            <div class="footer" style="margin-top:40px; text-align:center; font-size:12px; color:#999;">Отчёт сгенерирован автоматически</div>
+            <div class="no-print" style="text-align:right;margin-bottom:10px"><button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button></div>
+            <div class="header"><h1>📊 Отчёт по тесту</h1><h2>«${currentTest?.name || ''}»</h2></div>
+            <div class="info"><table style="width:100%"><tr><td><strong>Сотрудник:</strong> ${fullName}</td><td><strong>Город:</strong> ${userData.city || 'не указан'}</td></tr>
+            <tr><td><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}</td><td><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)<\/td><\/tr><\/table>
+            <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хороший результат':'📚 Требуется изучение материалов'}</div></div>
+            <div style="margin:20px 0;"><strong>📝 Разбор ошибок:</strong></div>
+            ${answersHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
+            <div class="footer">Отчёт сгенерирован автоматически</div>
         </body>
         </html>
     `;
-    
-    const reportWindow = window.open('', '_blank');
-    reportWindow.document.write(reportHtml);
-    reportWindow.document.close();
+    const win = window.open('', '_blank');
+    win.document.write(reportHtml);
+    win.document.close();
 }
 
-// Новая функция детального экспорта
-function exportDetailedTestToExcel(testId) {
-    let data = [];
-    let name = '';
-    if(testId === 'test1') { data = test1Data; name = 'Стандарты_продаж_детально'; }
-    else if(testId === 'test2') { data = test2Data; name = 'Стандарты_обслуживания_детально'; }
-    else { data = test3Data; name = 'Продажи_Входной_тест_детально'; }
-    
-    if(!data.length) return alert("Нет данных");
-    
-    const excelData = [];
-    
-    for (const r of data) {
-        const row = {
-            'ФИО': `${r.surname || ''} ${r.name || ''}`.trim(),
-            'Город': r.city || '',
-            'Баллы': `${r.score}/${r.total}`,
-            'Процент': `${Math.round(r.score/r.total*100)}%`,
-            'Дата': new Date(r.created_at).toLocaleString()
-        };
-        
-        // Добавляем детальные ответы по каждому вопросу
-        if (r.answers && r.answers.length > 0) {
-            for (let i = 0; i < r.answers.length; i++) {
-                const a = r.answers[i];
-                const questionNum = i + 1;
-                row[`Вопрос ${questionNum}`] = a.question || a.qs || '';
-                row[`Ответ сотрудника ${questionNum}`] = a.selected || a.sel || '';
-                row[`Правильный ответ ${questionNum}`] = a.correct || a.cor || '';
-                row[`Результат ${questionNum}`] = (a.isCorrect === true || a.ok === true) ? 'Верно' : 'Ошибка';
-            }
+function initRealtime() {
+    sb.channel('results-channel').on('postgres_changes', {event:'INSERT', schema:'public', table:'results'}, payload => {
+        if (currentTest && payload.new.test_type === currentTest.slug) {
+            currentResults.unshift(payload.new);
+            renderResults();
         }
-        
-        excelData.push(row);
-    }
-    
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, name);
-    XLSX.writeFile(wb, `${name}_${new Date().toLocaleDateString()}.xlsx`);
+    }).subscribe();
+    document.getElementById('realtime-status').innerHTML = '🟢 Live';
+    document.getElementById('realtime-status').className = 'badge bg-success';
 }
 
-function exportTestToExcel(testId) {
-    let data = [];
-    let name = '';
-    if(testId === 'test1') { data = test1Data; name = 'Стандарты_продаж'; }
-    else if(testId === 'test2') { data = test2Data; name = 'Стандарты_обслуживания'; }
-    else { data = test3Data; name = 'Продажи_Входной_тест'; }
-    if(!data.length) return alert("Нет данных");
-    const excelData = data.map(r => ({ 'ФИО': `${r.surname||''} ${r.name||''}`.trim(), 'Город': r.city||'', 'Баллы': `${r.score}/${r.total}`, 'Процент': `${Math.round(r.score/r.total*100)}%`, 'Дата': new Date(r.created_at).toLocaleString() }));
-    const ws = XLSX.utils.json_to_sheet(excelData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, name); XLSX.writeFile(wb, `${name}_${new Date().toLocaleDateString()}.xlsx`);
-}
-
-function toggleTest(id) { document.getElementById(`${id}-block`).classList.toggle('collapsed'); }
-function initRealtime() { sb.channel('results-channel').on('postgres_changes', {event:'INSERT', schema:'public', table:'results'}, payload => { const n = payload.new; if(n.test_type === 'test1') { test1Data.unshift(n); renderTest1(); } else if(n.test_type === 'test2') { test2Data.unshift(n); renderTest2(); } else if(n.test_type === 'test3') { test3Data.unshift(n); renderTest3(); } }).subscribe(); document.getElementById('realtime-status').innerHTML = '🟢 Live'; document.getElementById('realtime-status').className = 'badge bg-success'; }
 function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
-
-window.toggleTest = toggleTest;
-window.exportTestToExcel = exportTestToExcel;
-window.exportDetailedTestToExcel = exportDetailedTestToExcel;
-window.resetTest1Filters = resetTest1Filters;
-window.resetTest2Filters = resetTest2Filters;
-window.resetTest3Filters = resetTest3Filters;
-window.deleteSingleResult = deleteSingleResult;
-window.clearAllResults = clearAllResults;
-window.generateUserReport = generateUserReport;
 </script>
 </body>
 </html>
