@@ -16,6 +16,7 @@
         .upload-area:hover { background: #f8f9fa; }
         .btn-primary { background: #E30613; border: none; }
         .btn-primary:hover { background: #c41c2a; }
+        .test-selector { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -72,9 +73,19 @@
             <h3 style="color:#E30613;">👨💼 Панель Администратора</h3>
             <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
         </div>
+
+        <!-- Выбор теста -->
+        <div class="test-selector">
+            <label class="fw-bold mb-2">📋 Выберите тест:</label>
+            <select id="testSelect" class="form-select mb-2">
+                <option value="all">-- Все тесты --</option>
+            </select>
+            <button id="refreshBtn" class="btn btn-primary btn-sm">🔄 Обновить</button>
+        </div>
+
         <div class="bg-white rounded p-3">
             <h5>📈 Результаты сотрудников</h5>
-            <div id="results-area">⏳ Загрузка...</div>
+            <div id="results-area">⏳ Загрузите данные...</div>
         </div>
     </div>
 
@@ -87,6 +98,7 @@ const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentQuestions = [], currentCities = [], step = 0, nm = "", sn = "", ct = "", answers = [], score = 0, shuffledQuestions = [];
+let allResults = []; // Храним все результаты для фильтрации
 
 // Загрузка JSON
 document.getElementById('jsonFileInput').addEventListener('change', function(e) {
@@ -152,7 +164,7 @@ async function startQuiz() {
         [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
     }
     step = 0; score = 0; answers = [];
-    saveToSupabase('logs', { user_id: `${nm} ${sn} (${ct})`, action: '🟢 Начал тест' });
+    saveToSupabase('logs', { user_id: `${nm} ${sn} (${ct})`, action: '🟢 Начал тест', test_name: document.getElementById('testName').innerText });
     renderQuestion();
 }
 
@@ -189,7 +201,7 @@ async function handleAnswer(selectedIdx) {
         isCorrect: isCorrect
     });
     const userId = `${nm} ${sn} (${ct})`;
-    saveToSupabase('logs', { user_id: userId, action: `В${step+1}: ${isCorrect ? '✅' : '❌'} ${String.fromCharCode(65+selectedIdx)}` });
+    saveToSupabase('logs', { user_id: userId, action: `В${step+1}: ${isCorrect ? '✅' : '❌'} ${String.fromCharCode(65+selectedIdx)}`, test_name: document.getElementById('testName').innerText });
     step++;
     if (step < shuffledQuestions.length) {
         renderQuestion();
@@ -207,9 +219,10 @@ function finishTest(userId) {
     saveToSupabase('results', {
         user_id: userId, name: nm, surname: sn, city: ct,
         score: score, total: shuffledQuestions.length, answers: answers,
+        test_name: document.getElementById('testName').innerText,
         created_at: new Date().toISOString()
     });
-    saveToSupabase('logs', { user_id: userId, action: `🏁 Завершил: ${score}/${shuffledQuestions.length}` });
+    saveToSupabase('logs', { user_id: userId, action: `🏁 Завершил: ${score}/${shuffledQuestions.length}`, test_name: document.getElementById('testName').innerText });
 }
 
 function saveToSupabase(table, data) {
@@ -221,7 +234,8 @@ if (new URLSearchParams(location.search).get('mode') === 'admin') {
     document.getElementById('load-screen').classList.add('hidden');
     document.getElementById('admin-screen').classList.remove('hidden');
     loadAdmin();
-    setInterval(loadAdmin, 5000);
+    // Убираем автообновление — только по кнопке
+    document.getElementById('refreshBtn').addEventListener('click', () => loadAdmin());
 }
 
 async function loadAdmin() {
@@ -234,20 +248,54 @@ async function loadAdmin() {
             area.innerHTML = '<p class="text-muted">Пока нет результатов</p>';
             return;
         }
+        
+        allResults = data;
+        
+        // Заполняем выпадающий список тестов
+        const testNames = [...new Set(data.map(r => r.test_name || 'Без названия'))];
+        const testSelect = document.getElementById('testSelect');
+        testSelect.innerHTML = '<option value="all">-- Все тесты --</option>';
+        testNames.forEach(name => {
+            testSelect.innerHTML += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+        });
+        
+        // Фильтруем по выбранному тесту
+        const selectedTest = testSelect.value;
+        const filtered = selectedTest === 'all' ? data : data.filter(r => (r.test_name || 'Без названия') === selectedTest);
+        
         area.innerHTML = '';
-        data.forEach(r => {
+        filtered.forEach(r => {
             const percent = Math.round(r.score / r.total * 100);
             let answersHtml = '';
             if (r.answers) {
                 r.answers.forEach((a, i) => {
-                    answersHtml += `<div class="small mb-1"><strong>${i+1}:</strong> ${a.isCorrect ? '✅' : '❌'} ${!a.isCorrect ? `<span class="text-muted">(выбрано: ${a.selected})</span>` : ''}</div>`;
+                    const isCorrect = a.isCorrect;
+                    answersHtml += `<div class="small mb-1"><strong>${i+1}:</strong> ${isCorrect ? '✅' : '❌'} ${!isCorrect ? `<span class="text-muted">(выбрано: ${escapeHtml(a.selected)})</span>` : ''}</div>`;
                 });
             }
-            area.innerHTML += `<div class="border rounded p-2 mb-2"><strong>${escapeHtml(r.user_id)}</strong> <span class="badge bg-secondary">${r.score}/${r.total} (${percent}%)</span><br><small>📍 ${escapeHtml(r.city)}</small><div class="mt-1 small">${answersHtml}</div></div>`;
+            const testBadge = r.test_name ? `<span class="badge bg-secondary ms-2">${escapeHtml(r.test_name)}</span>` : '';
+            area.innerHTML += `
+                <div class="border rounded p-2 mb-2">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${escapeHtml(r.user_id)}</strong> ${testBadge}
+                            <span class="badge bg-${percent >= 80 ? 'success' : (percent >= 50 ? 'warning' : 'danger')} ms-2">${r.score}/${r.total} (${percent}%)</span>
+                        </div>
+                        <small class="text-muted">${new Date(r.created_at).toLocaleString('ru-RU')}</small>
+                    </div>
+                    <div class="mt-1 small">${answersHtml}</div>
+                </div>
+            `;
         });
+        
+        if (filtered.length === 0) area.innerHTML = '<p class="text-muted">Нет результатов для выбранного теста</p>';
+        
     } catch(e) {
         area.innerHTML = `<p class="text-danger">Ошибка: ${e.message}</p>`;
     }
+    
+    // При изменении выбора теста — обновляем список
+    document.getElementById('testSelect').onchange = () => loadAdmin();
 }
 
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
