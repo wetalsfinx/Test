@@ -32,12 +32,13 @@ body{background:#f5f7fa;font-family:sans-serif}
 .chart-container{height:200px;position:relative}
 .test-selector { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,.05); }
 .test-selector select { max-width: 300px; }
+.import-area { border: 2px dashed #E30613; border-radius: 10px; padding: 10px 15px; text-align: center; cursor: pointer; transition: all 0.3s; background: #fff5f5; margin-top: 10px; }
+.import-area:hover { background: #ffe5e5; }
 @media (max-width: 768px) {
     .filter-bar .row { flex-direction: column; }
     .filter-bar .col-md-3, .filter-bar .col-md-2, .filter-bar .col-md-1 { width: 100%; margin-bottom: 10px; }
     .stats-card { margin-bottom: 15px; }
     .chart-card { margin-bottom: 20px; }
-    .user-log { padding: 10px; }
     .user-log .d-flex { flex-direction: column; gap: 8px; }
     .user-log .d-flex .d-flex { flex-direction: row; justify-content: space-between; width: 100%; }
     .btn-sm { padding: 4px 8px; font-size: 11px; }
@@ -61,7 +62,7 @@ body{background:#f5f7fa;font-family:sans-serif}
     </div>
 </div>
 
-<!-- Выбор теста -->
+<!-- Выбор теста + импорт -->
 <div class="test-selector">
     <div class="row align-items-center">
         <div class="col-md-4">
@@ -76,6 +77,14 @@ body{background:#f5f7fa;font-family:sans-serif}
             <button class="btn btn-sm btn-outline-danger" onclick="deleteCurrentTest()" id="deleteTestBtn" style="display:none">
                 <i class="bi bi-trash"></i> Удалить тест
             </button>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="import-area" id="importArea" onclick="document.getElementById('importFileInput').click()">
+                <i class="bi bi-filetype-json"></i> 📥 Импортировать тест из JSON (конструктор)
+                <input type="file" id="importFileInput" accept=".json" style="display:none">
+            </div>
         </div>
     </div>
 </div>
@@ -129,7 +138,73 @@ window.addEventListener('load', () => {
     document.getElementById('city-filter').addEventListener('change', () => renderResults());
     document.getElementById('date-from').addEventListener('change', () => renderResults());
     document.getElementById('date-to').addEventListener('change', () => renderResults());
+    
+    // Импорт JSON
+    document.getElementById('importFileInput').addEventListener('change', importTestFromJSON);
 });
+
+// ========== ИМПОРТ ТЕСТА ИЗ JSON (КОНСТРУКТОР) ==========
+async function importTestFromJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const testData = JSON.parse(e.target.result);
+            
+            // Проверяем структуру
+            if (!testData.name || !testData.questions || !testData.cities) {
+                alert('Неверный формат JSON. Ожидается: name, questions, cities');
+                return;
+            }
+            
+            const slug = testData.name.toLowerCase()
+                .replace(/[^а-яa-z0-9]/g, '_')
+                .replace(/_+/g, '_')
+                .replace(/^_|_$/g, '');
+            
+            // Проверяем, нет ли уже такого теста
+            const { data: existing } = await sb.from('tests').select('slug').eq('slug', slug);
+            if (existing && existing.length > 0) {
+                if (!confirm(`Тест с именем "${testData.name}" уже существует. Перезаписать?`)) return;
+                // Удаляем старый тест и его результаты
+                await sb.from('results').delete().eq('test_type', slug);
+                await sb.from('tests').delete().eq('slug', slug);
+            }
+            
+            // Сохраняем тест в Supabase
+            const { error: insertError } = await sb.from('tests').insert([{
+                name: testData.name,
+                slug: slug,
+                questions_count: testData.questions.length,
+                city_list: testData.cities,
+                created_at: new Date().toISOString()
+            }]);
+            
+            if (insertError) throw insertError;
+            
+            alert(`✅ Тест "${testData.name}" успешно импортирован!`);
+            document.getElementById('importFileInput').value = '';
+            await loadTests(); // Перезагружаем список тестов
+            
+            // Автоматически выбираем новый тест
+            const selector = document.getElementById('testSelector');
+            for (let i = 0; i < selector.options.length; i++) {
+                if (selector.options[i].value === slug) {
+                    selector.selectedIndex = i;
+                    selector.dispatchEvent(new Event('change'));
+                    break;
+                }
+            }
+            
+        } catch(err) {
+            console.error(err);
+            alert('Ошибка при импорте: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
 
 async function loadTests() {
     const { data, error } = await sb.from('tests').select('*').order('created_at', { ascending: false });
@@ -146,7 +221,9 @@ async function loadTests() {
     }
     selector.innerHTML = options;
     
-    selector.addEventListener('change', async (e) => {
+    // Сохраняем обработчик
+    selector.removeEventListener('change', selector.changeHandler);
+    selector.changeHandler = async (e) => {
         const slug = e.target.value;
         if (!slug) {
             currentTest = null;
@@ -170,7 +247,8 @@ async function loadTests() {
         document.getElementById('deleteTestBtn').style.display = 'inline-block';
         await loadResults(slug);
         document.getElementById('resultsContainer').style.display = 'block';
-    });
+    };
+    selector.addEventListener('change', selector.changeHandler);
 }
 
 async function loadResults(slug) {
