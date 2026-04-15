@@ -162,6 +162,50 @@ window.addEventListener('load', () => {
     document.getElementById('importFileInput').addEventListener('change', importTestFromJSON);
 });
 
+// ========== АВТОМАТИЧЕСКОЕ ЗАПОЛНЕНИЕ ГОРОДОВ ИЗ РЕЗУЛЬТАТОВ ==========
+async function updateCityListFromResults() {
+    if (!currentTest) return false;
+    
+    try {
+        // Проверяем, есть ли уже города в тесте
+        const { data: testData } = await sb.from('tests').select('city_list').eq('slug', currentTest.slug).single();
+        if (testData?.city_list && testData.city_list.length > 0) {
+            // Города уже есть, просто обновляем фильтр
+            const cityFilter = document.getElementById('city-filter');
+            let cityOptions = '<option value="">Все города</option>';
+            for (const city of testData.city_list) {
+                cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
+            }
+            cityFilter.innerHTML = cityOptions;
+            return true;
+        }
+        
+        // Собираем города из результатов
+        const { data: results } = await sb.from('results').select('city').eq('test_type', currentTest.slug);
+        if (!results || results.length === 0) return false;
+        
+        const cities = [...new Set(results.map(r => r.city).filter(c => c && c !== 'null' && c !== 'undefined' && c.trim() !== ''))];
+        if (cities.length === 0) return false;
+        
+        // Обновляем тест
+        await sb.from('tests').update({ city_list: cities }).eq('slug', currentTest.slug);
+        
+        // Обновляем фильтр
+        const cityFilter = document.getElementById('city-filter');
+        let cityOptions = '<option value="">Все города</option>';
+        for (const city of cities) {
+            cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
+        }
+        cityFilter.innerHTML = cityOptions;
+        
+        console.log(`✅ Автоматически добавлены города для теста "${currentTest.name}":`, cities);
+        return true;
+    } catch(e) {
+        console.error('Ошибка обновления городов:', e);
+        return false;
+    }
+}
+
 // ========== СОХРАНЕНИЕ ФИЛЬТРОВ ==========
 function saveFiltersToLocalStorage() {
     const filters = {
@@ -252,10 +296,6 @@ async function loadTests() {
         const citiesJson = selectedOption.getAttribute('data-cities');
         currentTestData = { slug, name: selectedOption.text, cities: JSON.parse(citiesJson || '[]') };
         currentTest = currentTestData;
-        const cityFilter = document.getElementById('city-filter');
-        let cityOptions = '<option value="">Все города</option>';
-        for (const city of currentTestData.cities) cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
-        cityFilter.innerHTML = cityOptions;
         document.getElementById('deleteTestBtn').style.display = 'inline-block';
         await loadResults(slug);
         document.getElementById('resultsContainer').style.display = 'block';
@@ -266,6 +306,10 @@ async function loadTests() {
 async function loadResults(slug) {
     const { data, error } = await sb.from('results').select('*').eq('test_type', slug).order('created_at', { ascending: false });
     if (error) { console.error(error); currentResults = []; } else { currentResults = data || []; }
+    
+    // Автоматически заполняем города из результатов
+    await updateCityListFromResults();
+    
     filterAndDisplay();
 }
 
@@ -291,7 +335,6 @@ function filterAndDisplay() {
         document.getElementById('excellent-count').innerText = excellent;
     }
     
-    // Пагинация
     const totalPages = Math.ceil(currentFilteredResults.length / itemsPerPage);
     const start = (currentPage - 1) * itemsPerPage;
     const paginatedResults = currentFilteredResults.slice(start, start + itemsPerPage);
