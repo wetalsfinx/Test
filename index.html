@@ -23,13 +23,13 @@ body{background:#f5f7fa;font-family:sans-serif}
 @keyframes spin{to{transform:rotate(360deg)}}
 .answer-details{display:none;margin-top:10px;padding-top:10px;border-top:1px solid #dee2e6}
 .answer-details.show{display:block}
-.stats-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-radius:10px;padding:15px;margin-bottom:15px}
+.stats-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-radius:10px;padding:15px;margin-bottom:15px;cursor:help}
 .filter-bar{background:white;padding:15px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
 .user-name{font-weight:bold;font-size:1.1em}
 .user-city{font-size:0.85em;color:#6c757d;margin-left:8px}
 .expand-icon{float:right;color:#6c757d;transition:transform 0.3s}
 .user-log.expanded .expand-icon{transform:rotate(180deg)}
-.chart-card{background:white;border-radius:10px;padding:15px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
+.chart-card{background:white;border-radius:10px;padding:15px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,.05);cursor:help}
 .chart-container{height:200px;position:relative}
 .test-selector { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,.05); }
 .test-selector select { max-width: 300px; }
@@ -37,6 +37,11 @@ body{background:#f5f7fa;font-family:sans-serif}
 .import-area:hover { background: #ffe5e5; }
 .btn-pdf-city { background: #198754; color: white; border: none; padding: 8px 20px; border-radius: 5px; margin-right: 10px; }
 .btn-pdf-city:hover { background: #0d6efd; }
+.pagination { display: flex; justify-content: center; gap: 5px; margin-top: 20px; flex-wrap: wrap; }
+.pagination button { padding: 5px 12px; margin: 0 2px; border: 1px solid #dee2e6; background: white; border-radius: 5px; cursor: pointer; }
+.pagination button.active { background: #0d6efd; color: white; border-color: #0d6efd; }
+.pagination button:hover:not(.active) { background: #e9ecef; }
+.tooltip-text { border-bottom: 1px dashed #999; cursor: help; }
 @media (max-width: 768px) {
     .filter-bar .row { flex-direction: column; }
     .filter-bar .col-md-3, .filter-bar .col-md-2, .filter-bar .col-md-1 { width: 100%; margin-bottom: 10px; }
@@ -60,10 +65,11 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>👨‍💼 Панель Администратора</h3>
     <div>
-        <button id="analyzeBtn" class="btn btn-info btn-sm me-2">🔍 Анализ ошибок</button>
-        <button id="exportExcelBtn" class="btn btn-success btn-sm me-2">📎 Выгрузить в Excel</button>
-        <button id="refreshBtn" class="btn btn-primary btn-sm me-2">🔄 Обновить</button>
-        <button id="pdfCityBtn" class="btn-pdf-city" style="display:none;">📄 PDF по городу</button>
+        <button id="copyFiltersBtn" class="btn btn-outline-secondary btn-sm me-2" title="Скопировать ссылку с текущими фильтрами">🔗 Копировать ссылку</button>
+        <button id="analyzeBtn" class="btn btn-info btn-sm me-2" title="Передать отфильтрованные данные в анализатор ошибок">🔍 Анализ ошибок</button>
+        <button id="exportExcelBtn" class="btn btn-success btn-sm me-2" title="Выгрузить отфильтрованные результаты в Excel">📎 Выгрузить в Excel</button>
+        <button id="refreshBtn" class="btn btn-primary btn-sm me-2" title="Обновить данные">🔄 Обновить</button>
+        <button id="pdfCityBtn" class="btn-pdf-city" style="display:none;" title="Скачать PDF по выбранному городу">📄 PDF по городу</button>
         <span id="realtime-status" class="badge bg-warning me-2">🔄</span>
         <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
     </div>
@@ -99,22 +105,23 @@ body{background:#f5f7fa;font-family:sans-serif}
 <!-- Блок результатов (динамический) -->
 <div id="resultsContainer" style="display:none">
     <div class="row mb-4">
-        <div class="col-md-4"><div class="stats-card"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="total-count">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
-        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="avg-score">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
-        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="d-flex justify-content-between"><div><div class="small">Отлично (≥80%)</div><div class="h3 mb-0" id="excellent-count">0</div></div><i class="bi bi-star fs-1"></i></div></div></div>
+        <div class="col-md-4"><div class="stats-card" title="Всего сотрудников, прошедших этот тест"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="total-count">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
+        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" title="Средний процент правильных ответов"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="avg-score">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
+        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" title="Количество сотрудников с результатом 80% и выше"><div class="d-flex justify-content-between"><div><div class="small">Отлично (≥80%)</div><div class="h3 mb-0" id="excellent-count">0</div></div><i class="bi bi-star fs-1"></i></div></div></div>
     </div>
     <div class="row mb-4">
-        <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-pie-chart"></i> Распределение баллов</h6><div class="chart-container"><canvas id="scoreChart"></canvas></div></div></div>
-        <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6><div class="chart-container"><canvas id="cityChart"></canvas></div></div></div>
+        <div class="col-md-6"><div class="chart-card" title="Распределение результатов по категориям"><h6><i class="bi bi-pie-chart"></i> Распределение баллов</h6><div class="chart-container"><canvas id="scoreChart"></canvas></div></div></div>
+        <div class="col-md-6"><div class="chart-card" title="Средний балл по городам"><h6><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6><div class="chart-container"><canvas id="cityChart"></canvas></div></div></div>
     </div>
     <div class="filter-bar"><div class="row g-3">
         <div class="col-md-4"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div>
         <div class="col-md-3"><select id="city-filter" class="form-select"><option value="">Все города</option></select></div>
         <div class="col-md-2"><input type="date" id="date-from" class="form-control" placeholder="Дата от"></div>
         <div class="col-md-2"><input type="date" id="date-to" class="form-control" placeholder="Дата до"></div>
-        <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetFilters()">Сброс</button></div>
+        <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetFilters()" title="Сбросить все фильтры">Сброс</button></div>
     </div></div>
     <div id="results-area"><div class="text-center py-4">⏳ Выберите тест</div></div>
+    <div id="pagination-container" class="pagination"></div>
 </div>
 
 </div>
@@ -131,6 +138,8 @@ let currentTest = null;
 let currentTestData = null;
 let currentResults = [];
 let currentFilteredResults = [];
+let currentPage = 1;
+const itemsPerPage = 20;
 let scoreChart = null;
 let cityChart = null;
 
@@ -140,17 +149,66 @@ window.addEventListener('load', () => {
     document.getElementById('admin-screen').classList.remove('hidden');
     loadTests();
     initRealtime();
+    loadFiltersFromLocalStorage();
     
-    document.getElementById('search-input').addEventListener('input', () => { filterAndDisplay(); });
-    document.getElementById('city-filter').addEventListener('change', () => { filterAndDisplay(); });
-    document.getElementById('date-from').addEventListener('change', () => { filterAndDisplay(); });
-    document.getElementById('date-to').addEventListener('change', () => { filterAndDisplay(); });
+    document.getElementById('search-input').addEventListener('input', () => { currentPage = 1; filterAndDisplay(); saveFiltersToLocalStorage(); });
+    document.getElementById('city-filter').addEventListener('change', () => { currentPage = 1; filterAndDisplay(); saveFiltersToLocalStorage(); });
+    document.getElementById('date-from').addEventListener('change', () => { currentPage = 1; filterAndDisplay(); saveFiltersToLocalStorage(); });
+    document.getElementById('date-to').addEventListener('change', () => { currentPage = 1; filterAndDisplay(); saveFiltersToLocalStorage(); });
     document.getElementById('refreshBtn').addEventListener('click', () => { if(currentTest) loadResults(currentTest.slug); });
     document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
     document.getElementById('analyzeBtn').addEventListener('click', sendToAnalyzer);
+    document.getElementById('copyFiltersBtn').addEventListener('click', copyFiltersLink);
     document.getElementById('importFileInput').addEventListener('change', importTestFromJSON);
 });
 
+// ========== СОХРАНЕНИЕ ФИЛЬТРОВ ==========
+function saveFiltersToLocalStorage() {
+    const filters = {
+        city: document.getElementById('city-filter').value,
+        search: document.getElementById('search-input').value,
+        dateFrom: document.getElementById('date-from').value,
+        dateTo: document.getElementById('date-to').value
+    };
+    localStorage.setItem('adminFilters', JSON.stringify(filters));
+}
+
+function loadFiltersFromLocalStorage() {
+    const saved = localStorage.getItem('adminFilters');
+    if (saved) {
+        try {
+            const filters = JSON.parse(saved);
+            if (filters.city) document.getElementById('city-filter').value = filters.city;
+            if (filters.search) document.getElementById('search-input').value = filters.search;
+            if (filters.dateFrom) document.getElementById('date-from').value = filters.dateFrom;
+            if (filters.dateTo) document.getElementById('date-to').value = filters.dateTo;
+        } catch(e) {}
+    }
+}
+
+function copyFiltersLink() {
+    const filters = {
+        city: document.getElementById('city-filter').value,
+        search: document.getElementById('search-input').value,
+        dateFrom: document.getElementById('date-from').value,
+        dateTo: document.getElementById('date-to').value,
+        test: currentTest?.slug || ''
+    };
+    const url = new URL(window.location.href);
+    if (filters.city && filters.city !== '') url.searchParams.set('city', filters.city);
+    else url.searchParams.delete('city');
+    if (filters.search) url.searchParams.set('search', filters.search);
+    else url.searchParams.delete('search');
+    if (filters.dateFrom) url.searchParams.set('from', filters.dateFrom);
+    else url.searchParams.delete('from');
+    if (filters.dateTo) url.searchParams.set('to', filters.dateTo);
+    else url.searchParams.delete('to');
+    if (filters.test) url.searchParams.set('test', filters.test);
+    navigator.clipboard.writeText(url.toString());
+    alert('✅ Ссылка с фильтрами скопирована!');
+}
+
+// ========== ИМПОРТ ТЕСТА ==========
 async function importTestFromJSON(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -233,10 +291,22 @@ function filterAndDisplay() {
         document.getElementById('excellent-count').innerText = excellent;
     }
     
+    // Пагинация
+    const totalPages = Math.ceil(currentFilteredResults.length / itemsPerPage);
+    const start = (currentPage - 1) * itemsPerPage;
+    const paginatedResults = currentFilteredResults.slice(start, start + itemsPerPage);
+    
+    renderResultsList(paginatedResults);
+    renderPagination(totalPages);
+    updateCharts();
+    document.getElementById('pdfCityBtn').style.display = 'inline-block';
+}
+
+function renderResultsList(results) {
     const area = document.getElementById('results-area');
-    if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; updateCharts(); return; }
+    if(!results.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; return; }
     area.innerHTML = '';
-    filtered.forEach(r => {
+    results.forEach(r => {
         const p = Math.round(r.score/r.total*100);
         let details = '';
         if(r.answers) r.answers.forEach((a,i) => {
@@ -257,8 +327,21 @@ function filterAndDisplay() {
             <div class="answer-details mt-2"><div class="bg-light p-2 rounded">${details}</div></div>
         </div>`;
     });
-    updateCharts();
-    document.getElementById('pdfCityBtn').style.display = 'inline-block';
+}
+
+function renderPagination(totalPages) {
+    const container = document.getElementById('pagination-container');
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+    let html = '';
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
+    container.innerHTML = html;
+}
+
+function goToPage(page) {
+    currentPage = page;
+    filterAndDisplay();
 }
 
 async function deleteResult(resultId) {
@@ -285,7 +368,9 @@ function resetFilters() {
     document.getElementById('city-filter').value = '';
     document.getElementById('date-from').value = '';
     document.getElementById('date-to').value = '';
+    currentPage = 1;
     filterAndDisplay();
+    saveFiltersToLocalStorage();
 }
 
 function updateCharts() {
@@ -293,13 +378,13 @@ function updateCharts() {
     const cats = {'Отлично (80-100%)':0, 'Хорошо (60-79%)':0, 'Удовлетворительно (40-59%)':0, 'Плохо (0-39%)':0};
     currentResults.forEach(r => { let p = r.score/r.total*100; if(p>=80) cats['Отлично (80-100%)']++; else if(p>=60) cats['Хорошо (60-79%)']++; else if(p>=40) cats['Удовлетворительно (40-59%)']++; else cats['Плохо (0-39%)']++; });
     const ctx1 = document.getElementById('scoreChart');
-    if(ctx1){ if(scoreChart) scoreChart.destroy(); scoreChart = new Chart(ctx1, {type:'pie', data:{labels:Object.keys(cats), datasets:[{data:Object.values(cats), backgroundColor:['#28a745','#17a2b8','#ffc107','#dc3545']}]}, options:{responsive:true}}); }
+    if(ctx1){ if(scoreChart) scoreChart.destroy(); scoreChart = new Chart(ctx1, {type:'pie', data:{labels:Object.keys(cats), datasets:[{data:Object.values(cats), backgroundColor:['#28a745','#17a2b8','#ffc107','#dc3545']}]}, options:{responsive:true, plugins:{tooltip:{callbacks:{label:function(context){return `${context.label}: ${context.raw} чел (${Math.round(context.raw/currentResults.length*100)}%)`;}}}}}}); }
     const cityStats = {};
     currentResults.forEach(r => { let city = r.city||'Не указан'; if(!cityStats[city]) cityStats[city]={total:0,count:0}; cityStats[city].total+=r.score/r.total; cityStats[city].count++; });
     const cities = Object.keys(cityStats);
     const avgScores = cities.map(c=>Math.round(cityStats[c].total/cityStats[c].count*100));
     const ctx2 = document.getElementById('cityChart');
-    if(ctx2){ if(cityChart) cityChart.destroy(); cityChart = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#667eea'}]}, options:{responsive:true, scales:{y:{min:0,max:100}}}}); }
+    if(ctx2){ if(cityChart) cityChart.destroy(); cityChart = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#667eea'}]}, options:{responsive:true, scales:{y:{min:0,max:100,title:{display:true,text:'Средний балл (%)'}}, x:{title:{display:true,text:'Город'}}}, plugins:{tooltip:{callbacks:{label:function(context){return `${context.raw}%`;}}}}}}); }
 }
 
 function generateUserReport(resultId) {
@@ -331,41 +416,24 @@ function initRealtime() {
     document.getElementById('realtime-status').className = 'badge bg-success';
 }
 
-// ========== ПЕРЕДАЧА ДАННЫХ В АНАЛИЗАТОР ==========
 function sendToAnalyzer() {
-    if (!currentFilteredResults.length) {
-        alert('Нет данных для анализа');
-        return;
-    }
-    
-    // Сохраняем отфильтрованные данные в localStorage
+    if (!currentFilteredResults.length) { alert('Нет данных для анализа'); return; }
     localStorage.setItem('analyzerData', JSON.stringify({
         results: currentFilteredResults,
         testName: currentTest?.name || 'Тест',
         timestamp: new Date().toISOString()
     }));
-    
-    // Открываем анализатор в новой вкладке
     window.open('/Test/report_errors.html?fromAdmin=true', '_blank');
 }
 
-// ========== ЭКСПОРТ В EXCEL ==========
 function exportToExcel() {
     if (!currentFilteredResults.length) { alert('Нет данных для экспорта'); return; }
     const headers = ['ФИО', 'Город', 'Баллы', 'Процент', 'Дата'];
-    for (let i = 1; i <= 11; i++) {
-        headers.push(`Вопрос ${i}`, `Ответ сотрудника ${i}`, `Правильный ответ ${i}`, `Результат ${i}`);
-    }
+    for (let i = 1; i <= 11; i++) headers.push(`Вопрос ${i}`, `Ответ сотрудника ${i}`, `Правильный ответ ${i}`, `Результат ${i}`);
     const rows = [];
     for (const r of currentFilteredResults) {
         const percent = Math.round(r.score / r.total * 100);
-        const row = [
-            r.user_id || `${r.surname} ${r.name}`.trim(),
-            r.city || '',
-            `${r.score}/${r.total}`,
-            `${percent}%`,
-            new Date(r.created_at).toLocaleString('ru-RU')
-        ];
+        const row = [r.user_id || `${r.surname} ${r.name}`.trim(), r.city || '', `${r.score}/${r.total}`, `${percent}%`, new Date(r.created_at).toLocaleString('ru-RU')];
         for (let i = 0; i < 11; i++) {
             const answer = r.answers?.[i];
             if (answer) {
@@ -373,9 +441,7 @@ function exportToExcel() {
                 row.push(answer.selected || answer.sel || '');
                 row.push(answer.correct || answer.cor || '');
                 row.push((answer.isCorrect === true || answer.ok === true) ? 'Верно' : 'Ошибка');
-            } else {
-                row.push('', '', '', '');
-            }
+            } else { row.push('', '', '', ''); }
         }
         rows.push(row);
     }
@@ -383,8 +449,7 @@ function exportToExcel() {
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Результаты');
-    const fileName = `${currentTest?.name || 'результаты'}_${new Date().toISOString().slice(0,19)}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    XLSX.writeFile(wb, `${currentTest?.name || 'результаты'}_${new Date().toISOString().slice(0,19)}.xlsx`);
 }
 
 function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
