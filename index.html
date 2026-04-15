@@ -1,363 +1,364 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Админка: Результаты тестов</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<style>
-body{background:#f5f7fa;font-family:sans-serif}
-.card{margin-top:20px;border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}
-.hidden{display:none!important}
-.user-log{border-left:4px solid #0d6efd;padding:12px;background:#f8f9fa;margin-bottom:12px;border-radius:0 8px 8px 0;cursor:pointer}
-.user-log:hover{background:#e9ecef}
-.correct{color:#198754;font-weight:600}
-.wrong{color:#dc3545;font-weight:600}
-.score-badge{font-size:1.3em;padding:8px 20px}
-.online-badge{position:fixed;top:10px;right:10px;background:#28a745;color:white;padding:5px 10px;border-radius:20px;font-size:12px;z-index:1000}
-.splash-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:#f5f7fa;display:flex;justify-content:center;align-items:center;z-index:10000}
-.splash-spinner{width:50px;height:50px;border:4px solid #e9ecef;border-top-color:#0d6efd;border-radius:50%;animation:spin 0.8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.answer-details{display:none;margin-top:10px;padding-top:10px;border-top:1px solid #dee2e6}
-.answer-details.show{display:block}
-.stats-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-radius:10px;padding:15px;margin-bottom:15px}
-.filter-bar{background:white;padding:15px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
-.user-name{font-weight:bold;font-size:1.1em}
-.user-city{font-size:0.85em;color:#6c757d;margin-left:8px}
-.expand-icon{float:right;color:#6c757d;transition:transform 0.3s}
-.user-log.expanded .expand-icon{transform:rotate(180deg)}
-.chart-card{background:white;border-radius:10px;padding:15px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
-.chart-container{height:200px;position:relative}
-.test-selector { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,.05); }
-.test-selector select { max-width: 300px; }
-@media (max-width: 768px) {
-    .filter-bar .row { flex-direction: column; }
-    .filter-bar .col-md-3, .filter-bar .col-md-2, .filter-bar .col-md-1 { width: 100%; margin-bottom: 10px; }
-    .stats-card { margin-bottom: 15px; }
-    .chart-card { margin-bottom: 20px; }
-    .user-log { padding: 10px; }
-    .user-log .d-flex { flex-direction: column; gap: 8px; }
-    .user-log .d-flex .d-flex { flex-direction: row; justify-content: space-between; width: 100%; }
-    .btn-sm { padding: 4px 8px; font-size: 11px; }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Стандарты продаж | 585GOLD</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { margin-top: 20px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+        .btn-answer { text-align: left; white-space: normal; padding: 12px 16px; margin-bottom: 8px; }
+        .score-badge { font-size: 1.3em; padding: 8px 20px; }
+        .upload-area { border: 2px dashed #E30613; border-radius: 10px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; background: white; margin-bottom: 20px; }
+        .upload-area:hover { background: #f8f9fa; }
+        .btn-primary { background: #E30613; border: none; }
+        .btn-primary:hover { background: #c41c2a; }
+    </style>
 </head>
 <body>
-<div id="splash" class="splash-screen">
-    <div style="text-align:center"><div class="splash-spinner mx-auto mb-3"></div><p>Загрузка...</p></div>
-</div>
+<div class="container">
 
-<div class="online-badge" id="online-badge">🟢 Онлайн</div>
-<div class="container mt-4"><div class="row justify-content-center"><div class="col-md-10">
-
-<div id="admin-screen">
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>👨‍💼 Панель Администратора</h3>
-    <div>
-        <span id="realtime-status" class="badge bg-warning me-2">🔄</span>
-        <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
-    </div>
-</div>
-
-<!-- Выбор теста -->
-<div class="test-selector">
-    <div class="row align-items-center">
-        <div class="col-md-4">
-            <label class="form-label fw-bold mb-0">📋 Выберите тест</label>
-        </div>
-        <div class="col-md-5">
-            <select id="testSelector" class="form-select">
-                <option value="">Загрузка тестов...</option>
-            </select>
-        </div>
-        <div class="col-md-3 text-end">
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteCurrentTest()" id="deleteTestBtn" style="display:none">
-                <i class="bi bi-trash"></i> Удалить тест
-            </button>
+    <!-- Экран загрузки JSON -->
+    <div id="load-screen">
+        <div class="card p-5 shadow text-center">
+            <h2 class="mb-3" style="color:#E30613;">📋 Загрузите тест</h2>
+            <p class="text-muted">Выберите JSON-файл, созданный в конструкторе тестов</p>
+            <div class="upload-area" id="jsonUploadArea" onclick="document.getElementById('jsonFileInput').click()">
+                <i class="bi bi-filetype-json fs-1"></i>
+                <p class="mt-2">Нажмите или перетащите JSON-файл</p>
+                <input type="file" id="jsonFileInput" accept=".json" style="display:none">
+            </div>
+            <div id="loadError" class="text-danger mt-2"></div>
         </div>
     </div>
-</div>
 
-<!-- Блок результатов (динамический) -->
-<div id="resultsContainer" style="display:none">
-    <div class="row mb-4">
-        <div class="col-md-4"><div class="stats-card"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="total-count">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
-        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="avg-score">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
-        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><div class="d-flex justify-content-between"><div><div class="small">Отлично (≥80%)</div><div class="h3 mb-0" id="excellent-count">0</div></div><i class="bi bi-star fs-1"></i></div></div></div>
+    <!-- Экран регистрации -->
+    <div id="login-screen" class="hidden">
+        <div class="card p-4 shadow">
+            <h2 class="text-center mb-3" style="color:#E30613;">📊 <span id="testName"></span></h2>
+            <p class="text-center text-muted">Заполните данные для начала</p>
+            <div class="mb-3"><label class="form-label fw-bold">Имя</label><input type="text" id="name-input" class="form-control form-control-lg"></div>
+            <div class="mb-3"><label class="form-label fw-bold">Фамилия</label><input type="text" id="surname-input" class="form-control form-control-lg"></div>
+            <div class="mb-3"><label class="form-label fw-bold">Город работы</label>
+                <select id="city-select" class="form-select form-select-lg">
+                    <option value="">-- Выберите город --</option>
+                </select>
+            </div>
+            <button onclick="startQuiz()" class="btn btn-primary w-100 btn-lg">▶ Начать тест</button>
+        </div>
     </div>
-    <div class="row mb-4">
-        <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-pie-chart"></i> Распределение баллов</h6><div class="chart-container"><canvas id="scoreChart"></canvas></div></div></div>
-        <div class="col-md-6"><div class="chart-card"><h6><i class="bi bi-bar-chart"></i> Успеваемость по городам</h6><div class="chart-container"><canvas id="cityChart"></canvas></div></div></div>
+
+    <!-- Экран тестирования -->
+    <div id="quiz-screen" class="hidden">
+        <div class="card p-4 shadow">
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted small" id="user-display"></span>
+                <span class="badge bg-primary fs-6" id="progress-badge">Вопрос 1 из ?</span>
+            </div>
+            <h4 id="question-text" class="mb-4 fw-normal">Загрузка...</h4>
+            <div id="options-area" class="d-grid gap-2"></div>
+        </div>
     </div>
-    <div class="filter-bar"><div class="row g-3">
-        <div class="col-md-4"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div>
-        <div class="col-md-3"><select id="city-filter" class="form-select"><option value="">Все города</option></select></div>
-        <div class="col-md-2"><input type="date" id="date-from" class="form-control" placeholder="Дата от"></div>
-        <div class="col-md-2"><input type="date" id="date-to" class="form-control" placeholder="Дата до"></div>
-        <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetFilters()">Сброс</button></div>
-    </div></div>
-    <div id="results-area"><div class="text-center py-4">⏳ Выберите тест</div></div>
-</div>
+
+    <!-- Экран результатов -->
+    <div id="result-screen" class="hidden">
+        <div class="card p-5 shadow text-center">
+            <h1 class="mb-3">🎉 Готово!</h1>
+            <div class="mb-4"><span id="final-score" class="badge bg-success score-badge"></span></div>
+            <p class="text-muted">Спасибо за прохождение теста!</p>
+            <button onclick="location.reload()" class="btn btn-outline-primary">Пройти заново</button>
+        </div>
+    </div>
+
+    <!-- Админ-панель -->
+    <div id="admin-screen" class="hidden">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 style="color:#E30613;">👨💼 Панель Администратора</h3>
+            <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
+        </div>
+        <div id="admin-panel" class="shadow-sm p-3 bg-white rounded">
+            <h5 class="mb-3">📈 Результаты сотрудников</h5>
+            <div id="results-area"><div class="text-center py-4 text-muted">⏳ Загрузка...</div></div>
+        </div>
+    </div>
 
 </div>
-</div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <script>
-const SUPABASE_URL='https://qtostraaqrnjbxiydlip.supabase.co';
-const SUPABASE_KEY='sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+// ========== НАСТРОЙКИ SUPABASE ==========
+const SUPABASE_URL = 'https://qtostraqrnjbxlydlip.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentTest = null;
-let currentTestData = null;
-let currentResults = [];
-let scoreChart = null;
-let cityChart = null;
+// ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+let currentQuestions = [];
+let currentCities = [];
+let step = 0, nm = "", sn = "", ct = "", answers = [], score = 0, shuffledQuestions = [];
 
-window.addEventListener('load', () => {
-    setTimeout(() => { const splash = document.getElementById('splash'); if(splash) { splash.style.opacity = '0'; setTimeout(() => splash.style.display = 'none', 500); } }, 300);
-    document.getElementById('splash').style.display = 'none';
-    document.getElementById('admin-screen').classList.remove('hidden');
-    loadTests();
-    initRealtime();
+// ========== ЗАГРУЗКА JSON ==========
+document.getElementById('jsonFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
     
-    document.getElementById('search-input').addEventListener('input', () => renderResults());
-    document.getElementById('city-filter').addEventListener('change', () => renderResults());
-    document.getElementById('date-from').addEventListener('change', () => renderResults());
-    document.getElementById('date-to').addEventListener('change', () => renderResults());
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const testData = JSON.parse(e.target.result);
+            currentQuestions = testData.questions;
+            currentCities = testData.cities || [];
+            
+            if (!currentQuestions || currentQuestions.length === 0) {
+                throw new Error('Нет вопросов');
+            }
+            
+            document.getElementById('testName').innerText = testData.name || 'Тест';
+            
+            // Заполняем выпадающий список городов
+            const citySelect = document.getElementById('city-select');
+            citySelect.innerHTML = '<option value="">-- Выберите город --</option>';
+            currentCities.forEach(city => {
+                citySelect.innerHTML += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
+            });
+            
+            // Переход к экрану регистрации
+            document.getElementById('load-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            
+        } catch(err) {
+            document.getElementById('loadError').innerText = 'Ошибка: неверный JSON-файл';
+        }
+    };
+    reader.readAsText(file);
 });
 
-async function loadTests() {
-    const { data, error } = await sb.from('tests').select('*').order('created_at', { ascending: false });
-    const selector = document.getElementById('testSelector');
+// Drag & drop для JSON
+const jsonArea = document.getElementById('jsonUploadArea');
+jsonArea.addEventListener('dragover', e => { e.preventDefault(); jsonArea.style.borderColor = '#0d6efd'; });
+jsonArea.addEventListener('dragleave', e => { e.preventDefault(); jsonArea.style.borderColor = '#E30613'; });
+jsonArea.addEventListener('drop', e => {
+    e.preventDefault();
+    jsonArea.style.borderColor = '#E30613';
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.json')) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const testData = JSON.parse(e.target.result);
+                currentQuestions = testData.questions;
+                currentCities = testData.cities || [];
+                document.getElementById('testName').innerText = testData.name || 'Тест';
+                const citySelect = document.getElementById('city-select');
+                citySelect.innerHTML = '<option value="">-- Выберите город --</option>';
+                currentCities.forEach(city => {
+                    citySelect.innerHTML += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
+                });
+                document.getElementById('load-screen').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('hidden');
+            } catch(err) {
+                document.getElementById('loadError').innerText = 'Ошибка: неверный JSON';
+            }
+        };
+        reader.readAsText(file);
+    } else {
+        alert('Загрузите JSON-файл');
+    }
+});
+
+// ========== ФУНКЦИИ ТЕСТА ==========
+async function startQuiz() {
+    nm = document.getElementById('name-input').value.trim();
+    sn = document.getElementById('surname-input').value.trim();
+    ct = document.getElementById('city-select').value;
     
-    if (error || !data || data.length === 0) {
-        selector.innerHTML = '<option value="">Нет тестов</option>';
-        return;
+    if (!nm || !sn || !ct) return alert("⚠️ Заполните все поля и выберите город!");
+    
+    const id = `${nm} ${sn} (${ct})`;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    document.getElementById('user-display').innerText = id;
+    
+    // Перемешиваем вопросы
+    shuffledQuestions = [...currentQuestions];
+    for (let i = shuffledQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
     }
     
-    let options = '<option value="">-- Выберите тест --</option>';
-    for (const test of data) {
-        options += `<option value="${test.slug}" data-cities='${JSON.stringify(test.city_list || [])}'>${test.name} (${test.questions_count || '?'} вопросов)</option>`;
-    }
-    selector.innerHTML = options;
+    step = 0;
+    score = 0;
+    answers = [];
     
-    selector.addEventListener('change', async (e) => {
-        const slug = e.target.value;
-        if (!slug) {
-            currentTest = null;
-            currentTestData = null;
-            document.getElementById('resultsContainer').style.display = 'none';
-            document.getElementById('deleteTestBtn').style.display = 'none';
+    saveToSupabase('logs', { user_id: id, action: '🟢 Начал тест' });
+    renderQuestion();
+}
+
+function renderQuestion() {
+    const q = shuffledQuestions[step];
+    document.getElementById('question-text').innerHTML = `${step+1}. ${q.text}`;
+    document.getElementById('progress-badge').innerHTML = `Вопрос ${step+1} из ${shuffledQuestions.length}`;
+    
+    const area = document.getElementById('options-area');
+    area.innerHTML = '';
+    
+    // Перемешиваем варианты ответов
+    const indices = [0, 1, 2, 3];
+    for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    
+    indices.forEach(idx => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-dark btn-answer w-100';
+        const letter = String.fromCharCode(65 + idx);
+        btn.innerHTML = `<strong>${letter}.</strong> ${escapeHtml(q.options[idx])}`;
+        btn.onclick = () => handleAnswer(idx);
+        area.appendChild(btn);
+    });
+}
+
+async function handleAnswer(selectedIdx) {
+    const btns = document.querySelectorAll('#options-area button');
+    btns.forEach(btn => btn.style.pointerEvents = 'none');
+    
+    const q = shuffledQuestions[step];
+    const isCorrect = (selectedIdx === q.correct);
+    if (isCorrect) score++;
+    
+    const letterSelected = String.fromCharCode(65 + selectedIdx);
+    const letterCorrect = String.fromCharCode(65 + q.correct);
+    
+    answers.push({
+        num: step+1,
+        text: q.text,
+        selected: `${letterSelected}. ${q.options[selectedIdx]}`,
+        correct: `${letterCorrect}. ${q.options[q.correct]}`,
+        isCorrect: isCorrect
+    });
+    
+    const userId = `${nm} ${sn} (${ct})`;
+    saveToSupabase('logs', {
+        user_id: userId,
+        action: `В${step+1}: ${isCorrect ? '✅' : '❌'} ${letterSelected}`
+    });
+    
+    step++;
+    
+    if (step < shuffledQuestions.length) {
+        renderQuestion();
+        setTimeout(() => {
+            const newBtns = document.querySelectorAll('#options-area button');
+            newBtns.forEach(btn => btn.style.pointerEvents = '');
+        }, 100);
+    } else {
+        finishTest(userId);
+    }
+}
+
+function finishTest(userId) {
+    const percent = Math.round(score / shuffledQuestions.length * 100);
+    
+    const scoreSpan = document.getElementById('final-score');
+    scoreSpan.innerText = `${score} из ${shuffledQuestions.length} (${percent}%)`;
+    scoreSpan.className = `badge score-badge ${percent >= 80 ? 'bg-success' : (percent >= 50 ? 'bg-warning' : 'bg-danger')}`;
+    
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.remove('hidden');
+    
+    const resultData = {
+        user_id: userId,
+        name: nm,
+        surname: sn,
+        city: ct,
+        score: score,
+        total: shuffledQuestions.length,
+        answers: answers,
+        created_at: new Date().toISOString()
+    };
+    saveToSupabase('results', resultData);
+    saveToSupabase('logs', { user_id: userId, action: `🏁 Завершил: ${score}/${shuffledQuestions.length}` });
+}
+
+// ========== ОТПРАВКА В SUPABASE (ФОН) ==========
+function saveToSupabase(table, data) {
+    sb.from(table).insert([data]).then(() => {}).catch(e => {
+        console.error('Ошибка сохранения:', e);
+        const pending = JSON.parse(localStorage.getItem('pending_saves') || '[]');
+        pending.push({ table, data, timestamp: Date.now() });
+        localStorage.setItem('pending_saves', JSON.stringify(pending));
+    });
+}
+
+function retryPendingSaves() {
+    const pending = JSON.parse(localStorage.getItem('pending_saves') || '[]');
+    if (pending.length === 0) return;
+    pending.forEach((item, index) => {
+        sb.from(item.table).insert([item.data]).then(() => {
+            pending.splice(index, 1);
+            localStorage.setItem('pending_saves', JSON.stringify(pending));
+        }).catch(() => {});
+    });
+}
+setInterval(retryPendingSaves, 30000);
+
+// ========== АДМИН-ПАНЕЛЬ ==========
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.get('mode') === 'admin') {
+    document.getElementById('load-screen').classList.add('hidden');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('admin-screen').classList.remove('hidden');
+    loadAdmin();
+    setInterval(loadAdmin, 5000);
+}
+
+async function loadAdmin() {
+    const area = document.getElementById('results-area');
+    area.innerHTML = '<div class="text-center py-4 text-muted">⏳ Загрузка...</div>';
+    
+    try {
+        const { data, error } = await sb.from('results').select('*').order('created_at', { ascending: false });
+        
+        if (error || !data || data.length === 0) {
+            area.innerHTML = '<p class="text-muted text-center py-3">Пока нет результатов</p>';
             return;
         }
-        const selectedOption = selector.options[selector.selectedIndex];
-        const citiesJson = selectedOption.getAttribute('data-cities');
-        currentTestData = { slug, name: selectedOption.text, cities: JSON.parse(citiesJson || '[]') };
-        currentTest = currentTestData;
         
-        // Обновляем выпадающий список городов
-        const cityFilter = document.getElementById('city-filter');
-        let cityOptions = '<option value="">Все города</option>';
-        for (const city of currentTestData.cities) {
-            cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
-        }
-        cityFilter.innerHTML = cityOptions;
-        
-        document.getElementById('deleteTestBtn').style.display = 'inline-block';
-        await loadResults(slug);
-        document.getElementById('resultsContainer').style.display = 'block';
-    });
-}
-
-async function loadResults(slug) {
-    const { data, error } = await sb.from('results').select('*').eq('test_type', slug).order('created_at', { ascending: false });
-    if (error) {
-        console.error(error);
-        currentResults = [];
-    } else {
-        currentResults = data || [];
-    }
-    renderResults();
-}
-
-function renderResults() {
-    if (!currentTest) return;
-    
-    let filtered = [...currentResults];
-    const search = document.getElementById('search-input')?.value.toLowerCase() || '';
-    const cityF = document.getElementById('city-filter')?.value || '';
-    const dateFrom = document.getElementById('date-from')?.value;
-    const dateTo = document.getElementById('date-to')?.value;
-    
-    if(search) filtered = filtered.filter(r => r.user_id.toLowerCase().includes(search));
-    if(cityF) filtered = filtered.filter(r => r.city && r.city === cityF);
-    if(dateFrom) { const d = new Date(dateFrom); d.setHours(0,0,0,0); filtered = filtered.filter(r => new Date(r.created_at) >= d); }
-    if(dateTo) { const d = new Date(dateTo); d.setHours(23,59,59,999); filtered = filtered.filter(r => new Date(r.created_at) <= d); }
-    
-    const total = currentResults.length;
-    if(total > 0) {
-        const avg = Math.round(currentResults.reduce((s,r)=>s+(r.score/r.total),0)/total*100);
-        const excellent = currentResults.filter(r=>(r.score/r.total)>=0.8).length;
-        document.getElementById('total-count').innerText = total;
-        document.getElementById('avg-score').innerText = `${avg}%`;
-        document.getElementById('excellent-count').innerText = excellent;
-    }
-    
-    const area = document.getElementById('results-area');
-    if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; updateCharts(); return; }
-    
-    area.innerHTML = '';
-    filtered.forEach((r, idx) => {
-        const p = Math.round(r.score/r.total*100);
-        let details = '';
-        if(r.answers) r.answers.forEach((a,i) => {
-            const ok = a.isCorrect === true || a.ok === true;
-            details += `<div class="small mb-2"><strong>В${i+1}:</strong> ${ok?'✅':'❌'} <span class="${ok?'correct':'wrong'}">${ok?'Верно':'Неверно'}</span>${!ok?`<div class="text-muted ms-3">✖ ${a.selected || a.sel}<br>✔ ${a.correct || a.cor}</div>`:''}</div>`;
-        });
-        const clr = p>=80?'success':p>=50?'warning':'danger';
-        area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
-            <div class="d-flex justify-content-between align-items-start">
-                <div><span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span><span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div>
-                <div class="d-flex align-items-center gap-2">
-                    <small>${new Date(r.created_at).toLocaleString()}</small>
-                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); generateUserReport('${r.id}')" style="padding:2px 8px" title="Отчёт"><i class="bi bi-file-text"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteResult('${r.id}')" style="padding:2px 8px"><i class="bi bi-trash"></i></button>
-                    <i class="bi bi-chevron-down expand-icon ms-2"></i>
-                </div>
-            </div>
-            <div class="answer-details mt-2"><div class="bg-light p-2 rounded">${details}</div></div>
-        </div>`;
-    });
-    updateCharts();
-}
-
-async function deleteResult(resultId) {
-    if(!confirm('Удалить этот результат?')) return;
-    const { error } = await sb.from('results').delete().eq('id', resultId);
-    if(error) alert('Ошибка: ' + error.message);
-    else await loadResults(currentTest.slug);
-}
-
-async function deleteCurrentTest() {
-    if(!currentTest) return;
-    if(!confirm(`Удалить тест "${currentTest.name}" и ВСЕ его результаты? Это действие нельзя отменить!`)) return;
-    
-    const { error: resultsError } = await sb.from('results').delete().eq('test_type', currentTest.slug);
-    if(resultsError) alert('Ошибка удаления результатов: ' + resultsError.message);
-    
-    const { error: testError } = await sb.from('tests').delete().eq('slug', currentTest.slug);
-    if(testError) alert('Ошибка удаления теста: ' + testError.message);
-    
-    alert('Тест удалён');
-    await loadTests();
-    document.getElementById('resultsContainer').style.display = 'none';
-    currentTest = null;
-    document.getElementById('deleteTestBtn').style.display = 'none';
-}
-
-function resetFilters() {
-    document.getElementById('search-input').value = '';
-    document.getElementById('city-filter').value = '';
-    document.getElementById('date-from').value = '';
-    document.getElementById('date-to').value = '';
-    renderResults();
-}
-
-function updateCharts() {
-    if(!currentResults.length) return;
-    
-    const cats = {'Отлично (80-100%)':0, 'Хорошо (60-79%)':0, 'Удовлетворительно (40-59%)':0, 'Плохо (0-39%)':0};
-    currentResults.forEach(r => { let p = r.score/r.total*100; if(p>=80) cats['Отлично (80-100%)']++; else if(p>=60) cats['Хорошо (60-79%)']++; else if(p>=40) cats['Удовлетворительно (40-59%)']++; else cats['Плохо (0-39%)']++; });
-    const ctx1 = document.getElementById('scoreChart');
-    if(ctx1){ if(scoreChart) scoreChart.destroy(); scoreChart = new Chart(ctx1, {type:'pie', data:{labels:Object.keys(cats), datasets:[{data:Object.values(cats), backgroundColor:['#28a745','#17a2b8','#ffc107','#dc3545']}]}, options:{responsive:true}}); }
-    
-    const cityStats = {};
-    currentResults.forEach(r => { let city = r.city||'Не указан'; if(!cityStats[city]) cityStats[city]={total:0,count:0}; cityStats[city].total+=r.score/r.total; cityStats[city].count++; });
-    const cities = Object.keys(cityStats);
-    const avgScores = cities.map(c=>Math.round(cityStats[c].total/cityStats[c].count*100));
-    const ctx2 = document.getElementById('cityChart');
-    if(ctx2){ if(cityChart) cityChart.destroy(); cityChart = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#667eea'}]}, options:{responsive:true, scales:{y:{min:0,max:100}}}}); }
-}
-
-function generateUserReport(resultId) {
-    const userData = currentResults.find(r => r.id == resultId);
-    if(!userData) { alert('Данные не найдены'); return; }
-    
-    const fullName = `${userData.surname || ''} ${userData.name || ''}`.trim();
-    const percent = Math.round(userData.score / userData.total * 100);
-    
-    let answersHtml = '';
-    if(userData.answers && userData.answers.length > 0) {
-        userData.answers.forEach((a, i) => {
-            const isCorrect = a.isCorrect === true || a.ok === true;
-            const userAnswer = a.selected || a.sel || 'Не указан';
-            const correctAnswer = a.correct || a.cor || 'Не указан';
-            let questionText = a.question || a.qs || `Вопрос ${i+1}`;
-            if(questionText.length > 200) questionText = questionText.substring(0,200);
-            
-            if (!isCorrect) {
-                answersHtml += `<div style="margin-bottom:20px;padding:12px;background:#ffebee;border-radius:8px;border-left:4px solid #f44336">
-                    <div style="font-weight:bold;margin-bottom:8px;">❌ Ошибка в вопросе ${i+1}</div>
-                    <div style="margin-bottom:8px;color:#555;">${escapeHtml(questionText)}</div>
-                    <div><span style="color:#d32f2f;">✖ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
-                    <div><span style="color:#2e7d32;">✓ Правильный ответ:</span> ${escapeHtml(correctAnswer)}</div>
-                    <div style="margin-top:8px;font-size:12px;color:#666;">💡 Совет: обратите внимание на правильный вариант</div>
-                </div>`;
+        area.innerHTML = '';
+        data.forEach(r => {
+            const percent = Math.round(r.score / r.total * 100);
+            let answersHtml = '';
+            if (r.answers && Array.isArray(r.answers)) {
+                r.answers.forEach((a, i) => {
+                    answersHtml += `<div class="small mb-2 ps-2"><strong>В${i+1}:</strong> ${a.isCorrect ? '✅' : '❌'} <span class="${a.isCorrect ? 'text-success' : 'text-danger'}">${a.isCorrect ? 'Верно' : 'Неверно'}</span>${!a.isCorrect ? `<div class="text-muted ms-3">Выбрано: ${a.selected}<br>Правильно: ${a.correct}</div>` : ''}</div>`;
+                });
             }
+            const color = percent >= 80 ? 'success' : (percent >= 50 ? 'warning' : 'danger');
+            const date = new Date(r.created_at).toLocaleString('ru-RU');
+            
+            const div = document.createElement('div');
+            div.className = 'border rounded p-3 mb-3';
+            div.innerHTML = `<div class="d-flex justify-content-between align-items-start">
+                <div><strong class="fs-5">${escapeHtml(r.user_id)}</strong><span class="badge bg-${color} ms-2">${r.score}/${r.total} (${percent}%)</span></div>
+                <small class="text-muted">${date}</small>
+            </div>
+            <div class="mt-2"><small class="text-muted">📍 Город: ${escapeHtml(r.city)}</small></div>
+            <div class="mt-2 border-top pt-2">${answersHtml}</div>`;
+            area.appendChild(div);
         });
+    } catch(e) {
+        area.innerHTML = '<p class="text-muted text-center py-3">Ошибка загрузки</p>';
     }
-    
-    const reportHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="UTF-8"><title>Отчёт: ${fullName}</title>
-        <style>
-            body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px}
-            .header{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #0d6efd}
-            .header h1{color:#0d6efd;margin:0}
-            .info{background:#f5f7fa;padding:15px;border-radius:8px;margin-bottom:30px}
-            .score{display:inline-block;padding:5px 15px;border-radius:20px;font-weight:bold;margin-top:10px}
-            .score-good{background:#4caf50;color:white}
-            .score-normal{background:#ff9800;color:white}
-            .score-bad{background:#f44336;color:white}
-            .btn-print{background:#0d6efd;color:white;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;margin-bottom:10px}
-            @media print { .no-print { display: none; } }
-        </style>
-        </head>
-        <body>
-            <div class="no-print" style="text-align:right;margin-bottom:10px"><button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button></div>
-            <div class="header"><h1>📊 Отчёт по тесту</h1><h2>«${currentTest?.name || ''}»</h2></div>
-            <div class="info"><table style="width:100%"><tr><td style="padding:5px;"><strong>Сотрудник:</strong> ${fullName}</td><td style="padding:5px;"><strong>Город:</strong> ${userData.city || 'не указан'}<\/td><\/tr>
-            <tr><td style="padding:5px;"><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}<\/td><td style="padding:5px;"><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)<\/td><\/tr><\/table>
-            <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хороший результат':'📚 Требуется изучение материалов'}</div></div>
-            <div style="margin:20px 0;"><strong>📝 Разбор ошибок:</strong></div>
-            ${answersHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
-            <div class="footer">Отчёт сгенерирован автоматически</div>
-        </body>
-        </html>
-    `;
-    const win = window.open('', '_blank');
-    win.document.write(reportHtml);
-    win.document.close();
 }
 
-function initRealtime() {
-    sb.channel('results-channel').on('postgres_changes', {event:'INSERT', schema:'public', table:'results'}, payload => {
-        if (currentTest && payload.new.test_type === currentTest.slug) {
-            currentResults.unshift(payload.new);
-            renderResults();
-        }
-    }).subscribe();
-    document.getElementById('realtime-status').innerHTML = '🟢 Live';
-    document.getElementById('realtime-status').className = 'badge bg-success';
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
 }
-
-function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
 </script>
 </body>
 </html>
