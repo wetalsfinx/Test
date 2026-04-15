@@ -27,10 +27,12 @@
         .comparison-table th { background: #667eea; color: white; }
         .chart-bar { height: 20px; background: #4caf50; border-radius: 10px; margin: 3px 0; }
         .chart-container { background: #f0f0f0; border-radius: 10px; padding: 10px; margin-top: 10px; }
-        .btn-pdf { background: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+        .btn-pdf { background: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 5px; font-size: 12px; cursor: pointer; margin-left: 10px; }
         .btn-pdf:hover { background: #c82333; }
         .btn-pdf-city { background: #198754; color: white; border: none; padding: 8px 20px; border-radius: 5px; margin-right: 10px; }
         .btn-pdf-city:hover { background: #0d6efd; }
+        .recommendation-block { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; border-radius: 8px; font-size: 13px; }
+        .wrong-answer-detail { background: #ffebee; padding: 12px; border-radius: 8px; margin-top: 8px; border-left: 4px solid #dc3545; }
     </style>
 </head>
 <body>
@@ -92,7 +94,7 @@
             </div>
         </div>
 
-        <!-- Выбор теста -->
+        <!-- Выбор теста и фильтры -->
         <div class="filter-bar">
             <label><strong>Выбор теста:</strong></label>
             <select id="testSelect" class="form-select w-auto">
@@ -157,6 +159,25 @@ let currentQuestions = [], currentCities = [], step = 0, nm = "", sn = "", ct = 
 let allResults = [];
 let currentFilterCity = 'all';
 let currentSearchText = '';
+
+// Карта зон роста (на основе ответов)
+const zoneMap = {
+    "«Отлично! Оформляем?»": "Завершение сделки",
+    "«Давайте к этим серьгам подберём кольцо или кулон из той же коллекции — вместе они создадут законченный образ»": "Предложение второго украшения",
+    "«У нас на эту коллекцию действует рассрочка на 6 месяцев»": "Работа с возражениями (цена)",
+    "«Не хотите посмотреть ещё что-то? Может, браслет?»": "Предложение второго украшения",
+    "«Добрый день! Чем могу помочь?»": "Речевая пластинка про акции",
+    "«Здравствуйте! Подбираете кольцо для себя или в подарок?»": "Выявление потребностей",
+    "«Добрый день! У нас сегодня скидка 30% на бриллианты и можно оплатить бонусами до 80%»": "Речевая пластинка про акции",
+    "Молча стоите рядом, давая клиентке время осмотреться": "Инициатива в диалоге"
+};
+
+function getZoneForAnswer(answer) {
+    for (const [key, zone] of Object.entries(zoneMap)) {
+        if (answer.includes(key.substring(0, 30))) return zone;
+    }
+    return "Зона роста не определена";
+}
 
 // ========== ЗАГРУЗКА JSON ==========
 document.getElementById('jsonFileInput').addEventListener('change', function(e) {
@@ -288,7 +309,7 @@ function saveToSupabase(table, data) {
     sb.from(table).insert([data]).then(() => {}).catch(e => console.error('Ошибка', e));
 }
 
-// ========== АДМИНКА С ФИЛЬТРАМИ И СТАТИСТИКОЙ ==========
+// ========== АДМИНКА ==========
 if (new URLSearchParams(location.search).get('mode') === 'admin') {
     document.getElementById('load-screen').classList.add('hidden');
     document.getElementById('admin-screen').classList.remove('hidden');
@@ -340,25 +361,45 @@ function displayResults(results) {
     area.innerHTML = '';
     results.forEach(r => {
         const percent = Math.round(r.score / r.total * 100);
-        let answersHtml = '';
+        
+        // Собираем зоны роста сотрудника
+        const zones = new Set();
+        let errorsDetailsHtml = '';
         if (r.answers) {
-            r.answers.forEach((a, i) => {
-                answersHtml += `<div class="small mb-1"><strong>${i+1}:</strong> ${a.isCorrect ? '✅' : '❌'} ${!a.isCorrect ? `<span class="text-muted">(выбрано: ${escapeHtml(a.selected)})</span>` : ''}</div>`;
+            r.answers.forEach(a => {
+                if (!a.isCorrect) {
+                    const zone = getZoneForAnswer(a.selected);
+                    zones.add(zone);
+                    errorsDetailsHtml += `
+                        <div class="wrong-answer-detail">
+                            <strong>❌ Вопрос ${a.num}:</strong> ${escapeHtml(a.text)}<br>
+                            <span style="color:#d32f2f;">✖ Ваш ответ:</span> ${escapeHtml(a.selected)}<br>
+                            <span style="color:#2e7d32;">✓ Правильный ответ:</span> ${escapeHtml(a.correct)}<br>
+                            <div class="recommendation-block">
+                                <strong>🔍 Зона роста:</strong> ${zone}<br>
+                                <strong>💡 Рекомендация:</strong> Повторите правильный вариант ответа. ${zone === "Предложение второго украшения" ? 'Используйте утверждение «Давайте подберём» вместо вопроса «Хотите ещё что-то?»' : (zone === "Речевая пластинка про акции" ? 'Всегда начинайте диалог с выгоды, а не с вопроса «Чем помочь?»' : (zone === "Выявление потребностей" ? 'Перед показом товара всегда уточняйте стиль и контекст.' : 'Обратите внимание на правильный ответ и запомните его.'))}
+                            </div>
+                        </div>
+                    `;
+                }
             });
         }
+        const zonesSummary = Array.from(zones).map(z => `<span class="zone-badge">${escapeHtml(z)}</span>`).join('');
+        
         area.innerHTML += `
             <div class="border rounded p-2 mb-2">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <strong>${escapeHtml(r.user_id)}</strong>
                         <span class="badge bg-${percent >= 80 ? 'success' : (percent >= 50 ? 'warning' : 'danger')} ms-2">${r.score}/${r.total} (${percent}%)</span>
+                        ${zonesSummary ? `<div class="mt-1"><strong>🎓 Зоны роста:</strong> ${zonesSummary}</div>` : ''}
                     </div>
                     <div>
                         <small class="text-muted me-2">${new Date(r.created_at).toLocaleString('ru-RU')}</small>
                         <button class="btn-pdf" onclick="downloadEmployeePDF('${r.user_id}')">📄 PDF</button>
                     </div>
                 </div>
-                <div class="mt-1 small">${answersHtml}</div>
+                <div class="mt-2 small">${errorsDetailsHtml || '<div class="text-success">✅ Нет ошибок! Отличная работа!</div>'}</div>
             </div>
         `;
     });
@@ -388,8 +429,8 @@ function updateTopErrors(results) {
         if (r.answers) {
             r.answers.forEach(a => {
                 if (!a.isCorrect) {
-                    const qText = a.text.substring(0, 50);
-                    errorCount[qText] = (errorCount[qText] || 0) + 1;
+                    const zone = getZoneForAnswer(a.selected);
+                    errorCount[zone] = (errorCount[zone] || 0) + 1;
                 }
             });
         }
@@ -400,7 +441,7 @@ function updateTopErrors(results) {
         return;
     }
     let html = '<ol>';
-    sorted.forEach(([q, count]) => html += `<li><strong>${escapeHtml(q)}</strong> — ${count} ошибок</li>`);
+    sorted.forEach(([zone, count]) => html += `<li><strong>${escapeHtml(zone)}</strong> — ${count} ошибок</li>`);
     html += '</ol>';
     document.getElementById('topErrorsList').innerHTML = html;
     document.getElementById('topErrorsBlock').style.display = 'block';
@@ -411,7 +452,10 @@ function updateRecommendations(results) {
     results.forEach(r => {
         if (r.answers) {
             r.answers.forEach(a => {
-                if (!a.isCorrect) errorCount[a.selected] = (errorCount[a.selected] || 0) + 1;
+                if (!a.isCorrect) {
+                    const zone = getZoneForAnswer(a.selected);
+                    errorCount[zone] = (errorCount[zone] || 0) + 1;
+                }
             });
         }
     });
@@ -421,7 +465,16 @@ function updateRecommendations(results) {
         return;
     }
     let html = '<ul>';
-    top.forEach(([answer, count]) => html += `<li><strong>❌ ${escapeHtml(answer)}</strong> — ${count} раз(а)<br><span class="text-muted small">Рекомендуется повторить правильный вариант</span></li>`);
+    top.forEach(([zone, count]) => {
+        let advice = '';
+        if (zone === "Предложение второго украшения") advice = 'Используйте утверждение «Давайте подберём» вместо вопроса «Хотите ещё что-то?»';
+        else if (zone === "Речевая пластинка про акции") advice = 'Всегда начинайте диалог с выгоды, а не с вопроса «Чем помочь?»';
+        else if (zone === "Выявление потребностей") advice = 'Перед показом товара всегда уточняйте стиль и контекст.';
+        else if (zone === "Инициатива в диалоге") advice = 'Не ждите, пока клиент обратится. Подходите первым с конкретным вопросом.';
+        else if (zone === "Работа с возражениями (цена)") advice = 'Сначала присоединитесь: «Понимаю», затем предложите рассрочку или уточните причину.';
+        else advice = 'Повторите правильные ответы по этой теме.';
+        html += `<li><strong>🔴 ${escapeHtml(zone)}</strong> (${count} ошибок)<br><span class="text-muted small">💡 ${advice}</span></li>`;
+    });
     html += '</ul>';
     document.getElementById('cityRecommendationsList').innerHTML = html;
     document.getElementById('cityRecommendationsBlock').style.display = 'block';
@@ -503,10 +556,15 @@ function downloadEmployeePDF(userId) {
     if (emp.answers) {
         emp.answers.forEach(a => {
             if (!a.isCorrect) {
+                const zone = getZoneForAnswer(a.selected);
                 errorsHtml += `<div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0;">
-                    <strong>❌ Вопрос:</strong><br>${escapeHtml(a.text)}<br>
+                    <strong>❌ Вопрос ${a.num}:</strong><br>${escapeHtml(a.text)}<br>
                     <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(a.selected)}<br>
                     <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(a.correct)}<br>
+                    <div style="background:#fff3cd; padding:10px; margin-top:10px; border-left:3px solid #ffc107;">
+                        <strong>🔍 Зона роста:</strong> ${zone}<br>
+                        <strong>💡 Рекомендация:</strong> ${zone === "Предложение второго украшения" ? 'Используйте утверждение «Давайте подберём» вместо вопроса «Хотите ещё что-то?»' : (zone === "Речевая пластинка про акции" ? 'Всегда начинайте диалог с выгоды, а не с вопроса «Чем помочь?»' : (zone === "Выявление потребностей" ? 'Перед показом товара всегда уточняйте стиль и контекст.' : 'Обратите внимание на правильный ответ и запомните его.'))}
+                    </div>
                 </div>`;
             }
         });
@@ -527,10 +585,12 @@ function downloadCityPDF() {
         if (emp.answers) {
             emp.answers.forEach(a => {
                 if (!a.isCorrect) {
+                    const zone = getZoneForAnswer(a.selected);
                     errorsHtml += `<div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0;">
-                        <strong>❌ Вопрос:</strong><br>${escapeHtml(a.text)}<br>
+                        <strong>❌ Вопрос ${a.num}:</strong><br>${escapeHtml(a.text)}<br>
                         <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(a.selected)}<br>
                         <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(a.correct)}<br>
+                        <div style="background:#fff3cd; padding:10px; margin-top:10px;"><strong>🔍 Зона роста:</strong> ${zone}<br><strong>💡 Рекомендация:</strong> ${zone === "Предложение второго украшения" ? 'Используйте утверждение «Давайте подберём»' : (zone === "Речевая пластинка про акции" ? 'Начинайте диалог с выгоды' : 'Повторите правильный ответ')}</div>
                     </div>`;
                 }
             });
