@@ -169,6 +169,53 @@ let employeeCounter = 0;
 let currentFilterCity = 'all';
 let currentSearchText = '';
 
+    let allEmployees = [];
+let employeeCounter = 0;
+let currentFilterCity = 'all';
+let currentSearchText = '';
+
+// ========== ПРИЁМ ДАННЫХ ИЗ АДМИНКИ ==========
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.get('fromAdmin') === 'true') {
+    const storedData = localStorage.getItem('analyzerData');
+    if (storedData) {
+        try {
+            const data = JSON.parse(storedData);
+            if (data.results && data.results.length) {
+                // Преобразуем данные из админки в формат, понятный анализатору
+                const rows = data.results.map(r => ({
+                    'ФИО': r.user_id,
+                    'Город': r.city,
+                    'Баллы': `${r.score}/${r.total}`,
+                    'Процент': `${Math.round(r.score/r.total*100)}%`,
+                    'Дата': new Date(r.created_at).toLocaleString('ru-RU'),
+                    ...convertAnswersToExcelFormat(r.answers)
+                }));
+                processData(rows);
+                document.getElementById('statsPanel').style.display = 'flex';
+                document.getElementById('filterBar').style.display = 'flex';
+                // Очищаем временные данные
+                localStorage.removeItem('analyzerData');
+            }
+        } catch(e) { console.error('Ошибка загрузки данных из админки', e); }
+    }
+}
+
+function convertAnswersToExcelFormat(answers) {
+    const result = {};
+    if (answers) {
+        answers.forEach((a, idx) => {
+            const i = idx + 1;
+            result[`Вопрос ${i}`] = a.text || a.qs || '';
+            result[`Ответ сотрудника ${i}`] = a.selected || a.sel || '';
+            result[`Правильный ответ ${i}`] = a.correct || a.cor || '';
+            result[`Результат ${i}`] = (a.isCorrect === true || a.ok === true) ? 'Верно' : 'Ошибка';
+        });
+    }
+    return result;
+}
+
+// Дальше идёт ваш старый код: function parseExcelToEmployees(rows) { ...
 function parseExcelToEmployees(rows) {
     const employees = [];
     let empCounter = 0;
