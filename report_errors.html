@@ -59,7 +59,7 @@
     <div class="upload-area no-print" id="uploadArea" onclick="document.getElementById('fileInput').click()">
         <i class="bi bi-file-excel fs-1"></i>
         <p class="mt-2">Нажмите или перетащите файл Excel (.xlsx) с результатами</p>
-        <small class="text-muted">Данные сохранятся в браузере. При обновлении страницы файл не нужно загружать заново.</small>
+        <small class="text-muted">Экспортируйте из админки кнопкой "Выгрузить в Excel"</small>
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
 
@@ -147,7 +147,7 @@ const recommendationsEntry = {
     q11_wrong4: { zone: "Инициатива в диалоге", correct: "Подходите и спрашиваете: «Давайте я покажу несколько колец в вашем стиле — для себя подбираете или в подарок?»", whyWorse: "Повторяете акцию без перехода к подбору", whyBetter: "Переходите к подбору", practice: "Вместо: ❌ Повторять акцию → ✅ «Давайте покажу кольца в вашем стиле»" }
 };
 
-// ========== БАЗА РЕКОМЕНДАЦИЙ ДЛЯ ТЕСТА "СТАНДАРТЫ ОБСЛУЖИВАНИЯ" ==========
+// ========== БАЗА РЕКОМЕНДАЦИЙ ДЛЯ СТАНДАРТОВ ==========
 const recommendationsStandards = {
     q1_wrong1: { zone: "Приветствие", correct: "«Добрый день! У нас сегодня скидка 30% на бриллианты и можно оплатить бонусами до 80%»", whyWorse: "Начинаете с вопроса, а не с выгоды", whyBetter: "Сразу даёте клиенту выгоду", practice: "Всегда начинайте с акции, потом вопрос" },
     q2_wrong1: { zone: "Инициатива в диалоге", correct: "Подходите сразу и спрашиваете: «Для кого подбираете украшение: для себя, жены, дочери?»", whyWorse: "Пассивное ожидание", whyBetter: "Подходите с конкретным вопросом", practice: "Не ждите — подходите через 30-40 секунд" },
@@ -162,16 +162,26 @@ const recommendationsStandards = {
     q11_wrong1: { zone: "Нет размера", correct: "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", whyWorse: "Говорите, что нет размера", whyBetter: "Предлагаете альтернативы", practice: "Сначала наличие, потом каталог" }
 };
 
-let currentRecommendations = recommendationsEntry;
-let currentTestType = 'entry';
 let allEmployees = [];
 let employeeCounter = 0;
 let currentFilterCity = 'all';
 let currentSearchText = '';
+let currentTestType = 'entry';
+
+function getZoneForQuestion(questionNum) {
+    if (currentTestType === 'standards') {
+        const zones = {1:"Приветствие",2:"Инициатива в диалоге",3:"Выявление потребностей",4:"Эмоциональная презентация",5:"Работа с возражениями",6:"Альтернатива",7:"Предложение второго украшения",8:"Завершение продажи",9:"Работа с сомнениями",10:"Инициатива + Примерка",11:"Нет размера"};
+        return zones[questionNum] || "Зона роста";
+    } else {
+        const zones = {1:"Речевая пластинка про акции",2:"Инициатива в диалоге",3:"Выявление потребностей",4:"Эмоциональная презентация",5:"Предложение второго украшения",6:"Аксессуары ухода",7:"Работа с возражениями (цена)",8:"Альтернатива / Каталог на заказ",9:"Инициатива + Примерка",10:"Работа с возражениями",11:"Инициатива в диалоге"};
+        return zones[questionNum] || "Зона роста";
+    }
+}
 
 function getRecommendationHTML(questionNum, variantNum) {
+    const recs = currentTestType === 'standards' ? recommendationsStandards : recommendationsEntry;
     const key = `q${questionNum}_wrong${variantNum}`;
-    const rec = currentRecommendations[key];
+    const rec = recs[key];
     if (!rec) {
         return `<div class="recommendation"><strong>💡 Рекомендация:</strong><br>Обратите внимание на правильный ответ.</div>`;
     }
@@ -188,9 +198,11 @@ function getRecommendationHTML(questionNum, variantNum) {
 
 function detectTestType(rows) {
     if (!rows || rows.length === 0) return 'entry';
-    const firstQuestion = rows[0]['Вопрос 1'] || '';
-    if (firstQuestion.includes('якорь') || firstQuestion.includes('для какого случая') || firstQuestion.includes('футляр')) {
-        return 'standards';
+    for (const row of rows) {
+        const q1 = row['Вопрос 1'] || '';
+        if (q1.includes('якорь') || q1.includes('для какого случая') || q1.includes('футляр')) {
+            return 'standards';
+        }
     }
     return 'entry';
 }
@@ -198,9 +210,7 @@ function detectTestType(rows) {
 function parseExcelToEmployees(rows) {
     const employees = [];
     let empCounter = 0;
-    const testType = detectTestType(rows);
-    currentTestType = testType;
-    currentRecommendations = testType === 'standards' ? recommendationsStandards : recommendationsEntry;
+    currentTestType = detectTestType(rows);
     
     for (const row of rows) {
         const name = row['ФИО'] || '';
@@ -228,91 +238,10 @@ function parseExcelToEmployees(rows) {
             const userAnswer = row[`Ответ сотрудника ${i}`] || '';
             const correctAnswer = row[`Правильный ответ ${i}`] || '';
             
-            let qNum = 0;
-            let variantNum = 0;
-            
             if (result === 'Ошибка' && questionText) {
-                if (testType === 'entry') {
-                    // Логика для Входного теста (оставляем как было рабочее)
-                    const lowerQuestion = questionText.toLowerCase();
-                    if (lowerQuestion.includes("обеденный перерыв") || lowerQuestion.includes("торопитесь")) qNum = 1;
-                    else if (lowerQuestion.includes("детскими серьгами") || lowerQuestion.includes("ребёнок")) qNum = 2;
-                    else if (lowerQuestion.includes("день рождения подруге") || lowerQuestion.includes("бюджет")) qNum = 3;
-                    else if (lowerQuestion.includes("кулон в подарок дочери") || lowerQuestion.includes("выпускной")) qNum = 4;
-                    else if (lowerQuestion.includes("купил цепочку")) qNum = 5;
-                    else if (lowerQuestion.includes("кольцо за") || lowerQuestion.includes("футляр")) qNum = 6;
-                    else if (lowerQuestion.includes("серьги за") || lowerQuestion.includes("не уверен")) qNum = 7;
-                    else if (lowerQuestion.includes("изумрудом") || lowerQuestion.includes("нет в наличии")) qNum = 8;
-                    else if (lowerQuestion.includes("браслет на витрине") || lowerQuestion.includes("рассматривает браслет")) qNum = 9;
-                    else if (lowerQuestion.includes("не уверена, что это моё") || lowerQuestion.includes("красиво, но")) qNum = 10;
-                    else if (lowerQuestion.includes("витрину с кольцами") || lowerQuestion.includes("2 минуты")) qNum = 11;
-                    
-                    const lowerAnswer = userAnswer.toLowerCase();
-                    if (qNum === 1) {
-                        if (lowerAnswer.includes("вижу, вы торопитесь") || lowerAnswer.includes("быстро покажу")) variantNum = 2;
-                        else if (lowerAnswer.includes("подбираете что-то конкретное") || lowerAnswer.includes("просто смотрите")) variantNum = 3;
-                        else if (lowerAnswer.includes("чем могу помочь")) variantNum = 4;
-                    }
-                    else if (qNum === 2) {
-                        if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама обратится")) variantNum = 1;
-                        else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
-                        else if (lowerAnswer.includes("вот у нас есть детские модели")) variantNum = 4;
-                    }
-                    else if (qNum === 3) {
-                        if (lowerAnswer.includes("сразу показываете") || lowerAnswer.includes("3-4")) variantNum = 1;
-                        else if ((lowerAnswer.includes("20 000") || lowerAnswer.includes("20000")) && (lowerAnswer.includes("15 000") || lowerAnswer.includes("15000"))) variantNum = 3;
-                        else if (lowerAnswer.includes("подарочный сертификат")) variantNum = 4;
-                    }
-                    else if (qNum === 4) {
-                        if (lowerAnswer.includes("популярный") && lowerAnswer.includes("выпускниц")) variantNum = 1;
-                        else if (lowerAnswer.includes("акция") && lowerAnswer.includes("коллекцию")) variantNum = 3;
-                        else if (lowerAnswer.includes("упаковать как подарок")) variantNum = 4;
-                    }
-                    else if (qNum === 5) {
-                        if (lowerAnswer.includes("не хотите посмотреть") && lowerAnswer.includes("что-то")) variantNum = 1;
-                        else if (lowerAnswer.includes("рассрочка") || lowerAnswer.includes("денег не хватит")) variantNum = 3;
-                        else if (lowerAnswer.includes("браслет")) variantNum = 4;
-                    }
-                    else if (qNum === 6) {
-                        if (lowerAnswer.includes("до того") && lowerAnswer.includes("окончательное решение")) variantNum = 1;
-                        else if (lowerAnswer.includes("после оплаты") && lowerAnswer.includes("упаковке")) variantNum = 3;
-                        else if (lowerAnswer.includes("не предлагаете")) variantNum = 4;
-                    }
-                    else if (qNum === 7) {
-                        if (lowerAnswer.includes("за 30 000") || lowerAnswer.includes("30000")) variantNum = 1;
-                        else if (lowerAnswer.includes("бриллиантами") && lowerAnswer.includes("цена выше")) variantNum = 3;
-                        else if (lowerAnswer.includes("отложим до зарплаты")) variantNum = 4;
-                    }
-                    else if (qNum === 8) {
-                        if (lowerAnswer.includes("к сожалению") && lowerAnswer.includes("нет")) variantNum = 1;
-                        else if (lowerAnswer.includes("привезти") && lowerAnswer.includes("неделю")) variantNum = 3;
-                        else if (lowerAnswer.includes("зачем") && lowerAnswer.includes("без камней")) variantNum = 4;
-                    }
-                    else if (qNum === 9) {
-                        if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит")) variantNum = 1;
-                        else if (lowerAnswer.includes("хотите примерить")) variantNum = 2;
-                        else if (lowerAnswer.includes("регулируется")) variantNum = 4;
-                    }
-                    else if (qNum === 10) {
-                        if (lowerAnswer.includes("давайте посмотрим другие")) variantNum = 1;
-                        else if (lowerAnswer.includes("хит продаж")) variantNum = 3;
-                        else if (lowerAnswer.includes("отложить")) variantNum = 4;
-                    }
-                    else if (qNum === 11) {
-                        if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит показать")) variantNum = 1;
-                        else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
-                        else if (lowerAnswer.includes("акция на кольца") || (lowerAnswer.includes("скидки") && lowerAnswer.includes("30%"))) variantNum = 4;
-                    }
-                } else {
-                    // Упрощённая логика для Стандартов (по номеру вопроса в Excel)
-                    qNum = i;
-                    // Для Стандартов variantNum = 1 (будет использована общая рекомендация)
-                    variantNum = 1;
-                }
-                
                 employee.errors.push({
-                    questionNum: qNum,
-                    variantNum: variantNum,
+                    questionNum: i,
+                    variantNum: 1,
                     originalColumnNum: i,
                     question: questionText,
                     userAnswer: userAnswer,
@@ -485,7 +414,10 @@ function updateRecommendations(employees) {
         "Завершение продажи": "«Вы сделали отличный выбор! Дарите с любовью!»",
         "Работа с возражениями": "«Понимаю. Что именно смущает?»",
         "Инициатива + Примерка": "«Давайте примерим» — не спрашивайте разрешения.",
-        "Приветствие": "Начинайте с акции: «Добрый день! У нас сегодня скидка 30%»"
+        "Приветствие": "Начинайте с акции: «Добрый день! У нас сегодня скидка 30%»",
+        "Аксессуары ухода": "Предлагайте футляр и средство после согласия на цену, до оплаты.",
+        "Нет размера": "Сначала покажите похожие в наличии, потом каталог на заказ.",
+        "Работа с сомнениями": "«Понимаю. Что именно вызывает сомнения?»"
     };
     
     let html = '<ul class="mb-0">';
@@ -503,38 +435,15 @@ function updateRecommendations(employees) {
     document.getElementById('cityRecommendationsBlock').style.display = 'block';
 }
 
-function getZoneForQuestion(questionNum) {
-    if (currentTestType === 'standards') {
-        const zones = {
-            1: "Приветствие", 2: "Инициатива в диалоге", 3: "Выявление потребностей",
-            4: "Эмоциональная презентация", 5: "Работа с возражениями", 6: "Альтернатива",
-            7: "Предложение второго украшения", 8: "Завершение продажи", 9: "Работа с сомнениями",
-            10: "Инициатива + Примерка", 11: "Нет размера"
-        };
-        return zones[questionNum] || "Зона роста";
-    } else {
-        const zones = {
-            1: "Речевая пластинка про акции", 2: "Инициатива в диалоге", 3: "Выявление потребностей",
-            4: "Эмоциональная презентация", 5: "Предложение второго украшения", 6: "Аксессуары ухода",
-            7: "Работа с возражениями (цена)", 8: "Альтернатива / Каталог на заказ", 9: "Инициатива + Примерка",
-            10: "Работа с возражениями", 11: "Инициатива в диалоге"
-        };
-        return zones[questionNum] || "Зона роста";
-    }
-}
-
 function getComparisonTable() {
     const cityMap = {};
     for (const emp of allEmployees) {
-        if (!cityMap[emp.city]) {
-            cityMap[emp.city] = { total: 0, sumPercent: 0, errorCount: 0 };
-        }
+        if (!cityMap[emp.city]) cityMap[emp.city] = { total: 0, sumPercent: 0, errorCount: 0 };
         const percent = emp.total > 0 ? (emp.score / emp.total * 100) : 0;
         cityMap[emp.city].total++;
         cityMap[emp.city].sumPercent += percent;
         cityMap[emp.city].errorCount += emp.errors.length;
     }
-    
     let html = '<table class="comparison-table"><thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Всего ошибок</th></tr></thead><tbody>';
     for (const [city, data] of Object.entries(cityMap)) {
         const avgPercent = (data.sumPercent / data.total).toFixed(1);
@@ -580,36 +489,9 @@ function downloadEmployeePDF(employeeId) {
         `;
     }
     
-    const pdfContent = `
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title>
-        <style>
-            body { font-family: Arial; padding: 20px; }
-            h1 { color: #0d6efd; }
-            .info { background: #f5f7fa; padding: 15px; margin-bottom: 20px; }
-            .score-good { background: #4caf50; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; }
-        </style>
-        </head>
-        <body>
-            <h1>📊 Отчёт по тесту</h1>
-            <div class="info">
-                <strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br>
-                <strong>Город:</strong> ${escapeHtml(emp.city)}<br>
-                <strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
-                <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
-                    ${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}
-                </div>
-            </div>
-            <h3>Разбор ошибок (${emp.errors.length})</h3>
-            ${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}
-            <p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p>
-        </body>
-        </html>
-    `;
+    const pdfContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title>
+        <style>body{font-family:Arial;padding:20px}h1{color:#0d6efd}.info{background:#f5f7fa;padding:15px;margin-bottom:20px}.score-good{background:#4caf50;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-normal{background:#ff9800;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-bad{background:#f44336;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.recommendation{background:#fff3cd;border-left:4px solid #ffc107;padding:12px;margin-top:10px}</style>
+        </head><body><h1>📊 Отчёт по тесту</h1><div class="info"><strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br><strong>Город:</strong> ${escapeHtml(emp.city)}<br><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br><div class="${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'Отлично!':percent>=50?'Хороший результат':'Требуется изучение'}</div></div><h3>Разбор ошибок (${emp.errors.length})</h3>${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}<p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p></body></html>`;
     
     const printWindow = window.open('', '_blank');
     printWindow.document.write(pdfContent);
@@ -625,11 +507,7 @@ function toggleBody(header) {
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
 
 function saveDataToLocalStorage() {
-    localStorage.setItem('reportData', JSON.stringify({
-        allEmployees: allEmployees,
-        employeeCounter: employeeCounter,
-        currentTestType: currentTestType
-    }));
+    localStorage.setItem('reportData', JSON.stringify({ allEmployees: allEmployees, employeeCounter: employeeCounter, currentTestType: currentTestType }));
 }
 
 function loadDataFromLocalStorage() {
@@ -640,55 +518,10 @@ function loadDataFromLocalStorage() {
             allEmployees = data.allEmployees;
             employeeCounter = data.employeeCounter;
             currentTestType = data.currentTestType || 'entry';
-            currentRecommendations = currentTestType === 'standards' ? recommendationsStandards : recommendationsEntry;
             return true;
         } catch(e) { return false; }
     }
     return false;
-}
-
-function loadFromAdminData(adminData) {
-    if (!adminData || !adminData.results || adminData.results.length === 0) return false;
-    
-    const rows = adminData.results.map(r => {
-        const row = {
-            'ФИО': r.user_id,
-            'Город': r.city || '',
-            'Баллы': `${r.score}/${r.total}`,
-            'Процент': `${Math.round(r.score/r.total*100)}%`,
-            'Дата': new Date(r.created_at).toLocaleString('ru-RU')
-        };
-        if (r.answers) {
-            r.answers.forEach((a, idx) => {
-                const i = idx + 1;
-                row[`Вопрос ${i}`] = a.text || a.qs || '';
-                row[`Ответ сотрудника ${i}`] = a.selected || a.sel || '';
-                row[`Правильный ответ ${i}`] = a.correct || a.cor || '';
-                row[`Результат ${i}`] = (a.isCorrect === true || a.ok === true) ? 'Верно' : 'Ошибка';
-            });
-        }
-        return row;
-    });
-    
-    processData(rows);
-    return true;
-}
-
-const urlParams = new URLSearchParams(location.search);
-if (urlParams.get('fromAdmin') === 'true') {
-    const storedData = localStorage.getItem('analyzerData');
-    if (storedData) {
-        try {
-            const data = JSON.parse(storedData);
-            if (data.results && data.results.length) {
-                loadFromAdminData(data);
-                localStorage.removeItem('analyzerData');
-                document.getElementById('uploadArea').style.display = 'none';
-                document.getElementById('statsPanel').style.display = 'flex';
-                document.getElementById('filterBar').style.display = 'flex';
-            }
-        } catch(e) { console.error('Ошибка загрузки данных из админки', e); }
-    }
 }
 
 document.getElementById('fileInput').addEventListener('change', function(e) {
