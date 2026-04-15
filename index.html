@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тест | 585GOLD</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         .card { margin-top: 20px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .hidden { display: none !important; }
         .btn-answer { text-align: left; white-space: normal; padding: 12px 16px; margin-bottom: 8px; }
@@ -16,7 +17,20 @@
         .upload-area:hover { background: #f8f9fa; }
         .btn-primary { background: #E30613; border: none; }
         .btn-primary:hover { background: #c41c2a; }
-        .test-selector { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .filter-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .city-stats { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .top-errors { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .city-recommendations { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #0d6efd; }
+        .zone-badge { display: inline-block; background: #e9ecef; padding: 3px 10px; border-radius: 15px; font-size: 12px; margin: 3px; }
+        .comparison-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .comparison-table th, .comparison-table td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+        .comparison-table th { background: #667eea; color: white; }
+        .chart-bar { height: 20px; background: #4caf50; border-radius: 10px; margin: 3px 0; }
+        .chart-container { background: #f0f0f0; border-radius: 10px; padding: 10px; margin-top: 10px; }
+        .btn-pdf { background: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+        .btn-pdf:hover { background: #c82333; }
+        .btn-pdf-city { background: #198754; color: white; border: none; padding: 8px 20px; border-radius: 5px; margin-right: 10px; }
+        .btn-pdf-city:hover { background: #0d6efd; }
     </style>
 </head>
 <body>
@@ -71,21 +85,63 @@
     <div id="admin-screen" class="hidden">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 style="color:#E30613;">👨💼 Панель Администратора</h3>
-            <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
+            <div>
+                <button id="refreshBtn" class="btn btn-primary btn-sm me-2">🔄 Обновить</button>
+                <button id="pdfCityBtn" class="btn-pdf-city" style="display:none;">📄 PDF по городу</button>
+                <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
+            </div>
         </div>
 
         <!-- Выбор теста -->
-        <div class="test-selector">
-            <label class="fw-bold mb-2">📋 Выберите тест:</label>
-            <select id="testSelect" class="form-select mb-2">
+        <div class="filter-bar">
+            <label><strong>Выбор теста:</strong></label>
+            <select id="testSelect" class="form-select w-auto">
                 <option value="all">-- Все тесты --</option>
             </select>
-            <button id="refreshBtn" class="btn btn-primary btn-sm">🔄 Обновить</button>
+            <label><strong>Фильтр по городу:</strong></label>
+            <select id="cityFilter" class="form-select w-auto">
+                <option value="all">Все города</option>
+            </select>
+            <label><strong>Поиск по имени:</strong></label>
+            <input type="text" id="searchInput" class="form-control w-auto" placeholder="Введите имя...">
+            <button id="resetFilter" class="btn btn-secondary btn-sm">Сбросить</button>
+            <span class="ms-auto text-muted" id="filteredCount"></span>
         </div>
 
+        <!-- Статистика по городам -->
+        <div id="cityStats" class="city-stats">
+            <h6><i class="bi bi-pie-chart"></i> Статистика по городам</h6>
+            <div id="cityStatsList" class="small"></div>
+        </div>
+
+        <!-- Сравнение городов -->
+        <div id="comparisonBlock" class="city-stats">
+            <h6><i class="bi bi-table"></i> Сравнение городов</h6>
+            <div id="comparisonTable"></div>
+        </div>
+
+        <!-- График распределения баллов -->
+        <div id="chartBlock" class="city-stats">
+            <h6><i class="bi bi-bar-chart-steps"></i> Распределение баллов</h6>
+            <div id="chartContainer" class="chart-container"></div>
+        </div>
+
+        <!-- Топ-5 частых ошибок -->
+        <div id="topErrorsBlock" class="top-errors">
+            <h6><i class="bi bi-bar-chart-steps"></i> Топ-5 частых ошибок</h6>
+            <div id="topErrorsList"></div>
+        </div>
+
+        <!-- Рекомендации для города -->
+        <div id="cityRecommendationsBlock" class="city-recommendations">
+            <h6><i class="bi bi-lightbulb"></i> Рекомендации для города</h6>
+            <div id="cityRecommendationsList"></div>
+        </div>
+
+        <!-- Результаты сотрудников -->
         <div class="bg-white rounded p-3">
             <h5>📈 Результаты сотрудников</h5>
-            <div id="results-area">⏳ Загрузите данные...</div>
+            <div id="results-area">⏳ Загрузка...</div>
         </div>
     </div>
 
@@ -98,9 +154,11 @@ const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentQuestions = [], currentCities = [], step = 0, nm = "", sn = "", ct = "", answers = [], score = 0, shuffledQuestions = [];
-let allResults = []; // Храним все результаты для фильтрации
+let allResults = [];
+let currentFilterCity = 'all';
+let currentSearchText = '';
 
-// Загрузка JSON
+// ========== ЗАГРУЗКА JSON ==========
 document.getElementById('jsonFileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -149,6 +207,7 @@ document.getElementById('jsonUploadArea').addEventListener('drop', e => {
     } else alert('Загрузите JSON файл');
 });
 
+// ========== ТЕСТ ==========
 async function startQuiz() {
     nm = document.getElementById('name-input').value.trim();
     sn = document.getElementById('surname-input').value.trim();
@@ -229,13 +288,181 @@ function saveToSupabase(table, data) {
     sb.from(table).insert([data]).then(() => {}).catch(e => console.error('Ошибка', e));
 }
 
-// Админка
+// ========== АДМИНКА С ФИЛЬТРАМИ И СТАТИСТИКОЙ ==========
 if (new URLSearchParams(location.search).get('mode') === 'admin') {
     document.getElementById('load-screen').classList.add('hidden');
     document.getElementById('admin-screen').classList.remove('hidden');
     loadAdmin();
-    // Убираем автообновление — только по кнопке
     document.getElementById('refreshBtn').addEventListener('click', () => loadAdmin());
+    document.getElementById('cityFilter').addEventListener('change', e => { currentFilterCity = e.target.value; filterAndDisplay(); });
+    document.getElementById('searchInput').addEventListener('input', e => { currentSearchText = e.target.value; filterAndDisplay(); });
+    document.getElementById('resetFilter').addEventListener('click', () => {
+        currentFilterCity = 'all';
+        currentSearchText = '';
+        document.getElementById('cityFilter').value = 'all';
+        document.getElementById('searchInput').value = '';
+        filterAndDisplay();
+    });
+    document.getElementById('testSelect').addEventListener('change', () => filterAndDisplay());
+    document.getElementById('pdfCityBtn').addEventListener('click', downloadCityPDF);
+}
+
+let currentFilteredResults = [];
+
+function filterAndDisplay() {
+    const selectedTest = document.getElementById('testSelect').value;
+    let filtered = allResults;
+    if (selectedTest !== 'all') {
+        filtered = filtered.filter(r => (r.test_name || 'Без названия') === selectedTest);
+    }
+    if (currentFilterCity !== 'all') {
+        filtered = filtered.filter(r => r.city === currentFilterCity);
+    }
+    if (currentSearchText) {
+        filtered = filtered.filter(r => r.user_id.toLowerCase().includes(currentSearchText.toLowerCase()));
+    }
+    currentFilteredResults = filtered;
+    document.getElementById('filteredCount').innerText = `Показано: ${filtered.length} из ${allResults.length}`;
+    displayResults(filtered);
+    updateStats(filtered);
+    updateTopErrors(filtered);
+    updateRecommendations(filtered);
+    updateComparisonTable();
+    updateChart();
+}
+
+function displayResults(results) {
+    const area = document.getElementById('results-area');
+    if (!results.length) {
+        area.innerHTML = '<p class="text-muted">Нет результатов</p>';
+        return;
+    }
+    area.innerHTML = '';
+    results.forEach(r => {
+        const percent = Math.round(r.score / r.total * 100);
+        let answersHtml = '';
+        if (r.answers) {
+            r.answers.forEach((a, i) => {
+                answersHtml += `<div class="small mb-1"><strong>${i+1}:</strong> ${a.isCorrect ? '✅' : '❌'} ${!a.isCorrect ? `<span class="text-muted">(выбрано: ${escapeHtml(a.selected)})</span>` : ''}</div>`;
+            });
+        }
+        area.innerHTML += `
+            <div class="border rounded p-2 mb-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${escapeHtml(r.user_id)}</strong>
+                        <span class="badge bg-${percent >= 80 ? 'success' : (percent >= 50 ? 'warning' : 'danger')} ms-2">${r.score}/${r.total} (${percent}%)</span>
+                    </div>
+                    <div>
+                        <small class="text-muted me-2">${new Date(r.created_at).toLocaleString('ru-RU')}</small>
+                        <button class="btn-pdf" onclick="downloadEmployeePDF('${r.user_id}')">📄 PDF</button>
+                    </div>
+                </div>
+                <div class="mt-1 small">${answersHtml}</div>
+            </div>
+        `;
+    });
+}
+
+function updateStats(results) {
+    const cityStats = {};
+    results.forEach(r => {
+        if (!cityStats[r.city]) cityStats[r.city] = { total: 0, sumPercent: 0 };
+        const percent = (r.score / r.total * 100);
+        cityStats[r.city].total++;
+        cityStats[r.city].sumPercent += percent;
+    });
+    let html = '<div class="row">';
+    for (const [city, data] of Object.entries(cityStats)) {
+        const avg = (data.sumPercent / data.total).toFixed(1);
+        html += `<div class="col-md-3 mb-2"><strong>${escapeHtml(city)}</strong>: ${data.total} чел, средний балл: ${avg}%</div>`;
+    }
+    html += '</div>';
+    document.getElementById('cityStatsList').innerHTML = html;
+    document.getElementById('cityStats').style.display = 'block';
+}
+
+function updateTopErrors(results) {
+    const errorCount = {};
+    results.forEach(r => {
+        if (r.answers) {
+            r.answers.forEach(a => {
+                if (!a.isCorrect) {
+                    const qText = a.text.substring(0, 50);
+                    errorCount[qText] = (errorCount[qText] || 0) + 1;
+                }
+            });
+        }
+    });
+    const sorted = Object.entries(errorCount).sort((a,b) => b[1] - a[1]).slice(0,5);
+    if (sorted.length === 0) {
+        document.getElementById('topErrorsList').innerHTML = '<div class="text-muted">Нет ошибок</div>';
+        return;
+    }
+    let html = '<ol>';
+    sorted.forEach(([q, count]) => html += `<li><strong>${escapeHtml(q)}</strong> — ${count} ошибок</li>`);
+    html += '</ol>';
+    document.getElementById('topErrorsList').innerHTML = html;
+    document.getElementById('topErrorsBlock').style.display = 'block';
+}
+
+function updateRecommendations(results) {
+    const errorCount = {};
+    results.forEach(r => {
+        if (r.answers) {
+            r.answers.forEach(a => {
+                if (!a.isCorrect) errorCount[a.selected] = (errorCount[a.selected] || 0) + 1;
+            });
+        }
+    });
+    const top = Object.entries(errorCount).sort((a,b) => b[1] - a[1]).slice(0,3);
+    if (top.length === 0) {
+        document.getElementById('cityRecommendationsList').innerHTML = '<div class="text-muted">Нет ошибок</div>';
+        return;
+    }
+    let html = '<ul>';
+    top.forEach(([answer, count]) => html += `<li><strong>❌ ${escapeHtml(answer)}</strong> — ${count} раз(а)<br><span class="text-muted small">Рекомендуется повторить правильный вариант</span></li>`);
+    html += '</ul>';
+    document.getElementById('cityRecommendationsList').innerHTML = html;
+    document.getElementById('cityRecommendationsBlock').style.display = 'block';
+}
+
+function updateComparisonTable() {
+    const cityMap = {};
+    allResults.forEach(r => {
+        if (!cityMap[r.city]) cityMap[r.city] = { total: 0, sumPercent: 0 };
+        const percent = (r.score / r.total * 100);
+        cityMap[r.city].total++;
+        cityMap[r.city].sumPercent += percent;
+    });
+    let html = '<table class="comparison-table"><thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th></tr></thead><tbody>';
+    for (const [city, data] of Object.entries(cityMap)) {
+        const avg = (data.sumPercent / data.total).toFixed(1);
+        html += `<tr><td><strong>${escapeHtml(city)}</strong></td><td>${data.total}</td><td>${avg}%</td></tr>`;
+    }
+    html += '</tbody></table>';
+    document.getElementById('comparisonTable').innerHTML = html;
+    document.getElementById('comparisonBlock').style.display = 'block';
+}
+
+function updateChart() {
+    const ranges = { '0-49%': 0, '50-69%': 0, '70-89%': 0, '90-100%': 0 };
+    allResults.forEach(r => {
+        const percent = (r.score / r.total * 100);
+        if (percent < 50) ranges['0-49%']++;
+        else if (percent < 70) ranges['50-69%']++;
+        else if (percent < 90) ranges['70-89%']++;
+        else ranges['90-100%']++;
+    });
+    const total = allResults.length;
+    let html = '';
+    for (const [range, count] of Object.entries(ranges)) {
+        const pct = total > 0 ? (count / total * 100) : 0;
+        html += `<div><strong>${range}</strong>: ${count} чел (${pct.toFixed(0)}%)</div>
+                 <div class="chart-bar" style="width: ${pct}%; background: ${pct >= 70 ? '#4caf50' : (pct >= 50 ? '#ff9800' : '#f44336')};"></div>`;
+    }
+    document.getElementById('chartContainer').innerHTML = html;
+    document.getElementById('chartBlock').style.display = 'block';
 }
 
 async function loadAdmin() {
@@ -248,54 +475,73 @@ async function loadAdmin() {
             area.innerHTML = '<p class="text-muted">Пока нет результатов</p>';
             return;
         }
-        
         allResults = data;
-        
-        // Заполняем выпадающий список тестов
         const testNames = [...new Set(data.map(r => r.test_name || 'Без названия'))];
         const testSelect = document.getElementById('testSelect');
         testSelect.innerHTML = '<option value="all">-- Все тесты --</option>';
         testNames.forEach(name => {
             testSelect.innerHTML += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
         });
-        
-        // Фильтруем по выбранному тесту
-        const selectedTest = testSelect.value;
-        const filtered = selectedTest === 'all' ? data : data.filter(r => (r.test_name || 'Без названия') === selectedTest);
-        
-        area.innerHTML = '';
-        filtered.forEach(r => {
-            const percent = Math.round(r.score / r.total * 100);
-            let answersHtml = '';
-            if (r.answers) {
-                r.answers.forEach((a, i) => {
-                    const isCorrect = a.isCorrect;
-                    answersHtml += `<div class="small mb-1"><strong>${i+1}:</strong> ${isCorrect ? '✅' : '❌'} ${!isCorrect ? `<span class="text-muted">(выбрано: ${escapeHtml(a.selected)})</span>` : ''}</div>`;
-                });
-            }
-            const testBadge = r.test_name ? `<span class="badge bg-secondary ms-2">${escapeHtml(r.test_name)}</span>` : '';
-            area.innerHTML += `
-                <div class="border rounded p-2 mb-2">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <strong>${escapeHtml(r.user_id)}</strong> ${testBadge}
-                            <span class="badge bg-${percent >= 80 ? 'success' : (percent >= 50 ? 'warning' : 'danger')} ms-2">${r.score}/${r.total} (${percent}%)</span>
-                        </div>
-                        <small class="text-muted">${new Date(r.created_at).toLocaleString('ru-RU')}</small>
-                    </div>
-                    <div class="mt-1 small">${answersHtml}</div>
-                </div>
-            `;
+        const cities = [...new Set(data.map(r => r.city))];
+        const cityFilter = document.getElementById('cityFilter');
+        cityFilter.innerHTML = '<option value="all">Все города</option>';
+        cities.forEach(city => {
+            cityFilter.innerHTML += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
         });
-        
-        if (filtered.length === 0) area.innerHTML = '<p class="text-muted">Нет результатов для выбранного теста</p>';
-        
+        document.getElementById('pdfCityBtn').style.display = 'inline-block';
+        filterAndDisplay();
     } catch(e) {
         area.innerHTML = `<p class="text-danger">Ошибка: ${e.message}</p>`;
     }
-    
-    // При изменении выбора теста — обновляем список
-    document.getElementById('testSelect').onchange = () => loadAdmin();
+}
+
+function downloadEmployeePDF(userId) {
+    const emp = allResults.find(r => r.user_id === userId);
+    if (!emp) return;
+    const percent = Math.round(emp.score / emp.total * 100);
+    let errorsHtml = '';
+    if (emp.answers) {
+        emp.answers.forEach(a => {
+            if (!a.isCorrect) {
+                errorsHtml += `<div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0;">
+                    <strong>❌ Вопрос:</strong><br>${escapeHtml(a.text)}<br>
+                    <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(a.selected)}<br>
+                    <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(a.correct)}<br>
+                </div>`;
+            }
+        });
+    }
+    const pdfContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт: ${emp.user_id}</title><style>body{font-family:Arial;padding:20px}h1{color:#0d6efd}.info{background:#f5f7fa;padding:15px;margin-bottom:20px}.score-good{background:#4caf50;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-normal{background:#ff9800;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-bad{background:#f44336;color:white;display:inline-block;padding:5px 15px;border-radius:20px}</style></head><body><h1>📊 Отчёт по тесту</h1><div class="info"><strong>Сотрудник:</strong> ${escapeHtml(emp.user_id)}<br><strong>Город:</strong> ${escapeHtml(emp.city)}<br><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br><div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}</div></div><h3>Разбор ошибок</h3>${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}<p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p></body></html>`;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(pdfContent);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function downloadCityPDF() {
+    if (currentFilteredResults.length === 0) { alert('Нет сотрудников для выгрузки'); return; }
+    let employeesHtml = '';
+    currentFilteredResults.forEach(emp => {
+        const percent = Math.round(emp.score / emp.total * 100);
+        let errorsHtml = '';
+        if (emp.answers) {
+            emp.answers.forEach(a => {
+                if (!a.isCorrect) {
+                    errorsHtml += `<div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0;">
+                        <strong>❌ Вопрос:</strong><br>${escapeHtml(a.text)}<br>
+                        <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(a.selected)}<br>
+                        <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(a.correct)}<br>
+                    </div>`;
+                }
+            });
+        }
+        employeesHtml += `<div style="page-break-before: always;"><h2>${escapeHtml(emp.user_id)} (${escapeHtml(emp.city)})</h2><div class="info"><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)</div><h3>Разбор ошибок</h3>${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}</div>`;
+    });
+    const pdfContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт по городу</title><style>body{font-family:Arial;padding:20px}h1{color:#0d6efd}.info{background:#f5f7fa;padding:15px;margin-bottom:20px}</style></head><body><h1>📊 Отчёт по городу</h1><p>Сгенерирован: ${new Date().toLocaleString()}</p>${employeesHtml}</body></html>`;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(pdfContent);
+    printWindow.document.close();
+    printWindow.print();
 }
 
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
