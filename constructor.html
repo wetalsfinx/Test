@@ -10,7 +10,7 @@
         body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; }
         .upload-area { border: 2px dashed #ccc; border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; background: white; margin-bottom: 20px; }
-        .upload-area:hover { border-color: #0d6efd; background: #f8f9fa; }
+        .upload-area:hover { border-color: #E30613; background: #f8f9fa; }
         .question-card { background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .question-header { background: #E30613; color: white; padding: 12px 20px; border-radius: 10px 10px 0 0; cursor: pointer; }
         .question-body { padding: 20px; display: none; }
@@ -18,7 +18,7 @@
         .btn-primary { background: #E30613; border: none; }
         .btn-primary:hover { background: #c41c2a; }
         .btn-outline-primary { border-color: #E30613; color: #E30613; }
-        .btn-outline-primary:hover { background: #E30613; border-color: #E30613; }
+        .btn-outline-primary:hover { background: #E30613; border-color: #E30613; color: white; }
     </style>
 </head>
 <body>
@@ -32,7 +32,7 @@
         <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
             <i class="bi bi-file-excel fs-1"></i>
             <p class="mt-2">Нажмите или перетащите Excel-файл (.xlsx)</p>
-            <small class="text-muted">Формат: любые колонки. Программа сама найдёт вопросы, варианты A) B) C) D) и ✅ Правильный ответ: X</small>
+            <small class="text-muted">Формат: любые колонки. Программа сама найдёт вопросы, варианты A) B) C) D) и Правильный ответ: X</small>
             <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
         </div>
         <div id="importStatus" class="mt-2"></div>
@@ -48,7 +48,6 @@
         <div class="mb-3">
             <label class="form-label fw-bold">Города для выпадающего списка (через запятую)</label>
             <input type="text" id="citiesList" class="form-control" placeholder="Москва, Санкт-Петербург, Екатеринбург, Казань">
-            <small class="text-muted">Сотрудники смогут выбрать город при регистрации</small>
         </div>
     </div>
 
@@ -70,97 +69,98 @@
     let questions = [];
     let questionCounter = 0;
 
-    // ========== ПАРСИНГ EXCEL (УМНЫЙ) ==========
-    function parseExcelToQuestions(rows) {
-        const allText = [];
-        
-        // Собираем весь текст из всех ячеек
-        for (const row of rows) {
-            for (const key in row) {
-                const cell = row[key];
-                if (typeof cell === 'string' || typeof cell === 'number') {
-                    allText.push(String(cell));
-                }
-            }
-        }
-        
-        const fullText = allText.join('\n');
-        const lines = fullText.split(/\r?\n/);
-        
-        const parsedQuestions = [];
-        let currentQuestion = null;
+    function parseExcelToQuestions(rawText) {
+        const lines = rawText.split(/\r?\n/);
+        const parsed = [];
+        let current = null;
         
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i].trim();
-            if (!line) continue;
+            if (line === "") continue;
             
-            // Поиск вопроса (цифра в начале, точка или пробел)
-            const questionMatch = line.match(/^(\d+)[\.\s]+(.+)/);
-            if (questionMatch) {
-                // Сохраняем предыдущий вопрос
-                if (currentQuestion && currentQuestion.options && Object.keys(currentQuestion.options).length > 0) {
-                    parsedQuestions.push(currentQuestion);
+            // Пропускаем строки с "A |" и подобные (служебные)
+            if (line.match(/^\s*[A-Za-z]\s*\|/)) continue;
+            
+            // Ищем строку с правильным ответом (с галочкой или без)
+            const correctMatch = line.match(/Правильный ответ:\s*([A-D])/i);
+            if (correctMatch && current) {
+                current.correctLetter = correctMatch[1].toUpperCase();
+                // Если у текущего вопроса есть варианты, сохраняем его
+                if (current.options && Object.keys(current.options).length > 0) {
+                    parsed.push(current);
                 }
-                // Начинаем новый вопрос
-                currentQuestion = {
-                    text: questionMatch[2],
-                    options: {},
-                    correct: null
-                };
+                current = null;
                 continue;
             }
             
-            // Поиск варианта ответа A) B) C) D)
-            const optionMatch = line.match(/^([A-Da-d])[\)\.\s]+(.+)/);
-            if (optionMatch && currentQuestion) {
+            // Ищем вариант ответа: A) ... или A. ... или A)...
+            const optionMatch = line.match(/^([A-D])[\)\.]\s*(.+)/);
+            if (optionMatch) {
+                if (!current) {
+                    current = { text: "", options: {}, correctLetter: null };
+                }
                 const letter = optionMatch[1].toUpperCase();
-                const optionText = optionMatch[2];
-                currentQuestion.options[letter] = optionText;
+                let optText = optionMatch[2].trim();
+                // Убираем лишние кавычки в начале и конце
+                if (optText.startsWith('"') && optText.endsWith('"')) optText = optText.slice(1, -1);
+                if (optText.startsWith('«') && optText.endsWith('»')) optText = optText.slice(1, -1);
+                current.options[letter] = optText;
                 continue;
             }
             
-            // Поиск правильного ответа: ✅ Правильный ответ: B
-            const correctMatch = line.match(/[✅]*\s*Правильный ответ:\s*([A-Da-d])/i);
-            if (correctMatch && currentQuestion) {
-                currentQuestion.correct = correctMatch[1].toUpperCase();
+            // Если строка не начинается с A) B) C) D) и нет правильного ответа — это текст вопроса
+            if (!line.match(/^([A-D])[\)\.]/) && !line.match(/Правильный ответ/i)) {
+                if (!current) {
+                    current = { text: "", options: {}, correctLetter: null };
+                }
+                // Если у текущего уже есть варианты — начинаем новый вопрос
+                if (Object.keys(current.options).length > 0) {
+                    if (current.correctLetter) {
+                        parsed.push(current);
+                    }
+                    current = { text: "", options: {}, correctLetter: null };
+                }
+                // Добавляем текст вопроса (если есть цифра в начале — убираем её)
+                let questionText = line;
+                const numMatch = line.match(/^\d+\.?\s*/);
+                if (numMatch) questionText = line.substring(numMatch[0].length);
+                if (current.text) current.text += " " + questionText;
+                else current.text = questionText;
                 continue;
-            }
-            
-            // Если строка начинается с буквы и скобки/точки без вопроса
-            const looseOption = line.match(/^([A-Da-d])[\)\.\s]\s*(.+)/);
-            if (looseOption && currentQuestion && !currentQuestion.options[looseOption[1].toUpperCase()]) {
-                currentQuestion.options[looseOption[1].toUpperCase()] = looseOption[2];
             }
         }
         
         // Добавляем последний вопрос
-        if (currentQuestion && currentQuestion.options && Object.keys(currentQuestion.options).length > 0) {
-            parsedQuestions.push(currentQuestion);
+        if (current && current.options && Object.keys(current.options).length > 0 && current.correctLetter) {
+            parsed.push(current);
         }
         
         // Преобразуем в формат конструктора
         const result = [];
-        for (const q of parsedQuestions) {
+        const order = ['A', 'B', 'C', 'D'];
+        for (const q of parsed) {
             const options = [];
-            const order = ['A', 'B', 'C', 'D'];
             for (const letter of order) {
                 if (q.options[letter]) {
                     options.push(q.options[letter]);
                 }
             }
-            if (options.length >= 2 && q.correct) {
-                const correctIndex = order.indexOf(q.correct);
-                result.push({
-                    text: q.text,
-                    options: options,
-                    correct: correctIndex
-                });
+            if (options.length >= 2 && q.correctLetter) {
+                const correctIndex = order.indexOf(q.correctLetter);
+                if (correctIndex !== -1) {
+                    result.push({
+                        text: q.text,
+                        options: options,
+                        correct: correctIndex
+                    });
+                }
             }
         }
         
         return result;
     }
 
+    // Загрузка Excel
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -173,23 +173,25 @@
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
             
-            // Преобразуем в массив объектов
-            const headers = rows[0] || [];
-            const dataRows = [];
-            for (let i = 1; i < rows.length; i++) {
-                const obj = {};
-                for (let j = 0; j < headers.length; j++) {
-                    obj[headers[j]] = rows[i][j];
+            // Получаем весь текст из всех ячеек
+            let allText = "";
+            const range = XLSX.utils.decode_range(firstSheet['!ref'] || 'A1:A1');
+            for (let row = range.s.r; row <= range.e.r; row++) {
+                for (let col = range.s.c; col <= range.e.c; col++) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                    const cell = firstSheet[cellAddress];
+                    if (cell && cell.v) {
+                        allText += String(cell.v) + "\n";
+                    }
                 }
-                dataRows.push(obj);
+                allText += "\n";
             }
             
-            const imported = parseExcelToQuestions(dataRows);
+            const imported = parseExcelToQuestions(allText);
             
             if (imported.length === 0) {
-                statusDiv.innerHTML = '<div class="alert alert-danger">❌ Не удалось распознать вопросы. Проверьте формат: вопросы с цифрами, варианты A) B) C) D) и строка "✅ Правильный ответ: B"</div>';
+                statusDiv.innerHTML = '<div class="alert alert-danger">❌ Не удалось распознать вопросы. Проверьте формат: вопросы текстом, варианты A) ... B) ... и строка "Правильный ответ: X"</div>';
                 return;
             }
             
@@ -218,15 +220,17 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
-                const headers = rows[0] || [];
-                const dataRows = [];
-                for (let i = 1; i < rows.length; i++) {
-                    const obj = {};
-                    for (let j = 0; j < headers.length; j++) obj[headers[j]] = rows[i][j];
-                    dataRows.push(obj);
+                let allText = "";
+                const range = XLSX.utils.decode_range(firstSheet['!ref'] || 'A1:A1');
+                for (let row = range.s.r; row <= range.e.r; row++) {
+                    for (let col = range.s.c; col <= range.e.c; col++) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                        const cell = firstSheet[cellAddress];
+                        if (cell && cell.v) allText += String(cell.v) + "\n";
+                    }
+                    allText += "\n";
                 }
-                const imported = parseExcelToQuestions(dataRows);
+                const imported = parseExcelToQuestions(allText);
                 if (imported.length === 0) {
                     statusDiv.innerHTML = '<div class="alert alert-danger">❌ Не удалось распознать формат</div>';
                     return;
@@ -272,14 +276,13 @@
         container.innerHTML = '';
         for (let i = 0; i < questions.length; i++) {
             const q = questions[i];
-            const isExpanded = i === 0;
             
             const card = document.createElement('div');
             card.className = 'question-card';
             card.innerHTML = `
                 <div class="question-header" onclick="toggleQuestion(${i})">
                     <div class="d-flex justify-content-between align-items-center">
-                        <strong>Вопрос ${i+1}: ${q.text.substring(0, 80)}${q.text.length > 80 ? '...' : ''}</strong>
+                        <strong>Вопрос ${i+1}: ${escapeHtml(q.text.substring(0, 80))}${q.text.length > 80 ? '...' : ''}</strong>
                         <div>
                             <button class="btn btn-sm btn-light me-2" onclick="event.stopPropagation(); deleteQuestion(${i})">🗑️</button>
                             <span class="badge bg-light text-dark">${q.options.length} вариантов</span>
@@ -304,7 +307,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Правильный ответ</label>
                         <select class="form-select" onchange="updateQuestion(${i}, 'correct', parseInt(this.value))">
-                            ${q.options.map((opt, optIdx) => `<option value="${optIdx}" ${q.correct === optIdx ? 'selected' : ''}>${String.fromCharCode(65+optIdx)}. ${opt.substring(0, 50)}</option>`).join('')}
+                            ${q.options.map((opt, optIdx) => `<option value="${optIdx}" ${q.correct === optIdx ? 'selected' : ''}>${String.fromCharCode(65+optIdx)}. ${escapeHtml(opt.substring(0, 50))}</option>`).join('')}
                         </select>
                     </div>
                 </div>
