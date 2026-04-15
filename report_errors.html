@@ -110,8 +110,9 @@
 </div>
 
 <script>
-// ========== БАЗА РЕКОМЕНДАЦИЙ ==========
-const recommendations = {
+// ========== БАЗА РЕКОМЕНДАЦИЙ ДЛЯ ОБОИХ ТЕСТОВ ==========
+// Тест 1: Продажи. Входной тест
+const recommendationsEntry = {
     q1_wrong2: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня скидка до 30% и оплата бонусами»", whyWorse: "Акцент на спешке, пропускаете выгоду", whyBetter: "Сразу даёте выгоду", practice: "Вместо: ❌ «Вижу, вы торопитесь» → ✅ «Добрый день! Скидка до 30%»" },
     q1_wrong3: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня скидка до 30% и оплата бонусами»", whyWorse: "Сразу задаёте вопрос без выгоды", whyBetter: "Сначала даёте выгоду", practice: "Вместо: ❌ «Подбираете что-то?» → ✅ «Добрый день! Скидка до 30%»" },
     q1_wrong4: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня скидка до 30% и оплата бонусами»", whyWorse: "Общий вопрос без выгоды", whyBetter: "Сразу даёте выгоду", practice: "Вместо: ❌ «Чем могу помочь?» → ✅ «Добрый день! Скидка до 30%»" },
@@ -147,9 +148,48 @@ const recommendations = {
     q11_wrong4: { zone: "Инициатива в диалоге", correct: "«Давайте я покажу несколько колец в вашем стиле — для себя или в подарок?»", whyWorse: "Повторяете акцию без перехода к подбору", whyBetter: "Переходите к подбору", practice: "Вместо: ❌ Повторять акцию → ✅ «Давайте покажу кольца»" }
 };
 
-function getRecommendationHTML(questionNum, variantNum) {
+// Тест 2: Продажи. Стандарты обслуживания
+const recommendationsStandards = {
+    q1_wrong1: { zone: "Приветствие и речевая пластинка", correct: "«Добрый день! У нас сегодня скидка 30% на бриллианты и можно оплатить бонусами до 80%»", whyWorse: "Сразу задаёте вопрос или используете якорь без понимания потребности", whyBetter: "Сначала даёте выгоду, затем выявляете потребность", practice: "Всегда начинайте с акции, потом задавайте вопрос о контексте" },
+    q2_wrong1: { zone: "Инициатива в диалоге", correct: "Подходите сразу и спрашиваете: «Для кого подбираете украшение: для себя, жены, дочери?»", whyWorse: "Пассивное ожидание или общие фразы", whyBetter: "Подходите сразу с конкретным вопросом", practice: "Не ждите — подходите через 30-40 секунд с вопросом о получателе" },
+    q2_wrong2: { zone: "Инициатива в диалоге", correct: "Подходите сразу и спрашиваете: «Для кого подбираете украшение: для себя, жены, дочери?»", whyWorse: "Дистанционная позиция", whyBetter: "Подходите лично", practice: "Говорите: «Для кого подбираете украшение?»" },
+    q2_wrong3: { zone: "Инициатива в диалоге", correct: "Подходите сразу и спрашиваете: «Для кого подбираете украшение: для себя, жены, дочери?»", whyWorse: "Наблюдаете, но не подходите", whyBetter: "Подходите с конкретным вопросом", practice: "Наблюдение — это потеря времени. Подходите смело" },
+    q3_wrong1: { zone: "Выявление потребностей", correct: "Спрашиваете: «А для какого случая? Это подарок или для себя?»", whyWorse: "Сразу показываете товар без понимания контекста", whyBetter: "Сначала выясняете, для кого и для чего", practice: "Перед показом всегда спрашивайте о случае и получателе" },
+    q3_wrong2: { zone: "Выявление потребностей", correct: "Спрашиваете: «А для какого случая? Это подарок или для себя?»", whyWorse: "Применяете якорь до понимания потребностей", whyBetter: "Сначала выявляете контекст", practice: "Не используйте якорь, пока не поняли, что нужно клиенту" },
+    q3_wrong3: { zone: "Выявление потребностей", correct: "Спрашиваете: «А для какого случая? Это подарок или для себя?»", whyWorse: "Предлагаете добавить за лучшее качество до понимания потребностей", whyBetter: "Сначала выясняете контекст", practice: "Не предлагайте доплату, пока не поняли, что именно ищет клиент" },
+    q4_wrong1: { zone: "Эмоциональная презентация", correct: "«Эти серьги станут прекрасным напоминанием о вашей годовщине — каждый раз, надевая их, она будет вспоминать этот день»", whyWorse: "Акцент на популярности или акции", whyBetter: "Связываете с событием и эмоциями", practice: "Всегда привязывайте украшение к событию: «Это будет напоминать о...»" },
+    q4_wrong2: { zone: "Эмоциональная презентация", correct: "«Эти серьги станут прекрасным напоминанием о вашей годовщине — каждый раз, надевая их, она будет вспоминать этот день»", whyWorse: "Переключаете фокус на цену или рассрочку", whyBetter: "Акцент на эмоции", practice: "Сначала эмоции, потом цена и условия" },
+    q4_wrong3: { zone: "Эмоциональная презентация", correct: "«Эти серьги станут прекрасным напоминанием о вашей годовщине — каждый раз, надевая их, она будет вспоминать этот день»", whyWorse: "Говорите об упаковке до эмоций", whyBetter: "Сначала создаёте эмоциональную связь", practice: "Сначала: «Это будет напоминать о празднике». Потом: «Упакуем как подарок?»" },
+    q5_wrong1: { zone: "Работа с возражениями (цена)", correct: "«Понимаю, цена важна. А с чем вы сравниваете?»", whyWorse: "Сразу предлагаете более дешёвый вариант или рассрочку", whyBetter: "Сначала присоединяетесь, затем выясняете причину", practice: "«Понимаю. А с чем вы сравниваете?» — это золотая фраза" },
+    q5_wrong2: { zone: "Работа с возражениями (цена)", correct: "«Понимаю, цена важна. А с чем вы сравниваете?»", whyWorse: "Объясняете цену через качество", whyBetter: "Присоединяетесь и уточняете", practice: "Не оправдывайте цену — выясните, с чем сравнивает клиент" },
+    q5_wrong3: { zone: "Работа с возражениями (цена)", correct: "«Понимаю, цена важна. А с чем вы сравниваете?»", whyWorse: "Предлагаете отложить", whyBetter: "Решаете вопрос здесь и сейчас", practice: "Не предлагайте отложить — предложите сравнение" },
+    q6_wrong1: { zone: "Альтернатива / Каталог на заказ", correct: "«Давайте я покажу наш каталог с изделиями на заказ — там больше винтажных моделей»", whyWorse: "Констатация отсутствия", whyBetter: "Сразу предлагаете каталог", practice: "Всегда говорите: «Давайте посмотрим каталог на заказ»" },
+    q6_wrong2: { zone: "Альтернатива / Каталог на заказ", correct: "«Давайте я покажу наш каталог с изделиями на заказ — там больше винтажных моделей»", whyWorse: "Предлагаете доставку из другого магазина", whyBetter: "Каталог даёт больше вариантов", practice: "Не ограничивайтесь другими магазинами — покажите каталог" },
+    q6_wrong3: { zone: "Альтернатива / Каталог на заказ", correct: "«Давайте я покажу наш каталог с изделиями на заказ — там больше винтажных моделей»", whyWorse: "Спрашиваете, что именно нравилось", whyBetter: "Сразу переходите к решению", practice: "Не тратьте время на расспросы — покажите каталог" },
+    q7_wrong1: { zone: "Предложение второго украшения", correct: "«Давайте к этим серьгам подберём кольцо или кулон из той же коллекции — вместе они создадут законченный образ»", whyWorse: "Вопрос даёт право отказа", whyBetter: "Утверждение «Давайте подберём»", practice: "Говорите: «Давайте подберём к этим серьгам кольцо»" },
+    q7_wrong2: { zone: "Предложение второго украшения", correct: "«Давайте к этим серьгам подберём кольцо или кулон из той же коллекции — вместе они создадут законченный образ»", whyWorse: "Предлагаете рассрочку вместо комплекта", whyBetter: "Сначала предлагаете комплект", practice: "Сначала комплект, потом финансовые условия" },
+    q7_wrong3: { zone: "Предложение второго украшения", correct: "«Давайте к этим серьгам подберём кольцо или кулон из той же коллекции — вместе они создадут законченный образ»", whyWorse: "Вопрос «Может, браслет?» звучит неуверенно", whyBetter: "Утверждение ведёт к покупке", practice: "«Давайте подберём» — без вопросительной интонации" },
+    q8_wrong1: { zone: "Завершение продажи", correct: "«Вы сделали отличный выбор! Дарите с любовью, ждём снова!»", whyWorse: "Говорите «Хорошо, всего доброго»", whyBetter: "Завершаете с теплотой и позитивом", practice: "Всегда: «Вы сделали отличный выбор! Дарите с любовью!»" },
+    q8_wrong2: { zone: "Завершение продажи", correct: "«Вы сделали отличный выбор! Дарите с любовью, ждём снова!»", whyWorse: "Говорите про возврат или докупить", whyBetter: "Позитивное завершение", practice: "Никаких «если передумаете» — только позитив" },
+    q8_wrong3: { zone: "Завершение продажи", correct: "«Вы сделали отличный выбор! Дарите с любовью, ждём снова!»", whyWorse: "Молча заканчиваете", whyBetter: "Эмоциональное завершение", practice: "Завершайте фразой: «Ждём вас снова!»" },
+    q9_wrong1: { zone: "Работа с возражениями (сомнения)", correct: "«Понимаю, выбор непростой. Что именно вызывает сомнения: дизайн, цена или что-то ещё?»", whyWorse: "Предлагаете отложить или подумать", whyBetter: "Присоединяетесь + уточняете причину", practice: "«Понимаю. Что именно смущает?»" },
+    q9_wrong2: { zone: "Работа с возражениями (сомнения)", correct: "«Понимаю, выбор непростой. Что именно вызывает сомнения: дизайн, цена или что-то ещё?»", whyWorse: "Сразу предлагаете рассрочку", whyBetter: "Сначала выясняете причину", practice: "Не предлагайте рассрочку, пока не поняли причину" },
+    q9_wrong3: { zone: "Работа с возражениями (сомнения)", correct: "«Понимаю, выбор непростой. Что именно вызывает сомнения: дизайн, цена или что-то ещё?»", whyWorse: "Предлагаете отложить", whyBetter: "Выясняете причину здесь и сейчас", practice: "«Давайте разберёмся, что именно смущает»" },
+    q10_wrong1: { zone: "Инициатива + Примерка", correct: "«Давайте примерим — так вы сразу увидите, как он смотрится»", whyWorse: "Ждёте или задаёте вопрос «Хотите?»", whyBetter: "Утверждение «Давайте примерим»", practice: "Всегда: «Давайте примерим» — без вопроса" },
+    q10_wrong2: { zone: "Инициатива + Примерка", correct: "«Давайте примерим — так вы сразу увидите, как он смотрится»", whyWorse: "Вопрос «Хотите?» даёт право отказа", whyBetter: "Утверждение ведёт к действию", practice: "«Давайте примерим» — мягкое, но уверенное предложение" },
+    q10_wrong3: { zone: "Инициатива + Примерка", correct: "«Давайте примерим — так вы сразу увидите, как он смотрится»", whyWorse: "Говорите о популярности", whyBetter: "Призыв к примерке", practice: "Не говорите «это популярно» — говорите «давайте примерим»" },
+    q11_wrong1: { zone: "Предложение каталога на заказ", correct: "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", whyWorse: "Говорите, что нет размера", whyBetter: "Предлагаете альтернативы и каталог", practice: "«Сначала покажу, что есть, а потом каталог на заказ»" },
+    q11_wrong2: { zone: "Предложение каталога на заказ", correct: "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", whyWorse: "Предлагаете только заказ без альтернатив", whyBetter: "Сначала наличие, потом каталог", practice: "Всегда: «Сначала похожие в наличии, потом каталог»" },
+    q11_wrong3: { zone: "Предложение каталога на заказ", correct: "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", whyWorse: "Говорите, что будет через месяц", whyBetter: "Предлагаете решение здесь и сейчас", practice: "Никогда не говорите «приходите через месяц»" }
+};
+
+let currentRecommendations = recommendationsEntry;
+let currentTestType = 'entry';
+
+function getRecommendationHTML(questionNum, variantNum, testType) {
+    const recs = testType === 'standards' ? recommendationsStandards : recommendationsEntry;
     const key = `q${questionNum}_wrong${variantNum}`;
-    const rec = recommendations[key];
+    const rec = recs[key];
     if (!rec) {
         return `<div class="recommendation"><strong>💡 Рекомендация:</strong><br>Обратите внимание на правильный ответ.</div>`;
     }
@@ -169,7 +209,219 @@ let employeeCounter = 0;
 let currentFilterCity = 'all';
 let currentSearchText = '';
 
-// ========== ПРИЁМ ДАННЫХ ИЗ АДМИНКИ ==========
+function detectTestType(rows) {
+    if (!rows || rows.length === 0) return 'entry';
+    const firstQuestion = rows[0]['Вопрос 1'] || '';
+    if (firstQuestion.includes('якорь') || firstQuestion.includes('для какого случая') || firstQuestion.includes('футляр')) {
+        return 'standards';
+    }
+    return 'entry';
+}
+
+function getZoneForQuestion(questionNum, variantNum, testType) {
+    const recs = testType === 'standards' ? recommendationsStandards : recommendationsEntry;
+    const key = `q${questionNum}_wrong${variantNum}`;
+    const rec = recs[key];
+    return rec ? rec.zone : "Зона роста не определена";
+}
+
+function parseExcelToEmployees(rows) {
+    const employees = [];
+    let empCounter = 0;
+    
+    const testType = detectTestType(rows);
+    currentTestType = testType;
+    
+    for (const row of rows) {
+        const name = row['ФИО'] || '';
+        if (!name) continue;
+        
+        const employee = {
+            id: empCounter++,
+            name: name,
+            city: row['Город'] || 'Не указан',
+            score: 0,
+            total: 0,
+            errors: [],
+            testType: testType
+        };
+        
+        const scoreStr = row['Баллы'] || '';
+        const scoreMatch = scoreStr.match(/(\d+)\/(\d+)/);
+        if (scoreMatch) {
+            employee.score = parseInt(scoreMatch[1]);
+            employee.total = parseInt(scoreMatch[2]);
+        }
+        
+        for (let i = 1; i <= 11; i++) {
+            const result = row[`Результат ${i}`];
+            const questionText = row[`Вопрос ${i}`] || '';
+            const userAnswer = row[`Ответ сотрудника ${i}`] || '';
+            const correctAnswer = row[`Правильный ответ ${i}`] || '';
+            
+            let qNum = 0;
+            let variantNum = 0;
+            
+            if (result === 'Ошибка' && questionText) {
+                if (testType === 'entry') {
+                    // Логика для Входного теста (оставляем как было)
+                    const lowerQuestion = questionText.toLowerCase();
+                    if (lowerQuestion.includes("обеденный перерыв") || lowerQuestion.includes("торопитесь")) qNum = 1;
+                    else if (lowerQuestion.includes("детскими серьгами") || lowerQuestion.includes("ребёнок")) qNum = 2;
+                    else if (lowerQuestion.includes("день рождения подруге") || lowerQuestion.includes("бюджет")) qNum = 3;
+                    else if (lowerQuestion.includes("кулон в подарок дочери") || lowerQuestion.includes("выпускной")) qNum = 4;
+                    else if (lowerQuestion.includes("купил цепочку")) qNum = 5;
+                    else if (lowerQuestion.includes("кольцо за") || lowerQuestion.includes("футляр")) qNum = 6;
+                    else if (lowerQuestion.includes("серьги за") || lowerQuestion.includes("не уверен")) qNum = 7;
+                    else if (lowerQuestion.includes("изумрудом") || lowerQuestion.includes("нет в наличии")) qNum = 8;
+                    else if (lowerQuestion.includes("браслет на витрине") || lowerQuestion.includes("рассматривает браслет")) qNum = 9;
+                    else if (lowerQuestion.includes("не уверена, что это моё") || lowerQuestion.includes("красиво, но")) qNum = 10;
+                    else if (lowerQuestion.includes("витрину с кольцами") || lowerQuestion.includes("2 минуты")) qNum = 11;
+                    
+                    const lowerAnswer = userAnswer.toLowerCase();
+                    if (qNum === 1) {
+                        if (lowerAnswer.includes("вижу, вы торопитесь") || lowerAnswer.includes("быстро покажу")) variantNum = 2;
+                        else if (lowerAnswer.includes("подбираете что-то конкретное") || lowerAnswer.includes("просто смотрите")) variantNum = 3;
+                        else if (lowerAnswer.includes("чем могу помочь")) variantNum = 4;
+                    }
+                    else if (qNum === 2) {
+                        if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама обратится")) variantNum = 1;
+                        else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
+                        else if (lowerAnswer.includes("вот у нас есть детские модели")) variantNum = 4;
+                    }
+                    else if (qNum === 3) {
+                        if (lowerAnswer.includes("сразу показываете") || lowerAnswer.includes("3-4")) variantNum = 1;
+                        else if ((lowerAnswer.includes("20 000") || lowerAnswer.includes("20000")) && (lowerAnswer.includes("15 000") || lowerAnswer.includes("15000"))) variantNum = 3;
+                        else if (lowerAnswer.includes("подарочный сертификат")) variantNum = 4;
+                    }
+                    else if (qNum === 4) {
+                        if (lowerAnswer.includes("популярный") && lowerAnswer.includes("выпускниц")) variantNum = 1;
+                        else if (lowerAnswer.includes("акция") && lowerAnswer.includes("коллекцию")) variantNum = 3;
+                        else if (lowerAnswer.includes("упаковать как подарок")) variantNum = 4;
+                    }
+                    else if (qNum === 5) {
+                        if (lowerAnswer.includes("не хотите посмотреть") && lowerAnswer.includes("что-то")) variantNum = 1;
+                        else if (lowerAnswer.includes("рассрочка") || lowerAnswer.includes("денег не хватит")) variantNum = 3;
+                        else if (lowerAnswer.includes("браслет")) variantNum = 4;
+                    }
+                    else if (qNum === 6) {
+                        if (lowerAnswer.includes("до того") && lowerAnswer.includes("окончательное решение")) variantNum = 1;
+                        else if (lowerAnswer.includes("после оплаты") && lowerAnswer.includes("упаковке")) variantNum = 3;
+                        else if (lowerAnswer.includes("не предлагаете")) variantNum = 4;
+                    }
+                    else if (qNum === 7) {
+                        if (lowerAnswer.includes("за 30 000") || lowerAnswer.includes("30000")) variantNum = 1;
+                        else if (lowerAnswer.includes("бриллиантами") && lowerAnswer.includes("цена выше")) variantNum = 3;
+                        else if (lowerAnswer.includes("отложим до зарплаты")) variantNum = 4;
+                    }
+                    else if (qNum === 8) {
+                        if (lowerAnswer.includes("к сожалению") && lowerAnswer.includes("нет")) variantNum = 1;
+                        else if (lowerAnswer.includes("привезти") && lowerAnswer.includes("неделю")) variantNum = 3;
+                        else if (lowerAnswer.includes("зачем") && lowerAnswer.includes("без камней")) variantNum = 4;
+                    }
+                    else if (qNum === 9) {
+                        if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит")) variantNum = 1;
+                        else if (lowerAnswer.includes("хотите примерить")) variantNum = 2;
+                        else if (lowerAnswer.includes("регулируется")) variantNum = 4;
+                    }
+                    else if (qNum === 10) {
+                        if (lowerAnswer.includes("давайте посмотрим другие")) variantNum = 1;
+                        else if (lowerAnswer.includes("хит продаж")) variantNum = 3;
+                        else if (lowerAnswer.includes("отложить")) variantNum = 4;
+                    }
+                    else if (qNum === 11) {
+                        if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит показать")) variantNum = 1;
+                        else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
+                        else if (lowerAnswer.includes("акция на кольца") || (lowerAnswer.includes("скидки") && lowerAnswer.includes("30%"))) variantNum = 4;
+                    }
+                } else {
+                    // Логика для Стандартов обслуживания
+                    const qText = questionText.toLowerCase();
+                    if (qText.includes("обеденный перерыв") || qText.includes("торопитесь") || qText.includes("речевую пластинку")) qNum = 1;
+                    else if (qText.includes("мужчина") || qText.includes("2 минуты") || qText.includes("прошло 2 минуты")) qNum = 2;
+                    else if (qText.includes("бюджет") || qText.includes("30 000 рублей")) qNum = 3;
+                    else if (qText.includes("годовщина") || qText.includes("подарок жене")) qNum = 4;
+                    else if (qText.includes("дороговато") || qText.includes("дешевле будет")) qNum = 5;
+                    else if (qText.includes("советское кольцо") || qText.includes("аметистом")) qNum = 6;
+                    else if (qText.includes("кулон") || qText.includes("не просит примерку")) qNum = 7;
+                    else if (qText.includes("футляр") || qText.includes("средство")) qNum = 8;
+                    else if (qText.includes("серьги") && qText.includes("улыбается")) qNum = 9;
+                    else if (qText.includes("размера нет в наличии") || qText.includes("кольцо")) qNum = 10;
+                    else if (qText.includes("второе украшение") || qText.includes("цепочка")) qNum = 11;
+                    
+                    const uAnswer = userAnswer.toLowerCase();
+                    if (qNum === 1) {
+                        if (uAnswer.includes("здравствуйте") && uAnswer.includes("для себя или в подарок")) variantNum = 1;
+                        else if (uAnswer.includes("якорь") || uAnswer.includes("35 000")) variantNum = 2;
+                        else if (uAnswer.includes("добавить за лучшее качество")) variantNum = 3;
+                    }
+                    else if (qNum === 2) {
+                        if (uAnswer.includes("ждёте") || uAnswer.includes("осматривается")) variantNum = 1;
+                        else if (uAnswer.includes("издалека") || uAnswer.includes("если будут вопросы")) variantNum = 2;
+                        else if (uAnswer.includes("наблюдаете")) variantNum = 3;
+                    }
+                    else if (qNum === 3) {
+                        if (uAnswer.includes("сразу показываете") && uAnswer.includes("3-4")) variantNum = 1;
+                        else if (uAnswer.includes("якорь") || uAnswer.includes("35 000")) variantNum = 2;
+                        else if (uAnswer.includes("добавить за лучшее качество")) variantNum = 3;
+                    }
+                    else if (qNum === 4) {
+                        if (uAnswer.includes("популярные")) variantNum = 1;
+                        else if (uAnswer.includes("скидка")) variantNum = 2;
+                        else if (uAnswer.includes("упаковать")) variantNum = 3;
+                    }
+                    else if (qNum === 5) {
+                        if (uAnswer.includes("есть дешевле")) variantNum = 1;
+                        else if (uAnswer.includes("сравниваете")) variantNum = 2;
+                        else if (uAnswer.includes("рассрочка")) variantNum = 3;
+                    }
+                    else if (qNum === 6) {
+                        if (uAnswer.includes("к сожалению")) variantNum = 1;
+                        else if (uAnswer.includes("доставка")) variantNum = 2;
+                        else if (uAnswer.includes("что именно нравилось")) variantNum = 3;
+                    }
+                    else if (qNum === 7) {
+                        if (uAnswer.includes("ждёте")) variantNum = 1;
+                        else if (uAnswer.includes("хотите")) variantNum = 2;
+                        else if (uAnswer.includes("популярный")) variantNum = 3;
+                    }
+                    else if (qNum === 8) {
+                        if (uAnswer.includes("всего доброго")) variantNum = 1;
+                        else if (uAnswer.includes("передумаете")) variantNum = 2;
+                        else if (uAnswer.includes("только на возврат")) variantNum = 3;
+                    }
+                    else if (qNum === 9) {
+                        if (uAnswer.includes("подумайте")) variantNum = 1;
+                        else if (uAnswer.includes("рассрочка")) variantNum = 2;
+                        else if (uAnswer.includes("отложу")) variantNum = 3;
+                    }
+                    else if (qNum === 10) {
+                        if (uAnswer.includes("к сожалению")) variantNum = 1;
+                        else if (uAnswer.includes("заказать")) variantNum = 2;
+                        else if (uAnswer.includes("через месяц")) variantNum = 3;
+                    }
+                    else if (qNum === 11) {
+                        if (uAnswer.includes("хотите ещё что-то")) variantNum = 1;
+                        else if (uAnswer.includes("рассрочка")) variantNum = 2;
+                        else if (uAnswer.includes("браслет")) variantNum = 3;
+                    }
+                }
+                
+                employee.errors.push({
+                    questionNum: qNum,
+                    variantNum: variantNum,
+                    originalColumnNum: i,
+                    question: questionText,
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer
+                });
+            }
+        }
+        employees.push(employee);
+    }
+    return employees;
+}
+
 function loadFromAdminData(adminData) {
     if (!adminData || !adminData.results || adminData.results.length === 0) return false;
     
@@ -197,7 +449,6 @@ function loadFromAdminData(adminData) {
     return true;
 }
 
-// Проверяем, есть ли данные из админки
 const urlParams = new URLSearchParams(location.search);
 if (urlParams.get('fromAdmin') === 'true') {
     const storedData = localStorage.getItem('analyzerData');
@@ -207,131 +458,12 @@ if (urlParams.get('fromAdmin') === 'true') {
             if (data.results && data.results.length) {
                 loadFromAdminData(data);
                 localStorage.removeItem('analyzerData');
-                // Скрываем область загрузки Excel, показываем результаты
                 document.getElementById('uploadArea').style.display = 'none';
                 document.getElementById('statsPanel').style.display = 'flex';
                 document.getElementById('filterBar').style.display = 'flex';
             }
         } catch(e) { console.error('Ошибка загрузки данных из админки', e); }
     }
-}
-
-function parseExcelToEmployees(rows) {
-    const employees = [];
-    let empCounter = 0;
-    
-    for (const row of rows) {
-        const name = row['ФИО'] || '';
-        if (!name) continue;
-        
-        const employee = {
-            id: empCounter++,
-            name: name,
-            city: row['Город'] || 'Не указан',
-            score: 0,
-            total: 0,
-            errors: []
-        };
-        
-        const scoreStr = row['Баллы'] || '';
-        const scoreMatch = scoreStr.match(/(\d+)\/(\d+)/);
-        if (scoreMatch) {
-            employee.score = parseInt(scoreMatch[1]);
-            employee.total = parseInt(scoreMatch[2]);
-        }
-        
-        for (let i = 1; i <= 11; i++) {
-            const result = row[`Результат ${i}`];
-            const questionText = row[`Вопрос ${i}`] || '';
-            const userAnswer = row[`Ответ сотрудника ${i}`] || '';
-            const correctAnswer = row[`Правильный ответ ${i}`] || '';
-            
-            let qNum = 0;
-            const lowerQuestion = questionText.toLowerCase();
-            if (lowerQuestion.includes("обеденный перерыв") || lowerQuestion.includes("торопитесь")) qNum = 1;
-            else if (lowerQuestion.includes("детскими серьгами") || lowerQuestion.includes("ребёнок")) qNum = 2;
-            else if (lowerQuestion.includes("день рождения подруге") || lowerQuestion.includes("бюджет")) qNum = 3;
-            else if (lowerQuestion.includes("кулон в подарок дочери") || lowerQuestion.includes("выпускной")) qNum = 4;
-            else if (lowerQuestion.includes("купил цепочку")) qNum = 5;
-            else if (lowerQuestion.includes("кольцо за") || lowerQuestion.includes("футляр")) qNum = 6;
-            else if (lowerQuestion.includes("серьги за") || lowerQuestion.includes("не уверен")) qNum = 7;
-            else if (lowerQuestion.includes("изумрудом") || lowerQuestion.includes("нет в наличии")) qNum = 8;
-            else if (lowerQuestion.includes("браслет на витрине") || lowerQuestion.includes("рассматривает браслет")) qNum = 9;
-            else if (lowerQuestion.includes("не уверена, что это моё") || lowerQuestion.includes("красиво, но")) qNum = 10;
-            else if (lowerQuestion.includes("витрину с кольцами") || lowerQuestion.includes("2 минуты")) qNum = 11;
-            
-            if (result === 'Ошибка' && questionText && qNum > 0) {
-                let variantNum = 0;
-                const lowerAnswer = userAnswer.toLowerCase();
-                if (qNum === 1) {
-                    if (lowerAnswer.includes("вижу, вы торопитесь") || lowerAnswer.includes("быстро покажу")) variantNum = 2;
-                    else if (lowerAnswer.includes("подбираете что-то конкретное") || lowerAnswer.includes("просто смотрите")) variantNum = 3;
-                    else if (lowerAnswer.includes("чем могу помочь")) variantNum = 4;
-                }
-                else if (qNum === 2) {
-                    if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама обратится")) variantNum = 1;
-                    else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
-                    else if (lowerAnswer.includes("вот у нас есть детские модели")) variantNum = 4;
-                }
-                else if (qNum === 3) {
-                    if (lowerAnswer.includes("сразу показываете") || lowerAnswer.includes("3-4")) variantNum = 1;
-                    else if ((lowerAnswer.includes("20 000") || lowerAnswer.includes("20000")) && (lowerAnswer.includes("15 000") || lowerAnswer.includes("15000"))) variantNum = 3;
-                    else if (lowerAnswer.includes("подарочный сертификат")) variantNum = 4;
-                }
-                else if (qNum === 4) {
-                    if (lowerAnswer.includes("популярный") && lowerAnswer.includes("выпускниц")) variantNum = 1;
-                    else if (lowerAnswer.includes("акция") && lowerAnswer.includes("коллекцию")) variantNum = 3;
-                    else if (lowerAnswer.includes("упаковать как подарок")) variantNum = 4;
-                }
-                else if (qNum === 5) {
-                    if (lowerAnswer.includes("не хотите посмотреть") && lowerAnswer.includes("что-то")) variantNum = 1;
-                    else if (lowerAnswer.includes("рассрочка") || lowerAnswer.includes("денег не хватит")) variantNum = 3;
-                    else if (lowerAnswer.includes("браслет")) variantNum = 4;
-                }
-                else if (qNum === 6) {
-                    if (lowerAnswer.includes("до того") && lowerAnswer.includes("окончательное решение")) variantNum = 1;
-                    else if (lowerAnswer.includes("после оплаты") && lowerAnswer.includes("упаковке")) variantNum = 3;
-                    else if (lowerAnswer.includes("не предлагаете")) variantNum = 4;
-                }
-                else if (qNum === 7) {
-                    if (lowerAnswer.includes("за 30 000") || lowerAnswer.includes("30000")) variantNum = 1;
-                    else if (lowerAnswer.includes("бриллиантами") && lowerAnswer.includes("цена выше")) variantNum = 3;
-                    else if (lowerAnswer.includes("отложим до зарплаты")) variantNum = 4;
-                }
-                else if (qNum === 8) {
-                    if (lowerAnswer.includes("к сожалению") && lowerAnswer.includes("нет")) variantNum = 1;
-                    else if (lowerAnswer.includes("привезти") && lowerAnswer.includes("неделю")) variantNum = 3;
-                    else if (lowerAnswer.includes("зачем") && lowerAnswer.includes("без камней")) variantNum = 4;
-                }
-                else if (qNum === 9) {
-                    if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит")) variantNum = 1;
-                    else if (lowerAnswer.includes("хотите примерить")) variantNum = 2;
-                    else if (lowerAnswer.includes("регулируется")) variantNum = 4;
-                }
-                else if (qNum === 10) {
-                    if (lowerAnswer.includes("давайте посмотрим другие")) variantNum = 1;
-                    else if (lowerAnswer.includes("хит продаж")) variantNum = 3;
-                    else if (lowerAnswer.includes("отложить")) variantNum = 4;
-                }
-                else if (qNum === 11) {
-                    if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит показать")) variantNum = 1;
-                    else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
-                    else if (lowerAnswer.includes("акция на кольца") || (lowerAnswer.includes("скидки") && lowerAnswer.includes("30%"))) variantNum = 4;
-                }
-                
-                employee.errors.push({
-                    questionNum: qNum,
-                    variantNum: variantNum,
-                    originalColumnNum: i,
-                    question: questionText,
-                    userAnswer: userAnswer,
-                    correctAnswer: correctAnswer
-                });
-            }
-        }
-        employees.push(employee);
-    }
-    return employees;
 }
 
 function processData(rows) {
@@ -407,7 +539,7 @@ function updateFiltersAndDisplay() {
                     <div class="mt-1"><strong>Текст вопроса:</strong><br>${escapeHtml(err.question)}</div>
                     <div class="mt-1"><span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}</div>
                     <div class="mt-1"><span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}</div>
-                    ${getRecommendationHTML(err.questionNum, err.variantNum)}
+                    ${getRecommendationHTML(err.questionNum, err.variantNum, currentTestType)}
                 </div>
             `;
         }
@@ -446,7 +578,7 @@ function updateTopErrors(employees) {
     const errorCount = {};
     for (const emp of employees) {
         for (const err of emp.errors) {
-            const zone = getZoneForQuestion(err.questionNum, err.variantNum);
+            const zone = getZoneForQuestion(err.questionNum, err.variantNum, currentTestType);
             errorCount[zone] = (errorCount[zone] || 0) + 1;
         }
     }
@@ -471,7 +603,7 @@ function updateRecommendations(employees) {
     const errorCount = {};
     for (const emp of employees) {
         for (const err of emp.errors) {
-            const zone = getZoneForQuestion(err.questionNum, err.variantNum);
+            const zone = getZoneForQuestion(err.questionNum, err.variantNum, currentTestType);
             errorCount[zone] = (errorCount[zone] || 0) + 1;
         }
     }
@@ -484,22 +616,22 @@ function updateRecommendations(employees) {
     }
     
     const recommendationsMap = {
-        "Речевая пластинка про акции": "Всегда начинайте диалог с выгоды: «Добрый день! У нас сегодня скидка до 30% и оплата бонусами». Не спрашивайте «Чем помочь?» — сразу давайте ценность.",
-        "Инициатива в диалоге": "Не ждите, пока клиент обратится. Подходите первым с конкретным вопросом по ассортименту, который рассматривает клиент.",
-        "Инициатива + Выявление потребностей": "Подходите и спрашивайте про потребность. Например: «Подбираете первые серёжки? Давайте покажу безопасные варианты».",
-        "Выявление потребностей": "Перед показом товара всегда уточняйте стиль, предпочтения, контекст. Не показывайте «вслепую».",
-        "Эмоциональная презентация": "Связывайте украшение с событием и эмоциями. Не говорите «хит продаж» — говорите о том, что это украшение станет символом важного момента.",
-        "Предложение второго украшения": "Используйте утверждение «Давайте подберём» вместо вопроса «Хотите ещё что-то?». Предлагайте логичную пару (цепочка → кулон).",
-        "Аксессуары ухода": "Предлагайте футляр и средство для ухода ТОЛЬКО после того, как клиент согласился на цену, но ДО оплаты.",
-        "Работа с возражениями (цена)": "При возражении «дорого» сначала присоединитесь: «Понимаю», затем предложите Яндекс Сплит. Не предлагайте более дешёвый вариант сразу.",
-        "Альтернатива / Каталог на заказ": "Если нет нужного товара — сразу предлагайте каталог на заказ. Не говорите просто «нет в наличии».",
-        "Инициатива + Примерка": "Предлагайте примерку утверждением «Давайте примерим», а не вопросом «Хотите примерить?».",
-        "Работа с возражениями": "При сомнениях клиента сначала присоединитесь: «Понимаю», затем уточните причину: «А что именно смущает?»"
+        "Речевая пластинка про акции": "Всегда начинайте диалог с выгоды, а не с вопроса.",
+        "Инициатива в диалоге": "Не ждите — подходите с конкретным вопросом через 30-40 секунд.",
+        "Выявление потребностей": "Перед показом всегда спрашивайте: «Для какого случая?»",
+        "Эмоциональная презентация": "Связывайте украшение с событием, а не с акцией.",
+        "Работа с возражениями (цена)": "«Понимаю. А с чем вы сравниваете?» — золотая фраза.",
+        "Альтернатива / Каталог на заказ": "Нет товара → сразу показывайте каталог на заказ.",
+        "Предложение второго украшения": "«Давайте подберём» — без вопросительной интонации.",
+        "Завершение продажи": "«Вы сделали отличный выбор! Дарите с любовью!»",
+        "Работа с возражениями (сомнения)": "«Понимаю. Что именно смущает?»",
+        "Инициатива + Примерка": "«Давайте примерим» — не спрашивайте разрешения.",
+        "Предложение каталога на заказ": "Сначала похожие в наличии, потом каталог."
     };
     
     let html = '<ul class="mb-0">';
     for (const [zone, count] of top3) {
-        const recommendation = recommendationsMap[zone] || 'Обратите внимание на эту зону роста. Проведите дополнительное обучение по данному навыку.';
+        const recommendation = recommendationsMap[zone] || 'Обратите внимание на эту зону роста.';
         html += `
             <li style="margin-bottom: 12px;">
                 <strong>🔴 ${zone}</strong> (${count} ошибок)<br>
@@ -510,12 +642,6 @@ function updateRecommendations(employees) {
     html += '</ul>';
     document.getElementById('cityRecommendationsList').innerHTML = html;
     document.getElementById('cityRecommendationsBlock').style.display = 'block';
-}
-
-function getZoneForQuestion(questionNum, variantNum) {
-    const key = `q${questionNum}_wrong${variantNum}`;
-    const rec = recommendations[key];
-    return rec ? rec.zone : "Зона роста не определена";
 }
 
 function getComparisonTable() {
@@ -570,7 +696,7 @@ function downloadEmployeePDF(employeeId) {
                 <strong>❌ Вопрос:</strong><br>${escapeHtml(err.question)}<br>
                 <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br>
                 <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br>
-                ${getRecommendationHTML(err.questionNum, err.variantNum)}
+                ${getRecommendationHTML(err.questionNum, err.variantNum, currentTestType)}
             </div>
         `;
     }
@@ -622,7 +748,8 @@ function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m =
 function saveDataToLocalStorage() {
     localStorage.setItem('reportData', JSON.stringify({
         allEmployees: allEmployees,
-        employeeCounter: employeeCounter
+        employeeCounter: employeeCounter,
+        currentTestType: currentTestType
     }));
 }
 
@@ -633,6 +760,7 @@ function loadDataFromLocalStorage() {
             const data = JSON.parse(saved);
             allEmployees = data.allEmployees;
             employeeCounter = data.employeeCounter;
+            currentTestType = data.currentTestType || 'entry';
             return true;
         } catch(e) { return false; }
     }
