@@ -60,6 +60,7 @@ body{background:#f5f7fa;font-family:sans-serif}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>👨‍💼 Панель Администратора</h3>
     <div>
+        <button id="analyzeBtn" class="btn btn-info btn-sm me-2">🔍 Анализ ошибок</button>
         <button id="exportExcelBtn" class="btn btn-success btn-sm me-2">📎 Выгрузить в Excel</button>
         <button id="refreshBtn" class="btn btn-primary btn-sm me-2">🔄 Обновить</button>
         <button id="pdfCityBtn" class="btn-pdf-city" style="display:none;">📄 PDF по городу</button>
@@ -146,6 +147,7 @@ window.addEventListener('load', () => {
     document.getElementById('date-to').addEventListener('change', () => { filterAndDisplay(); });
     document.getElementById('refreshBtn').addEventListener('click', () => { if(currentTest) loadResults(currentTest.slug); });
     document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+    document.getElementById('analyzeBtn').addEventListener('click', sendToAnalyzer);
     document.getElementById('importFileInput').addEventListener('change', importTestFromJSON);
 });
 
@@ -329,16 +331,31 @@ function initRealtime() {
     document.getElementById('realtime-status').className = 'badge bg-success';
 }
 
-// ========== ЭКСПОРТ В EXCEL ДЛЯ report_errors.html ==========
+// ========== ПЕРЕДАЧА ДАННЫХ В АНАЛИЗАТОР ==========
+function sendToAnalyzer() {
+    if (!currentFilteredResults.length) {
+        alert('Нет данных для анализа');
+        return;
+    }
+    
+    // Сохраняем отфильтрованные данные в localStorage
+    localStorage.setItem('analyzerData', JSON.stringify({
+        results: currentFilteredResults,
+        testName: currentTest?.name || 'Тест',
+        timestamp: new Date().toISOString()
+    }));
+    
+    // Открываем анализатор в новой вкладке
+    window.open('/Test/report_errors.html?fromAdmin=true', '_blank');
+}
+
+// ========== ЭКСПОРТ В EXCEL ==========
 function exportToExcel() {
     if (!currentFilteredResults.length) { alert('Нет данных для экспорта'); return; }
-    
-    // Заголовки строго как в report_errors.html
     const headers = ['ФИО', 'Город', 'Баллы', 'Процент', 'Дата'];
     for (let i = 1; i <= 11; i++) {
         headers.push(`Вопрос ${i}`, `Ответ сотрудника ${i}`, `Правильный ответ ${i}`, `Результат ${i}`);
     }
-    
     const rows = [];
     for (const r of currentFilteredResults) {
         const percent = Math.round(r.score / r.total * 100);
@@ -349,7 +366,6 @@ function exportToExcel() {
             `${percent}%`,
             new Date(r.created_at).toLocaleString('ru-RU')
         ];
-        // Заполняем 11 вопросов
         for (let i = 0; i < 11; i++) {
             const answer = r.answers?.[i];
             if (answer) {
@@ -363,7 +379,6 @@ function exportToExcel() {
         }
         rows.push(row);
     }
-    
     const wsData = [headers, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
