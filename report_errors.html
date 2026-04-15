@@ -169,12 +169,35 @@ let employeeCounter = 0;
 let currentFilterCity = 'all';
 let currentSearchText = '';
 
-    let allEmployees = [];
-let employeeCounter = 0;
-let currentFilterCity = 'all';
-let currentSearchText = '';
-
 // ========== ПРИЁМ ДАННЫХ ИЗ АДМИНКИ ==========
+function loadFromAdminData(adminData) {
+    if (!adminData || !adminData.results || adminData.results.length === 0) return false;
+    
+    const rows = adminData.results.map(r => {
+        const row = {
+            'ФИО': r.user_id,
+            'Город': r.city || '',
+            'Баллы': `${r.score}/${r.total}`,
+            'Процент': `${Math.round(r.score/r.total*100)}%`,
+            'Дата': new Date(r.created_at).toLocaleString('ru-RU')
+        };
+        if (r.answers) {
+            r.answers.forEach((a, idx) => {
+                const i = idx + 1;
+                row[`Вопрос ${i}`] = a.text || a.qs || '';
+                row[`Ответ сотрудника ${i}`] = a.selected || a.sel || '';
+                row[`Правильный ответ ${i}`] = a.correct || a.cor || '';
+                row[`Результат ${i}`] = (a.isCorrect === true || a.ok === true) ? 'Верно' : 'Ошибка';
+            });
+        }
+        return row;
+    });
+    
+    processData(rows);
+    return true;
+}
+
+// Проверяем, есть ли данные из админки
 const urlParams = new URLSearchParams(location.search);
 if (urlParams.get('fromAdmin') === 'true') {
     const storedData = localStorage.getItem('analyzerData');
@@ -182,40 +205,17 @@ if (urlParams.get('fromAdmin') === 'true') {
         try {
             const data = JSON.parse(storedData);
             if (data.results && data.results.length) {
-                // Преобразуем данные из админки в формат, понятный анализатору
-                const rows = data.results.map(r => ({
-                    'ФИО': r.user_id,
-                    'Город': r.city,
-                    'Баллы': `${r.score}/${r.total}`,
-                    'Процент': `${Math.round(r.score/r.total*100)}%`,
-                    'Дата': new Date(r.created_at).toLocaleString('ru-RU'),
-                    ...convertAnswersToExcelFormat(r.answers)
-                }));
-                processData(rows);
+                loadFromAdminData(data);
+                localStorage.removeItem('analyzerData');
+                // Скрываем область загрузки Excel, показываем результаты
+                document.getElementById('uploadArea').style.display = 'none';
                 document.getElementById('statsPanel').style.display = 'flex';
                 document.getElementById('filterBar').style.display = 'flex';
-                // Очищаем временные данные
-                localStorage.removeItem('analyzerData');
             }
         } catch(e) { console.error('Ошибка загрузки данных из админки', e); }
     }
 }
 
-function convertAnswersToExcelFormat(answers) {
-    const result = {};
-    if (answers) {
-        answers.forEach((a, idx) => {
-            const i = idx + 1;
-            result[`Вопрос ${i}`] = a.text || a.qs || '';
-            result[`Ответ сотрудника ${i}`] = a.selected || a.sel || '';
-            result[`Правильный ответ ${i}`] = a.correct || a.cor || '';
-            result[`Результат ${i}`] = (a.isCorrect === true || a.ok === true) ? 'Верно' : 'Ошибка';
-        });
-    }
-    return result;
-}
-
-// Дальше идёт ваш старый код: function parseExcelToEmployees(rows) { ...
 function parseExcelToEmployees(rows) {
     const employees = [];
     let empCounter = 0;
@@ -233,7 +233,6 @@ function parseExcelToEmployees(rows) {
             errors: []
         };
         
-        // Парсим баллы
         const scoreStr = row['Баллы'] || '';
         const scoreMatch = scoreStr.match(/(\d+)\/(\d+)/);
         if (scoreMatch) {
@@ -241,14 +240,12 @@ function parseExcelToEmployees(rows) {
             employee.total = parseInt(scoreMatch[2]);
         }
         
-        // Проходим по вопросам 1-11
         for (let i = 1; i <= 11; i++) {
             const result = row[`Результат ${i}`];
             const questionText = row[`Вопрос ${i}`] || '';
             const userAnswer = row[`Ответ сотрудника ${i}`] || '';
             const correctAnswer = row[`Правильный ответ ${i}`] || '';
             
-            // Определяем номер вопроса по ключевым словам
             let qNum = 0;
             const lowerQuestion = questionText.toLowerCase();
             if (lowerQuestion.includes("обеденный перерыв") || lowerQuestion.includes("торопитесь")) qNum = 1;
@@ -264,7 +261,6 @@ function parseExcelToEmployees(rows) {
             else if (lowerQuestion.includes("витрину с кольцами") || lowerQuestion.includes("2 минуты")) qNum = 11;
             
             if (result === 'Ошибка' && questionText && qNum > 0) {
-                // Определяем номер варианта (какой вариант ответа выбрал сотрудник)
                 let variantNum = 0;
                 const lowerAnswer = userAnswer.toLowerCase();
                 if (qNum === 1) {
@@ -352,7 +348,6 @@ function updateFiltersAndDisplay() {
     cities.forEach(c => { citySelect.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`; });
     citySelect.value = currentFilterCity;
     
-    // Статистика по городам
     const cityStatsMap = {};
     allEmployees.forEach(e => {
         if (!cityStatsMap[e.city]) cityStatsMap[e.city] = { total: 0, sumPercent: 0, errorCount: 0 };
@@ -370,17 +365,14 @@ function updateFiltersAndDisplay() {
     document.getElementById('cityStatsList').innerHTML = cityStatsHtml;
     document.getElementById('cityStats').style.display = 'block';
     
-    // Сравнение городов
     const comparisonHtml = getComparisonTable();
     document.getElementById('comparisonTable').innerHTML = comparisonHtml;
     document.getElementById('comparisonBlock').style.display = 'block';
     
-    // График распределения баллов
     const chartHtml = getChart();
     document.getElementById('chartContainer').innerHTML = chartHtml;
     document.getElementById('chartBlock').style.display = 'block';
     
-    // Фильтрация
     let filtered = allEmployees.filter(e => {
         if (currentFilterCity !== 'all' && e.city !== currentFilterCity) return false;
         if (currentSearchText && !e.name.toLowerCase().includes(currentSearchText.toLowerCase())) return false;
@@ -388,7 +380,6 @@ function updateFiltersAndDisplay() {
     });
     document.getElementById('filteredCount').innerText = `Показано: ${filtered.length} из ${allEmployees.length}`;
     
-    // Топ-5 ошибок и рекомендации для города (на основе отфильтрованных)
     updateTopErrors(filtered);
     updateRecommendations(filtered);
     
@@ -658,6 +649,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(firstSheet);
         processData(rows);
+        document.getElementById('uploadArea').style.display = 'block';
     };
     reader.readAsArrayBuffer(file);
 });
