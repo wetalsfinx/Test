@@ -9,7 +9,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         .upload-area { border: 2px dashed #ccc; border-radius: 10px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; background: white; }
         .upload-area:hover { border-color: #0d6efd; background: #f8f9fa; }
         .error-card { background: white; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -24,11 +24,8 @@
         .btn-print:hover { background: #0b5ed7; }
         .btn-pdf { background: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 5px; font-size: 12px; margin-left: 10px; cursor: pointer; }
         .btn-pdf:hover { background: #c82333; }
-        .btn-pdf-city { background: #198754; color: white; border: none; padding: 8px 20px; border-radius: 5px; margin-right: 10px; }
-        .btn-pdf-city:hover { background: #0d6efd; }
         .filter-bar { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
         .city-stats { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .search-input { padding: 5px 10px; border: 1px solid #ddd; border-radius: 5px; width: 200px; }
         .top-errors { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .city-recommendations { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #0d6efd; }
         .zone-badge { display: inline-block; background: #e9ecef; padding: 3px 10px; border-radius: 15px; font-size: 12px; margin: 3px; }
@@ -55,7 +52,6 @@
         <h1><i class="bi bi-file-text"></i> Анализ ошибок тестирования</h1>
         <div class="no-print">
             <button class="btn-print" onclick="window.print()"><i class="bi bi-printer"></i> Распечатать всё</button>
-            <button id="pdfCityBtn" class="btn-pdf-city" style="display:none;"><i class="bi bi-file-pdf"></i> 📄 PDF по городу</button>
             <a href="?mode=admin" class="btn btn-outline-secondary">← Админка</a>
         </div>
     </div>
@@ -80,26 +76,24 @@
             <option value="all">Все города</option>
         </select>
         <label><strong>Поиск по имени:</strong></label>
-        <input type="text" id="searchInput" class="search-input" placeholder="Введите имя...">
+        <input type="text" id="searchInput" class="form-control w-auto" placeholder="Введите имя...">
         <button id="resetFilter" class="btn btn-secondary btn-sm">Сбросить</button>
         <span class="ms-auto text-muted" id="filteredCount"></span>
-    </div>
-
-    <!-- Сравнение городов (таблица) -->
-    <div id="comparisonBlock" class="city-stats no-print" style="display:none">
-        <h6><i class="bi bi-table"></i> Сравнение городов</h6>
-        <div id="comparisonTable"></div>
-    </div>
-
-    <!-- График распределения баллов -->
-    <div id="chartBlock" class="city-stats no-print" style="display:none">
-        <h6><i class="bi bi-bar-chart-steps"></i> Распределение баллов</h6>
-        <div id="chartContainer" class="chart-container"></div>
     </div>
 
     <div id="cityStats" class="city-stats no-print" style="display:none">
         <h6><i class="bi bi-pie-chart"></i> Статистика по городам</h6>
         <div id="cityStatsList" class="small"></div>
+    </div>
+
+    <div id="comparisonBlock" class="city-stats no-print" style="display:none">
+        <h6><i class="bi bi-table"></i> Сравнение городов</h6>
+        <div id="comparisonTable"></div>
+    </div>
+
+    <div id="chartBlock" class="city-stats no-print" style="display:none">
+        <h6><i class="bi bi-bar-chart-steps"></i> Распределение баллов</h6>
+        <div id="chartContainer" class="chart-container"></div>
     </div>
 
     <div id="topErrorsBlock" class="top-errors no-print" style="display:none">
@@ -118,21 +112,21 @@
 <script>
 // ========== БАЗА РЕКОМЕНДАЦИЙ ==========
 const recommendations = {
-    q1_wrong2: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня специальные условия: скидка до 30% и оплата бонусами»", whyWorse: "Акцент на спешке клиента. Пропускаете этап «дать выгоду»", whyBetter: "Сразу проговариваете акцию. Клиент сразу слышит выгоду", practice: "Вместо: ❌ «Вижу, вы торопитесь — давайте быстро...» → ✅ «Добрый день! У нас сегодня скидка до 30% и оплата бонусами»" },
-    q1_wrong3: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня специальные условия: скидка до 30% и оплата бонусами»", whyWorse: "Сразу задаёте вопрос. Пропускаете этап «дать выгоду»", whyBetter: "Сначала проговариваете акцию. Клиент слышит выгоду", practice: "Вместо: ❌ «Подбираете что-то конкретное?» → ✅ «Добрый день! У нас сегодня скидка до 30% и оплата бонусами»" },
-    q1_wrong4: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня специальные условия: скидка до 30% и оплата бонусами»", whyWorse: "Общий вопрос без выгоды. Клиент не получает стимул остаться", whyBetter: "Сразу проговариваете акцию. Клиент слышит выгоду", practice: "Вместо: ❌ «Чем могу помочь?» → ✅ «Добрый день! У нас сегодня скидка до 30% и оплата бонусами»" },
-    q2_wrong1: { zone: "Инициатива в диалоге", correct: "Подходите и спрашиваете: «Подбираете первые серёжки? Давайте я покажу самые безопасные варианты»", whyWorse: "Пассивное ожидание. Клиентка может уйти", whyBetter: "Подходите сразу с конкретным вопросом", practice: "Вместо: ❌ Ждать → ✅ «Подбираете первые серёжки? Давайте я покажу безопасные варианты»" },
-    q2_wrong2: { zone: "Инициатива в диалоге", correct: "Подходите и спрашиваете: «Подбираете первые серёжки? Давайте я покажу самые безопасные варианты»", whyWorse: "Дистанционная позиция. Клиент не вовлекается", whyBetter: "Подходите с конкретным вопросом", practice: "Вместо: ❌ Говорить издалека → ✅ «Подбираете первые серёжки? Давайте я покажу безопасные варианты»" },
-    q2_wrong4: { zone: "Инициатива + Выявление потребностей", correct: "Подходите и спрашиваете: «Подбираете первые серёжки? Давайте я покажу самые безопасные варианты»", whyWorse: "Общая информация без вовлечения", whyBetter: "Вопрос выявляет потребность", practice: "Вместо: ❌ Показывать на витрину → ✅ «Подбираете первые серёжки? Давайте я покажу безопасные варианты»" },
-    q3_wrong1: { zone: "Выявление потребностей", correct: "Спрашиваете: «А какой стиль она предпочитает: минимализм, классика или что-то яркое?»", whyWorse: "Показываете «вслепую» без уточнения стиля. Риск показать не то", whyBetter: "Сначала уточняете стиль. Показываете то, что понравится", practice: "Вместо: ❌ Сразу показывать 3-4 варианта → ✅ «А какой стиль она предпочитает?»" },
-    q3_wrong3: { zone: "Выявление потребностей", correct: "Спрашиваете: «А какой стиль она предпочитает: минимализм, классика или что-то яркое?»", whyWorse: "Применяете якорь до понимания потребностей", whyBetter: "Сначала выявляете стиль", practice: "Вместо: ❌ Сначала вариант за 20 000 → ✅ «А какой стиль она предпочитает?»" },
-    q3_wrong4: { zone: "Выявление потребностей", correct: "Спрашиваете: «А какой стиль она предпочитает: минимализм, классика или что-то яркое?»", whyWorse: "Предлагаете альтернативу до понимания потребностей", whyBetter: "Сначала выявляете предпочтения", practice: "Вместо: ❌ Сразу сертификат → ✅ «А какой стиль она предпочитает?»" },
-    q4_wrong1: { zone: "Эмоциональная презентация", correct: "«Этот кулон станет символом нового этапа в её жизни»", whyWorse: "Апеллируете к популярности", whyBetter: "Связываете изделие с событием", practice: "Вместо: ❌ «Это хит продаж» → ✅ «Этот кулон станет символом нового этапа»" },
+    q1_wrong2: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня скидка до 30% и оплата бонусами»", whyWorse: "Акцент на спешке, пропускаете выгоду", whyBetter: "Сразу даёте выгоду", practice: "Вместо: ❌ «Вижу, вы торопитесь» → ✅ «Добрый день! Скидка до 30%»" },
+    q1_wrong3: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня скидка до 30% и оплата бонусами»", whyWorse: "Сразу задаёте вопрос без выгоды", whyBetter: "Сначала даёте выгоду", practice: "Вместо: ❌ «Подбираете что-то?» → ✅ «Добрый день! Скидка до 30%»" },
+    q1_wrong4: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня скидка до 30% и оплата бонусами»", whyWorse: "Общий вопрос без выгоды", whyBetter: "Сразу даёте выгоду", practice: "Вместо: ❌ «Чем могу помочь?» → ✅ «Добрый день! Скидка до 30%»" },
+    q2_wrong1: { zone: "Инициатива в диалоге", correct: "«Подбираете первые серёжки? Давайте я покажу безопасные варианты»", whyWorse: "Пассивное ожидание", whyBetter: "Подходите сразу с конкретным вопросом", practice: "Вместо: ❌ Ждать → ✅ «Подбираете первые серёжки?»" },
+    q2_wrong2: { zone: "Инициатива в диалоге", correct: "«Подбираете первые серёжки? Давайте я покажу безопасные варианты»", whyWorse: "Дистанционная позиция", whyBetter: "Подходите с конкретным вопросом", practice: "Вместо: ❌ Говорить издалека → ✅ «Подбираете первые серёжки?»" },
+    q2_wrong4: { zone: "Инициатива + Выявление потребностей", correct: "«Подбираете первые серёжки? Давайте я покажу безопасные варианты»", whyWorse: "Общая информация без вовлечения", whyBetter: "Вопрос выявляет потребность", practice: "Вместо: ❌ Показывать на витрину → ✅ «Подбираете первые серёжки?»" },
+    q3_wrong1: { zone: "Выявление потребностей", correct: "«А какой стиль она предпочитает?»", whyWorse: "Показываете «вслепую»", whyBetter: "Сначала уточняете стиль", practice: "Вместо: ❌ Сразу показывать → ✅ «А какой стиль она предпочитает?»" },
+    q3_wrong3: { zone: "Выявление потребностей", correct: "«А какой стиль она предпочитает?»", whyWorse: "Применяете якорь до понимания потребностей", whyBetter: "Сначала выявляете стиль", practice: "Вместо: ❌ Якорь до стиля → ✅ «А какой стиль она предпочитает?»" },
+    q3_wrong4: { zone: "Выявление потребностей", correct: "«А какой стиль она предпочитает?»", whyWorse: "Предлагаете альтернативу до понимания", whyBetter: "Сначала выявляете предпочтения", practice: "Вместо: ❌ Сразу сертификат → ✅ «А какой стиль она предпочитает?»" },
+    q4_wrong1: { zone: "Эмоциональная презентация", correct: "«Этот кулон станет символом нового этапа в её жизни»", whyWorse: "Апеллируете к популярности", whyBetter: "Связываете изделие с событием", practice: "Вместо: ❌ «Хит продаж» → ✅ «Этот кулон станет символом нового этапа»" },
     q4_wrong3: { zone: "Эмоциональная презентация", correct: "«Этот кулон станет символом нового этапа в её жизни»", whyWorse: "Переключаете фокус на цену", whyBetter: "Акцент на эмоции и значимость", practice: "Вместо: ❌ «У нас акция» → ✅ «Этот кулон станет символом нового этапа»" },
     q4_wrong4: { zone: "Эмоциональная презентация", correct: "«Этот кулон станет символом нового этапа в её жизни»", whyWorse: "Переходите к логистике до эмоций", whyBetter: "Сначала создаёте эмоциональный якорь", practice: "Вместо: ❌ «Можем упаковать» → ✅ «Этот кулон станет символом нового этапа»" },
-    q5_wrong1: { zone: "Предложение второго украшения", correct: "«Давайте к этой цепочке подберём кулон — законченный образ»", whyWorse: "Вопрос даёт право отказа", whyBetter: "Утверждение «Давайте подберём»", practice: "Вместо: ❌ «Хотите ещё что-то?» → ✅ «Давайте подберём кулон»" },
-    q5_wrong3: { zone: "Предложение второго украшения", correct: "«Давайте к этой цепочке подберём кулон — законченный образ»", whyWorse: "Предлагаете рассрочку вместо комплекта", whyBetter: "Сначала предлагаете комплект", practice: "Вместо: ❌ «Если денег не хватит...» → ✅ «Давайте подберём кулон»" },
-    q5_wrong4: { zone: "Предложение второго украшения", correct: "«Давайте к этой цепочке подберём кулон — законченный образ»", whyWorse: "Вопрос «Может...?» звучит неуверенно", whyBetter: "Утверждение ведёт к покупке", practice: "Вместо: ❌ «Может, браслет?» → ✅ «Давайте подберём кулон»" },
+    q5_wrong1: { zone: "Предложение второго украшения", correct: "«Давайте к этой цепочке подберём кулон»", whyWorse: "Вопрос даёт право отказа", whyBetter: "Утверждение «Давайте подберём»", practice: "Вместо: ❌ «Хотите ещё что-то?» → ✅ «Давайте подберём кулон»" },
+    q5_wrong3: { zone: "Предложение второго украшения", correct: "«Давайте к этой цепочке подберём кулон»", whyWorse: "Предлагаете рассрочку вместо комплекта", whyBetter: "Сначала предлагаете комплект", practice: "Вместо: ❌ «Если денег не хватит...» → ✅ «Давайте подберём кулон»" },
+    q5_wrong4: { zone: "Предложение второго украшения", correct: "«Давайте к этой цепочке подберём кулон»", whyWorse: "Вопрос «Может...?» звучит неуверенно", whyBetter: "Утверждение ведёт к покупке", practice: "Вместо: ❌ «Может, браслет?» → ✅ «Давайте подберём кулон»" },
     q6_wrong1: { zone: "Аксессуары ухода", correct: "После согласия на цену, до оплаты", whyWorse: "Предлагаете до фиксации решения", whyBetter: "Клиент уже принял решение", practice: "Вместо: ❌ До решения → ✅ После согласия на цену" },
     q6_wrong3: { zone: "Аксессуары ухода", correct: "После согласия на цену, до оплаты", whyWorse: "Предлагаете после оплаты", whyBetter: "Клиент ещё в режиме покупки", practice: "Вместо: ❌ При упаковке → ✅ После согласия на цену" },
     q6_wrong4: { zone: "Аксессуары ухода", correct: "После согласия на цену, до оплаты", whyWorse: "Пропускаете предложение ухода", whyBetter: "Проявляете заботу", practice: "Вместо: ❌ Не предлагать → ✅ «Давайте добавим футляр»" },
@@ -142,72 +136,23 @@ const recommendations = {
     q8_wrong1: { zone: "Альтернатива / Каталог на заказ", correct: "«Давайте я покажу каталог на заказ»", whyWorse: "Констатация отсутствия", whyBetter: "Сразу предлагаете каталог", practice: "Вместо: ❌ «К сожалению, нет» → ✅ «Давайте каталог на заказ»" },
     q8_wrong3: { zone: "Альтернатива / Каталог на заказ", correct: "«Давайте я покажу каталог на заказ»", whyWorse: "Акцент на ожидании", whyBetter: "Широкий выбор", practice: "Вместо: ❌ «Привезём за неделю» → ✅ «Давайте каталог на заказ»" },
     q8_wrong4: { zone: "Альтернатива / Каталог на заказ", correct: "«Давайте я покажу каталог на заказ»", whyWorse: "Ставите под сомнение потребность", whyBetter: "Уважаете выбор клиента", practice: "Вместо: ❌ «А зачем вам?» → ✅ «Давайте каталог на заказ»" },
-    q9_wrong1: { zone: "Инициатива + Примерка", correct: "«Давайте примерим — так вы сразу почувствуете, ваш это вариант или нет»", whyWorse: "Пассивное ожидание", whyBetter: "Утверждение «Давайте примерим»", practice: "Вместо: ❌ Ждать → ✅ «Давайте примерим»" },
-    q9_wrong2: { zone: "Инициатива + Примерка", correct: "«Давайте примерим — так вы сразу почувствуете, ваш это вариант или нет»", whyWorse: "Вопрос «Хотите?» даёт право отказа", whyBetter: "Утверждение ведёт к действию", practice: "Вместо: ❌ «Хотите примерить?» → ✅ «Давайте примерим»" },
-    q9_wrong4: { zone: "Инициатива + Примерка", correct: "«Давайте примерим — так вы сразу почувствуете, ваш это вариант или нет»", whyWorse: "Даёте информацию без призыва к примерке", whyBetter: "Призыв к действию", practice: "Вместо: ❌ «Браслет регулируется» → ✅ «Давайте примерим»" },
-    q10_wrong1: { zone: "Работа с возражениями", correct: "«Понимаю. А что именно смущает: дизайн, размер или что-то ещё?»", whyWorse: "Уходите от диалога", whyBetter: "Присоединяетесь + уточнение", practice: "Вместо: ❌ «Давайте другие» → ✅ «Понимаю. А что смущает?»" },
-    q10_wrong3: { zone: "Работа с возражениями", correct: "«Понимаю. А что именно смущает: дизайн, размер или что-то ещё?»", whyWorse: "Апеллируете к популярности", whyBetter: "Присоединяетесь + уточнение", practice: "Вместо: ❌ «Хит продаж» → ✅ «Понимаю. А что смущает?»" },
-    q10_wrong4: { zone: "Работа с возражениями", correct: "«Понимаю. А что именно смущает: дизайн, размер или что-то ещё?»", whyWorse: "Предлагаете отложить", whyBetter: "Присоединяетесь + уточнение", practice: "Вместо: ❌ «Можем отложить» → ✅ «Понимаю. А что смущает?»" },
-    q11_wrong1: { zone: "Инициатива в диалоге", correct: "Подходите и спрашиваете: «Давайте я покажу несколько колец в вашем стиле — для себя подбираете или в подарок?»", whyWorse: "Пассивное ожидание", whyBetter: "Подходите с конкретным предложением", practice: "Вместо: ❌ Ждать → ✅ «Давайте покажу кольца в вашем стиле»" },
-    q11_wrong2: { zone: "Инициатива в диалоге", correct: "Подходите и спрашиваете: «Давайте я покажу несколько колец в вашем стиле — для себя подбираете или в подарок?»", whyWorse: "Дистанционная позиция", whyBetter: "Подходите лично", practice: "Вместо: ❌ «Если вопросы — обращайтесь» → ✅ «Давайте покажу кольца»" },
-    q11_wrong4: { zone: "Инициатива в диалоге", correct: "Подходите и спрашиваете: «Давайте я покажу несколько колец в вашем стиле — для себя подбираете или в подарок?»", whyWorse: "Повторяете акцию без перехода к подбору", whyBetter: "Переходите к подбору", practice: "Вместо: ❌ Повторять акцию → ✅ «Давайте покажу кольца в вашем стиле»" }
+    q9_wrong1: { zone: "Инициатива + Примерка", correct: "«Давайте примерим — так вы сразу почувствуете»", whyWorse: "Пассивное ожидание", whyBetter: "Утверждение «Давайте примерим»", practice: "Вместо: ❌ Ждать → ✅ «Давайте примерим»" },
+    q9_wrong2: { zone: "Инициатива + Примерка", correct: "«Давайте примерим — так вы сразу почувствуете»", whyWorse: "Вопрос «Хотите?» даёт право отказа", whyBetter: "Утверждение ведёт к действию", practice: "Вместо: ❌ «Хотите примерить?» → ✅ «Давайте примерим»" },
+    q9_wrong4: { zone: "Инициатива + Примерка", correct: "«Давайте примерим — так вы сразу почувствуете»", whyWorse: "Даёте информацию без призыва к примерке", whyBetter: "Призыв к действию", practice: "Вместо: ❌ «Браслет регулируется» → ✅ «Давайте примерим»" },
+    q10_wrong1: { zone: "Работа с возражениями", correct: "«Понимаю. А что именно смущает?»", whyWorse: "Уходите от диалога", whyBetter: "Присоединяетесь + уточнение", practice: "Вместо: ❌ «Давайте другие» → ✅ «Понимаю. А что смущает?»" },
+    q10_wrong3: { zone: "Работа с возражениями", correct: "«Понимаю. А что именно смущает?»", whyWorse: "Апеллируете к популярности", whyBetter: "Присоединяетесь + уточнение", practice: "Вместо: ❌ «Хит продаж» → ✅ «Понимаю. А что смущает?»" },
+    q10_wrong4: { zone: "Работа с возражениями", correct: "«Понимаю. А что именно смущает?»", whyWorse: "Предлагаете отложить", whyBetter: "Присоединяетесь + уточнение", practice: "Вместо: ❌ «Можем отложить» → ✅ «Понимаю. А что смущает?»" },
+    q11_wrong1: { zone: "Инициатива в диалоге", correct: "«Давайте я покажу несколько колец в вашем стиле — для себя или в подарок?»", whyWorse: "Пассивное ожидание", whyBetter: "Подходите с конкретным предложением", practice: "Вместо: ❌ Ждать → ✅ «Давайте покажу кольца»" },
+    q11_wrong2: { zone: "Инициатива в диалоге", correct: "«Давайте я покажу несколько колец в вашем стиле — для себя или в подарок?»", whyWorse: "Дистанционная позиция", whyBetter: "Подходите лично", practice: "Вместо: ❌ «Если вопросы — обращайтесь» → ✅ «Давайте покажу кольца»" },
+    q11_wrong4: { zone: "Инициатива в диалоге", correct: "«Давайте я покажу несколько колец в вашем стиле — для себя или в подарок?»", whyWorse: "Повторяете акцию без перехода к подбору", whyBetter: "Переходите к подбору", practice: "Вместо: ❌ Повторять акцию → ✅ «Давайте покажу кольца»" }
 };
 
-function getRecommendationHTML(userAnswer, correctAnswer) {
-    const answerMap = {
-        "«Здравствуйте! Вижу, вы торопитесь — давайте я быстро покажу то, что может подойти»": "q1_wrong2",
-        "Здравствуйте! Вижу, вы торопитесь — давайте я быстро покажу то, что может подойти": "q1_wrong2",
-        "«Добрый день! Подбираете что-то конкретное или просто смотрите?»": "q1_wrong3",
-        "Добрый день! Подбираете что-то конкретное или просто смотрите?": "q1_wrong3",
-        "«Здравствуйте! Чем могу помочь?»": "q1_wrong4",
-        "Здравствуйте! Чем могу помочь?": "q1_wrong4",
-        "Ждёте, пока мама сама обратится за помощью": "q2_wrong1",
-        "Говорите издалека: «Если будут вопросы по размерам — обращайтесь»": "q2_wrong2",
-        "Показываете на витрину и говорите: «Вот у нас есть детские модели»": "q2_wrong4",
-        "Сразу показываете 3-4 варианта в пределах бюджета": "q3_wrong1",
-        "Показываете сначала вариант за 20 000 ₽, затем за 15 000 ₽": "q3_wrong3",
-        "Спрашиваете: «А может, рассмотрим подарочный сертификат?»": "q3_wrong4",
-        "«Этот кулон очень популярный среди выпускниц»": "q4_wrong1",
-        "«У нас на эту коллекцию сейчас акция»": "q4_wrong3",
-        "«Можем сразу упаковать как подарок»": "q4_wrong4",
-        "«Не хотите посмотреть ещё что-то?»": "q5_wrong1",
-        "«Если денег не хватит, у нас есть рассрочка на 6 месяцев»": "q5_wrong3",
-        "«Может, браслет в том же стиле?»": "q5_wrong4",
-        "До того, как она приняла окончательное решение о покупке": "q6_wrong1",
-        "После оплаты, при упаковке": "q6_wrong3",
-        "Не предлагаете — клиент купил дорогое изделие, и так всё ясно": "q6_wrong4",
-        "«У нас есть серьги за 30 000 ₽, давайте посмотрим»": "q7_wrong1",
-        "«Это серьги с бриллиантами, поэтому цена выше»": "q7_wrong3",
-        "«Может, отложим до зарплаты?»": "q7_wrong4",
-        "«К сожалению, изумрудов 585 пробы сейчас нет»": "q8_wrong1",
-        "«Можем привезти из другого магазина — но это займёт неделю»": "q8_wrong3",
-        "«А зачем Вам с изумрудом? Может без камней посмотрим?»": "q8_wrong4",
-        "Ждёте, пока клиентка сама попросит примерить": "q9_wrong1",
-        "«Хотите примерить, чтобы оценить, как сидит на руке?»": "q9_wrong2",
-        "«А вы знаете, что этот браслет регулируется по размеру, очень удобный?»": "q9_wrong4",
-        "«Давайте посмотрим другие варианты»": "q10_wrong1",
-        "«Это хит продаж, многим нравится»": "q10_wrong3",
-        "«Можем отложить, чтобы вы подумали»": "q10_wrong4",
-        "Ждёте, пока клиентка сама попросит показать кольцо": "q11_wrong1",
-        "Говорите издалека: «Если будут вопросы по размерам — обращайтесь»": "q11_wrong2",
-        "«У нас сейчас акция на кольца — скидки до 30%»": "q11_wrong4"
-    };
-    
-    const cleanAnswer = userAnswer.trim();
-    
-    let key = null;
-    for (const [answerText, answerKey] of Object.entries(answerMap)) {
-        if (cleanAnswer === answerText || cleanAnswer.includes(answerText) || answerText.includes(cleanAnswer)) {
-            key = answerKey;
-            break;
-        }
-    }
-    
+function getRecommendationHTML(questionNum, variantNum) {
+    const key = `q${questionNum}_wrong${variantNum}`;
     const rec = recommendations[key];
     if (!rec) {
-        return `<div class="recommendation"><strong>💡 Рекомендация:</strong><br>Обратите внимание на правильный ответ: ${escapeHtml(correctAnswer)}</div>`;
+        return `<div class="recommendation"><strong>💡 Рекомендация:</strong><br>Обратите внимание на правильный ответ.</div>`;
     }
-    
     return `
         <div class="recommendation">
             <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: ${rec.zone}</div>
@@ -219,59 +164,423 @@ function getRecommendationHTML(userAnswer, correctAnswer) {
     `;
 }
 
-function getZoneNameByAnswer(userAnswer) {
-    const answerMap = {
-        "«Здравствуйте! Вижу, вы торопитесь — давайте я быстро покажу то, что может подойти»": "Речевая пластинка про акции",
-        "Здравствуйте! Вижу, вы торопитесь — давайте я быстро покажу то, что может подойти": "Речевая пластинка про акции",
-        "«Добрый день! Подбираете что-то конкретное или просто смотрите?»": "Речевая пластинка про акции",
-        "«Здравствуйте! Чем могу помочь?»": "Речевая пластинка про акции",
-        "Ждёте, пока мама сама обратится за помощью": "Инициатива в диалоге",
-        "Говорите издалека: «Если будут вопросы по размерам — обращайтесь»": "Инициатива в диалоге",
-        "Показываете на витрину и говорите: «Вот у нас есть детские модели»": "Инициатива + Выявление потребностей",
-        "Сразу показываете 3-4 варианта в пределах бюджета": "Выявление потребностей",
-        "Показываете сначала вариант за 20 000 ₽, затем за 15 000 ₽": "Выявление потребностей",
-        "Спрашиваете: «А может, рассмотрим подарочный сертификат?»": "Выявление потребностей",
-        "«Этот кулон очень популярный среди выпускниц»": "Эмоциональная презентация",
-        "«У нас на эту коллекцию сейчас акция»": "Эмоциональная презентация",
-        "«Можем сразу упаковать как подарок»": "Эмоциональная презентация",
-        "«Не хотите посмотреть ещё что-то?»": "Предложение второго украшения",
-        "«Если денег не хватит, у нас есть рассрочка на 6 месяцев»": "Предложение второго украшения",
-        "«Может, браслет в том же стиле?»": "Предложение второго украшения",
-        "До того, как она приняла окончательное решение о покупке": "Аксессуары ухода",
-        "После оплаты, при упаковке": "Аксессуары ухода",
-        "Не предлагаете — клиент купил дорогое изделие, и так всё ясно": "Аксессуары ухода",
-        "«У нас есть серьги за 30 000 ₽, давайте посмотрим»": "Работа с возражениями (цена)",
-        "«Это серьги с бриллиантами, поэтому цена выше»": "Работа с возражениями (цена)",
-        "«Может, отложим до зарплаты?»": "Работа с возражениями (цена)",
-        "«К сожалению, изумрудов 585 пробы сейчас нет»": "Альтернатива / Каталог на заказ",
-        "«Можем привезти из другого магазина — но это займёт неделю»": "Альтернатива / Каталог на заказ",
-        "«А зачем Вам с изумрудом? Может без камней посмотрим?»": "Альтернатива / Каталог на заказ",
-        "Ждёте, пока клиентка сама попросит примерить": "Инициатива + Примерка",
-        "«Хотите примерить, чтобы оценить, как сидит на руке?»": "Инициатива + Примерка",
-        "«А вы знаете, что этот браслет регулируется по размеру, очень удобный?»": "Инициатива + Примерка",
-        "«Давайте посмотрим другие варианты»": "Работа с возражениями",
-        "«Это хит продаж, многим нравится»": "Работа с возражениями",
-        "«Можем отложить, чтобы вы подумали»": "Работа с возражениями",
-        "Ждёте, пока клиентка сама попросит показать кольцо": "Инициатива в диалоге",
-        "Говорите издалека: «Если будут вопросы по размерам — обращайтесь»": "Инициатива в диалоге",
-        "«У нас сейчас акция на кольца — скидки до 30%»": "Инициатива в диалоге"
-    };
-    
-    const cleanAnswer = userAnswer.trim();
-    for (const [answerText, zoneName] of Object.entries(answerMap)) {
-        if (cleanAnswer === answerText || cleanAnswer.includes(answerText) || answerText.includes(cleanAnswer)) {
-            return zoneName;
-        }
-    }
-    return "Другое";
-}
-
 let allEmployees = [];
 let employeeCounter = 0;
 let currentFilterCity = 'all';
 let currentSearchText = '';
 
-// Сохранение в localStorage
+function parseExcelToEmployees(rows) {
+    const employees = [];
+    let empCounter = 0;
+    
+    for (const row of rows) {
+        const name = row['ФИО'] || '';
+        if (!name) continue;
+        
+        const employee = {
+            id: empCounter++,
+            name: name,
+            city: row['Город'] || 'Не указан',
+            score: 0,
+            total: 0,
+            errors: []
+        };
+        
+        // Парсим баллы
+        const scoreStr = row['Баллы'] || '';
+        const scoreMatch = scoreStr.match(/(\d+)\/(\d+)/);
+        if (scoreMatch) {
+            employee.score = parseInt(scoreMatch[1]);
+            employee.total = parseInt(scoreMatch[2]);
+        }
+        
+        // Проходим по вопросам 1-11
+        for (let i = 1; i <= 11; i++) {
+            const result = row[`Результат ${i}`];
+            const questionText = row[`Вопрос ${i}`] || '';
+            const userAnswer = row[`Ответ сотрудника ${i}`] || '';
+            const correctAnswer = row[`Правильный ответ ${i}`] || '';
+            
+            // Определяем номер вопроса по ключевым словам
+            let qNum = 0;
+            const lowerQuestion = questionText.toLowerCase();
+            if (lowerQuestion.includes("обеденный перерыв") || lowerQuestion.includes("торопитесь")) qNum = 1;
+            else if (lowerQuestion.includes("детскими серьгами") || lowerQuestion.includes("ребёнок")) qNum = 2;
+            else if (lowerQuestion.includes("день рождения подруге") || lowerQuestion.includes("бюджет")) qNum = 3;
+            else if (lowerQuestion.includes("кулон в подарок дочери") || lowerQuestion.includes("выпускной")) qNum = 4;
+            else if (lowerQuestion.includes("купил цепочку")) qNum = 5;
+            else if (lowerQuestion.includes("кольцо за") || lowerQuestion.includes("футляр")) qNum = 6;
+            else if (lowerQuestion.includes("серьги за") || lowerQuestion.includes("не уверен")) qNum = 7;
+            else if (lowerQuestion.includes("изумрудом") || lowerQuestion.includes("нет в наличии")) qNum = 8;
+            else if (lowerQuestion.includes("браслет на витрине") || lowerQuestion.includes("рассматривает браслет")) qNum = 9;
+            else if (lowerQuestion.includes("не уверена, что это моё") || lowerQuestion.includes("красиво, но")) qNum = 10;
+            else if (lowerQuestion.includes("витрину с кольцами") || lowerQuestion.includes("2 минуты")) qNum = 11;
+            
+            if (result === 'Ошибка' && questionText && qNum > 0) {
+                // Определяем номер варианта (какой вариант ответа выбрал сотрудник)
+                let variantNum = 0;
+                const lowerAnswer = userAnswer.toLowerCase();
+                if (qNum === 1) {
+                    if (lowerAnswer.includes("вижу, вы торопитесь") || lowerAnswer.includes("быстро покажу")) variantNum = 2;
+                    else if (lowerAnswer.includes("подбираете что-то конкретное") || lowerAnswer.includes("просто смотрите")) variantNum = 3;
+                    else if (lowerAnswer.includes("чем могу помочь")) variantNum = 4;
+                }
+                else if (qNum === 2) {
+                    if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама обратится")) variantNum = 1;
+                    else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
+                    else if (lowerAnswer.includes("вот у нас есть детские модели")) variantNum = 4;
+                }
+                else if (qNum === 3) {
+                    if (lowerAnswer.includes("сразу показываете") || lowerAnswer.includes("3-4")) variantNum = 1;
+                    else if ((lowerAnswer.includes("20 000") || lowerAnswer.includes("20000")) && (lowerAnswer.includes("15 000") || lowerAnswer.includes("15000"))) variantNum = 3;
+                    else if (lowerAnswer.includes("подарочный сертификат")) variantNum = 4;
+                }
+                else if (qNum === 4) {
+                    if (lowerAnswer.includes("популярный") && lowerAnswer.includes("выпускниц")) variantNum = 1;
+                    else if (lowerAnswer.includes("акция") && lowerAnswer.includes("коллекцию")) variantNum = 3;
+                    else if (lowerAnswer.includes("упаковать как подарок")) variantNum = 4;
+                }
+                else if (qNum === 5) {
+                    if (lowerAnswer.includes("не хотите посмотреть") && lowerAnswer.includes("что-то")) variantNum = 1;
+                    else if (lowerAnswer.includes("рассрочка") || lowerAnswer.includes("денег не хватит")) variantNum = 3;
+                    else if (lowerAnswer.includes("браслет")) variantNum = 4;
+                }
+                else if (qNum === 6) {
+                    if (lowerAnswer.includes("до того") && lowerAnswer.includes("окончательное решение")) variantNum = 1;
+                    else if (lowerAnswer.includes("после оплаты") && lowerAnswer.includes("упаковке")) variantNum = 3;
+                    else if (lowerAnswer.includes("не предлагаете")) variantNum = 4;
+                }
+                else if (qNum === 7) {
+                    if (lowerAnswer.includes("за 30 000") || lowerAnswer.includes("30000")) variantNum = 1;
+                    else if (lowerAnswer.includes("бриллиантами") && lowerAnswer.includes("цена выше")) variantNum = 3;
+                    else if (lowerAnswer.includes("отложим до зарплаты")) variantNum = 4;
+                }
+                else if (qNum === 8) {
+                    if (lowerAnswer.includes("к сожалению") && lowerAnswer.includes("нет")) variantNum = 1;
+                    else if (lowerAnswer.includes("привезти") && lowerAnswer.includes("неделю")) variantNum = 3;
+                    else if (lowerAnswer.includes("зачем") && lowerAnswer.includes("без камней")) variantNum = 4;
+                }
+                else if (qNum === 9) {
+                    if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит")) variantNum = 1;
+                    else if (lowerAnswer.includes("хотите примерить")) variantNum = 2;
+                    else if (lowerAnswer.includes("регулируется")) variantNum = 4;
+                }
+                else if (qNum === 10) {
+                    if (lowerAnswer.includes("давайте посмотрим другие")) variantNum = 1;
+                    else if (lowerAnswer.includes("хит продаж")) variantNum = 3;
+                    else if (lowerAnswer.includes("отложить")) variantNum = 4;
+                }
+                else if (qNum === 11) {
+                    if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит показать")) variantNum = 1;
+                    else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
+                    else if (lowerAnswer.includes("акция на кольца") || (lowerAnswer.includes("скидки") && lowerAnswer.includes("30%"))) variantNum = 4;
+                }
+                
+                employee.errors.push({
+                    questionNum: qNum,
+                    variantNum: variantNum,
+                    originalColumnNum: i,
+                    question: questionText,
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer
+                });
+            }
+        }
+        employees.push(employee);
+    }
+    return employees;
+}
+
+function processData(rows) {
+    allEmployees = parseExcelToEmployees(rows);
+    employeeCounter = allEmployees.length;
+    updateFiltersAndDisplay();
+    saveDataToLocalStorage();
+}
+
+function updateFiltersAndDisplay() {
+    const cities = [...new Set(allEmployees.map(e => e.city))].filter(c => c);
+    const citySelect = document.getElementById('cityFilter');
+    citySelect.innerHTML = '<option value="all">Все города</option>';
+    cities.forEach(c => { citySelect.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`; });
+    citySelect.value = currentFilterCity;
+    
+    // Статистика по городам
+    const cityStatsMap = {};
+    allEmployees.forEach(e => {
+        if (!cityStatsMap[e.city]) cityStatsMap[e.city] = { total: 0, sumPercent: 0, errorCount: 0 };
+        const percent = e.total > 0 ? (e.score / e.total * 100) : 0;
+        cityStatsMap[e.city].total++;
+        cityStatsMap[e.city].sumPercent += percent;
+        cityStatsMap[e.city].errorCount += e.errors.length;
+    });
+    let cityStatsHtml = '<div class="row">';
+    for (const [city, data] of Object.entries(cityStatsMap)) {
+        const avgPercent = (data.sumPercent / data.total).toFixed(1);
+        cityStatsHtml += `<div class="col-md-3 mb-2"><strong>${escapeHtml(city)}</strong>: ${data.total} чел, средний балл: ${avgPercent}%, ошибок: ${data.errorCount}</div>`;
+    }
+    cityStatsHtml += '</div>';
+    document.getElementById('cityStatsList').innerHTML = cityStatsHtml;
+    document.getElementById('cityStats').style.display = 'block';
+    
+    // Сравнение городов
+    const comparisonHtml = getComparisonTable();
+    document.getElementById('comparisonTable').innerHTML = comparisonHtml;
+    document.getElementById('comparisonBlock').style.display = 'block';
+    
+    // График распределения баллов
+    const chartHtml = getChart();
+    document.getElementById('chartContainer').innerHTML = chartHtml;
+    document.getElementById('chartBlock').style.display = 'block';
+    
+    // Фильтрация
+    let filtered = allEmployees.filter(e => {
+        if (currentFilterCity !== 'all' && e.city !== currentFilterCity) return false;
+        if (currentSearchText && !e.name.toLowerCase().includes(currentSearchText.toLowerCase())) return false;
+        return true;
+    });
+    document.getElementById('filteredCount').innerText = `Показано: ${filtered.length} из ${allEmployees.length}`;
+    
+    // Топ-5 ошибок и рекомендации для города (на основе отфильтрованных)
+    updateTopErrors(filtered);
+    updateRecommendations(filtered);
+    
+    const total = allEmployees.length;
+    const avgScore = total > 0 ? Math.round(allEmployees.reduce((s, e) => s + (e.score / e.total), 0) / total * 100) : 0;
+    const perfectCount = allEmployees.filter(e => e.errors.length === 0).length;
+    const totalErrors = allEmployees.reduce((s, e) => s + e.errors.length, 0);
+    document.getElementById('statsPanel').style.display = 'flex';
+    document.getElementById('totalCount').innerText = total;
+    document.getElementById('avgScore').innerText = avgScore + '%';
+    document.getElementById('totalErrors').innerText = totalErrors;
+    document.getElementById('perfectCount').innerText = perfectCount;
+    document.getElementById('filterBar').style.display = 'flex';
+    
+    let html = '<h3 class="mb-3">📋 Результаты сотрудников</h3>';
+    for (const emp of filtered) {
+        const percent = Math.round(emp.score / emp.total * 100);
+        const errorCount = emp.errors.length;
+        
+        let errorsHtml = '';
+        for (const err of emp.errors) {
+            errorsHtml += `
+                <div class="wrong-answer">
+                    <strong>❌ Вопрос ${err.originalColumnNum}:</strong><br>
+                    <div class="mt-1"><strong>Текст вопроса:</strong><br>${escapeHtml(err.question)}</div>
+                    <div class="mt-1"><span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}</div>
+                    <div class="mt-1"><span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}</div>
+                    ${getRecommendationHTML(err.questionNum, err.variantNum)}
+                </div>
+            `;
+        }
+        
+        html += `
+            <div id="emp-${emp.id}" class="error-card">
+                <div class="error-header ${errorCount === 0 ? 'green' : ''}" onclick="toggleBody(this)">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="emp-name">${escapeHtml(emp.name)}</strong>
+                            <span class="badge bg-light text-dark ms-2 emp-city">${emp.city}</span>
+                            <span class="emp-score badge ${percent >= 80 ? 'bg-success' : (percent >= 50 ? 'bg-warning text-dark' : 'bg-danger')} ms-2">${emp.score}/${emp.total} (${percent}%)</span>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary">Ошибок: ${errorCount}</span>
+                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); downloadEmployeePDF(${emp.id})">📄 Скачать PDF</button>
+                            <i class="bi bi-chevron-down ms-2"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="error-body">
+                    <p><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)</p>
+                    ${errorCount === 0 ? 
+                        '<div class="alert alert-success">✅ Отлично! Нет ошибок.</div>' : 
+                        `<div class="alert alert-warning">⚠️ Количество ошибок: ${errorCount}. Рекомендуется изучить рекомендации ниже.</div>`
+                    }
+                    ${errorsHtml}
+                </div>
+            </div>
+        `;
+    }
+    document.getElementById('resultsArea').innerHTML = html;
+}
+
+function updateTopErrors(employees) {
+    const errorCount = {};
+    for (const emp of employees) {
+        for (const err of emp.errors) {
+            const zone = getZoneForQuestion(err.questionNum, err.variantNum);
+            errorCount[zone] = (errorCount[zone] || 0) + 1;
+        }
+    }
+    const sorted = Object.entries(errorCount).sort((a,b) => b[1] - a[1]);
+    const top5 = sorted.slice(0, 5);
+    
+    if (top5.length === 0) {
+        document.getElementById('topErrorsList').innerHTML = '<div class="text-muted">Нет ошибок</div>';
+        return;
+    }
+    
+    let html = '<ol class="mb-0">';
+    for (const [zone, count] of top5) {
+        html += `<li><strong>${zone}</strong> — ${count} ошибок</li>`;
+    }
+    html += '</ol>';
+    document.getElementById('topErrorsList').innerHTML = html;
+    document.getElementById('topErrorsBlock').style.display = 'block';
+}
+
+function updateRecommendations(employees) {
+    const errorCount = {};
+    for (const emp of employees) {
+        for (const err of emp.errors) {
+            const zone = getZoneForQuestion(err.questionNum, err.variantNum);
+            errorCount[zone] = (errorCount[zone] || 0) + 1;
+        }
+    }
+    const sorted = Object.entries(errorCount).sort((a,b) => b[1] - a[1]);
+    const top3 = sorted.slice(0, 3);
+    
+    if (top3.length === 0) {
+        document.getElementById('cityRecommendationsList').innerHTML = '<div class="text-muted">🎉 Отлично! В этом городе нет ошибок.</div>';
+        return;
+    }
+    
+    const recommendationsMap = {
+        "Речевая пластинка про акции": "Всегда начинайте диалог с выгоды: «Добрый день! У нас сегодня скидка до 30% и оплата бонусами». Не спрашивайте «Чем помочь?» — сразу давайте ценность.",
+        "Инициатива в диалоге": "Не ждите, пока клиент обратится. Подходите первым с конкретным вопросом по ассортименту, который рассматривает клиент.",
+        "Инициатива + Выявление потребностей": "Подходите и спрашивайте про потребность. Например: «Подбираете первые серёжки? Давайте покажу безопасные варианты».",
+        "Выявление потребностей": "Перед показом товара всегда уточняйте стиль, предпочтения, контекст. Не показывайте «вслепую».",
+        "Эмоциональная презентация": "Связывайте украшение с событием и эмоциями. Не говорите «хит продаж» — говорите о том, что это украшение станет символом важного момента.",
+        "Предложение второго украшения": "Используйте утверждение «Давайте подберём» вместо вопроса «Хотите ещё что-то?». Предлагайте логичную пару (цепочка → кулон).",
+        "Аксессуары ухода": "Предлагайте футляр и средство для ухода ТОЛЬКО после того, как клиент согласился на цену, но ДО оплаты.",
+        "Работа с возражениями (цена)": "При возражении «дорого» сначала присоединитесь: «Понимаю», затем предложите Яндекс Сплит. Не предлагайте более дешёвый вариант сразу.",
+        "Альтернатива / Каталог на заказ": "Если нет нужного товара — сразу предлагайте каталог на заказ. Не говорите просто «нет в наличии».",
+        "Инициатива + Примерка": "Предлагайте примерку утверждением «Давайте примерим», а не вопросом «Хотите примерить?».",
+        "Работа с возражениями": "При сомнениях клиента сначала присоединитесь: «Понимаю», затем уточните причину: «А что именно смущает?»"
+    };
+    
+    let html = '<ul class="mb-0">';
+    for (const [zone, count] of top3) {
+        const recommendation = recommendationsMap[zone] || 'Обратите внимание на эту зону роста. Проведите дополнительное обучение по данному навыку.';
+        html += `
+            <li style="margin-bottom: 12px;">
+                <strong>🔴 ${zone}</strong> (${count} ошибок)<br>
+                <span style="font-size: 13px; color: #0d6efd;">💡 ${recommendation}</span>
+            </li>
+        `;
+    }
+    html += '</ul>';
+    document.getElementById('cityRecommendationsList').innerHTML = html;
+    document.getElementById('cityRecommendationsBlock').style.display = 'block';
+}
+
+function getZoneForQuestion(questionNum, variantNum) {
+    const key = `q${questionNum}_wrong${variantNum}`;
+    const rec = recommendations[key];
+    return rec ? rec.zone : "Зона роста не определена";
+}
+
+function getComparisonTable() {
+    const cityMap = {};
+    for (const emp of allEmployees) {
+        if (!cityMap[emp.city]) {
+            cityMap[emp.city] = { total: 0, sumPercent: 0, errorCount: 0 };
+        }
+        const percent = emp.total > 0 ? (emp.score / emp.total * 100) : 0;
+        cityMap[emp.city].total++;
+        cityMap[emp.city].sumPercent += percent;
+        cityMap[emp.city].errorCount += emp.errors.length;
+    }
+    
+    let html = '<table class="comparison-table"><thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Всего ошибок</th></tr></thead><tbody>';
+    for (const [city, data] of Object.entries(cityMap)) {
+        const avgPercent = (data.sumPercent / data.total).toFixed(1);
+        html += `<tr><td><strong>${escapeHtml(city)}</strong></td><td>${data.total}</td><td>${avgPercent}%</td><td>${data.errorCount}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    return html;
+}
+
+function getChart() {
+    const ranges = { '0-49%': 0, '50-69%': 0, '70-89%': 0, '90-100%': 0 };
+    for (const emp of allEmployees) {
+        const percent = emp.total > 0 ? (emp.score / emp.total * 100) : 0;
+        if (percent < 50) ranges['0-49%']++;
+        else if (percent < 70) ranges['50-69%']++;
+        else if (percent < 90) ranges['70-89%']++;
+        else ranges['90-100%']++;
+    }
+    const total = allEmployees.length;
+    let html = '';
+    for (const [range, count] of Object.entries(ranges)) {
+        const pct = total > 0 ? (count / total * 100) : 0;
+        html += `<div><strong>${range}</strong>: ${count} чел (${pct.toFixed(0)}%)</div>
+                 <div class="chart-bar" style="width: ${pct}%; background: ${pct >= 70 ? '#4caf50' : (pct >= 50 ? '#ff9800' : '#f44336')};"></div>`;
+    }
+    return html;
+}
+
+function downloadEmployeePDF(employeeId) {
+    const emp = allEmployees.find(e => e.id === employeeId);
+    if (!emp) { alert('Сотрудник не найден'); return; }
+    
+    const percent = Math.round(emp.score / emp.total * 100);
+    let errorsHtml = '';
+    for (const err of emp.errors) {
+        errorsHtml += `
+            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0;">
+                <strong>❌ Вопрос:</strong><br>${escapeHtml(err.question)}<br>
+                <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br>
+                <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br>
+                ${getRecommendationHTML(err.questionNum, err.variantNum)}
+            </div>
+        `;
+    }
+    
+    const pdfContent = `
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title>
+        <style>
+            body { font-family: Arial; padding: 20px; }
+            h1 { color: #0d6efd; }
+            .info { background: #f5f7fa; padding: 15px; margin-bottom: 20px; }
+            .score-good { background: #4caf50; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
+            .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
+            .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
+            .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; }
+        </style>
+        </head>
+        <body>
+            <h1>📊 Отчёт по тесту</h1>
+            <div class="info">
+                <strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br>
+                <strong>Город:</strong> ${escapeHtml(emp.city)}<br>
+                <strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
+                <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
+                    ${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}
+                </div>
+            </div>
+            <h3>Разбор ошибок (${emp.errors.length})</h3>
+            ${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}
+            <p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(pdfContent);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function toggleBody(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle('show');
+}
+
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+
 function saveDataToLocalStorage() {
     localStorage.setItem('reportData', JSON.stringify({
         allEmployees: allEmployees,
@@ -292,353 +601,30 @@ function loadDataFromLocalStorage() {
     return false;
 }
 
-function processData(rows) {
-    allEmployees = [];
-    employeeCounter = 0;
-    
-    for (const row of rows) {
-        const name = row['ФИО'] || '';
-        if (!name) continue;
-        
-        const employee = {
-            id: employeeCounter++,
-            name: name,
-            city: row['Город'] || 'Не указан',
-            score: 0,
-            total: 0,
-            errors: []
-        };
-        
-        const scoreMatch = (row['Баллы'] || '').match(/(\d+)\/(\d+)/);
-        if (scoreMatch) {
-            employee.score = parseInt(scoreMatch[1]);
-            employee.total = parseInt(scoreMatch[2]);
-        }
-        
-        for (let i = 1; i <= 11; i++) {
-            const result = row[`Результат ${i}`];
-            const questionText = row[`Вопрос ${i}`] || '';
-            const userAnswer = row[`Ответ сотрудника ${i}`] || '';
-            const correctAnswer = row[`Правильный ответ ${i}`] || '';
-            
-            if (result === 'Ошибка' && questionText) {
-                employee.errors.push({
-                    question: questionText,
-                    userAnswer: userAnswer,
-                    correctAnswer: correctAnswer,
-                    zone: getZoneNameByAnswer(userAnswer)
-                });
-            }
-        }
-        allEmployees.push(employee);
-    }
-    saveDataToLocalStorage();
-    updateFiltersAndDisplay();
-}
-
-function getComparisonTable() {
-    const cityMap = {};
-    for (const emp of allEmployees) {
-        if (!cityMap[emp.city]) {
-            cityMap[emp.city] = { total: 0, sumPercent: 0, errorCount: 0, topError: {} };
-        }
-        const percent = emp.total > 0 ? (emp.score / emp.total * 100) : 0;
-        cityMap[emp.city].total++;
-        cityMap[emp.city].sumPercent += percent;
-        cityMap[emp.city].errorCount += emp.errors.length;
-        for (const err of emp.errors) {
-            cityMap[emp.city].topError[err.zone] = (cityMap[emp.city].topError[err.zone] || 0) + 1;
-        }
-    }
-    
-    let html = '<table class="comparison-table"><thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Всего ошибок</th><th>Топ-1 ошибка</th></tr></thead><tbody>';
-    for (const [city, data] of Object.entries(cityMap)) {
-        const avgPercent = (data.sumPercent / data.total).toFixed(1);
-        const topError = Object.entries(data.topError).sort((a,b) => b[1] - a[1])[0];
-        const topErrorName = topError ? `${topError[0]} (${topError[1]})` : '—';
-        html += `<tr><td><strong>${escapeHtml(city)}</strong></td><td>${data.total}</td><td>${avgPercent}%</td><td>${data.errorCount}</td><td>${escapeHtml(topErrorName)}</td></tr>`;
-    }
-    html += '</tbody></table>';
-    return html;
-}
-
-function getChart() {
-    const ranges = { '0-49%': 0, '50-69%': 0, '70-89%': 0, '90-100%': 0 };
-    for (const emp of allEmployees) {
-        const percent = emp.total > 0 ? (emp.score / emp.total * 100) : 0;
-        if (percent < 50) ranges['0-49%']++;
-        else if (percent < 70) ranges['50-69%']++;
-        else if (percent < 90) ranges['70-89%']++;
-        else ranges['90-100%']++;
-    }
-    const total = allEmployees.length;
-    let html = '';
-    for (const [range, count] of Object.entries(ranges)) {
-        const percent = total > 0 ? (count / total * 100) : 0;
-        html += `<div><strong>${range}</strong>: ${count} чел (${percent.toFixed(0)}%)</div>
-                 <div class="chart-bar" style="width: ${percent}%; background: ${percent >= 70 ? '#4caf50' : (percent >= 50 ? '#ff9800' : '#f44336')};"></div>`;
-    }
-    return html;
-}
-
-function getTopErrorsByCity(city) {
-    const cityEmployees = city === 'all' ? allEmployees : allEmployees.filter(e => e.city === city);
-    const errorCount = {};
-    for (const emp of cityEmployees) {
-        for (const err of emp.errors) {
-            errorCount[err.zone] = (errorCount[err.zone] || 0) + 1;
-        }
-    }
-    const sorted = Object.entries(errorCount).sort((a, b) => b[1] - a[1]);
-    const top5 = sorted.slice(0, 5);
-    if (top5.length === 0) return '<div class="text-muted">Нет ошибок</div>';
-    let html = '<ol class="mb-0">';
-    for (const [zone, count] of top5) {
-        html += `<li><strong>${zone}</strong> — ${count} ошибок</li>`;
-    }
-    html += '</ol>';
-    return html;
-}
-
-function getCityRecommendations(city) {
-    const cityEmployees = city === 'all' ? allEmployees : allEmployees.filter(e => e.city === city);
-    const errorCount = {};
-    for (const emp of cityEmployees) {
-        for (const err of emp.errors) {
-            errorCount[err.zone] = (errorCount[err.zone] || 0) + 1;
-        }
-    }
-    const sorted = Object.entries(errorCount).sort((a, b) => b[1] - a[1]);
-    const top3 = sorted.slice(0, 3);
-    if (top3.length === 0) return '<div class="text-muted">🎉 Отлично! В этом городе нет ошибок.</div>';
-    
-    const recommendationsMap = {
-        "Речевая пластинка про акции": "Всегда начинайте диалог с выгоды: «Добрый день! У нас сегодня скидка до 30% и оплата бонусами». Не спрашивайте «Чем помочь?» — сразу давайте ценность.",
-        "Инициатива в диалоге": "Не ждите, пока клиент обратится. Подходите первым с конкретным вопросом по ассортименту, который рассматривает клиент.",
-        "Инициатива + Выявление потребностей": "Подходите и спрашивайте про потребность. Например: «Подбираете первые серёжки? Давайте покажу безопасные варианты».",
-        "Выявление потребностей": "Перед показом товара всегда уточняйте стиль, предпочтения, контекст. Не показывайте «вслепую».",
-        "Эмоциональная презентация": "Связывайте украшение с событием и эмоциями. Не говорите «хит продаж» — говорите о том, что это украшение станет символом важного момента.",
-        "Предложение второго украшения": "Используйте утверждение «Давайте подберём» вместо вопроса «Хотите ещё что-то?». Предлагайте логичную пару (цепочка → кулон).",
-        "Аксессуары ухода": "Предлагайте футляр и средство для ухода ТОЛЬКО после того, как клиент согласился на цену, но ДО оплаты.",
-        "Работа с возражениями (цена)": "При возражении «дорого» сначала присоединитесь: «Понимаю», затем предложите Яндекс Сплит. Не предлагайте более дешёвый вариант сразу.",
-        "Альтернатива / Каталог на заказ": "Если нет нужного товара — сразу предлагайте каталог на заказ. Не говорите просто «нет в наличии».",
-        "Инициатива + Примерка": "Предлагайте примерку утверждением «Давайте примерим», а не вопросом «Хотите примерить?».",
-        "Работа с возражениями": "При сомнениях клиента сначала присоединитесь: «Понимаю», затем уточните причину: «А что именно смущает?»"
-    };
-    
-    let html = '<ul class="mb-0">';
-    for (const [zone, count] of top3) {
-        const recommendation = recommendationsMap[zone] || 'Обратите внимание на эту зону роста. Проведите дополнительное обучение по данному навыку.';
-        html += `<li style="margin-bottom: 12px;"><strong>🔴 ${zone}</strong> (${count} ошибок)<br><span style="font-size: 13px; color: #0d6efd;">💡 ${recommendation}</span></li>`;
-    }
-    html += '</ul>';
-    return html;
-}
-
-function updateFiltersAndDisplay() {
-    if (allEmployees.length === 0) return;
-    
-    const cities = [...new Set(allEmployees.map(e => e.city))].filter(c => c);
-    const citySelect = document.getElementById('cityFilter');
-    citySelect.innerHTML = '<option value="all">Все города</option>';
-    cities.forEach(c => { citySelect.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`; });
-    citySelect.value = currentFilterCity;
-    
-    // Сравнение городов
-    document.getElementById('comparisonTable').innerHTML = getComparisonTable();
-    document.getElementById('comparisonBlock').style.display = 'block';
-    
-    // График
-    document.getElementById('chartContainer').innerHTML = getChart();
-    document.getElementById('chartBlock').style.display = 'block';
-    
-    const cityStatsMap = {};
-    allEmployees.forEach(e => {
-        if (!cityStatsMap[e.city]) cityStatsMap[e.city] = { total: 0, sumPercent: 0, errorCount: 0 };
-        const percent = e.total > 0 ? (e.score / e.total * 100) : 0;
-        cityStatsMap[e.city].total++;
-        cityStatsMap[e.city].sumPercent += percent;
-        cityStatsMap[e.city].errorCount += e.errors.length;
-    });
-    let cityStatsHtml = '<div class="row">';
-    for (const [city, data] of Object.entries(cityStatsMap)) {
-        const avgPercent = (data.sumPercent / data.total).toFixed(1);
-        cityStatsHtml += `<div class="col-md-3 mb-2"><strong>${escapeHtml(city)}</strong>: ${data.total} чел, средний балл: ${avgPercent}%, ошибок: ${data.errorCount}</div>`;
-    }
-    cityStatsHtml += '</div>';
-    document.getElementById('cityStatsList').innerHTML = cityStatsHtml;
-    document.getElementById('cityStats').style.display = 'block';
-    
-    document.getElementById('topErrorsList').innerHTML = getTopErrorsByCity(currentFilterCity);
-    document.getElementById('topErrorsBlock').style.display = 'block';
-    
-    document.getElementById('cityRecommendationsList').innerHTML = getCityRecommendations(currentFilterCity);
-    document.getElementById('cityRecommendationsBlock').style.display = 'block';
-    
-    let filtered = allEmployees.filter(e => {
-        if (currentFilterCity !== 'all' && e.city !== currentFilterCity) return false;
-        if (currentSearchText && !e.name.toLowerCase().includes(currentSearchText.toLowerCase())) return false;
-        return true;
-    });
-    document.getElementById('filteredCount').innerText = `Показано: ${filtered.length} из ${allEmployees.length}`;
-    document.getElementById('pdfCityBtn').style.display = 'inline-block';
-    
-    const total = allEmployees.length;
-    const avgScore = total > 0 ? Math.round(allEmployees.reduce((s, e) => s + (e.score / e.total), 0) / total * 100) : 0;
-    const perfectCount = allEmployees.filter(e => e.errors.length === 0).length;
-    const totalErrors = allEmployees.reduce((s, e) => s + e.errors.length, 0);
-    document.getElementById('statsPanel').style.display = 'flex';
-    document.getElementById('totalCount').innerText = total;
-    document.getElementById('avgScore').innerText = avgScore + '%';
-    document.getElementById('totalErrors').innerText = totalErrors;
-    document.getElementById('perfectCount').innerText = perfectCount;
-    document.getElementById('filterBar').style.display = 'flex';
-    
-    let html = '<h3 class="mb-3">📋 Результаты сотрудников</h3>';
-    for (const emp of filtered) {
-        const percent = Math.round(emp.score / emp.total * 100);
-        const errorCount = emp.errors.length;
-        const zoneSet = new Set();
-        for (const err of emp.errors) zoneSet.add(err.zone);
-        const zonesSummary = Array.from(zoneSet).map(z => `<span class="zone-badge">${escapeHtml(z)}</span>`).join('');
-        let errorsHtml = '';
-        for (const err of emp.errors) {
-            errorsHtml += `
-                <div class="wrong-answer">
-                    <strong>❌ Вопрос:</strong><br>
-                    <div><strong>Текст вопроса:</strong><br>${escapeHtml(err.question)}</div>
-                    <div><span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}</div>
-                    <div><span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}</div>
-                    ${getRecommendationHTML(err.userAnswer, err.correctAnswer)}
-                </div>
-            `;
-        }
-        html += `
-            <div id="emp-${emp.id}" class="error-card">
-                <div class="error-header ${errorCount === 0 ? 'green' : ''}" onclick="toggleBody(this)">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>${escapeHtml(emp.name)}</strong>
-                            <span class="badge bg-light text-dark ms-2">${escapeHtml(emp.city)}</span>
-                            <span class="badge ${percent >= 80 ? 'bg-success' : (percent >= 50 ? 'bg-warning text-dark' : 'bg-danger')} ms-2">${emp.score}/${emp.total} (${percent}%)</span>
-                        </div>
-                        <div>
-                            <span class="badge bg-secondary">Ошибок: ${errorCount}</span>
-                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); downloadEmployeePDF(${emp.id})">📄 Скачать PDF</button>
-                            <i class="bi bi-chevron-down ms-2"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="error-body">
-                    <p><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)</p>
-                    ${errorCount === 0 ? '<div class="alert alert-success">✅ Отлично! Нет ошибок.</div>' : `<div class="alert alert-warning">⚠️ Ошибок: ${errorCount}</div><div class="mt-2"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary || '—'}</div>`}
-                    ${errorsHtml}
-                </div>
-            </div>
-        `;
-    }
-    document.getElementById('resultsArea').innerHTML = html;
-}
-
-function downloadEmployeePDF(employeeId) {
-    const emp = allEmployees.find(e => e.id === employeeId);
-    if (!emp) { alert('Сотрудник не найден'); return; }
-    const percent = Math.round(emp.score / emp.total * 100);
-    const zoneSet = new Set();
-    for (const err of emp.errors) zoneSet.add(err.zone);
-    const zonesSummary = Array.from(zoneSet).map(z => `• ${z}`).join('\n');
-    let errorsHtml = '';
-    for (const err of emp.errors) {
-        errorsHtml += `
-            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0;">
-                <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br>
-                <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br>
-                <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br>
-                ${getRecommendationHTML(err.userAnswer, err.correctAnswer)}
-            </div>
-        `;
-    }
-    const pdfContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title><style>body{font-family:Arial;padding:20px}h1{color:#0d6efd}.info{background:#f5f7fa;padding:15px;margin-bottom:20px}.score-good{background:#4caf50;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-normal{background:#ff9800;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-bad{background:#f44336;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.recommendation{background:#fff3cd;border-left:4px solid #ffc107;padding:12px;margin-top:10px}.zone-summary{background:#e8f5e9;padding:10px;border-radius:8px;margin:15px 0}</style></head><body><h1>📊 Отчёт по тесту</h1><div class="info"><strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br><strong>Город:</strong> ${escapeHtml(emp.city)}<br><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br><div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}</div></div>${zonesSummary ? `<div class="zone-summary"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary.replace(/\n/g, '<br>')}</div>` : ''}<h3>Разбор ошибок (${emp.errors.length})</h3>${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}<p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p></body></html>`;
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(pdfContent);
-    printWindow.document.close();
-    printWindow.print();
-}
-
-function downloadCityPDF() {
-    const filtered = allEmployees.filter(e => {
-        if (currentFilterCity !== 'all' && e.city !== currentFilterCity) return false;
-        if (currentSearchText && !e.name.toLowerCase().includes(currentSearchText.toLowerCase())) return false;
-        return true;
-    });
-    if (filtered.length === 0) { alert('Нет сотрудников для выгрузки'); return; }
-    
-    let employeesHtml = '';
-    for (const emp of filtered) {
-        const percent = Math.round(emp.score / emp.total * 100);
-        const zoneSet = new Set();
-        for (const err of emp.errors) zoneSet.add(err.zone);
-        const zonesSummary = Array.from(zoneSet).map(z => `• ${z}`).join('\n');
-        let errorsHtml = '';
-        for (const err of emp.errors) {
-            errorsHtml += `
-                <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; page-break-inside: avoid;">
-                    <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br>
-                    <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br>
-                    <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br>
-                    ${getRecommendationHTML(err.userAnswer, err.correctAnswer)}
-                </div>
-            `;
-        }
-        employeesHtml += `
-            <div style="page-break-before: always; margin-top: 20px;">
-                <h2 style="color: #0d6efd;">${escapeHtml(emp.name)} (${escapeHtml(emp.city)})</h2>
-                <div class="info"><strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
-                <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}" style="display:inline-block; padding:5px 15px; border-radius:20px;">${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}</div></div>
-                ${zonesSummary ? `<div class="zone-summary" style="background:#e8f5e9; padding:10px; border-radius:8px; margin:15px 0;"><strong>🎓 Зоны роста сотрудника:</strong><br>${zonesSummary.replace(/\n/g, '<br>')}</div>` : ''}
-                <h3>Разбор ошибок (${emp.errors.length})</h3>
-                ${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}
-            </div>
-        `;
-    }
-    const cityName = currentFilterCity === 'all' ? 'Все_города' : currentFilterCity;
-    const pdfContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт по городу: ${cityName}</title><style>body{font-family:Arial;padding:20px}h1{color:#0d6efd}.info{background:#f5f7fa;padding:15px;margin-bottom:20px}.score-good{background:#4caf50;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-normal{background:#ff9800;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.score-bad{background:#f44336;color:white;display:inline-block;padding:5px 15px;border-radius:20px}.recommendation{background:#fff3cd;border-left:4px solid #ffc107;padding:12px;margin-top:10px}.zone-summary{background:#e8f5e9;padding:10px;border-radius:8px;margin:15px 0}</style></head><body><h1>📊 Отчёт по городу: ${cityName}</h1><p>Сгенерирован: ${new Date().toLocaleString()}</p>${employeesHtml}<p style="margin-top:40px; font-size:12px; color:#999;">Конец отчёта</p></body></html>`;
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(pdfContent);
-    printWindow.document.close();
-    printWindow.print();
-}
-
-function toggleBody(header) {
-    const body = header.nextElementSibling;
-    body.classList.toggle('show');
-}
-
-function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
-
-// Загрузка файла
-document.getElementById('fileInput').addEventListener('change', e => {
+document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
-        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet);
         processData(rows);
     };
     reader.readAsArrayBuffer(file);
 });
 
-// Фильтры
 document.getElementById('cityFilter').addEventListener('change', e => {
     currentFilterCity = e.target.value;
     updateFiltersAndDisplay();
 });
+
 document.getElementById('searchInput').addEventListener('input', e => {
     currentSearchText = e.target.value;
     updateFiltersAndDisplay();
 });
+
 document.getElementById('resetFilter').addEventListener('click', () => {
     currentFilterCity = 'all';
     currentSearchText = '';
@@ -646,9 +632,7 @@ document.getElementById('resetFilter').addEventListener('click', () => {
     document.getElementById('searchInput').value = '';
     updateFiltersAndDisplay();
 });
-document.getElementById('pdfCityBtn').addEventListener('click', () => downloadCityPDF());
 
-// Drag and drop
 const uploadArea = document.getElementById('uploadArea');
 uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#0d6efd'; });
 uploadArea.addEventListener('dragleave', e => { e.preventDefault(); uploadArea.style.borderColor = '#ccc'; });
@@ -668,12 +652,10 @@ uploadArea.addEventListener('drop', e => {
     } else alert('Загрузите Excel файл');
 });
 
-// Автозагрузка сохранённых данных
 if (loadDataFromLocalStorage() && allEmployees.length > 0) {
     updateFiltersAndDisplay();
     document.getElementById('statsPanel').style.display = 'flex';
     document.getElementById('filterBar').style.display = 'flex';
-    document.getElementById('pdfCityBtn').style.display = 'inline-block';
 }
 </script>
 </body>
