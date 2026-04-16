@@ -187,7 +187,9 @@ function loadFromAdminData(adminData) {
                 row[`Вопрос ${i}`] = a.text || a.qs || '';
                 row[`Ответ сотрудника ${i}`] = a.selected || a.sel || '';
                 row[`Правильный ответ ${i}`] = a.correct || a.cor || '';
-                row[`Результат ${i}`] = (a.isCorrect === true || a.ok === true) ? 'Верно' : 'Ошибка';
+                // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: правильно определяем статус ответа
+                const isCorrect = a.isCorrect === true || a.ok === true;
+                row[`Результат ${i}`] = isCorrect ? 'Верно' : 'Ошибка';
             });
         }
         return row;
@@ -540,7 +542,7 @@ function getComparisonTable() {
         cityMap[emp.city].errorCount += emp.errors.length;
     }
     
-    let html = '<table class="comparison-table"><thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Всего ошибок</th></tr></thead><tbody>';
+    let html = '<table class="comparison-table"><thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Всего ошибок</th><tr></thead><tbody>';
     for (const [city, data] of Object.entries(cityMap)) {
         const avgPercent = (data.sumPercent / data.total).toFixed(1);
         html += `<tr><td><strong>${escapeHtml(city)}</strong></td><td>${data.total}</td><td>${avgPercent}%</td><td>${data.errorCount}</td></tr>`;
