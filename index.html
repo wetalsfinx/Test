@@ -41,7 +41,6 @@ body{background:#f5f7fa;font-family:sans-serif}
 .pagination button { padding: 5px 12px; margin: 0 2px; border: 1px solid #dee2e6; background: white; border-radius: 5px; cursor: pointer; }
 .pagination button.active { background: #0d6efd; color: white; border-color: #0d6efd; }
 .pagination button:hover:not(.active) { background: #e9ecef; }
-.tooltip-text { border-bottom: 1px dashed #999; cursor: help; }
 @media (max-width: 768px) {
     .filter-bar .row { flex-direction: column; }
     .filter-bar .col-md-3, .filter-bar .col-md-2, .filter-bar .col-md-1 { width: 100%; margin-bottom: 10px; }
@@ -452,14 +451,32 @@ function initRealtime() {
 function sendToAnalyzer() {
     if (!currentFilteredResults.length) { alert('Нет данных для анализа'); return; }
     
-    // Гарантируем, что isCorrect сохранён
-    const resultsToSend = currentFilteredResults.map(r => ({
-        ...r,
-        answers: r.answers ? r.answers.map(a => ({
-            ...a,
-            isCorrect: a.isCorrect === true || a.ok === true
-        })) : []
-    }));
+    // Явно сохраняем все поля и гарантируем isCorrect
+    const resultsToSend = currentFilteredResults.map(r => {
+        // Создаём копию результата
+        const resultCopy = {
+            user_id: r.user_id,
+            name: r.name,
+            surname: r.surname,
+            city: r.city,
+            score: r.score,
+            total: r.total,
+            created_at: r.created_at,
+            answers: []
+        };
+        
+        // Копируем ответы с явным указанием isCorrect
+        if (r.answers && Array.isArray(r.answers)) {
+            resultCopy.answers = r.answers.map(a => ({
+                text: a.text || a.qs || '',
+                selected: a.selected || a.sel || '',
+                correct: a.correct || a.cor || '',
+                isCorrect: (a.isCorrect === true || a.ok === true)
+            }));
+        }
+        
+        return resultCopy;
+    });
     
     localStorage.setItem('analyzerData', JSON.stringify({
         results: resultsToSend,
