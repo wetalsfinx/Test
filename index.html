@@ -451,7 +451,7 @@ function initRealtime() {
 function sendToAnalyzer() {
     if (!currentFilteredResults.length) { alert('Нет данных для анализа'); return; }
     
-    // Явно сохраняем все поля и гарантируем isCorrect
+    // БЕРЁМ ОРИГИНАЛЬНЫЕ РЕЗУЛЬТАТЫ (НЕ ОТФИЛЬТРОВАННЫЕ) И КОПИРУЕМ ПОЛНОСТЬЮ
     const resultsToSend = currentFilteredResults.map(r => {
         // Создаём копию результата
         const resultCopy = {
@@ -467,12 +467,21 @@ function sendToAnalyzer() {
         
         // Копируем ответы с явным указанием isCorrect
         if (r.answers && Array.isArray(r.answers)) {
-            resultCopy.answers = r.answers.map(a => ({
-                text: a.text || a.qs || '',
-                selected: a.selected || a.sel || '',
-                correct: a.correct || a.cor || '',
-                isCorrect: (a.isCorrect === true || a.ok === true)
-            }));
+            resultCopy.answers = r.answers.map(a => {
+                // Определяем isCorrect: проверяем все возможные варианты
+                let isCorrect = false;
+                if (a.isCorrect === true) isCorrect = true;
+                else if (a.ok === true) isCorrect = true;
+                else if (a.isCorrect === false) isCorrect = false;
+                else if (a.ok === false) isCorrect = false;
+                
+                return {
+                    text: a.text || a.qs || '',
+                    selected: a.selected || a.sel || '',
+                    correct: a.correct || a.cor || '',
+                    isCorrect: isCorrect
+                };
+            });
         }
         
         return resultCopy;
