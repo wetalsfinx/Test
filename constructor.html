@@ -216,13 +216,26 @@ function renderQuestions() {
     container.innerHTML = html;
 }
 
-// ========== НОВЫЙ ПАРСИНГ EXCEL ДЛЯ ВАШЕГО ФОРМАТА ==========
+// ========== НОВЫЙ ПАРСИНГ EXCEL (РАБОТАЕТ С ВАШИМ ФАЙЛОМ) ==========
 function parseExcelToQuestions(fileData) {
     const workbook = XLSX.read(fileData, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const text = XLSX.utils.sheet_to_txt(sheet);
-    const lines = text.split(/\r?\n/);
     
+    // Получаем все ячейки как текст
+    let allText = '';
+    const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:A1');
+    for (let row = range.s.r; row <= range.e.r; row++) {
+        for (let col = range.s.c; col <= range.e.c; col++) {
+            const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+            const cell = sheet[cellAddress];
+            if (cell && cell.v) {
+                allText += String(cell.v) + '\n';
+            }
+        }
+        allText += '\n';
+    }
+    
+    const lines = allText.split(/\r?\n/);
     const questions = [];
     let currentQuestion = null;
     
@@ -230,47 +243,61 @@ function parseExcelToQuestions(fileData) {
         let line = lines[i].trim();
         if (line === "") continue;
         
-        // Ищем вопрос (строка, которая начинается не с A) B) C) D) и не с ✅)
-        const isOption = /^[A-Da-d][\)\.]\s*/.test(line);
-        const isCorrect = line.includes("✅") && line.includes("Правильный ответ:");
+        // Пропускаем строки, которые начинаются с A | (служебные)
+        if (line.match(/^\s*[A-Za-z]\s*\|/)) continue;
         
-        if (!isOption && !isCorrect && line.length > 10) {
-            // Сохраняем предыдущий вопрос
-            if (currentQuestion && currentQuestion.options && currentQuestion.options.length > 0) {
-                questions.push(currentQuestion);
-            }
-            // Начинаем новый вопрос
-            currentQuestion = {
-                text: line,
-                options: [],
-                correct: -1
-            };
-            continue;
-        }
-        
-        // Ищем вариант ответа A) ... или A. ...
-        const optionMatch = line.match(/^([A-Da-d])[\)\.]\s*(.+)/);
-        if (optionMatch && currentQuestion) {
-            const letter = optionMatch[1].toUpperCase();
-            const optionText = optionMatch[2];
-            currentQuestion.options.push(optionText);
-            continue;
-        }
-        
-        // Ищем правильный ответ
-        const correctMatch = line.match(/✅\s*Правильный ответ:\s*([A-Da-d])/i);
+        // Ищем строку с правильным ответом
+        const correctMatch = line.match(/✅\s*Правильный ответ:\s*([A-D])/i);
         if (correctMatch && currentQuestion) {
-            const correctLetter = correctMatch[1].toUpperCase();
-            const index = correctLetter.charCodeAt(0) - 65;
+            const letter = correctMatch[1].toUpperCase();
+            const index = letter.charCodeAt(0) - 65;
             if (index >= 0 && index < currentQuestion.options.length) {
                 currentQuestion.correct = index;
+            }
+            // Сохраняем вопрос после получения правильного ответа
+            if (currentQuestion.options.length > 0 && currentQuestion.correct !== -1) {
+                questions.push(currentQuestion);
+            }
+            currentQuestion = null;
+            continue;
+        }
+        
+        // Ищем вариант ответа: A) ... или A. ...
+        const optionMatch = line.match(/^([A-D])[\)\.]\s*(.+)/);
+        if (optionMatch) {
+            if (!currentQuestion) {
+                currentQuestion = { text: "", options: [], correct: -1 };
+            }
+            const optionText = optionMatch[2].trim();
+            // Убираем кавычки, если есть
+            const cleanOption = optionText.replace(/^["']|["']$/g, '');
+            currentQuestion.options.push(cleanOption);
+            continue;
+        }
+        
+        // Если строка не начинается с A) B) C) D) и нет правильного ответа — это текст вопроса
+        if (!line.match(/^([A-D])[\)\.]/) && !line.match(/✅\s*Правильный ответ/i)) {
+            // Если у нас уже есть текущий вопрос с вариантами — начинаем новый
+            if (currentQuestion && currentQuestion.options.length > 0) {
+                if (currentQuestion.correct !== -1) {
+                    questions.push(currentQuestion);
+                }
+                currentQuestion = { text: "", options: [], correct: -1 };
+            } else if (!currentQuestion) {
+                currentQuestion = { text: "", options: [], correct: -1 };
+            }
+            // Добавляем текст вопроса
+            if (currentQuestion.text) {
+                currentQuestion.text += " " + line;
+            } else {
+                currentQuestion.text = line;
             }
             continue;
         }
     }
     
-    // Добавляем последний вопрос
-    if (currentQuestion && currentQuestion.options && currentQuestion.options.length > 0 && currentQuestion.correct !== -1) {
+    // Добавляем последний вопрос, если есть
+    if (currentQuestion && currentQuestion.options.length > 0 && currentQuestion.correct !== -1) {
         questions.push(currentQuestion);
     }
     
@@ -313,8 +340,7 @@ function downloadSample() {
         '✅ Правильный ответ: C'
     ];
     
-    const wsData = [sampleData];
-    const ws = XLSX.utils.aoa_to_sheet(wsData.map(row => [row]));
+    const ws = XLSX.utils.aoa_to_sheet([sampleData]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Вопросы');
     XLSX.writeFile(wb, 'образец_теста.xlsx');
