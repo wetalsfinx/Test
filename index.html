@@ -66,6 +66,7 @@ body{background:#f5f7fa;font-family:sans-serif}
     <h3>👨‍💼 Панель Администратора</h3>
     <div>
         <button id="copyFiltersBtn" class="btn btn-outline-secondary btn-sm me-2" title="Скопировать ссылку с текущими фильтрами">🔗 Копировать ссылку</button>
+        <button id="analyzeBtn" class="btn btn-info btn-sm me-2" title="Передать отфильтрованные данные в анализатор ошибок">🔍 Анализ ошибок</button>
         <button id="exportExcelBtn" class="btn btn-success btn-sm me-2" title="Выгрузить отфильтрованные результаты в Excel">📎 Выгрузить в Excel</button>
         <button id="refreshBtn" class="btn btn-primary btn-sm me-2" title="Обновить данные">🔄 Обновить</button>
         <button id="pdfCityBtn" class="btn-pdf-city" style="display:none;" title="Скачать PDF по выбранному городу">📄 PDF по городу</button>
@@ -156,36 +157,56 @@ window.addEventListener('load', () => {
     document.getElementById('date-to').addEventListener('change', () => { currentPage = 1; filterAndDisplay(); saveFiltersToLocalStorage(); });
     document.getElementById('refreshBtn').addEventListener('click', () => { if(currentTest) loadResults(currentTest.slug); });
     document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+    document.getElementById('analyzeBtn').addEventListener('click', sendToAnalyzer);
     document.getElementById('copyFiltersBtn').addEventListener('click', copyFiltersLink);
     document.getElementById('importFileInput').addEventListener('change', importTestFromJSON);
 });
 
+// ========== АВТОМАТИЧЕСКОЕ ЗАПОЛНЕНИЕ ГОРОДОВ ИЗ РЕЗУЛЬТАТОВ ==========
 async function updateCityListFromResults() {
     if (!currentTest) return false;
+    
     try {
         const { data: testData } = await sb.from('tests').select('city_list').eq('slug', currentTest.slug).single();
         if (testData?.city_list && testData.city_list.length > 0) {
             const cityFilter = document.getElementById('city-filter');
             let cityOptions = '<option value="">Все города</option>';
-            for (const city of testData.city_list) cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
+            for (const city of testData.city_list) {
+                cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
+            }
             cityFilter.innerHTML = cityOptions;
             return true;
         }
+        
         const { data: results } = await sb.from('results').select('city').eq('test_type', currentTest.slug);
         if (!results || results.length === 0) return false;
+        
         const cities = [...new Set(results.map(r => r.city).filter(c => c && c !== 'null' && c !== 'undefined' && c.trim() !== ''))];
         if (cities.length === 0) return false;
+        
         await sb.from('tests').update({ city_list: cities }).eq('slug', currentTest.slug);
+        
         const cityFilter = document.getElementById('city-filter');
         let cityOptions = '<option value="">Все города</option>';
-        for (const city of cities) cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
+        for (const city of cities) {
+            cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
+        }
         cityFilter.innerHTML = cityOptions;
+        
         return true;
-    } catch(e) { console.error(e); return false; }
+    } catch(e) {
+        console.error('Ошибка обновления городов:', e);
+        return false;
+    }
 }
 
 function saveFiltersToLocalStorage() {
-    const filters = { city: document.getElementById('city-filter').value, search: document.getElementById('search-input').value, dateFrom: document.getElementById('date-from').value, dateTo: document.getElementById('date-to').value };
+    const filters = {
+        city: document.getElementById('city-filter').value,
+        search: document.getElementById('search-input').value,
+        dateFrom: document.getElementById('date-from').value,
+        dateTo: document.getElementById('date-to').value
+    };
     localStorage.setItem('adminFilters', JSON.stringify(filters));
 }
 
@@ -203,12 +224,22 @@ function loadFiltersFromLocalStorage() {
 }
 
 function copyFiltersLink() {
-    const filters = { city: document.getElementById('city-filter').value, search: document.getElementById('search-input').value, dateFrom: document.getElementById('date-from').value, dateTo: document.getElementById('date-to').value, test: currentTest?.slug || '' };
+    const filters = {
+        city: document.getElementById('city-filter').value,
+        search: document.getElementById('search-input').value,
+        dateFrom: document.getElementById('date-from').value,
+        dateTo: document.getElementById('date-to').value,
+        test: currentTest?.slug || ''
+    };
     const url = new URL(window.location.href);
-    if (filters.city && filters.city !== '') url.searchParams.set('city', filters.city); else url.searchParams.delete('city');
-    if (filters.search) url.searchParams.set('search', filters.search); else url.searchParams.delete('search');
-    if (filters.dateFrom) url.searchParams.set('from', filters.dateFrom); else url.searchParams.delete('from');
-    if (filters.dateTo) url.searchParams.set('to', filters.dateTo); else url.searchParams.delete('to');
+    if (filters.city && filters.city !== '') url.searchParams.set('city', filters.city);
+    else url.searchParams.delete('city');
+    if (filters.search) url.searchParams.set('search', filters.search);
+    else url.searchParams.delete('search');
+    if (filters.dateFrom) url.searchParams.set('from', filters.dateFrom);
+    else url.searchParams.delete('from');
+    if (filters.dateTo) url.searchParams.set('to', filters.dateTo);
+    else url.searchParams.delete('to');
     if (filters.test) url.searchParams.set('test', filters.test);
     navigator.clipboard.writeText(url.toString());
     alert('✅ Ссылка с фильтрами скопирована!');
@@ -334,11 +365,16 @@ function renderPagination(totalPages) {
     const container = document.getElementById('pagination-container');
     if (totalPages <= 1) { container.innerHTML = ''; return; }
     let html = '';
-    for (let i = 1; i <= totalPages; i++) html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
     container.innerHTML = html;
 }
 
-function goToPage(page) { currentPage = page; filterAndDisplay(); }
+function goToPage(page) {
+    currentPage = page;
+    filterAndDisplay();
+}
 
 async function deleteResult(resultId) {
     if(!confirm('Удалить этот результат?')) return;
@@ -410,6 +446,27 @@ function initRealtime() {
     }).subscribe();
     document.getElementById('realtime-status').innerHTML = '🟢 Live';
     document.getElementById('realtime-status').className = 'badge bg-success';
+}
+
+// ========== ИСПРАВЛЕННАЯ ПЕРЕДАЧА ДАННЫХ В АНАЛИЗАТОР ==========
+function sendToAnalyzer() {
+    if (!currentFilteredResults.length) { alert('Нет данных для анализа'); return; }
+    
+    // Гарантируем, что isCorrect сохранён
+    const resultsToSend = currentFilteredResults.map(r => ({
+        ...r,
+        answers: r.answers ? r.answers.map(a => ({
+            ...a,
+            isCorrect: a.isCorrect === true || a.ok === true
+        })) : []
+    }));
+    
+    localStorage.setItem('analyzerData', JSON.stringify({
+        results: resultsToSend,
+        testName: currentTest?.name || 'Тест',
+        timestamp: new Date().toISOString()
+    }));
+    window.open('/Test/report_errors.html?fromAdmin=true', '_blank');
 }
 
 function exportToExcel() {
