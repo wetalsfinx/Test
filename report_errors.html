@@ -169,66 +169,13 @@ let employeeCounter = 0;
 let currentFilterCity = 'all';
 let currentSearchText = '';
 
-// ========== ПРИЁМ ДАННЫХ ИЗ АДМИНКИ ==========
-function loadFromAdminData(adminData) {
-    if (!adminData || !adminData.results || adminData.results.length === 0) return false;
-    
-    const rows = adminData.results.map(r => {
-        const row = {
-            'ФИО': r.user_id,
-            'Город': r.city || '',
-            'Баллы': `${r.score}/${r.total}`,
-            'Процент': `${Math.round(r.score/r.total*100)}%`,
-            'Дата': new Date(r.created_at).toLocaleString('ru-RU')
-        };
-        if (r.answers) {
-            r.answers.forEach((a, idx) => {
-                const i = idx + 1;
-                row[`Вопрос ${i}`] = a.text || '';
-                row[`Ответ сотрудника ${i}`] = a.selected || '';
-                row[`Правильный ответ ${i}`] = a.correct || '';
-                row[`Результат ${i}`] = a.isCorrect ? 'Верно' : 'Ошибка';
-            });
-        }
-        return row;
-    });
-    
-    processData(rows);
-    return true;
-}
-
-// Проверяем, есть ли данные из админки
-const urlParams = new URLSearchParams(location.search);
-if (urlParams.get('fromAdmin') === 'true') {
-    const storedData = localStorage.getItem('analyzerData');
-    if (storedData) {
-        try {
-            const data = JSON.parse(storedData);
-            if (data.results && data.results.length) {
-                loadFromAdminData(data);
-                document.getElementById('uploadArea').style.display = 'none';
-                document.getElementById('statsPanel').style.display = 'flex';
-                document.getElementById('filterBar').style.display = 'flex';
-                localStorage.removeItem('analyzerData');
-            } else {
-                document.getElementById('uploadArea').style.display = 'block';
-            }
-        } catch(e) { 
-            console.error('Ошибка загрузки данных из админки', e);
-            document.getElementById('uploadArea').style.display = 'block';
-        }
-    } else {
-        document.getElementById('uploadArea').style.display = 'block';
-    }
-} else {
-    document.getElementById('uploadArea').style.display = 'block';
-}
-
+// ========== ПАРСИНГ EXCEL (ПЕРЕПИСАН С НУЛЯ) ==========
 function parseExcelToEmployees(rows) {
     const employees = [];
     let empCounter = 0;
     
     for (const row of rows) {
+        // Берём ФИО из первой колонки
         const name = row['ФИО'] || '';
         if (!name) continue;
         
@@ -241,6 +188,7 @@ function parseExcelToEmployees(rows) {
             errors: []
         };
         
+        // Парсим баллы
         const scoreStr = row['Баллы'] || '';
         const scoreMatch = scoreStr.match(/(\d+)\/(\d+)/);
         if (scoreMatch) {
@@ -248,93 +196,112 @@ function parseExcelToEmployees(rows) {
             employee.total = parseInt(scoreMatch[2]);
         }
         
+        // Перебираем вопросы 1-11
         for (let i = 1; i <= 11; i++) {
             const result = row[`Результат ${i}`];
             const questionText = row[`Вопрос ${i}`] || '';
             const userAnswer = row[`Ответ сотрудника ${i}`] || '';
             const correctAnswer = row[`Правильный ответ ${i}`] || '';
             
-            let qNum = 0;
-            const lowerQuestion = questionText.toLowerCase();
-            if (lowerQuestion.includes("обеденный перерыв") || lowerQuestion.includes("торопитесь")) qNum = 1;
-            else if (lowerQuestion.includes("детскими серьгами") || lowerQuestion.includes("ребёнок")) qNum = 2;
-            else if (lowerQuestion.includes("день рождения подруге") || lowerQuestion.includes("бюджет")) qNum = 3;
-            else if (lowerQuestion.includes("кулон в подарок дочери") || lowerQuestion.includes("выпускной")) qNum = 4;
-            else if (lowerQuestion.includes("купил цепочку")) qNum = 5;
-            else if (lowerQuestion.includes("кольцо за") || lowerQuestion.includes("футляр")) qNum = 6;
-            else if (lowerQuestion.includes("серьги за") || lowerQuestion.includes("не уверен")) qNum = 7;
-            else if (lowerQuestion.includes("изумрудом") || lowerQuestion.includes("нет в наличии")) qNum = 8;
-            else if (lowerQuestion.includes("браслет на витрине") || lowerQuestion.includes("рассматривает браслет")) qNum = 9;
-            else if (lowerQuestion.includes("не уверена, что это моё") || lowerQuestion.includes("красиво, но")) qNum = 10;
-            else if (lowerQuestion.includes("витрину с кольцами") || lowerQuestion.includes("2 минуты")) qNum = 11;
-            
-            if (result === 'Ошибка' && questionText && qNum > 0) {
-                let variantNum = 0;
-                const lowerAnswer = userAnswer.toLowerCase();
-                if (qNum === 1) {
-                    if (lowerAnswer.includes("вижу, вы торопитесь") || lowerAnswer.includes("быстро покажу")) variantNum = 2;
-                    else if (lowerAnswer.includes("подбираете что-то конкретное") || lowerAnswer.includes("просто смотрите")) variantNum = 3;
-                    else if (lowerAnswer.includes("чем могу помочь")) variantNum = 4;
-                }
-                else if (qNum === 2) {
-                    if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама обратится")) variantNum = 1;
-                    else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
-                    else if (lowerAnswer.includes("вот у нас есть детские модели")) variantNum = 4;
-                }
-                else if (qNum === 3) {
-                    if (lowerAnswer.includes("сразу показываете") || lowerAnswer.includes("3-4")) variantNum = 1;
-                    else if ((lowerAnswer.includes("20 000") || lowerAnswer.includes("20000")) && (lowerAnswer.includes("15 000") || lowerAnswer.includes("15000"))) variantNum = 3;
-                    else if (lowerAnswer.includes("подарочный сертификат")) variantNum = 4;
-                }
-                else if (qNum === 4) {
-                    if (lowerAnswer.includes("популярный") && lowerAnswer.includes("выпускниц")) variantNum = 1;
-                    else if (lowerAnswer.includes("акция") && lowerAnswer.includes("коллекцию")) variantNum = 3;
-                    else if (lowerAnswer.includes("упаковать как подарок")) variantNum = 4;
-                }
-                else if (qNum === 5) {
-                    if (lowerAnswer.includes("не хотите посмотреть") && lowerAnswer.includes("что-то")) variantNum = 1;
-                    else if (lowerAnswer.includes("рассрочка") || lowerAnswer.includes("денег не хватит")) variantNum = 3;
-                    else if (lowerAnswer.includes("браслет")) variantNum = 4;
-                }
-                else if (qNum === 6) {
-                    if (lowerAnswer.includes("до того") && lowerAnswer.includes("окончательное решение")) variantNum = 1;
-                    else if (lowerAnswer.includes("после оплаты") && lowerAnswer.includes("упаковке")) variantNum = 3;
-                    else if (lowerAnswer.includes("не предлагаете")) variantNum = 4;
-                }
-                else if (qNum === 7) {
-                    if (lowerAnswer.includes("за 30 000") || lowerAnswer.includes("30000")) variantNum = 1;
-                    else if (lowerAnswer.includes("бриллиантами") && lowerAnswer.includes("цена выше")) variantNum = 3;
-                    else if (lowerAnswer.includes("отложим до зарплаты")) variantNum = 4;
-                }
-                else if (qNum === 8) {
-                    if (lowerAnswer.includes("к сожалению") && lowerAnswer.includes("нет")) variantNum = 1;
-                    else if (lowerAnswer.includes("привезти") && lowerAnswer.includes("неделю")) variantNum = 3;
-                    else if (lowerAnswer.includes("зачем") && lowerAnswer.includes("без камней")) variantNum = 4;
-                }
-                else if (qNum === 9) {
-                    if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит")) variantNum = 1;
-                    else if (lowerAnswer.includes("хотите примерить")) variantNum = 2;
-                    else if (lowerAnswer.includes("регулируется")) variantNum = 4;
-                }
-                else if (qNum === 10) {
-                    if (lowerAnswer.includes("давайте посмотрим другие")) variantNum = 1;
-                    else if (lowerAnswer.includes("хит продаж")) variantNum = 3;
-                    else if (lowerAnswer.includes("отложить")) variantNum = 4;
-                }
-                else if (qNum === 11) {
-                    if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит показать")) variantNum = 1;
-                    else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
-                    else if (lowerAnswer.includes("акция на кольца") || (lowerAnswer.includes("скидки") && lowerAnswer.includes("30%"))) variantNum = 4;
-                }
+            // Если результат — "Ошибка" (без учёта регистра)
+            if (result && result.toString().trim().toLowerCase() === 'ошибка') {
+                // Определяем номер вопроса по тексту
+                let qNum = 0;
+                const lowerQuestion = questionText.toLowerCase();
+                if (lowerQuestion.includes("обеденный перерыв") || lowerQuestion.includes("торопитесь")) qNum = 1;
+                else if (lowerQuestion.includes("детскими серьгами") || lowerQuestion.includes("ребёнок")) qNum = 2;
+                else if (lowerQuestion.includes("день рождения подруге") || lowerQuestion.includes("бюджет")) qNum = 3;
+                else if (lowerQuestion.includes("кулон в подарок дочери") || lowerQuestion.includes("выпускной")) qNum = 4;
+                else if (lowerQuestion.includes("купил цепочку")) qNum = 5;
+                else if (lowerQuestion.includes("кольцо за") || lowerQuestion.includes("футляр")) qNum = 6;
+                else if (lowerQuestion.includes("серьги за") || lowerQuestion.includes("не уверен")) qNum = 7;
+                else if (lowerQuestion.includes("изумрудом") || lowerQuestion.includes("нет в наличии")) qNum = 8;
+                else if (lowerQuestion.includes("браслет на витрине") || lowerQuestion.includes("рассматривает браслет")) qNum = 9;
+                else if (lowerQuestion.includes("не уверена, что это моё") || lowerQuestion.includes("красиво, но")) qNum = 10;
+                else if (lowerQuestion.includes("витрину с кольцами") || lowerQuestion.includes("2 минуты")) qNum = 11;
                 
-                employee.errors.push({
-                    questionNum: qNum,
-                    variantNum: variantNum,
-                    originalColumnNum: i,
-                    question: questionText,
-                    userAnswer: userAnswer,
-                    correctAnswer: correctAnswer
-                });
+                if (qNum > 0) {
+                    // Определяем вариант ответа (1-4)
+                    let variantNum = 1;
+                    const lowerAnswer = userAnswer.toLowerCase();
+                    
+                    // Простой способ: ищем ключевые слова в ответе
+                    if (qNum === 1) {
+                        if (lowerAnswer.includes("вижу, вы торопитесь") || lowerAnswer.includes("быстро покажу")) variantNum = 2;
+                        else if (lowerAnswer.includes("подбираете что-то конкретное") || lowerAnswer.includes("просто смотрите")) variantNum = 3;
+                        else if (lowerAnswer.includes("чем могу помочь")) variantNum = 4;
+                        else variantNum = 1;
+                    }
+                    else if (qNum === 2) {
+                        if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама обратится")) variantNum = 1;
+                        else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
+                        else if (lowerAnswer.includes("вот у нас есть детские модели")) variantNum = 4;
+                        else variantNum = 3;
+                    }
+                    else if (qNum === 3) {
+                        if (lowerAnswer.includes("сразу показываете") || lowerAnswer.includes("3-4")) variantNum = 1;
+                        else if ((lowerAnswer.includes("20 000") || lowerAnswer.includes("20000")) && (lowerAnswer.includes("15 000") || lowerAnswer.includes("15000"))) variantNum = 3;
+                        else if (lowerAnswer.includes("подарочный сертификат")) variantNum = 4;
+                        else variantNum = 2;
+                    }
+                    else if (qNum === 4) {
+                        if (lowerAnswer.includes("популярный") && lowerAnswer.includes("выпускниц")) variantNum = 1;
+                        else if (lowerAnswer.includes("акция") && lowerAnswer.includes("коллекцию")) variantNum = 3;
+                        else if (lowerAnswer.includes("упаковать как подарок")) variantNum = 4;
+                        else variantNum = 2;
+                    }
+                    else if (qNum === 5) {
+                        if (lowerAnswer.includes("не хотите посмотреть") && lowerAnswer.includes("что-то")) variantNum = 1;
+                        else if (lowerAnswer.includes("рассрочка") || lowerAnswer.includes("денег не хватит")) variantNum = 3;
+                        else if (lowerAnswer.includes("браслет")) variantNum = 4;
+                        else variantNum = 2;
+                    }
+                    else if (qNum === 6) {
+                        if (lowerAnswer.includes("до того") && lowerAnswer.includes("окончательное решение")) variantNum = 1;
+                        else if (lowerAnswer.includes("после оплаты") && lowerAnswer.includes("упаковке")) variantNum = 3;
+                        else if (lowerAnswer.includes("не предлагаете")) variantNum = 4;
+                        else variantNum = 2;
+                    }
+                    else if (qNum === 7) {
+                        if (lowerAnswer.includes("за 30 000") || lowerAnswer.includes("30000")) variantNum = 1;
+                        else if (lowerAnswer.includes("бриллиантами") && lowerAnswer.includes("цена выше")) variantNum = 3;
+                        else if (lowerAnswer.includes("отложим до зарплаты")) variantNum = 4;
+                        else variantNum = 2;
+                    }
+                    else if (qNum === 8) {
+                        if (lowerAnswer.includes("к сожалению") && lowerAnswer.includes("нет")) variantNum = 1;
+                        else if (lowerAnswer.includes("привезти") && lowerAnswer.includes("неделю")) variantNum = 3;
+                        else if (lowerAnswer.includes("зачем") && lowerAnswer.includes("без камней")) variantNum = 4;
+                        else variantNum = 2;
+                    }
+                    else if (qNum === 9) {
+                        if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит")) variantNum = 1;
+                        else if (lowerAnswer.includes("хотите примерить")) variantNum = 2;
+                        else if (lowerAnswer.includes("регулируется")) variantNum = 4;
+                        else variantNum = 3;
+                    }
+                    else if (qNum === 10) {
+                        if (lowerAnswer.includes("давайте посмотрим другие")) variantNum = 1;
+                        else if (lowerAnswer.includes("хит продаж")) variantNum = 3;
+                        else if (lowerAnswer.includes("отложить")) variantNum = 4;
+                        else variantNum = 2;
+                    }
+                    else if (qNum === 11) {
+                        if (lowerAnswer.includes("ждёте") && lowerAnswer.includes("сама попросит показать")) variantNum = 1;
+                        else if (lowerAnswer.includes("издалека") && lowerAnswer.includes("если будут вопросы")) variantNum = 2;
+                        else if (lowerAnswer.includes("акция на кольца") || (lowerAnswer.includes("скидки") && lowerAnswer.includes("30%"))) variantNum = 4;
+                        else variantNum = 3;
+                    }
+                    
+                    employee.errors.push({
+                        questionNum: qNum,
+                        variantNum: variantNum,
+                        originalColumnNum: i,
+                        question: questionText,
+                        userAnswer: userAnswer,
+                        correctAnswer: correctAnswer
+                    });
+                }
             }
         }
         employees.push(employee);
