@@ -33,6 +33,7 @@ body{background:#f5f7fa;font-family:sans-serif}
 .chart-container{height:200px;position:relative}
 .test-selector { background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,.05); }
 .test-selector select { max-width: 300px; }
+.export-buttons { display: flex; gap: 8px; }
 @media (max-width: 768px) {
     .filter-bar .row { flex-direction: column; }
     .filter-bar .col-md-3, .filter-bar .col-md-2, .filter-bar .col-md-1 { width: 100%; margin-bottom: 10px; }
@@ -42,6 +43,7 @@ body{background:#f5f7fa;font-family:sans-serif}
     .user-log .d-flex { flex-direction: column; gap: 8px; }
     .user-log .d-flex .d-flex { flex-direction: row; justify-content: space-between; width: 100%; }
     .btn-sm { padding: 4px 8px; font-size: 11px; }
+    .export-buttons { flex-wrap: wrap; }
 }
 </style>
 </head>
@@ -81,7 +83,7 @@ body{background:#f5f7fa;font-family:sans-serif}
     </div>
 </div>
 
-<!-- Блок результатов (динамический) -->
+<!-- Блок результатов -->
 <div id="resultsContainer" style="display:none">
     <div class="row mb-4">
         <div class="col-md-4"><div class="stats-card"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="total-count">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
@@ -96,11 +98,13 @@ body{background:#f5f7fa;font-family:sans-serif}
         <div class="row g-3">
             <div class="col-md-3"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div>
             <div class="col-md-2"><select id="city-filter" class="form-select"><option value="">Все города</option></select></div>
-            <div class="col-md-2"><input type="date" id="date-from" class="form-control" placeholder="Дата от"></div>
-            <div class="col-md-2"><input type="date" id="date-to" class="form-control" placeholder="Дата до"></div>
+            <div class="col-md-2"><input type="date" id="date-from" class="form-control"></div>
+            <div class="col-md-2"><input type="date" id="date-to" class="form-control"></div>
             <div class="col-md-2">
-                <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()">📎 Экспорт</button>
-                <button class="btn btn-sm btn-outline-primary ms-1" onclick="exportDetailedToExcel()">📎 Детальный экспорт</button>
+                <div class="export-buttons">
+                    <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()">📎 Экспорт</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportDetailedToExcel()">📎 Детальный</button>
+                </div>
             </div>
             <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetFilters()">Сброс</button></div>
         </div>
@@ -112,14 +116,12 @@ body{background:#f5f7fa;font-family:sans-serif}
 </div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const SUPABASE_URL='https://qtostraaqrnjbxiydlip.supabase.co';
 const SUPABASE_KEY='sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let currentTest = null;
-let currentTestData = null;
 let currentResults = [];
 let scoreChart = null;
 let cityChart = null;
@@ -156,19 +158,17 @@ async function loadTests() {
         const slug = e.target.value;
         if (!slug) {
             currentTest = null;
-            currentTestData = null;
             document.getElementById('resultsContainer').style.display = 'none';
             document.getElementById('deleteTestBtn').style.display = 'none';
             return;
         }
         const selectedOption = selector.options[selector.selectedIndex];
         const citiesJson = selectedOption.getAttribute('data-cities');
-        currentTestData = { slug, name: selectedOption.text, cities: JSON.parse(citiesJson || '[]') };
-        currentTest = currentTestData;
+        currentTest = { slug, name: selectedOption.text, cities: JSON.parse(citiesJson || '[]') };
         
         const cityFilter = document.getElementById('city-filter');
         let cityOptions = '<option value="">Все города</option>';
-        for (const city of currentTestData.cities) {
+        for (const city of currentTest.cities) {
             cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
         }
         cityFilter.innerHTML = cityOptions;
@@ -181,12 +181,7 @@ async function loadTests() {
 
 async function loadResults(slug) {
     const { data, error } = await sb.from('results').select('*').eq('test_type', slug).order('created_at', { ascending: false });
-    if (error) {
-        console.error(error);
-        currentResults = [];
-    } else {
-        currentResults = data || [];
-    }
+    currentResults = error ? [] : (data || []);
     renderResults();
 }
 
@@ -230,7 +225,7 @@ function renderResults() {
                 <div><span class="user-name">${escapeHtml(r.surname||'')} ${escapeHtml(r.name||'')}</span><span class="user-city">📍 ${escapeHtml(r.city||'не указан')}</span><span class="badge bg-${clr} ms-2">${r.score}/${r.total} (${p}%)</span></div>
                 <div class="d-flex align-items-center gap-2">
                     <small>${new Date(r.created_at).toLocaleString()}</small>
-                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); generateUserReport('${r.id}')" style="padding:2px 8px" title="Отчёт"><i class="bi bi-file-text"></i></button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); generateUserReport('${r.id}')" style="padding:2px 8px"><i class="bi bi-file-text"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteResult('${r.id}')" style="padding:2px 8px"><i class="bi bi-trash"></i></button>
                     <i class="bi bi-chevron-down expand-icon ms-2"></i>
                 </div>
@@ -243,21 +238,15 @@ function renderResults() {
 
 async function deleteResult(resultId) {
     if(!confirm('Удалить этот результат?')) return;
-    const { error } = await sb.from('results').delete().eq('id', resultId);
-    if(error) alert('Ошибка: ' + error.message);
-    else await loadResults(currentTest.slug);
+    await sb.from('results').delete().eq('id', resultId);
+    await loadResults(currentTest.slug);
 }
 
 async function deleteCurrentTest() {
     if(!currentTest) return;
-    if(!confirm(`Удалить тест "${currentTest.name}" и ВСЕ его результаты? Это действие нельзя отменить!`)) return;
-    
-    const { error: resultsError } = await sb.from('results').delete().eq('test_type', currentTest.slug);
-    if(resultsError) alert('Ошибка удаления результатов: ' + resultsError.message);
-    
-    const { error: testError } = await sb.from('tests').delete().eq('slug', currentTest.slug);
-    if(testError) alert('Ошибка удаления теста: ' + testError.message);
-    
+    if(!confirm(`Удалить тест "${currentTest.name}" и все результаты?`)) return;
+    await sb.from('results').delete().eq('test_type', currentTest.slug);
+    await sb.from('tests').delete().eq('slug', currentTest.slug);
     alert('Тест удалён');
     await loadTests();
     document.getElementById('resultsContainer').style.display = 'none';
@@ -291,63 +280,40 @@ function updateCharts() {
 
 function generateUserReport(resultId) {
     const userData = currentResults.find(r => r.id == resultId);
-    if(!userData) { alert('Данные не найдены'); return; }
-    
+    if(!userData) return;
     const fullName = `${userData.surname || ''} ${userData.name || ''}`.trim();
     const percent = Math.round(userData.score / userData.total * 100);
-    
     let answersHtml = '';
-    if(userData.answers && userData.answers.length > 0) {
+    if(userData.answers) {
         userData.answers.forEach((a, i) => {
             const isCorrect = a.isCorrect === true || a.ok === true;
-            const userAnswer = a.selected || a.sel || 'Не указан';
-            const correctAnswer = a.correct || a.cor || 'Не указан';
-            let questionText = a.question || a.qs || `Вопрос ${i+1}`;
-            if(questionText.length > 200) questionText = questionText.substring(0,200);
-            
             if (!isCorrect) {
-                answersHtml += `<div style="margin-bottom:20px;padding:12px;background:#ffebee;border-radius:8px;border-left:4px solid #f44336">
-                    <div style="font-weight:bold;margin-bottom:8px;">❌ Ошибка в вопросе ${i+1}</div>
-                    <div style="margin-bottom:8px;color:#555;">${escapeHtml(questionText)}</div>
-                    <div><span style="color:#d32f2f;">✖ Ваш ответ:</span> ${escapeHtml(userAnswer)}</div>
-                    <div><span style="color:#2e7d32;">✓ Правильный ответ:</span> ${escapeHtml(correctAnswer)}</div>
-                    <div style="margin-top:8px;font-size:12px;color:#666;">💡 Совет: обратите внимание на правильный вариант</div>
+                answersHtml += `<div style="margin-bottom:15px;padding:12px;background:#ffebee;border-radius:8px">
+                    <strong>❌ Вопрос ${i+1}</strong><br>
+                    <div><strong>Ваш ответ:</strong> ${escapeHtml(a.selected || a.sel)}</div>
+                    <div><strong>Правильный ответ:</strong> ${escapeHtml(a.correct || a.cor)}</div>
                 </div>`;
             }
         });
     }
-    
-    const reportHtml = `
+    const win = window.open('', '_blank');
+    win.document.write(`
         <!DOCTYPE html>
         <html>
         <head><meta charset="UTF-8"><title>Отчёт: ${fullName}</title>
-        <style>
-            body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px}
-            .header{text-align:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #0d6efd}
-            .header h1{color:#0d6efd;margin:0}
-            .info{background:#f5f7fa;padding:15px;border-radius:8px;margin-bottom:30px}
-            .score{display:inline-block;padding:5px 15px;border-radius:20px;font-weight:bold;margin-top:10px}
-            .score-good{background:#4caf50;color:white}
-            .score-normal{background:#ff9800;color:white}
-            .score-bad{background:#f44336;color:white}
-            .btn-print{background:#0d6efd;color:white;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;margin-bottom:10px}
-            @media print { .no-print { display: none; } }
-        </style>
+        <style>body{font-family:Arial;padding:20px}</style>
         </head>
         <body>
-            <div class="no-print" style="text-align:right;margin-bottom:10px"><button class="btn-print" onclick="window.print()">🖨️ Распечатать / Сохранить PDF</button></div>
-            <div class="header"><h1>📊 Отчёт по тесту</h1><h2>«${currentTest?.name || ''}»</h2></div>
-            <div class="info"><table style="width:100%"><tr><td style="padding:5px;"><strong>Сотрудник:</strong> ${fullName}<\/td><td style="padding:5px;"><strong>Город:</strong> ${userData.city || 'не указан'}<\/td><\/tr>
-            <tr><td style="padding:5px;"><strong>Дата:</strong> ${new Date(userData.created_at).toLocaleString()}<\/td><td style="padding:5px;"><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)<\/td><\/tr><\/table>
-            <div class="score ${percent>=80?'score-good':percent>=50?'score-normal':'score-bad'}">${percent>=80?'🎉 Отлично!':percent>=50?'📈 Хороший результат':'📚 Требуется изучение материалов'}</div></div>
-            <div style="margin:20px 0;"><strong>📝 Разбор ошибок:</strong></div>
-            ${answersHtml || '<div style="color:#999;">✅ Нет ошибок! Отличная работа!</div>'}
-            <div class="footer">Отчёт сгенерирован автоматически</div>
+            <h1>📊 Отчёт по тесту</h1>
+            <p><strong>Сотрудник:</strong> ${fullName}</p>
+            <p><strong>Город:</strong> ${userData.city || 'не указан'}</p>
+            <p><strong>Результат:</strong> ${userData.score} из ${userData.total} (${percent}%)</p>
+            <h3>Разбор ошибок:</h3>
+            ${answersHtml || '<p>✅ Нет ошибок</p>'}
+            <p style="margin-top:30px;font-size:12px;color:#999;">Отчёт сгенерирован автоматически</p>
         </body>
         </html>
-    `;
-    const win = window.open('', '_blank');
-    win.document.write(reportHtml);
+    `);
     win.document.close();
 }
 
@@ -369,7 +335,6 @@ function exportToExcel() {
 
 function exportDetailedToExcel() {
     if (!currentResults.length) return alert("Нет данных");
-    
     const excelData = [];
     for (const r of currentResults) {
         const row = {
@@ -379,8 +344,7 @@ function exportDetailedToExcel() {
             'Процент': `${Math.round(r.score / r.total * 100)}%`,
             'Дата': new Date(r.created_at).toLocaleString()
         };
-        
-        if (r.answers && r.answers.length > 0) {
+        if (r.answers) {
             for (let i = 0; i < r.answers.length; i++) {
                 const a = r.answers[i];
                 row[`Вопрос ${i+1}`] = a.question || a.qs || '';
@@ -391,7 +355,6 @@ function exportDetailedToExcel() {
         }
         excelData.push(row);
     }
-    
     const ws = XLSX.utils.json_to_sheet(excelData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, currentTest?.name || 'Детальные результаты');
