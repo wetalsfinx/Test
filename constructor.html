@@ -372,6 +372,56 @@
 
     // Инициализация
     renderQuestions();
+// ========== СОХРАНЕНИЕ ТЕСТА В SUPABASE ==========
+async function generateAndSaveTest() {
+    const name = document.getElementById('testName').value.trim();
+    if (!name) { alert('Введите название теста'); return; }
+    if (questions.length === 0) { alert('Добавьте хотя бы один вопрос'); return; }
+    if (cities.length === 0) { alert('Добавьте хотя бы один город'); return; }
+    
+    const desc = document.getElementById('testDesc').value.trim();
+    let slug = name.toLowerCase().replace(/[^а-яёa-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    if (!slug) slug = 'test_' + Date.now();
+    
+    try {
+        const { error } = await sb.from('tests').insert({
+            name: name,
+            slug: slug,
+            questions_count: questions.length,
+            city_list: cities,
+            description: desc,
+            questions: questions,
+            created_at: new Date().toISOString()
+        });
+        
+        if (error) {
+            if (error.code === '23505') {
+                alert('❌ Тест с таким именем уже существует! Измените название.');
+            } else {
+                console.error('Ошибка сохранения:', error);
+                alert('Ошибка сохранения: ' + error.message);
+            }
+            return;
+        }
+        
+        const testUrl = `https://wetalsfinx.github.io/Test/test-runner.html?slug=${slug}`;
+        
+        alert(`✅ Тест "${name}" успешно создан!\n\n🔗 Ссылка для прохождения:\n${testUrl}\n\n📋 Тест автоматически появится в админке.`);
+        
+        // Очищаем форму
+        document.getElementById('testName').value = '';
+        document.getElementById('testDesc').value = '';
+        cities = [];
+        questions = [];
+        renderCities();
+        renderQuestions();
+        document.getElementById('resultContainer').style.display = 'none';
+        
+    } catch(e) {
+        console.error('Ошибка:', e);
+        alert('Ошибка подключения к Supabase');
+    }
+}
 </script>
 </body>
 </html>
