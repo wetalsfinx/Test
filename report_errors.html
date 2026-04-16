@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
@@ -24,10 +25,6 @@
         .btn-print:hover { background: #0b5ed7; }
         .btn-pdf { background: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 5px; font-size: 12px; margin-left: 10px; cursor: pointer; }
         .btn-pdf:hover { background: #c82333; }
-        .comparison-table { width: 100%; margin-top: 10px; border-collapse: collapse; }
-        .comparison-table td { padding: 8px; border: 1px solid #ddd; vertical-align: top; }
-        .table-wrong { background: #f8d7da; }
-        .table-correct { background: #d4edda; }
         @media print {
             .no-print { display: none; }
             .error-header { background: #dc3545 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -93,14 +90,14 @@ function getRecommendationHTML(questionNum, userAnswer, correctAnswer) {
     `;
 }
 
-function generatePDF(employee) {
+async function generatePDF(employee) {
     const percent = Math.round(employee.score / employee.total * 100);
     const errorCount = employee.errors.length;
     
     let errorsHtml = '';
     for (const err of employee.errors) {
         errorsHtml += `
-            <div class="wrong-answer">
+            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0;">
                 <strong>❌ Вопрос ${err.num}:</strong><br>
                 <div class="mt-1"><strong>Текст вопроса:</strong><br>${escapeHtml(err.question)}</div>
                 <div class="mt-1"><span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}</div>
@@ -124,7 +121,7 @@ function generatePDF(employee) {
             .score-normal { background: #ff9800; color: white; }
             .score-bad { background: #f44336; color: white; }
             .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
-            @media print { .no-print { display: none; } }
+            .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; }
         </style>
         </head>
         <body>
@@ -144,27 +141,28 @@ function generatePDF(employee) {
         </html>
     `;
     
-    const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `Отчёт_${employee.name.replace(/[^а-яёa-z0-9]/gi, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
     const element = document.createElement('div');
     element.innerHTML = html;
     element.style.position = 'absolute';
     element.style.left = '-9999px';
     document.body.appendChild(element);
     
-    html2pdf().set(opt).from(element).save().then(() => {
-        document.body.removeChild(element);
-    }).catch(err => {
-        console.error('Ошибка PDF:', err);
+    const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `Отчёт_${employee.name.replace(/[^а-яёa-z0-9]/gi, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    
+    try {
+        await html2pdf().set(opt).from(element).save();
+    } catch(e) {
+        console.error('Ошибка PDF:', e);
         alert('Ошибка при создании PDF');
+    } finally {
         document.body.removeChild(element);
-    });
+    }
 }
 
 document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -195,7 +193,9 @@ function processData(rows) {
         if (scoreMatch) { employee.score = parseInt(scoreMatch[1]); employee.total = parseInt(scoreMatch[2]); }
         
         for (let i = 1; i <= 11; i++) {
-            if (row[`Результат ${i}`] === 'Ошибка') {
+            const resultValue = row[`Результат ${i}`];
+            // СРАВНИВАЕМ КАК СТРОКУ, УБИРАЯ ПРОБЕЛЫ
+            if (resultValue && resultValue.toString().trim() === 'Ошибка') {
                 employee.errors.push({
                     num: i,
                     question: row[`Вопрос ${i}`] || '',
@@ -237,8 +237,6 @@ function processData(rows) {
             `;
         }
         
-        const empJson = JSON.stringify(emp).replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
-        
         html += `
             <div id="emp-${emp.id}" class="error-card">
                 <div class="error-header ${errorCount === 0 ? 'green' : ''}" onclick="toggleBody(this)">
@@ -250,7 +248,7 @@ function processData(rows) {
                         </div>
                         <div>
                             <span class="badge bg-secondary">Ошибок: ${errorCount}</span>
-                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); generatePDF(${empJson})">📄 Скачать PDF</button>
+                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); generatePDF(${JSON.stringify(emp).replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0')})">📄 Скачать PDF</button>
                             <i class="bi bi-chevron-down ms-2"></i>
                         </div>
                     </div>
