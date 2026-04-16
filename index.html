@@ -65,7 +65,6 @@ body{background:#f5f7fa;font-family:sans-serif}
     <h3>👨‍💼 Панель Администратора</h3>
     <div>
         <button id="copyFiltersBtn" class="btn btn-outline-secondary btn-sm me-2" title="Скопировать ссылку с текущими фильтрами">🔗 Копировать ссылку</button>
-        <button id="analyzeBtn" class="btn btn-info btn-sm me-2" title="Передать отфильтрованные данные в анализатор ошибок">🔍 Анализ ошибок</button>
         <button id="exportExcelBtn" class="btn btn-success btn-sm me-2" title="Выгрузить отфильтрованные результаты в Excel">📎 Выгрузить в Excel</button>
         <button id="refreshBtn" class="btn btn-primary btn-sm me-2" title="Обновить данные">🔄 Обновить</button>
         <button id="pdfCityBtn" class="btn-pdf-city" style="display:none;" title="Скачать PDF по выбранному городу">📄 PDF по городу</button>
@@ -156,7 +155,6 @@ window.addEventListener('load', () => {
     document.getElementById('date-to').addEventListener('change', () => { currentPage = 1; filterAndDisplay(); saveFiltersToLocalStorage(); });
     document.getElementById('refreshBtn').addEventListener('click', () => { if(currentTest) loadResults(currentTest.slug); });
     document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
-    document.getElementById('analyzeBtn').addEventListener('click', sendToAnalyzer);
     document.getElementById('copyFiltersBtn').addEventListener('click', copyFiltersLink);
     document.getElementById('importFileInput').addEventListener('change', importTestFromJSON);
 });
@@ -445,54 +443,6 @@ function initRealtime() {
     }).subscribe();
     document.getElementById('realtime-status').innerHTML = '🟢 Live';
     document.getElementById('realtime-status').className = 'badge bg-success';
-}
-
-// ========== ИСПРАВЛЕННАЯ ПЕРЕДАЧА ДАННЫХ В АНАЛИЗАТОР ==========
-function sendToAnalyzer() {
-    if (!currentFilteredResults.length) { alert('Нет данных для анализа'); return; }
-    
-    // БЕРЁМ ОРИГИНАЛЬНЫЕ РЕЗУЛЬТАТЫ (НЕ ОТФИЛЬТРОВАННЫЕ) И КОПИРУЕМ ПОЛНОСТЬЮ
-    const resultsToSend = currentFilteredResults.map(r => {
-        // Создаём копию результата
-        const resultCopy = {
-            user_id: r.user_id,
-            name: r.name,
-            surname: r.surname,
-            city: r.city,
-            score: r.score,
-            total: r.total,
-            created_at: r.created_at,
-            answers: []
-        };
-        
-        // Копируем ответы с явным указанием isCorrect
-        if (r.answers && Array.isArray(r.answers)) {
-            resultCopy.answers = r.answers.map(a => {
-                // Определяем isCorrect: проверяем все возможные варианты
-                let isCorrect = false;
-                if (a.isCorrect === true) isCorrect = true;
-                else if (a.ok === true) isCorrect = true;
-                else if (a.isCorrect === false) isCorrect = false;
-                else if (a.ok === false) isCorrect = false;
-                
-                return {
-                    text: a.text || a.qs || '',
-                    selected: a.selected || a.sel || '',
-                    correct: a.correct || a.cor || '',
-                    isCorrect: isCorrect
-                };
-            });
-        }
-        
-        return resultCopy;
-    });
-    
-    localStorage.setItem('analyzerData', JSON.stringify({
-        results: resultsToSend,
-        testName: currentTest?.name || 'Тест',
-        timestamp: new Date().toISOString()
-    }));
-    window.open('/Test/report_errors.html?fromAdmin=true', '_blank');
 }
 
 function exportToExcel() {
