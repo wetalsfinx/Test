@@ -32,7 +32,7 @@
         <div class="import-area" id="importArea" onclick="document.getElementById('excelFile').click()">
             <i class="bi bi-cloud-upload fs-1"></i>
             <p class="mt-2">Нажмите или перетащите Excel-файл (.xlsx)</p>
-            <small class="text-muted">Формат: любые колонки. Программа сама найдёт вопросы, варианты A) B) C) D) и Правильный ответ</small>
+            <small class="text-muted">Формат: вопросы текстом, варианты A) ... B) ... и строка "✅ Правильный ответ: X"</small>
             <input type="file" id="excelFile" accept=".xlsx, .xls" style="display:none">
         </div>
         <div class="mt-2">
@@ -216,54 +216,81 @@ function renderQuestions() {
     container.innerHTML = html;
 }
 
-// Импорт из Excel
+// ========== НОВЫЙ ПАРСИНГ EXCEL ДЛЯ ВАШЕГО ФОРМАТА ==========
+function parseExcelToQuestions(fileData) {
+    const workbook = XLSX.read(fileData, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const text = XLSX.utils.sheet_to_txt(sheet);
+    const lines = text.split(/\r?\n/);
+    
+    const questions = [];
+    let currentQuestion = null;
+    
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (line === "") continue;
+        
+        // Ищем вопрос (строка, которая начинается не с A) B) C) D) и не с ✅)
+        const isOption = /^[A-Da-d][\)\.]\s*/.test(line);
+        const isCorrect = line.includes("✅") && line.includes("Правильный ответ:");
+        
+        if (!isOption && !isCorrect && line.length > 10) {
+            // Сохраняем предыдущий вопрос
+            if (currentQuestion && currentQuestion.options && currentQuestion.options.length > 0) {
+                questions.push(currentQuestion);
+            }
+            // Начинаем новый вопрос
+            currentQuestion = {
+                text: line,
+                options: [],
+                correct: -1
+            };
+            continue;
+        }
+        
+        // Ищем вариант ответа A) ... или A. ...
+        const optionMatch = line.match(/^([A-Da-d])[\)\.]\s*(.+)/);
+        if (optionMatch && currentQuestion) {
+            const letter = optionMatch[1].toUpperCase();
+            const optionText = optionMatch[2];
+            currentQuestion.options.push(optionText);
+            continue;
+        }
+        
+        // Ищем правильный ответ
+        const correctMatch = line.match(/✅\s*Правильный ответ:\s*([A-Da-d])/i);
+        if (correctMatch && currentQuestion) {
+            const correctLetter = correctMatch[1].toUpperCase();
+            const index = correctLetter.charCodeAt(0) - 65;
+            if (index >= 0 && index < currentQuestion.options.length) {
+                currentQuestion.correct = index;
+            }
+            continue;
+        }
+    }
+    
+    // Добавляем последний вопрос
+    if (currentQuestion && currentQuestion.options && currentQuestion.options.length > 0 && currentQuestion.correct !== -1) {
+        questions.push(currentQuestion);
+    }
+    
+    return questions;
+}
+
 document.getElementById('excelFile').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet);
-        
-        if (!rows.length) { alert('Файл пуст'); return; }
-        
-        const headers = Object.keys(rows[0]);
-        let questionCol = headers.find(h => h.toLowerCase().includes('вопрос') || h.toLowerCase().includes('текст')) || headers[0];
-        let answerCols = headers.filter(h => /[a-dа-д]/i.test(h) || h.toLowerCase().includes('вариант') || h.toLowerCase().includes('ответ'));
-        let correctCol = headers.find(h => h.toLowerCase().includes('правильн') || h.toLowerCase().includes('верн') || h.toLowerCase().includes('коррект'));
-        
-        if (answerCols.length < 2) answerCols = headers.slice(1, 5);
-        
-        const newQuestions = [];
-        for (const row of rows) {
-            const questionText = row[questionCol] || '';
-            if (!questionText) continue;
-            const options = answerCols.map(c => row[c] || '').filter(opt => opt !== '');
-            let correct = 0;
-            if (correctCol) {
-                const correctVal = row[correctCol]?.toString().trim();
-                if (correctVal) {
-                    const index = answerCols.findIndex(c => c.toLowerCase().includes(correctVal.toLowerCase()));
-                    if (index >= 0) correct = index;
-                    else if (/^[a-dа-д]$/i.test(correctVal)) {
-                        const letterIndex = 'abcdabcd'.indexOf(correctVal.toLowerCase());
-                        if (letterIndex >= 0 && letterIndex < options.length) correct = letterIndex;
-                    }
-                }
-            }
-            if (questionText && options.length >= 2) {
-                newQuestions.push({ text: questionText, options: options, correct: correct });
-            }
-        }
+        const newQuestions = parseExcelToQuestions(data);
         
         if (newQuestions.length > 0) {
             questions = newQuestions;
             renderQuestions();
-            alert(`Загружено ${newQuestions.length} вопросов`);
+            alert(`✅ Загружено ${questions.length} вопросов`);
         } else {
-            alert('Не удалось загрузить вопросы. Проверьте формат файла.');
+            alert('❌ Не удалось загрузить вопросы. Проверьте формат: вопросы текстом, варианты A) ... B) ... и строка "✅ Правильный ответ: X"');
         }
     };
     reader.readAsArrayBuffer(file);
@@ -271,10 +298,23 @@ document.getElementById('excelFile').addEventListener('change', function(e) {
 
 function downloadSample() {
     const sampleData = [
-        { 'Вопрос': 'Пример вопроса 1', 'А': 'Вариант А1', 'Б': 'Вариант Б1', 'В': 'Вариант В1', 'Г': 'Вариант Г1', 'Правильный': 'А' },
-        { 'Вопрос': 'Пример вопроса 2', 'А': 'Вариант А2', 'Б': 'Вариант Б2', 'В': 'Вариант В2', 'Г': 'Вариант Г2', 'Правильный': 'Б' }
+        'Клиентка говорит: «Мне нужно кольцо, примерно до 30 000 рублей». Что делаете?',
+        'A) Сразу показываете 3-4 кольца в пределах 30 000 ₽',
+        'B) Спрашиваете: «А для какого случая? Это подарок или для себя?»',
+        'C) Показываете сначала кольцо за 35 000 ₽ (якорь), затем за 30 000 ₽',
+        'D) Спрашиваете: «А готовы ли вы немного добавить за лучшее качество камня?»',
+        '✅ Правильный ответ: B',
+        '',
+        'Клиент заходит в магазин в обеденный перерыв, смотрит на часы и быстро идёт к витрине. Что говорите?',
+        'A) «Добрый день! Чем могу помочь?»',
+        'B) «Здравствуйте! Подбираете кольцо для себя или в подарок?»',
+        'C) «Добрый день! У нас сегодня скидка 30% на бриллианты и можно оплатить бонусами до 80%»',
+        'D) Молча стоите рядом, давая клиентке время осмотреться',
+        '✅ Правильный ответ: C'
     ];
-    const ws = XLSX.utils.json_to_sheet(sampleData);
+    
+    const wsData = [sampleData];
+    const ws = XLSX.utils.aoa_to_sheet(wsData.map(row => [row]));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Вопросы');
     XLSX.writeFile(wb, 'образец_теста.xlsx');
@@ -384,36 +424,14 @@ importArea.addEventListener('drop', e => {
         const reader = new FileReader();
         reader.onload = e => {
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(sheet);
-            if (!rows.length) { alert('Файл пуст'); return; }
-            const headers = Object.keys(rows[0]);
-            let questionCol = headers.find(h => h.toLowerCase().includes('вопрос') || h.toLowerCase().includes('текст')) || headers[0];
-            let answerCols = headers.filter(h => /[a-dа-д]/i.test(h) || h.toLowerCase().includes('вариант') || h.toLowerCase().includes('ответ'));
-            let correctCol = headers.find(h => h.toLowerCase().includes('правильн') || h.toLowerCase().includes('верн') || h.toLowerCase().includes('коррект'));
-            if (answerCols.length < 2) answerCols = headers.slice(1, 5);
-            const newQuestions = [];
-            for (const row of rows) {
-                const questionText = row[questionCol] || '';
-                if (!questionText) continue;
-                const options = answerCols.map(c => row[c] || '').filter(opt => opt !== '');
-                let correct = 0;
-                if (correctCol) {
-                    const correctVal = row[correctCol]?.toString().trim();
-                    if (correctVal) {
-                        const index = answerCols.findIndex(c => c.toLowerCase().includes(correctVal.toLowerCase()));
-                        if (index >= 0) correct = index;
-                        else if (/^[a-dа-д]$/i.test(correctVal)) {
-                            const letterIndex = 'abcdabcd'.indexOf(correctVal.toLowerCase());
-                            if (letterIndex >= 0 && letterIndex < options.length) correct = letterIndex;
-                        }
-                    }
-                }
-                if (questionText && options.length >= 2) newQuestions.push({ text: questionText, options: options, correct: correct });
+            const newQuestions = parseExcelToQuestions(data);
+            if (newQuestions.length > 0) {
+                questions = newQuestions;
+                renderQuestions();
+                alert(`✅ Загружено ${questions.length} вопросов`);
+            } else {
+                alert('❌ Не удалось загрузить вопросы');
             }
-            if (newQuestions.length > 0) { questions = newQuestions; renderQuestions(); alert(`Загружено ${newQuestions.length} вопросов`); }
-            else alert('Не удалось загрузить вопросы');
         };
         reader.readAsArrayBuffer(file);
     } else { alert('Загрузите Excel файл'); }
