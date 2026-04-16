@@ -7,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { background: #f5f7fa; font-family: 'Segoe UI', sans-serif; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
@@ -30,6 +29,8 @@
             .error-header { background: #dc3545 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .error-header.green { background: #198754 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .stats-card { background: #667eea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { padding: 0; margin: 0; }
+            .container { max-width: 100%; padding: 10px; }
         }
     </style>
 </head>
@@ -64,17 +65,17 @@
 // ========== КАРТА СООТВЕТСТВИЯ ТЕКСТ ВОПРОСА → НОМЕР ВОПРОСА ==========
 function getQuestionNumberByText(questionText) {
     const t = questionText.toLowerCase();
-    if (t.includes("обеденный перерыв") || t.includes("торопитесь") || (t.includes("заходит") && t.includes("витрине"))) return 1;
-    if (t.includes("детскими серьгами") || t.includes("ребёнок") || (t.includes("ребенком") && t.includes("витрину"))) return 2;
-    if (t.includes("день рождения подруге") || t.includes("бюджет") || t.includes("15 тысяч")) return 3;
-    if (t.includes("кулон в подарок") || t.includes("выпускной") || t.includes("символом нового этапа")) return 4;
-    if (t.includes("купил цепочку") || t.includes("цепочку за")) return 5;
-    if (t.includes("кольцо за") || t.includes("футляр") || t.includes("70 000")) return 6;
-    if (t.includes("серьги за") || t.includes("не уверен") || t.includes("55 000")) return 7;
-    if (t.includes("изумрудом") || t.includes("нет в наличии") || t.includes("585 пробы")) return 8;
-    if (t.includes("браслет на витрине") || t.includes("рассматривает браслет")) return 9;
-    if (t.includes("не уверена, что это моё") || t.includes("красиво, но")) return 10;
-    if (t.includes("витрину с кольцами") || t.includes("2 минуты") || t.includes("около 2 минут")) return 11;
+    if (t.includes("обеденный перерыв") || t.includes("торопитесь")) return 1;
+    if (t.includes("детскими серьгами") || t.includes("ребёнок")) return 2;
+    if (t.includes("день рождения подруге") || t.includes("бюджет")) return 3;
+    if (t.includes("кулон в подарок") || t.includes("выпускной")) return 4;
+    if (t.includes("купил цепочку")) return 5;
+    if (t.includes("кольцо за") || t.includes("футляр")) return 6;
+    if (t.includes("серьги за") || t.includes("не уверен")) return 7;
+    if (t.includes("изумрудом") || t.includes("нет в наличии")) return 8;
+    if (t.includes("браслет на витрине")) return 9;
+    if (t.includes("не уверена, что это моё")) return 10;
+    if (t.includes("витрину с кольцами") || t.includes("2 минуты")) return 11;
     return 0;
 }
 
@@ -107,8 +108,8 @@ function getRecommendationHTML(questionNum) {
     `;
 }
 
-// ========== ГЕНЕРАЦИЯ PDF ==========
-async function generatePDF(empId) {
+// ========== ПЕЧАТЬ PDF (через окно печати) ==========
+function printPDF(empId) {
     const emp = employeesData.find(e => e.id == empId);
     if (!emp) {
         alert('Данные сотрудника не найдены');
@@ -119,7 +120,7 @@ async function generatePDF(empId) {
     let errorsHtml = '';
     for (const err of emp.errors) {
         errorsHtml += `
-            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; border-radius:8px;">
+            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; border-radius:8px; page-break-inside: avoid;">
                 <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br><br>
                 <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br><br>
                 <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br>
@@ -128,21 +129,37 @@ async function generatePDF(empId) {
         `;
     }
     
-    const html = `
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+        alert('Разрешите всплывающие окна для этого сайта');
+        return;
+    }
+    
+    printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title>
         <style>
-            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; margin: 0; }
             h1 { color: #0d6efd; }
             .info { background: #f5f7fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
             .score-good { background: #4caf50; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; border-radius: 6px; }
+            @media print {
+                body { padding: 0; }
+                .no-print { display: none; }
+                .error-header, .stats-card { background: #0d6efd !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .recommendation { background: #fff3cd !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                div { page-break-inside: avoid; }
+            }
         </style>
         </head>
         <body>
+            <div class="no-print" style="text-align:right; margin-bottom:10px;">
+                <button onclick="window.print()" style="padding:8px 16px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer;">🖨️ Сохранить PDF</button>
+            </div>
             <h1>📊 Отчёт по тесту</h1>
             <div class="info">
                 <strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br>
@@ -157,30 +174,8 @@ async function generatePDF(empId) {
             <p style="margin-top:40px; font-size:12px; color:#999; text-align:center;">Отчёт сгенерирован автоматически</p>
         </body>
         </html>
-    `;
-    
-    const element = document.createElement('div');
-    element.innerHTML = html;
-    element.style.position = 'absolute';
-    element.style.left = '-9999px';
-    document.body.appendChild(element);
-    
-    const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `Отчёт_${emp.name.replace(/[^а-яёa-z0-9]/gi, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
-    try {
-        await html2pdf().set(opt).from(element).save();
-    } catch(e) {
-        console.error('Ошибка PDF:', e);
-        alert('Ошибка при создании PDF');
-    } finally {
-        document.body.removeChild(element);
-    }
+    `);
+    printWindow.document.close();
 }
 
 // ========== ОСНОВНАЯ ЛОГИКА ==========
@@ -288,7 +283,7 @@ function displayResults() {
                         </div>
                         <div>
                             <span class="badge bg-secondary">Ошибок: ${errorCount}</span>
-                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); generatePDF(${emp.id})">📄 Скачать PDF</button>
+                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); printPDF(${emp.id})">📄 Скачать PDF</button>
                             <i class="bi bi-chevron-down ms-2"></i>
                         </div>
                     </div>
