@@ -169,13 +169,12 @@ let employeeCounter = 0;
 let currentFilterCity = 'all';
 let currentSearchText = '';
 
-// ========== ПАРСИНГ EXCEL (ПЕРЕПИСАН С НУЛЯ) ==========
+// ========== ГЛАВНАЯ ФУНКЦИЯ ПАРСИНГА (ИСПРАВЛЕНА) ==========
 function parseExcelToEmployees(rows) {
     const employees = [];
     let empCounter = 0;
     
     for (const row of rows) {
-        // Берём ФИО из первой колонки
         const name = row['ФИО'] || '';
         if (!name) continue;
         
@@ -188,7 +187,6 @@ function parseExcelToEmployees(rows) {
             errors: []
         };
         
-        // Парсим баллы
         const scoreStr = row['Баллы'] || '';
         const scoreMatch = scoreStr.match(/(\d+)\/(\d+)/);
         if (scoreMatch) {
@@ -196,36 +194,37 @@ function parseExcelToEmployees(rows) {
             employee.total = parseInt(scoreMatch[2]);
         }
         
-        // Перебираем вопросы 1-11
+        // Проходим по вопросам 1-11
         for (let i = 1; i <= 11; i++) {
             const result = row[`Результат ${i}`];
             const questionText = row[`Вопрос ${i}`] || '';
             const userAnswer = row[`Ответ сотрудника ${i}`] || '';
             const correctAnswer = row[`Правильный ответ ${i}`] || '';
             
-            // Если результат — "Ошибка" (без учёта регистра)
-            if (result && result.toString().trim().toLowerCase() === 'ошибка') {
-                // Определяем номер вопроса по тексту
+            // Проверяем, является ли ответ ошибочным (игнорируем пробелы и регистр)
+            const isError = result && result.toString().trim().toLowerCase() === 'ошибка';
+            
+            if (isError && questionText) {
+                // Определяем номер вопроса по тексту (без привязки к порядку колонок)
                 let qNum = 0;
                 const lowerQuestion = questionText.toLowerCase();
-                if (lowerQuestion.includes("обеденный перерыв") || lowerQuestion.includes("торопитесь")) qNum = 1;
-                else if (lowerQuestion.includes("детскими серьгами") || lowerQuestion.includes("ребёнок")) qNum = 2;
-                else if (lowerQuestion.includes("день рождения подруге") || lowerQuestion.includes("бюджет")) qNum = 3;
+                if (lowerQuestion.includes("обеденный перерыв") || lowerQuestion.includes("торопитесь") || lowerQuestion.includes("витрине")) qNum = 1;
+                else if (lowerQuestion.includes("детскими серьгами") || lowerQuestion.includes("ребёнок") || lowerQuestion.includes("застёжкой")) qNum = 2;
+                else if (lowerQuestion.includes("день рождения подруге") || lowerQuestion.includes("бюджет около")) qNum = 3;
                 else if (lowerQuestion.includes("кулон в подарок дочери") || lowerQuestion.includes("выпускной")) qNum = 4;
                 else if (lowerQuestion.includes("купил цепочку")) qNum = 5;
-                else if (lowerQuestion.includes("кольцо за") || lowerQuestion.includes("футляр")) qNum = 6;
-                else if (lowerQuestion.includes("серьги за") || lowerQuestion.includes("не уверен")) qNum = 7;
-                else if (lowerQuestion.includes("изумрудом") || lowerQuestion.includes("нет в наличии")) qNum = 8;
-                else if (lowerQuestion.includes("браслет на витрине") || lowerQuestion.includes("рассматривает браслет")) qNum = 9;
+                else if (lowerQuestion.includes("кольцо за") || lowerQuestion.includes("футляр") || lowerQuestion.includes("средство для ухода")) qNum = 6;
+                else if (lowerQuestion.includes("серьги за") || lowerQuestion.includes("не уверен, что сейчас готов")) qNum = 7;
+                else if (lowerQuestion.includes("изумрудом") || lowerQuestion.includes("нет в наличии") || lowerQuestion.includes("каталог на заказ")) qNum = 8;
+                else if (lowerQuestion.includes("браслет на витрине") || lowerQuestion.includes("рассматривает браслет") || lowerQuestion.includes("примерим")) qNum = 9;
                 else if (lowerQuestion.includes("не уверена, что это моё") || lowerQuestion.includes("красиво, но")) qNum = 10;
-                else if (lowerQuestion.includes("витрину с кольцами") || lowerQuestion.includes("2 минуты")) qNum = 11;
+                else if (lowerQuestion.includes("витрину с кольцами") || lowerQuestion.includes("2 минуты") || lowerQuestion.includes("кивнула")) qNum = 11;
                 
                 if (qNum > 0) {
-                    // Определяем вариант ответа (1-4)
+                    // Определяем вариант ответа
                     let variantNum = 1;
                     const lowerAnswer = userAnswer.toLowerCase();
                     
-                    // Простой способ: ищем ключевые слова в ответе
                     if (qNum === 1) {
                         if (lowerAnswer.includes("вижу, вы торопитесь") || lowerAnswer.includes("быстро покажу")) variantNum = 2;
                         else if (lowerAnswer.includes("подбираете что-то конкретное") || lowerAnswer.includes("просто смотрите")) variantNum = 3;
@@ -505,7 +504,7 @@ function getComparisonTable() {
         cityMap[emp.city].errorCount += emp.errors.length;
     }
     
-    let html = '<table class="comparison-table"><thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Всего ошибок</th></tr></thead><tbody>';
+    let html = '<table class="comparison-table"><thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Всего ошибок</th><tr></thead><tbody>';
     for (const [city, data] of Object.entries(cityMap)) {
         const avgPercent = (data.sumPercent / data.total).toFixed(1);
         html += `<tr><td><strong>${escapeHtml(city)}</strong></td><td>${data.total}</td><td>${avgPercent}%</td><td>${data.errorCount}</td></tr>`;
