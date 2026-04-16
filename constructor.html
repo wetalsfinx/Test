@@ -19,6 +19,8 @@
         .import-area { border: 2px dashed #ccc; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: #f8f9fa; margin-bottom: 20px; }
         .import-area:hover { background: #e9ecef; border-color: #0d6efd; }
         .result-code { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow: auto; }
+        .btn-edit { background: #6c757d; border-color: #6c757d; }
+        .btn-edit:hover { background: #5a6268; }
     </style>
 </head>
 <body>
@@ -29,11 +31,23 @@
     <!-- Импорт из Excel -->
     <div class="card">
         <h4><i class="bi bi-file-excel"></i> 📂 Импорт из Excel</h4>
-        <div class="import-area" id="importArea" onclick="document.getElementById('excelFile').click()">
-            <i class="bi bi-cloud-upload fs-1"></i>
-            <p class="mt-2">Нажмите или перетащите Excel-файл (.xlsx)</p>
-            <small class="text-muted">Формат: вопросы текстом, варианты A) ... B) ... и строка "✅ Правильный ответ: X"</small>
-            <input type="file" id="excelFile" accept=".xlsx, .xls" style="display:none">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="import-area" id="importArea" onclick="document.getElementById('excelFile').click()">
+                    <i class="bi bi-cloud-upload fs-1"></i>
+                    <p class="mt-2">Нажмите или перетащите Excel-файл (.xlsx)</p>
+                    <small class="text-muted">Формат: вопросы текстом, варианты A) ... B) ... и строка "✅ Правильный ответ: X"</small>
+                    <input type="file" id="excelFile" accept=".xlsx, .xls" style="display:none">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="import-area" id="editArea" style="border-color: #6c757d;" onclick="document.getElementById('editFile').click()">
+                    <i class="bi bi-pencil-square fs-1"></i>
+                    <p class="mt-2">📝 Загрузить тест для редактирования</p>
+                    <small class="text-muted">Выгрузите Excel из админки (кнопка "Детальный") и загрузите сюда</small>
+                    <input type="file" id="editFile" accept=".xlsx, .xls" style="display:none">
+                </div>
+            </div>
         </div>
         <div class="mt-2">
             <button class="btn btn-sm btn-outline-secondary" onclick="downloadSample()"><i class="bi bi-download"></i> Скачать образец Excel</button>
@@ -216,12 +230,11 @@ function renderQuestions() {
     container.innerHTML = html;
 }
 
-// ========== НОВЫЙ ПАРСИНГ EXCEL (РАБОТАЕТ С ВАШИМ ФАЙЛОМ) ==========
+// ========== ПАРСИНГ EXCEL (ДЛЯ ИМПОРТА) ==========
 function parseExcelToQuestions(fileData) {
     const workbook = XLSX.read(fileData, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     
-    // Получаем все ячейки как текст
     let allText = '';
     const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:A1');
     for (let row = range.s.r; row <= range.e.r; row++) {
@@ -242,11 +255,8 @@ function parseExcelToQuestions(fileData) {
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i].trim();
         if (line === "") continue;
-        
-        // Пропускаем строки, которые начинаются с A | (служебные)
         if (line.match(/^\s*[A-Za-z]\s*\|/)) continue;
         
-        // Ищем строку с правильным ответом
         const correctMatch = line.match(/✅\s*Правильный ответ:\s*([A-D])/i);
         if (correctMatch && currentQuestion) {
             const letter = correctMatch[1].toUpperCase();
@@ -254,7 +264,6 @@ function parseExcelToQuestions(fileData) {
             if (index >= 0 && index < currentQuestion.options.length) {
                 currentQuestion.correct = index;
             }
-            // Сохраняем вопрос после получения правильного ответа
             if (currentQuestion.options.length > 0 && currentQuestion.correct !== -1) {
                 questions.push(currentQuestion);
             }
@@ -262,22 +271,18 @@ function parseExcelToQuestions(fileData) {
             continue;
         }
         
-        // Ищем вариант ответа: A) ... или A. ...
         const optionMatch = line.match(/^([A-D])[\)\.]\s*(.+)/);
         if (optionMatch) {
             if (!currentQuestion) {
                 currentQuestion = { text: "", options: [], correct: -1 };
             }
             const optionText = optionMatch[2].trim();
-            // Убираем кавычки, если есть
             const cleanOption = optionText.replace(/^["']|["']$/g, '');
             currentQuestion.options.push(cleanOption);
             continue;
         }
         
-        // Если строка не начинается с A) B) C) D) и нет правильного ответа — это текст вопроса
         if (!line.match(/^([A-D])[\)\.]/) && !line.match(/✅\s*Правильный ответ/i)) {
-            // Если у нас уже есть текущий вопрос с вариантами — начинаем новый
             if (currentQuestion && currentQuestion.options.length > 0) {
                 if (currentQuestion.correct !== -1) {
                     questions.push(currentQuestion);
@@ -286,7 +291,6 @@ function parseExcelToQuestions(fileData) {
             } else if (!currentQuestion) {
                 currentQuestion = { text: "", options: [], correct: -1 };
             }
-            // Добавляем текст вопроса
             if (currentQuestion.text) {
                 currentQuestion.text += " " + line;
             } else {
@@ -296,7 +300,6 @@ function parseExcelToQuestions(fileData) {
         }
     }
     
-    // Добавляем последний вопрос, если есть
     if (currentQuestion && currentQuestion.options.length > 0 && currentQuestion.correct !== -1) {
         questions.push(currentQuestion);
     }
@@ -304,6 +307,34 @@ function parseExcelToQuestions(fileData) {
     return questions;
 }
 
+// ========== ПАРСИНГ ДЛЯ РЕДАКТИРОВАНИЯ (считывает название и города) ==========
+function parseTestForEdit(fileData) {
+    const workbook = XLSX.read(fileData, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+    
+    let testName = '';
+    let citiesList = [];
+    
+    if (rows.length > 0) {
+        // Пробуем найти название теста (оно может быть в первой строке)
+        const firstRow = rows[0];
+        if (firstRow['Название теста']) {
+            testName = firstRow['Название теста'];
+        }
+        if (firstRow['Города']) {
+            const citiesStr = firstRow['Города'];
+            citiesList = citiesStr.split(',').map(c => c.trim()).filter(c => c);
+        }
+    }
+    
+    // Загружаем вопросы
+    const questionsData = parseExcelToQuestions(fileData);
+    
+    return { name: testName, cities: citiesList, questions: questionsData };
+}
+
+// Обычный импорт (только вопросы)
 document.getElementById('excelFile').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -311,13 +342,42 @@ document.getElementById('excelFile').addEventListener('change', function(e) {
     reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
         const newQuestions = parseExcelToQuestions(data);
-        
         if (newQuestions.length > 0) {
             questions = newQuestions;
             renderQuestions();
             alert(`✅ Загружено ${questions.length} вопросов`);
         } else {
-            alert('❌ Не удалось загрузить вопросы. Проверьте формат: вопросы текстом, варианты A) ... B) ... и строка "✅ Правильный ответ: X"');
+            alert('❌ Не удалось загрузить вопросы');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+// Редактирование теста (загружает название, города и вопросы)
+document.getElementById('editFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const { name, cities: loadedCities, questions: loadedQuestions } = parseTestForEdit(data);
+        
+        if (loadedQuestions.length > 0) {
+            questions = loadedQuestions;
+            renderQuestions();
+            
+            if (name) {
+                document.getElementById('testName').value = name;
+            }
+            
+            if (loadedCities.length > 0) {
+                cities = loadedCities;
+                renderCities();
+            }
+            
+            alert(`✅ Загружен тест для редактирования: ${name || 'без названия'}\n📋 Вопросов: ${questions.length}\n🏙️ Городов: ${cities.length}`);
+        } else {
+            alert('❌ Не удалось загрузить тест. Убедитесь, что вы загружаете Excel, выгруженный из админки (кнопка "Детальный")');
         }
     };
     reader.readAsArrayBuffer(file);
@@ -346,7 +406,6 @@ function downloadSample() {
     XLSX.writeFile(wb, 'образец_теста.xlsx');
 }
 
-// Генерация HTML-кода (без сохранения)
 function generateTest() {
     const name = document.getElementById('testName').value.trim();
     if (!name) { alert('Введите название теста'); return; }
@@ -364,7 +423,6 @@ function generateTest() {
     document.getElementById('resultContainer').style.display = 'block';
 }
 
-// Сохранение в Supabase
 async function saveTestToSupabase() {
     const name = document.getElementById('testName').value.trim();
     if (!name) { alert('Введите название теста'); return; }
@@ -388,7 +446,28 @@ async function saveTestToSupabase() {
         
         if (error) {
             if (error.code === '23505') {
-                alert('❌ Тест с таким именем уже существует! Измените название.');
+                if (confirm('❌ Тест с таким именем уже существует! Перезаписать?')) {
+                    const { error: updateError } = await sb.from('tests').update({
+                        name: name,
+                        questions_count: questions.length,
+                        city_list: cities,
+                        description: desc,
+                        questions: questions
+                    }).eq('slug', slug);
+                    if (updateError) {
+                        alert('Ошибка обновления: ' + updateError.message);
+                    } else {
+                        alert(`✅ Тест "${name}" успешно обновлён!`);
+                        // Очищаем форму
+                        document.getElementById('testName').value = '';
+                        document.getElementById('testDesc').value = '';
+                        cities = [];
+                        questions = [];
+                        renderCities();
+                        renderQuestions();
+                        document.getElementById('resultContainer').style.display = 'none';
+                    }
+                }
             } else {
                 alert('Ошибка сохранения: ' + error.message);
             }
@@ -398,7 +477,6 @@ async function saveTestToSupabase() {
         const testUrl = `https://wetalsfinx.github.io/Test/test-runner.html?slug=${slug}`;
         alert(`✅ Тест "${name}" успешно создан!\n\n🔗 Ссылка для прохождения:\n${testUrl}\n\n📋 Тест автоматически появится в админке.`);
         
-        // Очищаем форму
         document.getElementById('testName').value = '';
         document.getElementById('testDesc').value = '';
         cities = [];
@@ -438,7 +516,7 @@ function escapeHtml(str) {
     });
 }
 
-// Drag and drop
+// Drag and drop для обычного импорта
 const importArea = document.getElementById('importArea');
 importArea.addEventListener('dragover', e => { e.preventDefault(); importArea.style.background = '#e9ecef'; });
 importArea.addEventListener('dragleave', e => { importArea.style.background = '#f8f9fa'; });
@@ -457,6 +535,36 @@ importArea.addEventListener('drop', e => {
                 alert(`✅ Загружено ${questions.length} вопросов`);
             } else {
                 alert('❌ Не удалось загрузить вопросы');
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    } else { alert('Загрузите Excel файл'); }
+});
+
+// Drag and drop для редактирования
+const editArea = document.getElementById('editArea');
+editArea.addEventListener('dragover', e => { e.preventDefault(); editArea.style.background = '#e9ecef'; });
+editArea.addEventListener('dragleave', e => { editArea.style.background = '#f8f9fa'; });
+editArea.addEventListener('drop', e => {
+    e.preventDefault();
+    editArea.style.background = '#f8f9fa';
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const data = new Uint8Array(e.target.result);
+            const { name, cities: loadedCities, questions: loadedQuestions } = parseTestForEdit(data);
+            if (loadedQuestions.length > 0) {
+                questions = loadedQuestions;
+                renderQuestions();
+                if (name) document.getElementById('testName').value = name;
+                if (loadedCities.length > 0) {
+                    cities = loadedCities;
+                    renderCities();
+                }
+                alert(`✅ Загружен тест для редактирования: ${name || 'без названия'}\n📋 Вопросов: ${questions.length}\n🏙️ Городов: ${cities.length}`);
+            } else {
+                alert('❌ Не удалось загрузить тест');
             }
         };
         reader.readAsArrayBuffer(file);
