@@ -46,7 +46,7 @@
     <div class="upload-area no-print" id="uploadArea" onclick="document.getElementById('fileInput').click()">
         <i class="bi bi-file-excel fs-1"></i>
         <p class="mt-2">Нажмите или перетащите файл Excel (.xlsx) с результатами</p>
-        <small class="text-muted">Экспортируйте из админки кнопкой "Выгрузить в Excel"</small>
+        <small class="text-muted">Экспортируйте из админки кнопкой "Детальный экспорт"</small>
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
 
@@ -64,17 +64,17 @@
 // ========== КАРТА СООТВЕТСТВИЯ ТЕКСТ ВОПРОСА → НОМЕР ВОПРОСА ==========
 function getQuestionNumberByText(questionText) {
     const t = questionText.toLowerCase();
-    if (t.includes("обеденный перерыв") || t.includes("торопитесь")) return 1;
-    if (t.includes("детскими серьгами") || t.includes("ребёнок")) return 2;
-    if (t.includes("день рождения подруге") || t.includes("бюджет")) return 3;
-    if (t.includes("кулон в подарок") || t.includes("выпускной")) return 4;
-    if (t.includes("купил цепочку")) return 5;
-    if (t.includes("кольцо за") || t.includes("футляр")) return 6;
-    if (t.includes("серьги за") || t.includes("не уверен")) return 7;
-    if (t.includes("изумрудом") || t.includes("нет в наличии")) return 8;
+    if (t.includes("обеденный перерыв") || t.includes("торопитесь") || (t.includes("заходит") && t.includes("витрине"))) return 1;
+    if (t.includes("детскими серьгами") || t.includes("ребёнок") || (t.includes("ребенком") && t.includes("витрину"))) return 2;
+    if (t.includes("день рождения подруге") || t.includes("бюджет") || t.includes("15 тысяч")) return 3;
+    if (t.includes("кулон в подарок") || t.includes("выпускной") || t.includes("символом нового этапа")) return 4;
+    if (t.includes("купил цепочку") || t.includes("цепочку за")) return 5;
+    if (t.includes("кольцо за") || t.includes("футляр") || t.includes("70 000")) return 6;
+    if (t.includes("серьги за") || t.includes("не уверен") || t.includes("55 000")) return 7;
+    if (t.includes("изумрудом") || t.includes("нет в наличии") || t.includes("585 пробы")) return 8;
     if (t.includes("браслет на витрине") || t.includes("рассматривает браслет")) return 9;
     if (t.includes("не уверена, что это моё") || t.includes("красиво, но")) return 10;
-    if (t.includes("витрину с кольцами") || t.includes("2 минуты")) return 11;
+    if (t.includes("витрину с кольцами") || t.includes("2 минуты") || t.includes("около 2 минут")) return 11;
     return 0;
 }
 
@@ -108,14 +108,20 @@ function getRecommendationHTML(questionNum) {
 }
 
 // ========== ГЕНЕРАЦИЯ PDF ==========
-async function generatePDF(emp) {
+async function generatePDF(empId) {
+    const emp = employeesData.find(e => e.id == empId);
+    if (!emp) {
+        alert('Данные сотрудника не найдены');
+        return;
+    }
+    
     const percent = Math.round(emp.score / emp.total * 100);
     let errorsHtml = '';
     for (const err of emp.errors) {
         errorsHtml += `
-            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0;">
-                <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br>
-                <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br>
+            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; border-radius:8px;">
+                <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br><br>
+                <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br><br>
                 <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br>
                 ${getRecommendationHTML(err.qNum)}
             </div>
@@ -127,13 +133,13 @@ async function generatePDF(emp) {
         <html>
         <head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title>
         <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; }
             h1 { color: #0d6efd; }
-            .info { background: #f5f7fa; padding: 15px; margin-bottom: 20px; }
+            .info { background: #f5f7fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
             .score-good { background: #4caf50; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; }
+            .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; border-radius: 6px; }
         </style>
         </head>
         <body>
@@ -143,12 +149,12 @@ async function generatePDF(emp) {
                 <strong>Город:</strong> ${escapeHtml(emp.city)}<br>
                 <strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
                 <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
-                    ${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}
+                    ${percent >= 80 ? '🎉 Отлично!' : (percent >= 50 ? '📈 Хороший результат' : '📚 Требуется изучение')}
                 </div>
             </div>
-            <h3>Разбор ошибок (${emp.errors.length})</h3>
-            ${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}
-            <p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p>
+            <h3>📝 Разбор ошибок (${emp.errors.length})</h3>
+            ${errorsHtml || '<div style="color:#4caf50;">✅ Нет ошибок! Отличная работа!</div>'}
+            <p style="margin-top:40px; font-size:12px; color:#999; text-align:center;">Отчёт сгенерирован автоматически</p>
         </body>
         </html>
     `;
@@ -160,11 +166,11 @@ async function generatePDF(emp) {
     document.body.appendChild(element);
     
     const opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
+        margin: [10, 10, 10, 10],
         filename: `Отчёт_${emp.name.replace(/[^а-яёa-z0-9]/gi, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
     try {
@@ -282,7 +288,7 @@ function displayResults() {
                         </div>
                         <div>
                             <span class="badge bg-secondary">Ошибок: ${errorCount}</span>
-                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); generatePDF(${JSON.stringify(emp).replace(/[\\"']/g, '\\$&')})">📄 Скачать PDF</button>
+                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); generatePDF(${emp.id})">📄 Скачать PDF</button>
                             <i class="bi bi-chevron-down ms-2"></i>
                         </div>
                     </div>
@@ -311,11 +317,12 @@ function escapeHtml(str) {
 }
 
 const uploadArea = document.getElementById('uploadArea');
-uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#0d6efd'; });
-uploadArea.addEventListener('dragleave', e => { uploadArea.style.borderColor = '#ccc'; });
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#0d6efd'; uploadArea.style.background = '#f8f9fa'; });
+uploadArea.addEventListener('dragleave', e => { uploadArea.style.borderColor = '#ccc'; uploadArea.style.background = 'white'; });
 uploadArea.addEventListener('drop', e => {
     e.preventDefault();
     uploadArea.style.borderColor = '#ccc';
+    uploadArea.style.background = 'white';
     const file = e.dataTransfer.files[0];
     if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
         const reader = new FileReader();
