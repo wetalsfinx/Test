@@ -331,6 +331,77 @@ uploadArea.addEventListener('drop', e => {
         reader.readAsArrayBuffer(file);
     } else { alert('Загрузите Excel файл'); }
 });
+// ========== ГЕНЕРАЦИЯ PDF ==========
+function generatePDF(empId) {
+    const emp = employeesData.find(e => e.id == empId);
+    if (!emp) {
+        alert('Данные сотрудника не найдены');
+        return;
+    }
+    
+    const percent = Math.round(emp.score / emp.total * 100);
+    let errorsHtml = '';
+    
+    for (const err of emp.errors) {
+        const rec = recommendations[err.qNum] || { zone: "Общая рекомендация", correct: err.correctAnswer, practice: "Изучите правильный ответ" };
+        errorsHtml += `
+            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; border-radius:8px;">
+                <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br><br>
+                <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br><br>
+                <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br><br>
+                <div style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px; border-radius:6px;">
+                    <strong>🔍 Зона роста: ${rec.zone}</strong><br>
+                    <strong>✅ Правильный подход:</strong> ${rec.correct}<br>
+                    <strong>🛠️ Как применять на практике:</strong> ${rec.practice}
+                </div>
+            </div>
+        `;
+    }
+    
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+        alert('Разрешите всплывающие окна для этого сайта');
+        return;
+    }
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title>
+        <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; margin: 0; }
+            h1 { color: #0d6efd; }
+            .info { background: #f5f7fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+            .score-good { background: #4caf50; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
+            .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
+            .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
+            @media print {
+                body { padding: 0; }
+                .no-print { display: none; }
+            }
+        </style>
+        </head>
+        <body>
+            <div class="no-print" style="text-align:right; margin-bottom:10px;">
+                <button onclick="window.print()" style="padding:8px 16px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer;">🖨️ Сохранить PDF</button>
+            </div>
+            <h1>📊 Отчёт по тесту</h1>
+            <div class="info">
+                <strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br>
+                <strong>Город:</strong> ${escapeHtml(emp.city)}<br>
+                <strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
+                <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
+                    ${percent >= 80 ? '🎉 Отлично!' : (percent >= 50 ? '📈 Хороший результат' : '📚 Требуется изучение')}
+                </div>
+            </div>
+            <h3>📝 Разбор ошибок (${emp.errors.length})</h3>
+            ${errorsHtml || '<div style="color:#4caf50;">✅ Нет ошибок! Отличная работа!</div>'}
+            <p style="margin-top:40px; font-size:12px; color:#999; text-align:center;">Отчёт сгенерирован автоматически</p>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
 </script>
 </body>
 </html>
