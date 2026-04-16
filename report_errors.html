@@ -46,7 +46,7 @@
     <div class="upload-area no-print" id="uploadArea" onclick="document.getElementById('fileInput').click()">
         <i class="bi bi-file-excel fs-1"></i>
         <p class="mt-2">Нажмите или перетащите файл Excel (.xlsx) с результатами</p>
-        <small class="text-muted">Экспортируйте из админки кнопкой "Детальный экспорт"</small>
+        <small class="text-muted">Экспортируйте из админки кнопкой "Выгрузить в Excel"</small>
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
 
@@ -61,9 +61,26 @@
 </div>
 
 <script>
-// БАЗА РЕКОМЕНДАЦИЙ
+// ========== КАРТА СООТВЕТСТВИЯ ТЕКСТ ВОПРОСА → НОМЕР ВОПРОСА ==========
+function getQuestionNumberByText(questionText) {
+    const t = questionText.toLowerCase();
+    if (t.includes("обеденный перерыв") || t.includes("торопитесь")) return 1;
+    if (t.includes("детскими серьгами") || t.includes("ребёнок")) return 2;
+    if (t.includes("день рождения подруге") || t.includes("бюджет")) return 3;
+    if (t.includes("кулон в подарок") || t.includes("выпускной")) return 4;
+    if (t.includes("купил цепочку")) return 5;
+    if (t.includes("кольцо за") || t.includes("футляр")) return 6;
+    if (t.includes("серьги за") || t.includes("не уверен")) return 7;
+    if (t.includes("изумрудом") || t.includes("нет в наличии")) return 8;
+    if (t.includes("браслет на витрине") || t.includes("рассматривает браслет")) return 9;
+    if (t.includes("не уверена, что это моё") || t.includes("красиво, но")) return 10;
+    if (t.includes("витрину с кольцами") || t.includes("2 минуты")) return 11;
+    return 0;
+}
+
+// ========== БАЗА РЕКОМЕНДАЦИЙ ==========
 const recommendations = {
-    1: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня специальные условия: скидка до 30% и оплата бонусами»", practice: "Вместо: ❌ «Чем могу помочь?» Говорите: ✅ «Добрый день! У нас сегодня скидка 30%»" },
+    1: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня специальные условия: скидка до 30% и оплата бонусами»", practice: "Вместо: ❌ «Чем могу помочь?» или «Вижу, вы торопитесь» → ✅ «Добрый день! У нас сегодня скидка до 30%»" },
     2: { zone: "Инициатива в диалоге", correct: "«Подбираете первые серёжки? Давайте я покажу безопасные варианты»", practice: "Не ждите, подходите с конкретным вопросом" },
     3: { zone: "Выявление потребностей", correct: "«А какой стиль она предпочитает?»", practice: "Сначала спросите о стиле, потом показывайте" },
     4: { zone: "Эмоциональная презентация", correct: "«Этот кулон станет символом нового этапа»", practice: "Связывайте украшение с событием" },
@@ -76,7 +93,7 @@ const recommendations = {
     11: { zone: "Инициатива в диалоге", correct: "«Давайте я покажу несколько колец в вашем стиле»", practice: "Предлагайте помощь, не ждите" }
 };
 
-function getRecommendationHTML(questionNum, userAnswer, correctAnswer) {
+function getRecommendationHTML(questionNum) {
     const rec = recommendations[questionNum];
     if (!rec) {
         return `<div class="recommendation"><strong>💡 Рекомендация:</strong><br>Обратите внимание на правильный ответ.</div>`;
@@ -90,19 +107,17 @@ function getRecommendationHTML(questionNum, userAnswer, correctAnswer) {
     `;
 }
 
-async function generatePDF(employee) {
-    const percent = Math.round(employee.score / employee.total * 100);
-    const errorCount = employee.errors.length;
-    
+// ========== ГЕНЕРАЦИЯ PDF ==========
+async function generatePDF(emp) {
+    const percent = Math.round(emp.score / emp.total * 100);
     let errorsHtml = '';
-    for (const err of employee.errors) {
+    for (const err of emp.errors) {
         errorsHtml += `
             <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0;">
-                <strong>❌ Вопрос ${err.num}:</strong><br>
-                <div class="mt-1"><strong>Текст вопроса:</strong><br>${escapeHtml(err.question)}</div>
-                <div class="mt-1"><span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}</div>
-                <div class="mt-1"><span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}</div>
-                ${getRecommendationHTML(err.num, err.userAnswer, err.correctAnswer)}
+                <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br>
+                <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br>
+                <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br>
+                ${getRecommendationHTML(err.qNum)}
             </div>
         `;
     }
@@ -110,33 +125,30 @@ async function generatePDF(employee) {
     const html = `
         <!DOCTYPE html>
         <html>
-        <head><meta charset="UTF-8"><title>Отчёт: ${employee.name}</title>
+        <head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title>
         <style>
-            body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #0d6efd; }
-            .header h1 { color: #0d6efd; }
-            .info { background: #f5f7fa; padding: 15px; border-radius: 8px; margin-bottom: 30px; }
-            .score { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-top: 10px; }
-            .score-good { background: #4caf50; color: white; }
-            .score-normal { background: #ff9800; color: white; }
-            .score-bad { background: #f44336; color: white; }
-            .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #0d6efd; }
+            .info { background: #f5f7fa; padding: 15px; margin-bottom: 20px; }
+            .score-good { background: #4caf50; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
+            .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
+            .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; }
         </style>
         </head>
         <body>
-            <div class="header"><h1>📊 Отчёт по тесту</h1></div>
+            <h1>📊 Отчёт по тесту</h1>
             <div class="info">
-                <p><strong>Сотрудник:</strong> ${escapeHtml(employee.name)}</p>
-                <p><strong>Город:</strong> ${escapeHtml(employee.city)}</p>
-                <p><strong>Результат:</strong> ${employee.score} из ${employee.total} (${percent}%)</p>
-                <div class="score ${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
-                    ${percent >= 80 ? '🎉 Отлично!' : (percent >= 50 ? '📈 Хороший результат' : '📚 Требуется изучение материалов')}
+                <strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br>
+                <strong>Город:</strong> ${escapeHtml(emp.city)}<br>
+                <strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
+                <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
+                    ${percent >= 80 ? 'Отлично!' : (percent >= 50 ? 'Хороший результат' : 'Требуется изучение')}
                 </div>
             </div>
-            <div style="margin: 20px 0; font-size: 18px; font-weight: bold;">📝 Разбор ошибок (${errorCount}):</div>
-            ${errorsHtml || '<div style="color: #999;">✅ Нет ошибок! Отличная работа!</div>'}
-            <div class="footer">Отчёт сгенерирован автоматически</div>
+            <h3>Разбор ошибок (${emp.errors.length})</h3>
+            ${errorsHtml || '<div style="color:green;">✅ Нет ошибок!</div>'}
+            <p style="margin-top:40px; font-size:12px; color:#999;">Отчёт сгенерирован ${new Date().toLocaleString()}</p>
         </body>
         </html>
     `;
@@ -149,7 +161,7 @@ async function generatePDF(employee) {
     
     const opt = {
         margin: [0.5, 0.5, 0.5, 0.5],
-        filename: `Отчёт_${employee.name.replace(/[^а-яёa-z0-9]/gi, '_')}.pdf`,
+        filename: `Отчёт_${emp.name.replace(/[^а-яёa-z0-9]/gi, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
@@ -164,6 +176,9 @@ async function generatePDF(employee) {
         document.body.removeChild(element);
     }
 }
+
+// ========== ОСНОВНАЯ ЛОГИКА ==========
+let employeesData = [];
 
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -182,35 +197,55 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
 let employeeCounter = 0;
 
 function processData(rows) {
-    const employees = [];
+    employeesData = [];
+    employeeCounter = 0;
     
     for (const row of rows) {
         const name = row['ФИО'] || '';
         if (!name) continue;
         
-        const employee = { id: employeeCounter++, name: name, city: row['Город'] || '', score: 0, total: 0, errors: [] };
+        const employee = {
+            id: employeeCounter++,
+            name: name,
+            city: row['Город'] || '',
+            score: 0,
+            total: 0,
+            errors: []
+        };
+        
         const scoreMatch = (row['Баллы'] || '').match(/(\d+)\/(\d+)/);
-        if (scoreMatch) { employee.score = parseInt(scoreMatch[1]); employee.total = parseInt(scoreMatch[2]); }
+        if (scoreMatch) {
+            employee.score = parseInt(scoreMatch[1]);
+            employee.total = parseInt(scoreMatch[2]);
+        }
         
         for (let i = 1; i <= 11; i++) {
-            const resultValue = row[`Результат ${i}`];
-            // СРАВНИВАЕМ КАК СТРОКУ, УБИРАЯ ПРОБЕЛЫ
-            if (resultValue && resultValue.toString().trim() === 'Ошибка') {
+            const result = row[`Результат ${i}`];
+            const questionText = row[`Вопрос ${i}`] || '';
+            const userAnswer = row[`Ответ сотрудника ${i}`] || '';
+            const correctAnswer = row[`Правильный ответ ${i}`] || '';
+            
+            if (result && result.toString().trim() === 'Ошибка') {
+                const qNum = getQuestionNumberByText(questionText);
                 employee.errors.push({
-                    num: i,
-                    question: row[`Вопрос ${i}`] || '',
-                    userAnswer: row[`Ответ сотрудника ${i}`] || '',
-                    correctAnswer: row[`Правильный ответ ${i}`] || ''
+                    qNum: qNum,
+                    question: questionText,
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer
                 });
             }
         }
-        employees.push(employee);
+        employeesData.push(employee);
     }
     
-    const total = employees.length;
-    const avgScore = total > 0 ? Math.round(employees.reduce((s, e) => s + (e.score / e.total), 0) / total * 100) : 0;
-    const perfectCount = employees.filter(e => e.errors.length === 0).length;
-    const totalErrors = employees.reduce((s, e) => s + e.errors.length, 0);
+    displayResults();
+}
+
+function displayResults() {
+    const total = employeesData.length;
+    const avgScore = total > 0 ? Math.round(employeesData.reduce((s, e) => s + (e.score / e.total), 0) / total * 100) : 0;
+    const perfectCount = employeesData.filter(e => e.errors.length === 0).length;
+    const totalErrors = employeesData.reduce((s, e) => s + e.errors.length, 0);
     
     document.getElementById('statsPanel').style.display = 'flex';
     document.getElementById('totalCount').innerText = total;
@@ -220,7 +255,7 @@ function processData(rows) {
     
     let html = '<h3 class="mb-3">📋 Результаты сотрудников</h3>';
     
-    for (const emp of employees) {
+    for (const emp of employeesData) {
         const percent = Math.round(emp.score / emp.total * 100);
         const errorCount = emp.errors.length;
         
@@ -228,11 +263,10 @@ function processData(rows) {
         for (const err of emp.errors) {
             errorsHtml += `
                 <div class="wrong-answer">
-                    <strong>❌ Вопрос ${err.num}:</strong><br>
-                    <div class="mt-1"><strong>Текст вопроса:</strong><br>${escapeHtml(err.question)}</div>
-                    <div class="mt-1"><span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}</div>
+                    <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br>
+                    <div class="mt-2"><span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}</div>
                     <div class="mt-1"><span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}</div>
-                    ${getRecommendationHTML(err.num, err.userAnswer, err.correctAnswer)}
+                    ${getRecommendationHTML(err.qNum)}
                 </div>
             `;
         }
@@ -248,7 +282,7 @@ function processData(rows) {
                         </div>
                         <div>
                             <span class="badge bg-secondary">Ошибок: ${errorCount}</span>
-                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); generatePDF(${JSON.stringify(emp).replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0')})">📄 Скачать PDF</button>
+                            <button class="btn-pdf no-print" onclick="event.stopPropagation(); generatePDF(${JSON.stringify(emp).replace(/[\\"']/g, '\\$&')})">📄 Скачать PDF</button>
                             <i class="bi bi-chevron-down ms-2"></i>
                         </div>
                     </div>
