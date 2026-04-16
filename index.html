@@ -318,47 +318,71 @@ function generateUserReport(resultId) {
 }
 
 // ========== ЭКСПОРТ ==========
+// ========== ЭКСПОРТ ==========
 function exportToExcel() {
     if (!currentResults.length) return alert("Нет данных");
-    const data = currentResults.map(r => ({
-        'ФИО': `${r.surname || ''} ${r.name || ''}`.trim(),
-        'Город': r.city || '',
-        'Баллы': `${r.score}/${r.total}`,
-        'Процент': `${Math.round(r.score / r.total * 100)}%`,
-        'Дата': new Date(r.created_at).toLocaleString()
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, currentTest?.name || 'Результаты');
-    XLSX.writeFile(wb, `${currentTest?.name || 'results'}_${new Date().toLocaleDateString()}.xlsx`);
-}
-
-function exportDetailedToExcel() {
-    if (!currentResults.length) return alert("Нет данных");
-    const excelData = [];
-    for (const r of currentResults) {
-        const row = {
+    
+    try {
+        const data = currentResults.map(r => ({
             'ФИО': `${r.surname || ''} ${r.name || ''}`.trim(),
             'Город': r.city || '',
             'Баллы': `${r.score}/${r.total}`,
             'Процент': `${Math.round(r.score / r.total * 100)}%`,
             'Дата': new Date(r.created_at).toLocaleString()
-        };
-        if (r.answers) {
-            for (let i = 0; i < r.answers.length; i++) {
-                const a = r.answers[i];
-                row[`Вопрос ${i+1}`] = a.question || a.qs || '';
-                row[`Ответ сотрудника ${i+1}`] = a.selected || a.sel || '';
-                row[`Правильный ответ ${i+1}`] = a.correct || a.cor || '';
-                row[`Результат ${i+1}`] = (a.isCorrect === true || a.ok === true) ? 'Верно' : 'Ошибка';
-            }
-        }
-        excelData.push(row);
+        }));
+        
+        // Обрезаем название листа до 31 символа
+        let sheetName = currentTest?.name || 'Результаты';
+        if (sheetName.length > 31) sheetName = sheetName.substring(0, 28) + '...';
+        
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        XLSX.writeFile(wb, `${sheetName}_${new Date().toLocaleDateString()}.xlsx`);
+    } catch(e) {
+        console.error('Ошибка экспорта:', e);
+        alert('Ошибка при экспорте');
     }
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, currentTest?.name || 'Детальные результаты');
-    XLSX.writeFile(wb, `${currentTest?.name || 'results'}_детальный_${new Date().toLocaleDateString()}.xlsx`);
+}
+
+function exportDetailedToExcel() {
+    if (!currentResults.length) return alert("Нет данных");
+    
+    try {
+        const excelData = [];
+        for (const r of currentResults) {
+            const row = {
+                'ФИО': `${r.surname || ''} ${r.name || ''}`.trim(),
+                'Город': r.city || '',
+                'Баллы': `${r.score}/${r.total}`,
+                'Процент': `${Math.round(r.score / r.total * 100)}%`,
+                'Дата': new Date(r.created_at).toLocaleString()
+            };
+            
+            if (r.answers && r.answers.length > 0) {
+                for (let i = 0; i < r.answers.length; i++) {
+                    const a = r.answers[i];
+                    row[`Вопрос ${i+1}`] = (a.question || a.qs || '').substring(0, 200);
+                    row[`Ответ сотрудника ${i+1}`] = (a.selected || a.sel || '').substring(0, 200);
+                    row[`Правильный ответ ${i+1}`] = (a.correct || a.cor || '').substring(0, 200);
+                    row[`Результат ${i+1}`] = (a.isCorrect === true || a.ok === true) ? 'Верно' : 'Ошибка';
+                }
+            }
+            excelData.push(row);
+        }
+        
+        // Обрезаем название листа до 31 символа
+        let sheetName = currentTest?.name || 'Детальные';
+        if (sheetName.length > 31) sheetName = sheetName.substring(0, 28) + '...';
+        
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        XLSX.writeFile(wb, `${sheetName}_детальный_${new Date().toLocaleDateString()}.xlsx`);
+    } catch(e) {
+        console.error('Ошибка детального экспорта:', e);
+        alert('Ошибка при экспорте');
+    }
 }
 
 function initRealtime() {
