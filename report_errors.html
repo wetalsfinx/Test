@@ -184,12 +184,10 @@ function loadFromAdminData(adminData) {
         if (r.answers) {
             r.answers.forEach((a, idx) => {
                 const i = idx + 1;
-                row[`Вопрос ${i}`] = a.text || a.qs || '';
-                row[`Ответ сотрудника ${i}`] = a.selected || a.sel || '';
-                row[`Правильный ответ ${i}`] = a.correct || a.cor || '';
-                // Исправлено: правильно определяем статус ответа
-                const isCorrect = a.isCorrect === true || a.ok === true;
-                row[`Результат ${i}`] = isCorrect ? 'Верно' : 'Ошибка';
+                row[`Вопрос ${i}`] = a.text || '';
+                row[`Ответ сотрудника ${i}`] = a.selected || '';
+                row[`Правильный ответ ${i}`] = a.correct || '';
+                row[`Результат ${i}`] = a.isCorrect ? 'Верно' : 'Ошибка';
             });
         }
         return row;
