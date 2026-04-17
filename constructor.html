@@ -230,7 +230,7 @@ function renderQuestions() {
     container.innerHTML = html;
 }
 
-// ========== ПАРСИНГ EXCEL (ДЛЯ ИМПОРТА) ==========
+// ========== ПАРСИНГ EXCEL (УНИВЕРСАЛЬНЫЙ) ==========
 function parseExcelToQuestions(fileData) {
     const workbook = XLSX.read(fileData, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -252,14 +252,24 @@ function parseExcelToQuestions(fileData) {
     const questions = [];
     let currentQuestion = null;
     
+    // Карта перевода русских букв в латинские
+    const ruToLat = { 'А': 'A', 'В': 'B', 'С': 'C', 'Д': 'D', 'а': 'A', 'в': 'B', 'с': 'C', 'д': 'D' };
+    
     for (let i = 0; i < lines.length; i++) {
         let line = lines[i].trim();
-        if (line === "") continue;
-        if (line.match(/^\s*[A-Za-z]\s*\|/)) continue;
         
-        const correctMatch = line.match(/✅\s*Правильный ответ:\s*([A-D])/i);
+        // Пропускаем пустые строки
+        if (line === "") continue;
+        
+        // Пропускаем служебные строки (A | B | ...)
+        if (line.match(/^\s*[A-Za-zА-Яа-я]\s*\|/)) continue;
+        
+        // Ищем правильный ответ (с русскими или латинскими буквами)
+        const correctMatch = line.match(/✅\s*Правильный ответ:\s*([A-DA-Да-д])/i);
         if (correctMatch && currentQuestion) {
-            const letter = correctMatch[1].toUpperCase();
+            let letter = correctMatch[1].toUpperCase();
+            // Переводим русскую букву в латинскую
+            if (ruToLat[letter]) letter = ruToLat[letter];
             const index = letter.charCodeAt(0) - 65;
             if (index >= 0 && index < currentQuestion.options.length) {
                 currentQuestion.correct = index;
@@ -271,18 +281,23 @@ function parseExcelToQuestions(fileData) {
             continue;
         }
         
-        const optionMatch = line.match(/^([A-D])[\)\.]\s*(.+)/);
+        // Ищем вариант ответа A) ... или A. ...
+        const optionMatch = line.match(/^([A-DA-Да-д])[\)\.]\s*(.+)/);
         if (optionMatch) {
             if (!currentQuestion) {
                 currentQuestion = { text: "", options: [], correct: -1 };
             }
-            const optionText = optionMatch[2].trim();
-            const cleanOption = optionText.replace(/^["']|["']$/g, '');
-            currentQuestion.options.push(cleanOption);
+            let optionText = optionMatch[2].trim();
+            // Убираем лишние кавычки
+            optionText = optionText.replace(/^["']|["']$/g, '');
+            // Убираем лишние « » если есть
+            optionText = optionText.replace(/^«|»$/g, '');
+            currentQuestion.options.push(optionText);
             continue;
         }
         
-        if (!line.match(/^([A-D])[\)\.]/) && !line.match(/✅\s*Правильный ответ/i)) {
+        // Всё остальное — текст вопроса
+        if (!line.match(/^([A-DA-Да-д])[\)\.]/) && !line.match(/✅\s*Правильный ответ/i)) {
             if (currentQuestion && currentQuestion.options.length > 0) {
                 if (currentQuestion.correct !== -1) {
                     questions.push(currentQuestion);
@@ -300,6 +315,7 @@ function parseExcelToQuestions(fileData) {
         }
     }
     
+    // Добавляем последний вопрос, если есть
     if (currentQuestion && currentQuestion.options.length > 0 && currentQuestion.correct !== -1) {
         questions.push(currentQuestion);
     }
@@ -307,7 +323,7 @@ function parseExcelToQuestions(fileData) {
     return questions;
 }
 
-// ========== ПАРСИНГ ДЛЯ РЕДАКТИРОВАНИЯ (считывает название и города) ==========
+// ========== ПАРСИНГ ДЛЯ РЕДАКТИРОВАНИЯ ==========
 function parseTestForEdit(fileData) {
     const workbook = XLSX.read(fileData, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -317,7 +333,6 @@ function parseTestForEdit(fileData) {
     let citiesList = [];
     
     if (rows.length > 0) {
-        // Пробуем найти название теста (оно может быть в первой строке)
         const firstRow = rows[0];
         if (firstRow['Название теста']) {
             testName = firstRow['Название теста'];
@@ -328,13 +343,12 @@ function parseTestForEdit(fileData) {
         }
     }
     
-    // Загружаем вопросы
     const questionsData = parseExcelToQuestions(fileData);
     
     return { name: testName, cities: citiesList, questions: questionsData };
 }
 
-// Обычный импорт (только вопросы)
+// Обычный импорт
 document.getElementById('excelFile').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -347,13 +361,13 @@ document.getElementById('excelFile').addEventListener('change', function(e) {
             renderQuestions();
             alert(`✅ Загружено ${questions.length} вопросов`);
         } else {
-            alert('❌ Не удалось загрузить вопросы');
+            alert('❌ Не удалось загрузить вопросы. Проверьте формат: вопросы текстом, варианты A) ... B) ... и строка "✅ Правильный ответ: X"');
         }
     };
     reader.readAsArrayBuffer(file);
 });
 
-// Редактирование теста (загружает название, города и вопросы)
+// Редактирование теста
 document.getElementById('editFile').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -458,7 +472,6 @@ async function saveTestToSupabase() {
                         alert('Ошибка обновления: ' + updateError.message);
                     } else {
                         alert(`✅ Тест "${name}" успешно обновлён!`);
-                        // Очищаем форму
                         document.getElementById('testName').value = '';
                         document.getElementById('testDesc').value = '';
                         cities = [];
