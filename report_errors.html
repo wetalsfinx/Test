@@ -107,71 +107,81 @@ function getQuestionNumberByText(questionText) {
     return 0;
 }
 
-// ========== ОПРЕДЕЛЕНИЕ ВАРИАНТА ОТВЕТА ПО ТЕКСТУ ==========
+// ========== ОПРЕДЕЛЕНИЕ ВАРИАНТА ОТВЕТА ПО ТЕКСТУ (ПОЛНАЯ ВЕРСИЯ) ==========
 function getWrongVariantByAnswer(userAnswer, questionNum) {
     const a = userAnswer.toLowerCase();
     
+    // Вопрос 1
     if (questionNum === 1) {
         if (a.includes("подбираете для себя или в подарок")) return 'A';
         if (a.includes("рады видеть вас") && !a.includes("скидка")) return 'B';
         if (a.includes("чем могу помочь")) return 'D';
         return '';
     }
+    // Вопрос 2
     if (questionNum === 2) {
         if (a.includes("сразу показываете") && a.includes("3-4")) return 'A';
         if (a.includes("20 000") || a.includes("20000")) return 'C';
         if (a.includes("готовы добавить")) return 'D';
         return '';
     }
+    // Вопрос 3
     if (questionNum === 3) {
         if (a.includes("будете ещё что-то")) return 'A';
         if (a.includes("можно подобрать серьги")) return 'B';
         if (a.includes("у нас есть ещё серьги")) return 'D';
         return '';
     }
+    // Вопрос 4
     if (questionNum === 4) {
         if (a.includes("золото лучше") && a.includes("дороже")) return 'A';
         if (a.includes("серебро быстро темнеет")) return 'B';
         if (a.includes("акция на золото")) return 'D';
         return '';
     }
+    // Вопрос 5
     if (questionNum === 5) {
         if (a.includes("футляр нужен")) return 'A';
         if (a.includes("может еще что-нибудь")) return 'C';
         if (a.includes("ничего не предлагаете")) return 'D';
         return '';
     }
+    // Вопрос 6
     if (questionNum === 6) {
         if (a.includes("рассрочку")) return 'A';
         if (a.includes("бриллиантом высокой чистоты")) return 'C';
         if (a.includes("подешевле")) return 'D';
         return '';
     }
+    // Вопрос 7
     if (questionNum === 7) {
-        // ИСПРАВЛЕНО: правильно определяем вариант A, B, D
         if (a.includes("можем заказать") || (a.includes("доставка") && a.includes("дней"))) return 'A';
         if (a.includes("этого размера нет") || (a.includes("нет") && a.includes("похожие"))) return 'B';
         if (a.includes("приходите через неделю")) return 'D';
         return '';
     }
+    // Вопрос 8
     if (questionNum === 8) {
         if (a.includes("золота 585")) return 'A';
         if (a.includes("57 граней")) return 'B';
         if (a.includes("сейчас популярны")) return 'D';
         return '';
     }
+    // Вопрос 9
     if (questionNum === 9) {
         if (a.includes("да, конечно. какие именно")) return 'A';
         if (a.includes("смотрите, у нас много всего")) return 'C';
         if (a.includes("эти вам не понравились")) return 'D';
         return '';
     }
+    // Вопрос 10
     if (questionNum === 10) {
         if (a.includes("после того, как клиентка скажет")) return 'A';
         if (a.includes("только на кассе")) return 'B';
         if (a.includes("не упоминаете, пока клиент сам не спросит")) return 'D';
         return '';
     }
+    // Вопрос 11
     if (questionNum === 11) {
         if (a.includes("сразу подходите")) return 'A';
         if (a.includes("идёте рядом и рассказываете")) return 'C';
@@ -233,11 +243,6 @@ function getRecommendationHTML(questionNum, wrongVariant, userAnswer) {
             <div class="mt-2"><strong>💡 Запомните формулу:</strong><br>${rec.formula}</div>
         </div>
     `;
-}
-
-function getRecommendationForPDF(questionNum, wrongVariant) {
-    const key = `q${questionNum}_wrong${wrongVariant}`;
-    return recommendations[key];
 }
 
 let allEmployees = [];
@@ -459,7 +464,8 @@ function generatePDF(employeeId) {
     let wrongZones = [];
     
     for (const err of emp.errors) {
-        const rec = getRecommendationForPDF(err.qNum, err.wrongVariant);
+        const key = `q${err.qNum}_wrong${err.wrongVariant}`;
+        const rec = recommendations[key];
         if (rec) {
             errorsHtml += `
                 <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; page-break-inside: avoid;">
