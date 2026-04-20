@@ -117,7 +117,8 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 style="color: var(--text-color);">👨‍💼 Панель Администратора</h3>
     <div>
-        <button id="reportBtn" class="btn btn-info btn-sm me-2" title="Скопировать отчёт для руководителя">📊 Отчёт для руководителя</button>
+        <button id="reportTextBtn" class="btn btn-info btn-sm me-2" title="Скопировать текстовый отчёт для Outlook">📋 Текстовый отчёт</button>
+        <button id="reportHtmlBtn" class="btn btn-success btn-sm me-2" title="Скачать HTML-отчёт с графиками">📊 HTML-отчёт с графиками</button>
         <span id="realtime-status" class="badge bg-warning me-2">🔄</span>
         <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
     </div>
@@ -216,7 +217,8 @@ window.addEventListener('load', () => {
     document.getElementById('city-filter').addEventListener('change', () => renderResults());
     document.getElementById('date-from').addEventListener('change', () => renderResults());
     document.getElementById('date-to').addEventListener('change', () => renderResults());
-    document.getElementById('reportBtn').addEventListener('click', generateManagerReport);
+    document.getElementById('reportTextBtn').addEventListener('click', generateTextReport);
+    document.getElementById('reportHtmlBtn').addEventListener('click', generateHtmlReport);
 });
 
 function resetFiltersAndFilter(type) {
@@ -468,8 +470,8 @@ function initRealtime() {
     document.getElementById('realtime-status').className = 'badge bg-success';
 }
 
-// ========== ОТЧЁТ ДЛЯ РУКОВОДИТЕЛЯ ==========
-function generateManagerReport() {
+// ========== ТЕКСТОВЫЙ ОТЧЁТ (ДЛЯ OUTLOOK) ==========
+function generateTextReport() {
     if (!currentResults.length) {
         alert('Нет данных для отчёта');
         return;
@@ -481,7 +483,6 @@ function generateManagerReport() {
     const excellent = currentResults.filter(r => (r.score / r.total) >= 0.8).length;
     const totalErrors = currentResults.reduce((s, r) => s + (r.total - r.score), 0);
     
-    // Статистика по городам
     const cityStats = {};
     for (const r of currentResults) {
         const city = r.city || 'Не указан';
@@ -493,12 +494,10 @@ function generateManagerReport() {
         cityStats[city].count++;
     }
     
-    // Топ-5 сотрудников
     const topEmployees = [...currentResults]
         .sort((a, b) => (b.score / b.total) - (a.score / a.total))
         .slice(0, 5);
     
-    // Частые ошибки (по вопросам)
     const errorCount = {};
     for (const r of currentResults) {
         if (r.answers) {
@@ -512,7 +511,6 @@ function generateManagerReport() {
     }
     const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
     
-    // Формируем текст отчёта
     let report = `📊 ОТЧЁТ ПО ТЕСТУ\n`;
     report += `${'━'.repeat(60)}\n`;
     report += `📋 Тест: ${testName}\n`;
@@ -570,12 +568,208 @@ function generateManagerReport() {
     report += `${'━'.repeat(60)}\n`;
     report += `Отчёт сгенерирован автоматически\n`;
     
-    // Копируем в буфер обмена
     navigator.clipboard.writeText(report).then(() => {
-        alert('✅ Отчёт скопирован в буфер обмена!\n\nВставьте его в письмо (Ctrl+V)');
+        alert('✅ Текстовый отчёт скопирован в буфер обмена!\n\nВставьте его в письмо (Ctrl+V)');
     }).catch(() => {
-        alert('❌ Не удалось скопировать. Скопируйте текст вручную');
+        alert('❌ Не удалось скопировать');
     });
+}
+
+// ========== HTML-ОТЧЁТ С ГРАФИКАМИ ==========
+function generateHtmlReport() {
+    if (!currentResults.length) {
+        alert('Нет данных для отчёта');
+        return;
+    }
+    
+    const testName = currentTest?.name || 'Тест';
+    const total = currentResults.length;
+    const avgScore = Math.round(currentResults.reduce((s, r) => s + (r.score / r.total), 0) / total * 100);
+    const excellent = currentResults.filter(r => (r.score / r.total) >= 0.8).length;
+    const totalErrors = currentResults.reduce((s, r) => s + (r.total - r.score), 0);
+    
+    const cityStats = {};
+    for (const r of currentResults) {
+        const city = r.city || 'Не указан';
+        if (!cityStats[city]) {
+            cityStats[city] = { total: 0, sumScore: 0, sumTotal: 0, count: 0 };
+        }
+        cityStats[city].sumScore += r.score;
+        cityStats[city].sumTotal += r.total;
+        cityStats[city].count++;
+    }
+    
+    const topEmployees = [...currentResults]
+        .sort((a, b) => (b.score / b.total) - (a.score / a.total))
+        .slice(0, 5);
+    
+    const errorCount = {};
+    for (const r of currentResults) {
+        if (r.answers) {
+            for (const a of r.answers) {
+                if (!a.isCorrect && a.isCorrect !== undefined) {
+                    const qNum = a.num || '?';
+                    errorCount[`Вопрос ${qNum}`] = (errorCount[`Вопрос ${qNum}`] || 0) + 1;
+                }
+            }
+        }
+    }
+    const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    
+    // Данные для графиков
+    const scoreDistribution = {
+        'Отлично (80-100%)': currentResults.filter(r => (r.score / r.total) >= 0.8).length,
+        'Хорошо (60-79%)': currentResults.filter(r => (r.score / r.total) >= 0.6 && (r.score / r.total) < 0.8).length,
+        'Удовлетворительно (40-59%)': currentResults.filter(r => (r.score / r.total) >= 0.4 && (r.score / r.total) < 0.6).length,
+        'Плохо (0-39%)': currentResults.filter(r => (r.score / r.total) < 0.4).length
+    };
+    
+    const cities = Object.keys(cityStats);
+    const cityScores = cities.map(c => Math.round(cityStats[c].sumScore / cityStats[c].sumTotal * 100));
+    
+    const htmlContent = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчёт: ${testName}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: #f5f7fa; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #0d6efd; }
+        .header h1 { color: #0d6efd; margin: 0; }
+        .stats { display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
+        .stat-card { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex: 1; min-width: 150px; }
+        .stat-card h3 { margin: 0 0 10px 0; color: #0d6efd; }
+        .stat-card .number { font-size: 32px; font-weight: bold; margin: 0; }
+        .chart-row { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
+        .chart-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex: 1; min-width: 300px; }
+        .chart-card h3 { margin-top: 0; color: #0d6efd; }
+        .chart-container { height: 300px; position: relative; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background: #0d6efd; color: white; }
+        .city-list { margin-top: 30px; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Отчёт по тесту</h1>
+            <p>${testName}</p>
+            <p>Дата: ${new Date().toLocaleDateString('ru-RU')}</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card"><h3>👥 Всего сотрудников</h3><div class="number">${total}</div></div>
+            <div class="stat-card"><h3>📈 Средний балл</h3><div class="number">${avgScore}%</div></div>
+            <div class="stat-card"><h3>⭐ Отлично (≥80%)</h3><div class="number">${excellent}</div></div>
+            <div class="stat-card"><h3>❌ Всего ошибок</h3><div class="number">${totalErrors}</div></div>
+        </div>
+        
+        <div class="chart-row">
+            <div class="chart-card">
+                <h3>📊 Распределение баллов</h3>
+                <div class="chart-container">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>🏙️ Успеваемость по городам</h3>
+                <div class="chart-container">
+                    <canvas id="cityChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="city-list">
+            <h3>🏙️ Статистика по городам</h3>
+            <table>
+                <thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Ошибок</th></tr></thead>
+                <tbody>
+                    ${Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count).map(([city, data]) => {
+                        const avg = Math.round(data.sumScore / data.sumTotal * 100);
+                        const errors = data.sumTotal - data.sumScore;
+                        return `<tr><td><strong>${escapeHtml(city)}</strong></td><td>${data.count}</td><td>${avg}%</td><td>${errors}</td></tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>🔝 Лучшие сотрудники</h3>
+            <table>
+                <thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead>
+                <tbody>
+                    ${topEmployees.map((emp, i) => {
+                        const percent = Math.round(emp.score / emp.total * 100);
+                        const name = emp.user_id || `${emp.surname} ${emp.name}`;
+                        return `<tr><td>${i+1}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(emp.city || '—')}</td><td>${emp.score}/${emp.total} (${percent}%)</td></tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>📚 Частые ошибки</h3>
+            <table>
+                <thead><tr><th>Вопрос</th><th>Количество ошибок</th></tr></thead>
+                <tbody>
+                    ${topErrors.map(([q, count]) => `<tr><td>${escapeHtml(q)}</td><td>${count}</td></tr>`).join('')}
+                    ${topErrors.length === 0 ? '<tr><td colspan="2">Нет ошибок</td></tr>' : ''}
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 30px; background: #e3f2fd; padding: 15px; border-radius: 12px; border-left: 4px solid #0d6efd;">
+            <h3>💡 Рекомендации для улучшения</h3>
+            <ul>
+                ${topErrors.length > 0 ? `
+                    <li>Обратите внимание на частые ошибки: ${topErrors.slice(0, 3).map(e => e[0]).join(', ')}</li>
+                    <li>Проведите дополнительное обучение по этим темам</li>
+                    <li>Рекомендуется разобрать типичные ошибки на планерке</li>
+                ` : '<li>Отличный результат! Поддерживайте высокий уровень.</li>'}
+            </ul>
+        </div>
+        
+        <div class="footer">
+            Отчёт сгенерирован автоматически
+        </div>
+    </div>
+    <script>
+        const scoreCtx = document.getElementById('scoreChart').getContext('2d');
+        new Chart(scoreCtx, {
+            type: 'pie',
+            data: {
+                labels: ${JSON.stringify(Object.keys(scoreDistribution))},
+                datasets: [{ data: ${JSON.stringify(Object.values(scoreDistribution))}, backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#dc3545'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+        
+        const cityCtx = document.getElementById('cityChart').getContext('2d');
+        new Chart(cityCtx, {
+            type: 'bar',
+            data: {
+                labels: ${JSON.stringify(cities)},
+                datasets: [{ label: 'Средний балл (%)', data: ${JSON.stringify(cityScores)}, backgroundColor: '#667eea' }]
+            },
+            options: { responsive: true, maintainAspectRatio: true, scales: { y: { min: 0, max: 100, title: { display: true, text: 'Средний балл (%)' } } } }
+        });
+    <\/script>
+</body>
+</html>`;
+    
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `отчёт_${currentTest?.slug || 'report'}_${new Date().toISOString().slice(0, 19)}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('✅ HTML-отчёт с графиками скачан! Откройте его в браузере.');
 }
 
 function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
