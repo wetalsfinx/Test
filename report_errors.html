@@ -121,7 +121,7 @@ function getWrongVariantByAnswer(userAnswer, questionNum) {
     // Вопрос 2
     if (questionNum === 2) {
         if (a.includes("сразу показываете") && a.includes("3-4")) return 'A';
-        if (a.includes("35 000") && a.includes("30 000")) return 'C';
+        if (a.includes("35") && a.includes("30") && (a.includes("000") || a.includes("тыс"))) return 'C';
         if (a.includes("готовы добавить")) return 'D';
         return '';
     }
@@ -162,7 +162,7 @@ function getWrongVariantByAnswer(userAnswer, questionNum) {
     }
     // Вопрос 8
     if (questionNum === 8) {
-        if (a.includes("золота 585")) return 'A';
+        if (a.includes("золота 585") || (a.includes("585") && a.includes("пробы"))) return 'A';
         if (a.includes("57 граней")) return 'B';
         if (a.includes("сейчас популярны")) return 'D';
         return '';
