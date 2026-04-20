@@ -65,7 +65,7 @@
 // ========== КАРТА СООТВЕТСТВИЯ ТЕКСТ ВОПРОСА → НОМЕР ВОПРОСА ==========
 function getQuestionNumberByText(questionText) {
     const t = questionText.toLowerCase();
-    if (t.includes("обеденный перерыв") || t.includes("торопитесь")) return 1;
+    if (t.includes("обеденный перерыв") || t.includes("торопитесь") || t.includes("витрине")) return 1;
     if (t.includes("детскими серьгами") || t.includes("ребёнок")) return 2;
     if (t.includes("день рождения подруге") || t.includes("бюджет")) return 3;
     if (t.includes("кулон в подарок") || t.includes("выпускной")) return 4;
@@ -73,43 +73,179 @@ function getQuestionNumberByText(questionText) {
     if (t.includes("кольцо за") || t.includes("футляр")) return 6;
     if (t.includes("серьги за") || t.includes("не уверен")) return 7;
     if (t.includes("изумрудом") || t.includes("нет в наличии")) return 8;
-    if (t.includes("браслет на витрине")) return 9;
-    if (t.includes("не уверена, что это моё")) return 10;
+    if (t.includes("браслет на витрине") || t.includes("рассматривает браслет")) return 9;
+    if (t.includes("не уверена, что это моё") || t.includes("красиво, но")) return 10;
     if (t.includes("витрину с кольцами") || t.includes("2 минуты")) return 11;
     return 0;
 }
 
-// ========== БАЗА РЕКОМЕНДАЦИЙ ==========
+// ========== ПОЛНАЯ БАЗА РЕКОМЕНДАЦИЙ ==========
 const recommendations = {
-    1: { zone: "Речевая пластинка про акции", correct: "«Добрый день! У нас сегодня специальные условия: скидка до 30% и оплата бонусами»", practice: "Вместо: ❌ «Чем могу помочь?» или «Вижу, вы торопитесь» → ✅ «Добрый день! У нас сегодня скидка до 30%»" },
-    2: { zone: "Инициатива в диалоге", correct: "«Подбираете первые серёжки? Давайте я покажу безопасные варианты»", practice: "Не ждите, подходите с конкретным вопросом" },
-    3: { zone: "Выявление потребностей", correct: "«А какой стиль она предпочитает?»", practice: "Сначала спросите о стиле, потом показывайте" },
-    4: { zone: "Эмоциональная презентация", correct: "«Этот кулон станет символом нового этапа»", practice: "Связывайте украшение с событием" },
-    5: { zone: "Предложение второго украшения", correct: "«Давайте подберём кулон — законченный образ»", practice: "Предлагайте комплект, а не «что-то ещё»" },
-    6: { zone: "Аксессуары ухода", correct: "После согласия на цену, но до оплаты", practice: "Предлагайте футляр и средство ДО оплаты" },
-    7: { zone: "Работа с возражениями (цена)", correct: "«Понимаю. Давайте оформим Яндекс Сплит»", practice: "Предлагайте рассрочку, а не более дешёвый товар" },
-    8: { zone: "Альтернатива / Каталог на заказ", correct: "«Давайте покажу каталог на заказ»", practice: "Вместо «нет в наличии» покажите каталог" },
-    9: { zone: "Инициатива + Примерка", correct: "«Давайте примерим»", practice: "Предлагайте примерить сразу, не ждите" },
-    10: { zone: "Работа с возражениями", correct: "«Понимаю. А что именно смущает?»", practice: "Выясните причину сомнения" },
-    11: { zone: "Инициатива в диалоге", correct: "«Давайте я покажу несколько колец в вашем стиле»", practice: "Предлагайте помощь, не ждите" }
+    // Вопрос 1
+    q1_wrongA: { zone: "Речевая пластинка в приветствии", correct: "«Добрый день! Рады видеть вас. У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%»", whyWorse: "🔁 Пропускает речевую пластинку\n🎯 Сразу задаёт вопрос", whyBetter: "✅ Приветствие + Акция + Бонусы\n💎 Задаёт тон диалогу", practice: "Вместо: ❌ «Здравствуйте! Подбираете для себя или в подарок?»\nГоворите: ✅ «Добрый день! Рады видеть вас. У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Для себя выбираете или в подарок?»", formula: "Приветствие + Акция + Бонусы = Клиент слышит выгоду с первых секунд" },
+    q1_wrongB: { zone: "Речевая пластинка в приветствии", correct: "«Добрый день! Рады видеть вас. У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%»", whyWorse: "🔹 Неполная речевая пластинка\n🎯 Упускаете «крючок»", whyBetter: "✅ Полная формула\n💎 Конкретика = доверие", practice: "Вместо: ❌ «Добрый день! Рады видеть вас»\nГоворите: ✅ «Добрый день! Рады видеть вас. У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%»", formula: "Не просто приветствие, а приветствие с выгодой" },
+    q1_wrongD: { zone: "Речевая пластинка в приветствии", correct: "«Добрый день! Рады видеть вас. У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%»", whyWorse: "🔁 Слишком общо\n🎯 Перекладывает инициативу", whyBetter: "✅ Конкретика с первых секунд\n💎 Вы ведёте диалог", practice: "Вместо: ❌ «Добрый день! Чем могу помочь?»\nГоворите: ✅ «Добрый день! Рады видеть вас. У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое украшение выбираете?»", formula: "Не спрашивайте «чем помочь» — говорите, чем можете быть полезны" },
+    // Вопрос 2
+    q2_wrongA: { zone: "Выявление потребностей", correct: "Спрашиваете: «А для какого случая? Это подарок или для себя?»", whyWorse: "💰 Сразу переходите к показу товара\n🎯 Пропускаете этап выявления потребности", whyBetter: "❓ Сначала задаёте вопрос про повод\n🎁 Связываете бюджет с потребностью", practice: "Вместо: ❌ Сразу показывать товар по бюджету\nГоворите: ✅ «А для какого случая? Это подарок или для себя?»", formula: "Бюджет + А для какого случая/для кого? = Точный подбор" },
+    q2_wrongC: { zone: "Выявление потребностей", correct: "Спрашиваете: «А для какого случая? Это подарок или для себя?»", whyWorse: "🔹 Техника «якоря» применена не вовремя\n🎯 Клиент может воспринять как давление", whyBetter: "✅ Сначала выявите потребность, потом используйте якорь\n💎 Клиент чувствует, что вы подбираете решение", practice: "Вместо: ❌ Сначала кольцо за 35 000, затем за 30 000\nГоворите: ✅ «А для какого случая?.. Поняла. Давайте я покажу два варианта: один точно в вашем бюджете, и второй — чуть дороже, но с бриллиантом более высокой чистоты»", formula: "Сначала «зачем», потом «что» и «почему дороже»" },
+    q2_wrongD: { zone: "Выявление потребностей", correct: "Спрашиваете: «А для какого случая? Это подарок или для себя?»", whyWorse: "🔁 Слишком рано\n🎯 Звучит как попытка «развести» на деньги", whyBetter: "✅ Сначала покажите ценность, потом предлагайте премиум\n💎 Ценность → Доверие → Предложение премиума", practice: "Вместо: ❌ «А готовы добавить за лучшее качество?»\nГоворите: ✅ Сначала выявите потребность → презентуйте товар → затем: «Есть вариант чуть дороже, но с бриллиантом более высокой чистоты. Хотите посмотреть?»", formula: "Ценность → Доверие → Предложение премиума" },
+    // Вопрос 3
+    q3_wrongA: { zone: "Предложение второго украшения", correct: "«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»", whyWorse: "🔁 Вопрос даёт право отказа\n🎯 Нет связи с выбранным изделием", whyBetter: "✅ «Давайте» + парное изделие + выгода\n💎 Создаёте образ, а не предлагаете «ещё одну вещь»", practice: "Вместо: ❌ «Будете ещё что-то смотреть?»\nГоворите: ✅ «Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»", formula: "Давайте + [парное изделие] + [выгода комплекта] = Допродажа без давления" },
+    q3_wrongB: { zone: "Предложение второго украшения", correct: "«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»", whyWorse: "🔹 «Можно» = робкое предложение\n🎯 Нет эмоциональной привязки", whyBetter: "✅ «Давайте» = переход от просьбы к лидерству\n💎 Клиент видит ценность комплекта", practice: "Вместо: ❌ «Можно подобрать серьги в комплект?»\nГоворите: ✅ «Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»", formula: "«Можно» → «Давайте» = переход от просьбы к лидерству" },
+    q3_wrongD: { zone: "Предложение второго украшения", correct: "«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»", whyWorse: "🔁 Слишком общо\n🎯 Клиент может растеряться", whyBetter: "✅ Конкретика + связь с выбором\n💎 Понятное предложение", practice: "Вместо: ❌ «У нас есть ещё серьги, посмотрите?»\nГоворите: ✅ «Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»", formula: "Конкретика + связь с выбором = понятное предложение" },
+    // Вопрос 4
+    q4_wrongA: { zone: "Переориентация на золото", correct: "«Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»", whyWorse: "🔻 Обесценивает выбор клиента\n🎯 Аргумент «дороже» = давление", whyBetter: "✅ Не говорите «лучше» — покажите разницу на клиенте\n💎 Визуальный контраст вместо слов", practice: "Вместо: ❌ «Золото лучше — оно дороже и престижнее»\nГоворите: ✅ «Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»", formula: "Не говорите «золото лучше» — покажите, как оно раскрывается на клиенте" },
+    q4_wrongB: { zone: "Переориентация на золото", correct: "«Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»", whyWorse: "🔹 Негатив о текущем выборе\n🎯 Звучит как критика, а не помощь", whyBetter: "✅ Без обесценивания — покажите факты\n💎 Без обесценивания → факты → визуальное сравнение", practice: "Вместо: ❌ «Серебро быстро темнеет, лучше возьмите золото»\nГоворите: ✅ «Бижутерия — это на сезон. Золото — на всю жизнь. Давайте примерим оба варианта и сравним»", formula: "Без обесценивания → факты → визуальное сравнение" },
+    q4_wrongD: { zone: "Переориентация на золото", correct: "«Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»", whyWorse: "🔁 Слишком рано\n🎯 Клиент может воспринять как «навязывание»", whyBetter: "✅ Сначала создайте эмоцию, потом упоминайте акцию\n💎 Эмоция → Сравнение → Выгода", practice: "Вместо: ❌ «У нас акция на золото — скидка 30%»\nГоворите: ✅ «Давайте примерим оба варианта... Видите, как золото играет? Кстати, на золотые коллекции сейчас скидка 30%»", formula: "Эмоция → Сравнение → Выгода" },
+    // Вопрос 5
+    q5_wrongA: { zone: "Аксессуары как забота", correct: "«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»", whyWorse: "🔁 Вопрос даёт право отказа\n🎯 Звучит как формальность", whyBetter: "✅ Забота + Конкретика\n💎 Директива эксперта", practice: "Вместо: ❌ «Футляр нужен будет?»\nГоворите: ✅ «Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»", formula: "Забота + Конкретика = Допродажа без давления" },
+    q5_wrongC: { zone: "Аксессуары как забота", correct: "«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»", whyWorse: "🔹 Слишком общо\n🎯 Клиент может воспринять как «навязывание»", whyBetter: "✅ Фокус на заботе о покупке\n💎 Аксессуары — это не «допродажа», это забота о долговечности покупки", practice: "Вместо: ❌ «Может еще что-нибудь посмотрите?»\nГоворите: ✅ «Чтобы покупка оставалась идеальной, давайте сразу возьмём фирменный футляр и средство для ухода»", formula: "Аксессуары — это не «допродажа», это забота о долговечности покупки" },
+    q5_wrongD: { zone: "Аксессуары как забота", correct: "«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»", whyWorse: "🔁 Упускаете +10-15% к чеку\n🎯 Клиент может не знать о средствах ухода", whyBetter: "✅ Предлагайте как экспертную рекомендацию\n💎 Не «навязываю», а «рекомендую как эксперт»", practice: "Вместо: ❌ Ничего не предлагать\nГоворите: ✅ «Все наши клиенты берут средства по уходу — это продлевает жизнь украшениям. Давайте подберём и вам»", formula: "Не «навязываю», а «рекомендую как эксперт»" },
+    // Вопрос 6
+    q6_wrongA: { zone: "Работа с возражением «Дорого»", correct: "«Понимаю, цена важна. А с чем вы сравниваете?»", whyWorse: "💳 Сразу предлагаете рассрочку\n🎯 Пропускаете этап «Понять»", whyBetter: "🤝 Сначала присоединяетесь\n❓ Задаёте уточняющий вопрос", practice: "Вместо: ❌ «Можно оформить рассрочку на 6 месяцев»\nГоворите: ✅ «Понимаю, цена важна. А с чем именно вы сравниваете: с такими же по камню и металлу?»", formula: "Понимаю + [присоединение к эмоции] + А с чем/что именно...?" },
+    q6_wrongC: { zone: "Работа с возражением «Дорого»", correct: "«Понимаю, цена важна. А с чем вы сравниваете?»", whyWorse: "🔹 Факт без контекста\n🎯 Звучит как оправдание", whyBetter: "✅ Сначала узнайте, с чем сравнивают, потом аргументируйте\n💎 Сначала «с чем сравниваете», потом аргументы", practice: "Вместо: ❌ «Это кольцо с бриллиантом высокой чистоты»\nГоворите: ✅ «Понимаю, цена важна. А с чем вы сравниваете?.. Если с такими же по камню — обратите внимание на чистоту бриллианта»", formula: "Сначала «с чем сравниваете», потом аргументы" },
+    q6_wrongD: { zone: "Работа с возражением «Дорого»", correct: "«Понимаю, цена важна. А с чем вы сравниваете?»", whyWorse: "🔁 Сразу сдаёт позиции\n🎯 Клиент может подумать, что цена завышена", whyBetter: "✅ Присоединение → Уточнение → Альтернатива (если нужно)\n💎 Не сдавайте позиции сразу", practice: "Вместо: ❌ «Давайте посмотрю, что есть подешевле»\nГоворите: ✅ «Понимаю, цена важна. А с чем вы сравниваете?.. Если бюджет ограничен, давайте посмотрим варианты в вашем диапазоне»", formula: "Присоединение → Уточнение → Альтернатива (если нужно)" },
+    // Вопрос 7
+    q7_wrongA: { zone: "Альтернатива при отсутствии товара", correct: "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", whyWorse: "🔁 Частично верно, но нет альтернативы «здесь и сейчас»\n🎯 Нет вовлечения в диалог", whyBetter: "✅ Предложите оба варианта сразу\n💎 «Нет в наличии» ≠ «Нет продажи»", practice: "Вместо: ❌ «Можем заказать — доставка 3-5 дней»\nГоворите: ✅ «Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", formula: "«Нет в наличии» ≠ «Нет продажи». Предлагайте решение сразу." },
+    q7_wrongB: { zone: "Альтернатива при отсутствии товара", correct: "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", whyWorse: "🔹 Нет конкретики\n🎯 Звучит как отказ", whyBetter: "✅ Избегайте слова «нет», предлагайте решение\n💎 Не «нет», а «есть другое решение»", practice: "Вместо: ❌ «Этого размера нет, но есть похожие кольца»\nГоворите: ✅ «У меня есть ещё варианты! Позвольте показать по каталогу — там как раз то, что вам подходит»", formula: "Не «нет», а «есть другое решение»" },
+    q7_wrongD: { zone: "Альтернатива при отсутствии товара", correct: "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", whyWorse: "🔁 Отпускает клиента «на потом»\n🎯 Нет удержания здесь и сейчас", whyBetter: "✅ Удерживайте клиента предложением решения\n💎 Удержание > Отпускание «на потом»", practice: "Вместо: ❌ «Приходите через неделю — будет ваш размер»\nГоворите: ✅ «Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", formula: "Удержание > Отпускание «на потом»" },
+    // Вопрос 8
+    q8_wrongA: { zone: "Эмоциональная презентация", correct: "«Это кольцо станет идеальным напоминанием о её юбилее — через 20 лет она будет доставать его с теплотой»", whyWorse: "🔹 Сухие характеристики\n🎯 Клиент не видит ценности", whyBetter: "✅ Связь изделия с событием\n💎 Клиент покупает не «граммы золота», а воспоминание", practice: "Вместо: ❌ «Это кольцо из золота 585 пробы, вес 3 грамма»\nГоворите: ✅ «Это кольцо станет идеальным напоминанием о её юбилее — через 20 лет она будет доставать его с теплотой»", formula: "Клиент покупает не «граммы золота», а воспоминание, которое останется навсегда" },
+    q8_wrongB: { zone: "Эмоциональная презентация", correct: "«Это кольцо станет идеальным напоминанием о её юбилее — через 20 лет она будет доставать его с теплотой»", whyWorse: "🔹 Техническая деталь\n🎯 Нет связи с потребностью", whyBetter: "✅ Переведите характеристику в выгоду\n💎 Характеристика → Преимущество → Выгода для клиента (ХПВ)", practice: "Вместо: ❌ «Бриллиант имеет 57 граней»\nГоворите: ✅ «57 граней дают идеальную игру света — камень будет сиять при каждом движении, как маленькая звезда»", formula: "Характеристика → Преимущество → Выгода для клиента (ХПВ)" },
+    q8_wrongD: { zone: "Эмоциональная презентация", correct: "«Это кольцо станет идеальным напоминанием о её юбилее — через 20 лет она будет доставать его с теплотой»", whyWorse: "🔁 Социальное доказательство без персонализации\n🎯 Звучит как шаблон", whyBetter: "✅ Персонализируйте под ситуацию\n💎 «Популярно» → «Подойдет именно вам/получателю»", practice: "Вместо: ❌ «Сейчас популярны такие кольца»\nГоворите: ✅ «Для юбилея мамы это идеальный вариант — классический дизайн, который будет актуален через годы»", formula: "«Популярно» → «Подойдет именно вам/получателю»" },
+    // Вопрос 9
+    q9_wrongA: { zone: "«Можно» vs «Давайте»", correct: "«Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»", whyWorse: "🔁 Пассивный ответ\n🎯 Нет направления", whyBetter: "✅ Проявите инициативу с выгодой\n💎 Не спрашивайте разрешения — предлагайте решение с выгодой", practice: "Вместо: ❌ «Да, конечно. Какие именно?»\nГоворите: ✅ «Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»", formula: "Не спрашивайте разрешения — предлагайте решение с выгодой" },
+    q9_wrongC: { zone: "«Можно» vs «Давайте»", correct: "«Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»", whyWorse: "🔹 Слишком общо\n🎯 Клиент может растеряться", whyBetter: "✅ Конкретика + направление\n💎 Конкретика + направление = понятное предложение", practice: "Вместо: ❌ «Смотрите, у нас много всего»\nГоворите: ✅ «Давайте я покажу три модели из новой коллекции — они идеально дополнят ваш выбор»", formula: "Конкретика + направление = понятное предложение" },
+    q9_wrongD: { zone: "«Можно» vs «Давайте»", correct: "«Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»", whyWorse: "🔁 Может вызвать защитную реакцию\n🎯 Не конструктивно", whyBetter: "✅ Похвала текущего выбора + предложение для сравнения\n💎 Похвала текущего выбора + предложение для сравнения", practice: "Вместо: ❌ «А эти вам не понравились?»\nГоворите: ✅ «Отличный выбор! А давайте я покажу ещё несколько моделей для сравнения — так вы будете уверены на 100%»", formula: "Похвала текущего выбора + предложение для сравнения" },
+    // Вопрос 10
+    q10_wrongA: { zone: "Финансовые инструменты + тайминг", correct: "Во время презентации, ДО озвучивания итоговой цены: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»", whyWorse: "🔁 Реакция на возражение\n🎯 Упускаете момент", whyBetter: "✅ Интегрируйте в презентацию ДО цены\n💎 Финансовые инструменты — часть презентации", practice: "Вместо: ❌ Ждать, пока клиент скажет «дорого»\nГоворите: ✅ «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»", formula: "Финансовые инструменты — часть презентации, упоминайте ДО озвучивания цены" },
+    q10_wrongB: { zone: "Финансовые инструменты + тайминг", correct: "Во время презентации, ДО озвучивания итоговой цены: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»", whyWorse: "🔹 Слишком поздно\n🎯 Упускаете возможность удержать «сомневающегося»", whyBetter: "✅ Упоминайте в процессе презентации\n💎 Чем раньше снимете барьер — тем выше шанс покупки", practice: "Вместо: ❌ Только на кассе\nГоворите: ✅ «Для такого выбора можно оформить Сплит — 4 платежа без переплат»", formula: "Чем раньше снимете барьер — тем выше шанс покупки" },
+    q10_wrongD: { zone: "Финансовые инструменты + тайминг", correct: "Во время презентации, ДО озвучивания итоговой цены: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»", whyWorse: "🔁 Пассивная позиция\n🎯 Клиент может не знать о возможности", whyBetter: "✅ Проявите инициативу как эксперт\n💎 Не ждите вопроса — предлагайте решение как профессионал", practice: "Вместо: ❌ Не упоминать, пока клиент не спросит\nГоворите: ✅ «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»", formula: "Не ждите вопроса — предлагайте решение как профессионал" },
+    // Вопрос 11
+    q11_wrongA: { zone: "Начало контакта: пауза + инициатива", correct: "Ждёте 20-30 секунд, даёте клиентке освоиться, затем мягко начинаете диалог: «Какое изделие выбираете? Для себя или в подарок?»", whyWorse: "🔁 Слишком рано\n🎯 Давление вместо заботы", whyBetter: "✅ Пауза 20-30 сек + мягкая инициатива\n💎 Баланс уважения к личному пространству и проактивности", practice: "Вместо: ❌ Сразу подходить с вопросом\nГоворите: ✅ «Какое изделие выбираете? Для себя или в подарок?»", formula: "Инициатива — это не навязчивость. Это проактивность с уважением к личному пространству" },
+    q11_wrongC: { zone: "Начало контакта: пауза + инициатива", correct: "Ждёте 20-30 секунд, даёте клиентке освоиться, затем мягко начинаете диалог: «Какое изделие выбираете? Для себя или в подарок?»", whyWorse: "🔹 Информационный шум\n🎯 Нарушение личного пространства", whyBetter: "✅ Дайте клиенту время, затем предложите помощь\n💎 Пауза + мягкая инициатива = баланс уважения и проактивности", practice: "Вместо: ❌ Идти рядом и рассказывать про все акции подряд\nГоворите: ✅ Пауза 20-30 сек → «Какое изделие выбираете? Для себя или в подарок?»", formula: "Пауза + мягкая инициатива = баланс уважения и проактивности" },
+    q11_wrongD: { zone: "Начало контакта: пауза + инициатива", correct: "Ждёте 20-30 секунд, даёте клиентке освоиться, затем мягко начинаете диалог: «Какое изделие выбираете? Для себя или в подарок?»", whyWorse: "🔁 Пассивная позиция\n🎯 Клиент может уйти без покупки", whyBetter: "✅ Проявите инициативу после паузы\n💎 Не «не мешать», а «быть рядом, когда клиент готов»", practice: "Вместо: ❌ Оставлять клиентку одну\nГоворите: ✅ Ждите 20-30 секунд, затем: «Какое изделие выбираете? Для себя или в подарок?»", formula: "Не «не мешать», а «быть рядом, когда клиент готов»" }
 };
 
-function getRecommendationHTML(questionNum) {
-    const rec = recommendations[questionNum];
+function getRecommendationHTML(questionNum, wrongVariant) {
+    let key = '';
+    if (questionNum === 1) {
+        if (wrongVariant === 'A') key = 'q1_wrongA';
+        else if (wrongVariant === 'B') key = 'q1_wrongB';
+        else if (wrongVariant === 'D') key = 'q1_wrongD';
+    } else if (questionNum === 2) {
+        if (wrongVariant === 'A') key = 'q2_wrongA';
+        else if (wrongVariant === 'C') key = 'q2_wrongC';
+        else if (wrongVariant === 'D') key = 'q2_wrongD';
+    } else if (questionNum === 3) {
+        if (wrongVariant === 'A') key = 'q3_wrongA';
+        else if (wrongVariant === 'B') key = 'q3_wrongB';
+        else if (wrongVariant === 'D') key = 'q3_wrongD';
+    } else if (questionNum === 4) {
+        if (wrongVariant === 'A') key = 'q4_wrongA';
+        else if (wrongVariant === 'B') key = 'q4_wrongB';
+        else if (wrongVariant === 'D') key = 'q4_wrongD';
+    } else if (questionNum === 5) {
+        if (wrongVariant === 'A') key = 'q5_wrongA';
+        else if (wrongVariant === 'C') key = 'q5_wrongC';
+        else if (wrongVariant === 'D') key = 'q5_wrongD';
+    } else if (questionNum === 6) {
+        if (wrongVariant === 'A') key = 'q6_wrongA';
+        else if (wrongVariant === 'C') key = 'q6_wrongC';
+        else if (wrongVariant === 'D') key = 'q6_wrongD';
+    } else if (questionNum === 7) {
+        if (wrongVariant === 'A') key = 'q7_wrongA';
+        else if (wrongVariant === 'B') key = 'q7_wrongB';
+        else if (wrongVariant === 'D') key = 'q7_wrongD';
+    } else if (questionNum === 8) {
+        if (wrongVariant === 'A') key = 'q8_wrongA';
+        else if (wrongVariant === 'B') key = 'q8_wrongB';
+        else if (wrongVariant === 'D') key = 'q8_wrongD';
+    } else if (questionNum === 9) {
+        if (wrongVariant === 'A') key = 'q9_wrongA';
+        else if (wrongVariant === 'C') key = 'q9_wrongC';
+        else if (wrongVariant === 'D') key = 'q9_wrongD';
+    } else if (questionNum === 10) {
+        if (wrongVariant === 'A') key = 'q10_wrongA';
+        else if (wrongVariant === 'B') key = 'q10_wrongB';
+        else if (wrongVariant === 'D') key = 'q10_wrongD';
+    } else if (questionNum === 11) {
+        if (wrongVariant === 'A') key = 'q11_wrongA';
+        else if (wrongVariant === 'C') key = 'q11_wrongC';
+        else if (wrongVariant === 'D') key = 'q11_wrongD';
+    }
+    
+    const rec = recommendations[key];
     if (!rec) {
         return `<div class="recommendation"><strong>💡 Рекомендация:</strong><br>Обратите внимание на правильный ответ.</div>`;
     }
+    
     return `
         <div class="recommendation">
             <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: ${rec.zone}</div>
             <div class="mt-2"><strong>✅ Правильный подход:</strong><br>${rec.correct}</div>
+            <div class="mt-2"><strong>📊 В чём разница?</strong><br>${rec.whyWorse}<br><strong>→</strong> ${rec.whyBetter}</div>
             <div class="mt-2"><strong>🛠️ Как применять на практике:</strong><br>${rec.practice}</div>
+            <div class="mt-2"><strong>💡 Запомните формулу:</strong><br>${rec.formula}</div>
         </div>
     `;
 }
 
-// ========== ПЕЧАТЬ PDF (через окно печати) ==========
-function printPDF(empId) {
+function getRecommendationForPDF(questionNum, wrongVariant) {
+    let key = '';
+    if (questionNum === 1) {
+        if (wrongVariant === 'A') key = 'q1_wrongA';
+        else if (wrongVariant === 'B') key = 'q1_wrongB';
+        else if (wrongVariant === 'D') key = 'q1_wrongD';
+    } else if (questionNum === 2) {
+        if (wrongVariant === 'A') key = 'q2_wrongA';
+        else if (wrongVariant === 'C') key = 'q2_wrongC';
+        else if (wrongVariant === 'D') key = 'q2_wrongD';
+    } else if (questionNum === 3) {
+        if (wrongVariant === 'A') key = 'q3_wrongA';
+        else if (wrongVariant === 'B') key = 'q3_wrongB';
+        else if (wrongVariant === 'D') key = 'q3_wrongD';
+    } else if (questionNum === 4) {
+        if (wrongVariant === 'A') key = 'q4_wrongA';
+        else if (wrongVariant === 'B') key = 'q4_wrongB';
+        else if (wrongVariant === 'D') key = 'q4_wrongD';
+    } else if (questionNum === 5) {
+        if (wrongVariant === 'A') key = 'q5_wrongA';
+        else if (wrongVariant === 'C') key = 'q5_wrongC';
+        else if (wrongVariant === 'D') key = 'q5_wrongD';
+    } else if (questionNum === 6) {
+        if (wrongVariant === 'A') key = 'q6_wrongA';
+        else if (wrongVariant === 'C') key = 'q6_wrongC';
+        else if (wrongVariant === 'D') key = 'q6_wrongD';
+    } else if (questionNum === 7) {
+        if (wrongVariant === 'A') key = 'q7_wrongA';
+        else if (wrongVariant === 'B') key = 'q7_wrongB';
+        else if (wrongVariant === 'D') key = 'q7_wrongD';
+    } else if (questionNum === 8) {
+        if (wrongVariant === 'A') key = 'q8_wrongA';
+        else if (wrongVariant === 'B') key = 'q8_wrongB';
+        else if (wrongVariant === 'D') key = 'q8_wrongD';
+    } else if (questionNum === 9) {
+        if (wrongVariant === 'A') key = 'q9_wrongA';
+        else if (wrongVariant === 'C') key = 'q9_wrongC';
+        else if (wrongVariant === 'D') key = 'q9_wrongD';
+    } else if (questionNum === 10) {
+        if (wrongVariant === 'A') key = 'q10_wrongA';
+        else if (wrongVariant === 'B') key = 'q10_wrongB';
+        else if (wrongVariant === 'D') key = 'q10_wrongD';
+    } else if (questionNum === 11) {
+        if (wrongVariant === 'A') key = 'q11_wrongA';
+        else if (wrongVariant === 'C') key = 'q11_wrongC';
+        else if (wrongVariant === 'D') key = 'q11_wrongD';
+    }
+    
+    const rec = recommendations[key];
+    if (!rec) return null;
+    return rec;
+}
+
+// ========== ГЕНЕРАЦИЯ PDF (НОВЫЙ ФОРМАТ) ==========
+function generatePDF(empId) {
     const emp = employeesData.find(e => e.id == empId);
     if (!emp) {
         alert('Данные сотрудника не найдены');
@@ -118,15 +254,53 @@ function printPDF(empId) {
     
     const percent = Math.round(emp.score / emp.total * 100);
     let errorsHtml = '';
+    let correctZones = [];
+    let wrongZones = [];
+    
     for (const err of emp.errors) {
-        errorsHtml += `
-            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; border-radius:8px; page-break-inside: avoid;">
-                <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br><br>
-                <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br><br>
-                <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br>
-                ${getRecommendationHTML(err.qNum)}
-            </div>
-        `;
+        const rec = getRecommendationForPDF(err.qNum, err.wrongVariant);
+        if (rec) {
+            errorsHtml += `
+                <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; border-radius:8px; page-break-inside: avoid;">
+                    <div style="font-size:16px; font-weight:bold; color:#856404;">🔍 Зона роста: ${rec.zone}</div>
+                    <div style="margin-top:10px;"><strong>📌 Ситуация из теста (Вопрос ${err.qNum}):</strong><br>${escapeHtml(err.question)}</div>
+                    <div style="margin-top:8px;"><span style="color:#d32f2f;">❌ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}</div>
+                    <div style="margin-top:5px;"><span style="color:#2e7d32;">✅ Правильный подход:</span><br>${rec.correct}</div>
+                    <div style="margin-top:10px;"><strong>📊 В чём разница?</strong></div>
+                    <table style="width:100%; border-collapse:collapse; margin-top:5px;">
+                        <tr style="background:#f8d7da;"><td style="padding:8px; border:1px solid #ddd;"><strong>❌ Ваш вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это слабее</strong></td></tr>
+                        <tr style="background:#f8d7da;"><td style="padding:8px; border:1px solid #ddd;">${escapeHtml(err.userAnswer)}</td><td style="padding:8px; border:1px solid #ddd;">${rec.whyWorse.replace(/\n/g, '<br>')}</td></tr>
+                        <tr style="background:#d4edda;"><td style="padding:8px; border:1px solid #ddd;"><strong>✅ Правильный вариант</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>Почему это работает</strong></td></tr>
+                        <tr style="background:#d4edda;"><td style="padding:8px; border:1px solid #ddd;">${rec.correct}</td><td style="padding:8px; border:1px solid #ddd;">${rec.whyBetter.replace(/\n/g, '<br>')}</td></tr>
+                    </table>
+                    <div style="margin-top:10px;"><strong>🛠️ Как применять на практике:</strong><br>${rec.practice}</div>
+                    <div style="margin-top:8px; padding:8px; background:#e8f5e9; border-radius:6px;"><strong>💡 Запомните формулу:</strong><br>${rec.formula}</div>
+                </div>
+            `;
+            wrongZones.push(rec.zone);
+        }
+    }
+    
+    // Определяем сильные зоны (все возможные зоны роста)
+    const allZones = [
+        "Речевая пластинка в приветствии", "Выявление потребностей", "Предложение второго украшения",
+        "Переориентация на золото", "Аксессуары как забота", "Работа с возражением «Дорого»",
+        "Альтернатива при отсутствии товара", "Эмоциональная презентация", "«Можно» vs «Давайте»",
+        "Финансовые инструменты + тайминг", "Начало контакта: пауза + инициатива"
+    ];
+    
+    const wrongZonesSet = new Set(wrongZones);
+    const strongZones = allZones.filter(zone => !wrongZonesSet.has(zone));
+    
+    let strongZonesHtml = '';
+    if (strongZones.length > 0) {
+        strongZonesHtml = '<div style="margin-top:15px;"><strong>🎯 Сильные стороны (нет ошибок):</strong><br>' + strongZones.map(z => `✅ ${z}`).join('<br>') + '</div>';
+    }
+    
+    let weakZonesHtml = '';
+    if (wrongZones.length > 0) {
+        const uniqueWrongZones = [...new Set(wrongZones)];
+        weakZonesHtml = '<div style="margin-top:10px;"><strong>📚 Зоны роста (требуют внимания):</strong><br>' + uniqueWrongZones.map(z => `🔴 ${z}`).join('<br>') + '</div>';
     }
     
     const printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -146,7 +320,7 @@ function printPDF(empId) {
             .score-good { background: #4caf50; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
             .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .recommendation { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-top: 10px; border-radius: 6px; }
+            .summary { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #0d6efd; }
             @media print {
                 body { padding: 0; }
                 .no-print { display: none; }
@@ -166,11 +340,17 @@ function printPDF(empId) {
                 <strong>Город:</strong> ${escapeHtml(emp.city)}<br>
                 <strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
                 <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
-                    ${percent >= 80 ? '🎉 Отлично!' : (percent >= 50 ? '📈 Хороший результат' : '📚 Требуется изучение')}
+                    ${percent >= 80 ? '🎉 Отлично!' : (percent >= 50 ? '📈 Хороший результат' : '📚 Требуется изучение материалов')}
                 </div>
             </div>
             <h3>📝 Разбор ошибок (${emp.errors.length})</h3>
             ${errorsHtml || '<div style="color:#4caf50;">✅ Нет ошибок! Отличная работа!</div>'}
+            <div class="summary">
+                <strong>🎯 Итог по сотруднику:</strong><br>
+                ${percent >= 80 ? 'Отличный результат!' : (percent >= 50 ? 'Хороший результат, но есть куда расти.' : 'Требуется дополнительное обучение.')}
+                ${weakZonesHtml}
+                ${strongZonesHtml}
+            </div>
             <p style="margin-top:40px; font-size:12px; color:#999; text-align:center;">Отчёт сгенерирован автоматически</p>
         </body>
         </html>
@@ -228,8 +408,17 @@ function processData(rows) {
             
             if (result && result.toString().trim() === 'Ошибка') {
                 const qNum = getQuestionNumberByText(questionText);
+                // Определяем вариант ответа (A, B, C, D)
+                let wrongVariant = '';
+                const firstChar = userAnswer.trim().charAt(0);
+                if (firstChar === 'А' || firstChar === 'A') wrongVariant = 'A';
+                else if (firstChar === 'Б' || firstChar === 'B') wrongVariant = 'B';
+                else if (firstChar === 'В' || firstChar === 'C') wrongVariant = 'C';
+                else if (firstChar === 'Г' || firstChar === 'D') wrongVariant = 'D';
+                
                 employee.errors.push({
                     qNum: qNum,
+                    wrongVariant: wrongVariant,
                     question: questionText,
                     userAnswer: userAnswer,
                     correctAnswer: correctAnswer
@@ -267,7 +456,7 @@ function displayResults() {
                     <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br>
                     <div class="mt-2"><span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}</div>
                     <div class="mt-1"><span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}</div>
-                    ${getRecommendationHTML(err.qNum)}
+                    ${getRecommendationHTML(err.qNum, err.wrongVariant)}
                 </div>
             `;
         }
@@ -331,77 +520,6 @@ uploadArea.addEventListener('drop', e => {
         reader.readAsArrayBuffer(file);
     } else { alert('Загрузите Excel файл'); }
 });
-// ========== ГЕНЕРАЦИЯ PDF ==========
-function generatePDF(empId) {
-    const emp = employeesData.find(e => e.id == empId);
-    if (!emp) {
-        alert('Данные сотрудника не найдены');
-        return;
-    }
-    
-    const percent = Math.round(emp.score / emp.total * 100);
-    let errorsHtml = '';
-    
-    for (const err of emp.errors) {
-        const rec = recommendations[err.qNum] || { zone: "Общая рекомендация", correct: err.correctAnswer, practice: "Изучите правильный ответ" };
-        errorsHtml += `
-            <div style="border-left:4px solid #dc3545; background:#ffebee; padding:15px; margin:15px 0; border-radius:8px;">
-                <strong>❌ Текст вопроса:</strong><br>${escapeHtml(err.question)}<br><br>
-                <span style="color:#d32f2f;">✖ Ваш ответ:</span><br>${escapeHtml(err.userAnswer)}<br><br>
-                <span style="color:#2e7d32;">✓ Правильный ответ:</span><br>${escapeHtml(err.correctAnswer)}<br><br>
-                <div style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px; border-radius:6px;">
-                    <strong>🔍 Зона роста: ${rec.zone}</strong><br>
-                    <strong>✅ Правильный подход:</strong> ${rec.correct}<br>
-                    <strong>🛠️ Как применять на практике:</strong> ${rec.practice}
-                </div>
-            </div>
-        `;
-    }
-    
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
-        alert('Разрешите всплывающие окна для этого сайта');
-        return;
-    }
-    
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="UTF-8"><title>Отчёт: ${emp.name}</title>
-        <style>
-            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; margin: 0; }
-            h1 { color: #0d6efd; }
-            .info { background: #f5f7fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-            .score-good { background: #4caf50; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .score-normal { background: #ff9800; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            .score-bad { background: #f44336; color: white; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-            @media print {
-                body { padding: 0; }
-                .no-print { display: none; }
-            }
-        </style>
-        </head>
-        <body>
-            <div class="no-print" style="text-align:right; margin-bottom:10px;">
-                <button onclick="window.print()" style="padding:8px 16px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer;">🖨️ Сохранить PDF</button>
-            </div>
-            <h1>📊 Отчёт по тесту</h1>
-            <div class="info">
-                <strong>Сотрудник:</strong> ${escapeHtml(emp.name)}<br>
-                <strong>Город:</strong> ${escapeHtml(emp.city)}<br>
-                <strong>Результат:</strong> ${emp.score} из ${emp.total} (${percent}%)<br>
-                <div class="${percent >= 80 ? 'score-good' : (percent >= 50 ? 'score-normal' : 'score-bad')}">
-                    ${percent >= 80 ? '🎉 Отлично!' : (percent >= 50 ? '📈 Хороший результат' : '📚 Требуется изучение')}
-                </div>
-            </div>
-            <h3>📝 Разбор ошибок (${emp.errors.length})</h3>
-            ${errorsHtml || '<div style="color:#4caf50;">✅ Нет ошибок! Отличная работа!</div>'}
-            <p style="margin-top:40px; font-size:12px; color:#999; text-align:center;">Отчёт сгенерирован автоматически</p>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-}
 </script>
 </body>
 </html>
