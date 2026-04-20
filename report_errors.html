@@ -60,7 +60,6 @@
         <div class="col-md-3"><div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"><div class="small">Без ошибок</div><div class="h3 mb-0" id="perfectCount">0</div></div></div>
     </div>
 
-    <!-- Фильтр по городу -->
     <div id="filterBar" class="filter-bar no-print" style="display:none">
         <label><strong>Фильтр по городу:</strong></label>
         <select id="cityFilter" class="form-select w-auto">
@@ -72,19 +71,16 @@
         <span class="ms-auto text-muted" id="filteredCount"></span>
     </div>
 
-    <!-- Статистика по городам -->
     <div id="cityStats" class="city-stats no-print" style="display:none">
         <h6><i class="bi bi-pie-chart"></i> Статистика по городам</h6>
         <div id="cityStatsList" class="small"></div>
     </div>
 
-    <!-- Топ-5 частых ошибок -->
     <div id="topErrorsBlock" class="top-errors no-print" style="display:none">
         <h6><i class="bi bi-bar-chart-steps"></i> Топ-5 частых ошибок</h6>
         <div id="topErrorsList"></div>
     </div>
 
-    <!-- Рекомендации для города -->
     <div id="cityRecommendationsBlock" class="city-recommendations no-print" style="display:none">
         <h6><i class="bi bi-lightbulb"></i> Рекомендации для города</h6>
         <div id="cityRecommendationsList"></div>
@@ -152,8 +148,9 @@ function getWrongVariantByAnswer(userAnswer, questionNum) {
         return '';
     }
     if (questionNum === 7) {
-        if (a.includes("можем заказать")) return 'A';
-        if (a.includes("этого размера нет")) return 'B';
+        // ИСПРАВЛЕНО: правильно определяем вариант A, B, D
+        if (a.includes("можем заказать") || (a.includes("доставка") && a.includes("дней"))) return 'A';
+        if (a.includes("этого размера нет") || (a.includes("нет") && a.includes("похожие"))) return 'B';
         if (a.includes("приходите через неделю")) return 'D';
         return '';
     }
@@ -322,7 +319,6 @@ function updateFiltersAndDisplay() {
     cities.forEach(c => { citySelect.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`; });
     citySelect.value = currentFilterCity;
     
-    // Статистика по городам
     const cityStatsMap = {};
     allEmployees.forEach(e => {
         if (!cityStatsMap[e.city]) cityStatsMap[e.city] = { total: 0, sumPercent: 0, errorCount: 0 };
@@ -347,7 +343,6 @@ function updateFiltersAndDisplay() {
     });
     document.getElementById('filteredCount').innerText = `Показано: ${filtered.length} из ${allEmployees.length}`;
     
-    // Топ-5 ошибок
     const errorCount = {};
     for (const emp of filtered) {
         for (const err of emp.errors) {
@@ -372,7 +367,6 @@ function updateFiltersAndDisplay() {
     }
     document.getElementById('topErrorsBlock').style.display = 'block';
     
-    // Рекомендации для города (на основе топ-5 ошибок)
     const recommendationsMap = {
         "Речевая пластинка в приветствии": "Всегда начинайте диалог с выгоды: «Добрый день! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%». Не спрашивайте «Чем помочь?» — сразу давайте ценность.",
         "Выявление потребностей": "Перед показом товара всегда уточняйте контекст: «А для какого случая? Это подарок или для себя?». Не показывайте «вслепую».",
