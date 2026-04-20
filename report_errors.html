@@ -118,10 +118,11 @@ function getWrongVariantByAnswer(userAnswer, questionNum) {
         if (a.includes("чем могу помочь")) return 'D';
         return '';
     }
-    // Вопрос 2
+    // Вопрос 2 - ИСПРАВЛЕН (прямое сравнение)
     if (questionNum === 2) {
         if (a.includes("сразу показываете") && a.includes("3-4")) return 'A';
-        if ((a.includes("35 000") || a.includes("35000")) && (a.includes("30 000") || a.includes("30000"))) return 'C';
+        // Прямое сравнение для ответа про 35 000 и 30 000
+        if (a.includes("показываете сначала кольцо за 35") && a.includes("затем за 30")) return 'C';
         if (a.includes("готовы добавить")) return 'D';
         return '';
     }
