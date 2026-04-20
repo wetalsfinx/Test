@@ -13,31 +13,47 @@
         --bg-body: #f5f7fa;
         --bg-card: white;
         --text-color: #212529;
+        --text-muted: #6c757d;
         --border-color: #dee2e6;
         --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         --filter-bg: white;
         --user-log-bg: #f8f9fa;
         --user-log-hover: #e9ecef;
+        --user-log-border: #0d6efd;
         --expand-icon-color: #6c757d;
+        --btn-outline-border: #dee2e6;
+        --btn-outline-hover-bg: #e9ecef;
+        --input-bg: white;
+        --input-border: #ced4da;
+        --chart-grid: #ddd;
     }
     body.dark {
         --bg-body: #1a1a2e;
         --bg-card: #16213e;
         --text-color: #e0e0e0;
+        --text-muted: #aaa;
         --border-color: #2c3e50;
         --header-bg: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
         --filter-bg: #0f3460;
         --user-log-bg: #0f3460;
         --user-log-hover: #1a1a2e;
+        --user-log-border: #4facfe;
         --expand-icon-color: #aaa;
+        --btn-outline-border: #2c3e50;
+        --btn-outline-hover-bg: #2c3e50;
+        --input-bg: #0f3460;
+        --input-border: #2c3e50;
+        --chart-grid: #2c3e50;
     }
     body { background: var(--bg-body); font-family: 'Segoe UI', sans-serif; transition: all 0.3s; color: var(--text-color); }
-    .card { margin-top: 20px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: var(--bg-card); }
+    .card { margin-top: 20px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: var(--bg-card); color: var(--text-color); }
     .hidden { display: none!important; }
-    .user-log { border-left: 4px solid #0d6efd; padding: 12px; background: var(--user-log-bg); margin-bottom: 12px; border-radius: 0 8px 8px 0; cursor: pointer; transition: all 0.2s; }
+    .user-log { border-left: 4px solid var(--user-log-border); padding: 12px; background: var(--user-log-bg); margin-bottom: 12px; border-radius: 0 8px 8px 0; cursor: pointer; transition: all 0.2s; color: var(--text-color); }
     .user-log:hover { background: var(--user-log-hover); transform: translateX(4px); }
-    .correct { color: #198754; font-weight: 600; }
-    .wrong { color: #dc3545; font-weight: 600; }
+    .correct { color: #4caf50; font-weight: 600; }
+    body.dark .correct { color: #6fbf6f; }
+    .wrong { color: #f44336; font-weight: 600; }
+    body.dark .wrong { color: #ff6b6b; }
     .score-badge { font-size: 1.3em; padding: 8px 20px; }
     .online-badge { position: fixed; top: 10px; right: 10px; background: #28a745; color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; z-index: 1000; }
     .splash-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-body); display: flex; justify-content: center; align-items: center; z-index: 10000; }
@@ -49,19 +65,30 @@
     .stats-card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
     .filter-bar { background: var(--filter-bg); padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .user-name { font-weight: bold; font-size: 1.1em; }
-    .user-city { font-size: 0.85em; color: #6c757d; margin-left: 8px; }
-    body.dark .user-city { color: #aaa; }
+    .user-city { font-size: 0.85em; color: var(--text-muted); margin-left: 8px; }
     .expand-icon { float: right; color: var(--expand-icon-color); transition: transform 0.3s; }
     .user-log.expanded .expand-icon { transform: rotate(180deg); }
     .chart-card { background: var(--bg-card); border-radius: 10px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .chart-container { height: 200px; position: relative; }
     .test-selector { background: var(--bg-card); border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .test-selector select { max-width: 300px; background: var(--bg-card); color: var(--text-color); border-color: var(--border-color); }
-    .export-buttons { display: flex; gap: 8px; }
-    .sortable { cursor: pointer; user-select: none; }
-    .sortable:hover { text-decoration: underline; }
+    .test-selector select { max-width: 300px; background: var(--input-bg); color: var(--text-color); border-color: var(--input-border); }
+    .test-selector select:focus { border-color: #0d6efd; outline: none; }
+    .export-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
     .theme-toggle { position: fixed; bottom: 20px; right: 20px; background: #0d6efd; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; cursor: pointer; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s; }
     .theme-toggle:hover { transform: scale(1.1); }
+    .form-control, .form-select { background: var(--input-bg); color: var(--text-color); border-color: var(--input-border); }
+    .form-control:focus, .form-select:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25); }
+    .btn-outline-success, .btn-outline-primary, .btn-outline-secondary { border-color: var(--btn-outline-border); color: var(--text-color); }
+    .btn-outline-success:hover, .btn-outline-primary:hover, .btn-outline-secondary:hover { background: var(--btn-outline-hover-bg); color: var(--text-color); }
+    .btn-outline-danger { border-color: #dc3545; color: #dc3545; }
+    .btn-outline-danger:hover { background: #dc3545; color: white; }
+    .badge.bg-light { background: var(--user-log-bg) !important; color: var(--text-color) !important; }
+    .bg-light { background: var(--user-log-bg) !important; }
+    .text-muted { color: var(--text-muted) !important; }
+    .alert-warning { background: #fff3cd; color: #856404; }
+    body.dark .alert-warning { background: #2c3e50; color: #ffc107; }
+    .alert-success { background: #d4edda; color: #155724; }
+    body.dark .alert-success { background: #1a4a2a; color: #90ee90; }
     @media (max-width: 768px) {
         .filter-bar .row { flex-direction: column; }
         .filter-bar .col-md-3, .filter-bar .col-md-2, .filter-bar .col-md-1 { width: 100%; margin-bottom: 10px; }
@@ -90,6 +117,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 style="color: var(--text-color);">👨‍💼 Панель Администратора</h3>
     <div>
+        <button id="reportBtn" class="btn btn-info btn-sm me-2" title="Скопировать отчёт для руководителя">📊 Отчёт для руководителя</button>
         <span id="realtime-status" class="badge bg-warning me-2">🔄</span>
         <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
     </div>
@@ -117,8 +145,8 @@
 <!-- Блок результатов -->
 <div id="resultsContainer" style="display:none">
     <div class="row mb-4">
-        <div class="col-md-4"><div class="stats-card" onclick="resetFiltersAndFilter('excellent')"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="total-count">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
-        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="resetFiltersAndFilter('excellent')"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="avg-score">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
+        <div class="col-md-4"><div class="stats-card" onclick="resetFiltersAndFilter('all')"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="total-count">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
+        <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="resetFiltersAndFilter('all')"><div class="d-flex justify-content-between"><div><div class="small">Средний балл</div><div class="h3 mb-0" id="avg-score">0%</div></div><i class="bi bi-graph-up fs-1"></i></div></div></div>
         <div class="col-md-4"><div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" onclick="resetFiltersAndFilter('excellent')"><div class="d-flex justify-content-between"><div><div class="small">Отлично (≥80%)</div><div class="h3 mb-0" id="excellent-count">0</div></div><i class="bi bi-star fs-1"></i></div></div></div>
     </div>
     <div class="row mb-4">
@@ -127,10 +155,10 @@
     </div>
     <div class="filter-bar">
         <div class="row g-3">
-            <div class="col-md-3"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..." style="background: var(--bg-card); color: var(--text-color); border-color: var(--border-color);"></div>
-            <div class="col-md-2"><select id="city-filter" class="form-select" style="background: var(--bg-card); color: var(--text-color); border-color: var(--border-color);"><option value="">Все города</option></select></div>
-            <div class="col-md-2"><input type="date" id="date-from" class="form-control" style="background: var(--bg-card); color: var(--text-color); border-color: var(--border-color);"></div>
-            <div class="col-md-2"><input type="date" id="date-to" class="form-control" style="background: var(--bg-card); color: var(--text-color); border-color: var(--border-color);"></div>
+            <div class="col-md-3"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div>
+            <div class="col-md-2"><select id="city-filter" class="form-select"><option value="">Все города</option></select></div>
+            <div class="col-md-2"><input type="date" id="date-from" class="form-control"></div>
+            <div class="col-md-2"><input type="date" id="date-to" class="form-control"></div>
             <div class="col-md-2">
                 <div class="export-buttons">
                     <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()" title="Экспорт отфильтрованных данных">📎 Экспорт</button>
@@ -156,7 +184,6 @@ let currentTest = null;
 let currentResults = [];
 let scoreChart = null;
 let cityChart = null;
-let currentSort = { column: 'date', direction: 'desc' };
 
 // ========== ТЁМНАЯ ТЕМА ==========
 function initTheme() {
@@ -173,7 +200,6 @@ function toggleTheme() {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     document.getElementById('themeToggle').innerHTML = isDark ? '☀️' : '🌙';
     document.getElementById('themeToggle').title = isDark ? 'Светлая тема' : 'Тёмная тема';
-    // Обновляем графики для новой темы
     updateCharts();
 }
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
@@ -190,16 +216,15 @@ window.addEventListener('load', () => {
     document.getElementById('city-filter').addEventListener('change', () => renderResults());
     document.getElementById('date-from').addEventListener('change', () => renderResults());
     document.getElementById('date-to').addEventListener('change', () => renderResults());
+    document.getElementById('reportBtn').addEventListener('click', generateManagerReport);
 });
 
 function resetFiltersAndFilter(type) {
-    if (type === 'excellent') {
-        document.getElementById('search-input').value = '';
-        document.getElementById('city-filter').value = '';
-        document.getElementById('date-from').value = '';
-        document.getElementById('date-to').value = '';
-        renderResults();
-    }
+    document.getElementById('search-input').value = '';
+    document.getElementById('city-filter').value = '';
+    document.getElementById('date-from').value = '';
+    document.getElementById('date-to').value = '';
+    renderResults();
 }
 
 async function loadTests() {
@@ -248,28 +273,6 @@ async function loadResults(slug) {
     renderResults();
 }
 
-function sortResults(results, column, direction) {
-    return [...results].sort((a, b) => {
-        let valA, valB;
-        if (column === 'name') {
-            valA = a.user_id.toLowerCase();
-            valB = b.user_id.toLowerCase();
-        } else if (column === 'city') {
-            valA = a.city || '';
-            valB = b.city || '';
-        } else if (column === 'score') {
-            valA = a.score / a.total;
-            valB = b.score / b.total;
-        } else {
-            valA = new Date(a.created_at);
-            valB = new Date(b.created_at);
-        }
-        if (valA < valB) return direction === 'asc' ? -1 : 1;
-        if (valA > valB) return direction === 'asc' ? 1 : -1;
-        return 0;
-    });
-}
-
 function renderResults() {
     if (!currentTest) return;
     
@@ -284,8 +287,6 @@ function renderResults() {
     if(dateFrom) { const d = new Date(dateFrom); d.setHours(0,0,0,0); filtered = filtered.filter(r => new Date(r.created_at) >= d); }
     if(dateTo) { const d = new Date(dateTo); d.setHours(23,59,59,999); filtered = filtered.filter(r => new Date(r.created_at) <= d); }
     
-    const sorted = sortResults(filtered, currentSort.column, currentSort.direction);
-    
     const total = currentResults.length;
     if(total > 0) {
         const avg = Math.round(currentResults.reduce((s,r)=>s+(r.score/r.total),0)/total*100);
@@ -296,10 +297,10 @@ function renderResults() {
     }
     
     const area = document.getElementById('results-area');
-    if(!sorted.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; updateCharts(); return; }
+    if(!filtered.length) { area.innerHTML='<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; updateCharts(); return; }
     
     area.innerHTML = '';
-    sorted.forEach((r, idx) => {
+    filtered.forEach((r, idx) => {
         const p = Math.round(r.score/r.total*100);
         let details = '';
         if(r.answers) r.answers.forEach((a,i) => {
@@ -362,7 +363,7 @@ function updateCharts() {
     const cities = Object.keys(cityStats);
     const avgScores = cities.map(c=>Math.round(cityStats[c].total/cityStats[c].count*100));
     const ctx2 = document.getElementById('cityChart');
-    if(ctx2){ if(cityChart) cityChart.destroy(); cityChart = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#667eea'}]}, options:{responsive:true, scales:{y:{min:0,max:100,title:{display:true,text:'Средний балл (%)'}}, x:{title:{display:true,text:'Город'}}}, plugins:{tooltip:{callbacks:{label:function(context){return `${context.raw}%`;}}}}}}); }
+    if(ctx2){ if(cityChart) cityChart.destroy(); cityChart = new Chart(ctx2, {type:'bar', data:{labels:cities, datasets:[{label:'Средний балл (%)', data:avgScores, backgroundColor:'#667eea'}]}, options:{responsive:true, scales:{y:{min:0,max:100,title:{display:true,text:'Средний балл (%)'}, grid:{color: getComputedStyle(document.body).getPropertyValue('--chart-grid')}}, x:{title:{display:true,text:'Город'}, grid:{color: getComputedStyle(document.body).getPropertyValue('--chart-grid')}}}, plugins:{tooltip:{callbacks:{label:function(context){return `${context.raw}%`;}}}}}}); }
 }
 
 function generateUserReport(resultId) {
@@ -465,6 +466,116 @@ function initRealtime() {
     }).subscribe();
     document.getElementById('realtime-status').innerHTML = '🟢 Live';
     document.getElementById('realtime-status').className = 'badge bg-success';
+}
+
+// ========== ОТЧЁТ ДЛЯ РУКОВОДИТЕЛЯ ==========
+function generateManagerReport() {
+    if (!currentResults.length) {
+        alert('Нет данных для отчёта');
+        return;
+    }
+    
+    const testName = currentTest?.name || 'Тест';
+    const total = currentResults.length;
+    const avgScore = Math.round(currentResults.reduce((s, r) => s + (r.score / r.total), 0) / total * 100);
+    const excellent = currentResults.filter(r => (r.score / r.total) >= 0.8).length;
+    const totalErrors = currentResults.reduce((s, r) => s + (r.total - r.score), 0);
+    
+    // Статистика по городам
+    const cityStats = {};
+    for (const r of currentResults) {
+        const city = r.city || 'Не указан';
+        if (!cityStats[city]) {
+            cityStats[city] = { total: 0, sumScore: 0, sumTotal: 0, count: 0 };
+        }
+        cityStats[city].sumScore += r.score;
+        cityStats[city].sumTotal += r.total;
+        cityStats[city].count++;
+    }
+    
+    // Топ-5 сотрудников
+    const topEmployees = [...currentResults]
+        .sort((a, b) => (b.score / b.total) - (a.score / a.total))
+        .slice(0, 5);
+    
+    // Частые ошибки (по вопросам)
+    const errorCount = {};
+    for (const r of currentResults) {
+        if (r.answers) {
+            for (const a of r.answers) {
+                if (!a.isCorrect && a.isCorrect !== undefined) {
+                    const qNum = a.num || '?';
+                    errorCount[`Вопрос ${qNum}`] = (errorCount[`Вопрос ${qNum}`] || 0) + 1;
+                }
+            }
+        }
+    }
+    const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    
+    // Формируем текст отчёта
+    let report = `📊 ОТЧЁТ ПО ТЕСТУ\n`;
+    report += `${'━'.repeat(60)}\n`;
+    report += `📋 Тест: ${testName}\n`;
+    report += `📅 Дата: ${new Date().toLocaleDateString('ru-RU')}\n\n`;
+    
+    report += `📈 ОБЩАЯ СТАТИСТИКА\n`;
+    report += `${'━'.repeat(60)}\n`;
+    report += `Всего сотрудников: ${total}\n`;
+    report += `Средний балл: ${avgScore}%\n`;
+    report += `Отлично (≥80%): ${excellent} человек\n`;
+    report += `Всего ошибок: ${totalErrors}\n\n`;
+    
+    report += `🏙️ СТАТИСТИКА ПО ГОРОДАМ\n`;
+    report += `${'━'.repeat(60)}\n`;
+    report += `Город                │ Сотр. │ Средний балл │ Ошибок\n`;
+    report += `${'─'.repeat(60)}\n`;
+    for (const [city, data] of Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count)) {
+        const avg = Math.round(data.sumScore / data.sumTotal * 100);
+        const errors = data.sumTotal - data.sumScore;
+        report += `${city.padEnd(20)} │ ${String(data.count).padStart(5)} │ ${String(avg).padStart(12)}% │ ${String(errors).padStart(6)}\n`;
+    }
+    report += `\n`;
+    
+    report += `🔝 ЛУЧШИЕ СОТРУДНИКИ\n`;
+    report += `${'━'.repeat(60)}\n`;
+    topEmployees.forEach((emp, i) => {
+        const percent = Math.round(emp.score / emp.total * 100);
+        const name = emp.user_id || `${emp.surname} ${emp.name}`;
+        report += `${i + 1}. ${name} — ${emp.score}/${emp.total} (${percent}%)\n`;
+    });
+    report += `\n`;
+    
+    report += `📚 ЧАСТЫЕ ОШИБКИ\n`;
+    report += `${'━'.repeat(60)}\n`;
+    if (topErrors.length) {
+        topErrors.forEach(([q, count], i) => {
+            report += `${i + 1}. ${q} — ${count} ошибок\n`;
+        });
+    } else {
+        report += `Нет ошибок\n`;
+    }
+    report += `\n`;
+    
+    report += `💡 РЕКОМЕНДАЦИИ ДЛЯ УЛУЧШЕНИЯ\n`;
+    report += `${'━'.repeat(60)}\n`;
+    if (topErrors.length) {
+        const topErrorNames = topErrors.slice(0, 3).map(e => e[0]).join(', ');
+        report += `• Обратите внимание на частые ошибки: ${topErrorNames}\n`;
+        report += `• Проведите дополнительное обучение по этим темам\n`;
+        report += `• Рекомендуется разобрать типичные ошибки на планерке\n`;
+    } else {
+        report += `• Отличный результат! Поддерживайте высокий уровень.\n`;
+    }
+    report += `\n`;
+    report += `${'━'.repeat(60)}\n`;
+    report += `Отчёт сгенерирован автоматически\n`;
+    
+    // Копируем в буфер обмена
+    navigator.clipboard.writeText(report).then(() => {
+        alert('✅ Отчёт скопирован в буфер обмена!\n\nВставьте его в письмо (Ctrl+V)');
+    }).catch(() => {
+        alert('❌ Не удалось скопировать. Скопируйте текст вручную');
+    });
 }
 
 function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
