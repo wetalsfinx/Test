@@ -107,7 +107,7 @@ function getQuestionNumberByText(questionText) {
     return 0;
 }
 
-// ========== ОПРЕДЕЛЕНИЕ ВАРИАНТА ОТВЕТА ПО ТЕКСТУ (ПОЛНАЯ ВЕРСИЯ) ==========
+// ========== ОПРЕДЕЛЕНИЕ ВАРИАНТА ОТВЕТА (ПРЯМОЕ СОПОСТАВЛЕНИЕ) ==========
 function getWrongVariantByAnswer(userAnswer, questionNum) {
     const a = userAnswer.toLowerCase();
     
@@ -118,10 +118,9 @@ function getWrongVariantByAnswer(userAnswer, questionNum) {
         if (a.includes("чем могу помочь")) return 'D';
         return '';
     }
-    // Вопрос 2 - ИСПРАВЛЕН (прямое сравнение)
+    // Вопрос 2
     if (questionNum === 2) {
         if (a.includes("сразу показываете") && a.includes("3-4")) return 'A';
-        // Прямое сравнение для ответа про 35 000 и 30 000
         if (a.includes("показываете сначала кольцо за 35") && a.includes("затем за 30")) return 'C';
         if (a.includes("готовы добавить")) return 'D';
         return '';
