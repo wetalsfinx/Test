@@ -616,7 +616,6 @@ function generateHtmlReport() {
     }
     const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
     
-    // Данные для графиков
     const scoreDistribution = {
         'Отлично (80-100%)': currentResults.filter(r => (r.score / r.total) >= 0.8).length,
         'Хорошо (60-79%)': currentResults.filter(r => (r.score / r.total) >= 0.6 && (r.score / r.total) < 0.8).length,
@@ -626,6 +625,27 @@ function generateHtmlReport() {
     
     const cities = Object.keys(cityStats);
     const cityScores = cities.map(c => Math.round(cityStats[c].sumScore / cityStats[c].sumTotal * 100));
+    
+    // Формируем HTML вручную без использования escapeHtml внутри
+    let cityRows = '';
+    for (const [city, data] of Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count)) {
+        const avg = Math.round(data.sumScore / data.sumTotal * 100);
+        const errors = data.sumTotal - data.sumScore;
+        cityRows += `<tr><td><strong>${city}</strong></td><td>${data.count}</td><td>${avg}%</td><td>${errors}</td></tr>`;
+    }
+    
+    let topRows = '';
+    for (let i = 0; i < topEmployees.length; i++) {
+        const emp = topEmployees[i];
+        const percent = Math.round(emp.score / emp.total * 100);
+        const name = emp.user_id || `${emp.surname} ${emp.name}`;
+        topRows += `<tr><td>${i+1}</td><td>${name}</td><td>${emp.city || '—'}</td><td>${emp.score}/${emp.total} (${percent}%)</td></tr>`;
+    }
+    
+    let errorRows = '';
+    for (const [q, count] of topErrors) {
+        errorRows += `<tr><td>${q}</td><td>${count}</td></tr>`;
+    }
     
     const htmlContent = `<!DOCTYPE html>
 <html lang="ru">
@@ -688,13 +708,7 @@ function generateHtmlReport() {
             <h3>🏙️ Статистика по городам</h3>
             <table>
                 <thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Ошибок</th></tr></thead>
-                <tbody>
-                    ${Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count).map(([city, data]) => {
-                        const avg = Math.round(data.sumScore / data.sumTotal * 100);
-                        const errors = data.sumTotal - data.sumScore;
-                        return `<tr><td><strong>${escapeHtml(city)}</strong></td><td>${data.count}</td><td>${avg}%</td><td>${errors}</td></tr>`;
-                    }).join('')}
-                </tbody>
+                <tbody>${cityRows}</tbody>
             </table>
         </div>
         
@@ -702,13 +716,7 @@ function generateHtmlReport() {
             <h3>🔝 Лучшие сотрудники</h3>
             <table>
                 <thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead>
-                <tbody>
-                    ${topEmployees.map((emp, i) => {
-                        const percent = Math.round(emp.score / emp.total * 100);
-                        const name = emp.user_id || `${emp.surname} ${emp.name}`;
-                        return `<tr><td>${i+1}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(emp.city || '—')}</td><td>${emp.score}/${emp.total} (${percent}%)</td></tr>`;
-                    }).join('')}
-                </tbody>
+                <tbody>${topRows}</tbody>
             </table>
         </div>
         
@@ -716,10 +724,7 @@ function generateHtmlReport() {
             <h3>📚 Частые ошибки</h3>
             <table>
                 <thead><tr><th>Вопрос</th><th>Количество ошибок</th></tr></thead>
-                <tbody>
-                    ${topErrors.map(([q, count]) => `<tr><td>${escapeHtml(q)}</td><td>${count}</td></tr>`).join('')}
-                    ${topErrors.length === 0 ? '<tr><td colspan="2">Нет ошибок</td></tr>' : ''}
-                </tbody>
+                <tbody>${errorRows || '<tr><td colspan="2">Нет ошибок</td></tr>'}</tbody>
             </table>
         </div>
         
