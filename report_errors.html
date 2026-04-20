@@ -118,76 +118,76 @@ function getWrongVariantByAnswer(userAnswer, questionNum) {
         if (a.includes("чем могу помочь")) return 'D';
         return '';
     }
-    // Вопрос 2 - с ПРЯМЫМ СОВПАДЕНИЕМ
+    // Вопрос 2
     if (questionNum === 2) {
-        // Прямое совпадение для проблемного ответа
+        // Прямые совпадения
         if (a === "Показываете сначала кольцо за 35 000 ₽, затем за 30 000 ₽") return 'C';
         if (a.includes("сразу показываете") && a.includes("3-4")) return 'A';
-        if (a.includes("35") && a.includes("30") && (a.includes("000") || a.includes("тыс"))) return 'C';
         if (a.includes("готовы добавить")) return 'D';
         return '';
     }
     // Вопрос 3
     if (questionNum === 3) {
-        if (a.includes("будете ещё что-то")) return 'A';
-        if (a.includes("можно подобрать серьги")) return 'B';
-        if (a.includes("у нас есть ещё серьги")) return 'D';
+        if (a === "«Будете ещё что-то смотреть?»") return 'A';
+        if (a === "«Можно подобрать серьги в комплект?»") return 'B';
+        if (a === "«У нас есть ещё серьги, посмотрите?»") return 'D';
         return '';
     }
     // Вопрос 4
     if (questionNum === 4) {
-        if (a.includes("золото лучше") && a.includes("дороже")) return 'A';
-        if (a.includes("серебро быстро темнеет")) return 'B';
-        if (a.includes("акция на золото")) return 'D';
+        if (a === "«Золото лучше — оно дороже и престижнее»") return 'A';
+        if (a === "«Серебро быстро темнеет, лучше возьмите золото»") return 'B';
+        if (a === "«У нас акция на золото — скидка 30%»") return 'D';
         return '';
     }
     // Вопрос 5
     if (questionNum === 5) {
-        if (a.includes("футляр нужен")) return 'A';
+        if (a === "«Футляр нужен будет?»") return 'A';
         if (a.includes("может еще что-нибудь")) return 'C';
-        if (a.includes("ничего не предлагаете")) return 'D';
+        if (a === "Ничего не предлагаете, чтобы не навязываться") return 'D';
         return '';
     }
     // Вопрос 6
     if (questionNum === 6) {
-        if (a.includes("рассрочку") && !a.includes("сплит")) return 'A';
-        if (a.includes("бриллиантом высокой чистоты")) return 'C';
-        if (a.includes("подешевле")) return 'D';
+        if (a === "«Можно оформить рассрочку на 6 месяцев»") return 'A';
+        if (a === "«Это кольцо с бриллиантом высокой чистоты»") return 'C';
+        if (a === "«Давайте посмотрю, что есть подешевле»") return 'D';
         return '';
     }
     // Вопрос 7
     if (questionNum === 7) {
-        if (a.includes("можем заказать") || (a.includes("доставка") && a.includes("дней"))) return 'A';
-        if (a.includes("этого размера нет") || (a.includes("нет") && a.includes("похожие"))) return 'B';
-        if (a.includes("приходите через неделю")) return 'D';
+        if (a === "«Можем заказать — доставка 3-5 дней»") return 'A';
+        if (a === "«Этого размера нет, но есть похожие кольца»") return 'B';
+        if (a === "«Приходите через неделю — будет ваш размер»") return 'D';
         return '';
     }
     // Вопрос 8
     if (questionNum === 8) {
-        if (a.includes("золота 585") || (a.includes("585") && a.includes("пробы"))) return 'A';
-        if (a.includes("57 граней")) return 'B';
-        if (a.includes("сейчас популярны")) return 'D';
+        if (a === "«Это кольцо из золота 585 пробы, вес 3 грамма»") return 'A';
+        if (a === "«Бриллиант имеет 57 граней»") return 'B';
+        if (a === "«Сейчас популярны такие кольца»") return 'D';
         return '';
     }
     // Вопрос 9
     if (questionNum === 9) {
-        if (a.includes("да, конечно. какие именно")) return 'A';
-        if (a.includes("смотрите, у нас много всего")) return 'C';
-        if (a.includes("эти вам не понравились")) return 'D';
+        if (a === "«Да, конечно. Какие именно?»") return 'A';
+        if (a === "«Смотрите, у нас много всего»") return 'C';
+        if (a === "«А эти вам не понравились?»") return 'D';
         return '';
     }
     // Вопрос 10
     if (questionNum === 10) {
-        if (a.includes("после того, как клиентка скажет")) return 'A';
-        if (a.includes("только на кассе")) return 'B';
-        if (a.includes("не упоминаете, пока клиент сам не спросит")) return 'D';
+        // Прямое совпадение для проблемного ответа
+        if (a === "После того, как клиентка скажет «дорого» или «я подумаю") return 'A';
+        if (a === "Только на кассе, когда она уже готова платить") return 'B';
+        if (a === "Не упоминаете, пока клиент сам не спросит") return 'D';
         return '';
     }
     // Вопрос 11
     if (questionNum === 11) {
-        if (a.includes("сразу подходите")) return 'A';
-        if (a.includes("идёте рядом и рассказываете")) return 'C';
-        if (a.includes("оставляете клиентку одну")) return 'D';
+        if (a === "Сразу подходите и спрашиваете: «Что-то присмотрели?»") return 'A';
+        if (a === "Идёте рядом и рассказываете про все акции подряд") return 'C';
+        if (a === "Оставляете клиентку одну, чтобы не мешать") return 'D';
         return '';
     }
     return '';
