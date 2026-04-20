@@ -109,7 +109,7 @@ function getQuestionNumberByText(questionText) {
 
 // ========== ПРЯМОЕ СОПОСТАВЛЕНИЕ ВАРИАНТА ОТВЕТА ПО ТЕКСТУ ==========
 function getWrongVariantByAnswer(userAnswer, questionNum) {
-    const a = userAnswer.toLowerCase();
+    const a = userAnswer.trim();
     
     // Вопрос 1
     if (questionNum === 1) {
@@ -118,8 +118,10 @@ function getWrongVariantByAnswer(userAnswer, questionNum) {
         if (a.includes("чем могу помочь")) return 'D';
         return '';
     }
-    // Вопрос 2
+    // Вопрос 2 - с ПРЯМЫМ СОВПАДЕНИЕМ
     if (questionNum === 2) {
+        // Прямое совпадение для проблемного ответа
+        if (a === "Показываете сначала кольцо за 35 000 ₽, затем за 30 000 ₽") return 'C';
         if (a.includes("сразу показываете") && a.includes("3-4")) return 'A';
         if (a.includes("35") && a.includes("30") && (a.includes("000") || a.includes("тыс"))) return 'C';
         if (a.includes("готовы добавить")) return 'D';
