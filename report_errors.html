@@ -107,7 +107,7 @@ function getQuestionNumberByText(questionText) {
     return 0;
 }
 
-// ========== ОПРЕДЕЛЕНИЕ ВАРИАНТА ОТВЕТА ПО ТЕКСТУ (ИСПРАВЛЕНАЯ ВЕРСИЯ) ==========
+// ========== ОПРЕДЕЛЕНИЕ ВАРИАНТА ОТВЕТА ПО ТЕКСТУ (ПОЛНАЯ ВЕРСИЯ) ==========
 function getWrongVariantByAnswer(userAnswer, questionNum) {
     const a = userAnswer.toLowerCase();
     
@@ -118,10 +118,9 @@ function getWrongVariantByAnswer(userAnswer, questionNum) {
         if (a.includes("чем могу помочь")) return 'D';
         return '';
     }
-    // Вопрос 2 - ИСПРАВЛЕН
+    // Вопрос 2
     if (questionNum === 2) {
         if (a.includes("сразу показываете") && a.includes("3-4")) return 'A';
-        // Ищем 35 000 и 30 000 (с пробелом или без)
         if ((a.includes("35 000") || a.includes("35000")) && (a.includes("30 000") || a.includes("30000"))) return 'C';
         if (a.includes("готовы добавить")) return 'D';
         return '';
@@ -177,7 +176,7 @@ function getWrongVariantByAnswer(userAnswer, questionNum) {
     }
     // Вопрос 10
     if (questionNum === 10) {
-        if (a.includes("после того, как клиентка скажет")) return 'A';
+        if (a.includes("после того, как клиентка скажет") || (a.includes("дорого") && a.includes("подумаю"))) return 'A';
         if (a.includes("только на кассе")) return 'B';
         if (a.includes("не упоминаете, пока клиент сам не спросит")) return 'D';
         return '';
