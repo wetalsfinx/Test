@@ -51,6 +51,22 @@
             padding: 8px 24px;
             font-weight: 500;
         }
+        .filter-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafd;
+            padding: 6px 16px;
+            border-radius: 40px;
+            margin-left: 10px;
+        }
+        .filter-group select {
+            border: none;
+            background: transparent;
+            font-weight: 500;
+            outline: none;
+            padding: 6px;
+        }
         .error-card {
             background: white;
             border-radius: 24px;
@@ -108,7 +124,7 @@
             border: none;
         }
         @media print {
-            .no-print, .btn-pdf, .upload-zone, button { display: none !important; }
+            .no-print, .btn-pdf, .upload-zone, button, .filter-group { display: none !important; }
             .error-body { display: block !important; }
             body { background: white; padding: 0; }
         }
@@ -154,6 +170,12 @@
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
         <button class="btn btn-primary btn-outline-custom mt-2" id="selectFileBtn"><i class="bi bi-folder2-open"></i> Выбрать файл</button>
         <button class="btn btn-secondary btn-outline-custom mt-2 ms-2" id="resetBtn"><i class="bi bi-arrow-repeat"></i> Сбросить</button>
+        <div class="filter-group mt-2">
+            <i class="bi bi-filter"></i>
+            <select id="cityFilter">
+                <option value="all">Все города</option>
+            </select>
+        </div>
         <div id="fileInfo" class="mt-2 text-muted small"></div>
     </div>
 
@@ -163,6 +185,8 @@
 
 <script>
     let employeeCounter = 0;
+    let allEmployeesData = [];
+    let currentCityFilter = "all";
 
     // ========== РЕКОМЕНДАЦИИ ПО КАЖДОМУ ВОПРОСУ ==========
     const recommendations = {
@@ -179,51 +203,27 @@
         11: "📌 Инициатива в продажах / работа с пассивным клиентом: проявите инициативу: подойдите ближе, покажите аксессуар: «Посмотрите, новинка — очень популярная модель»."
     };
 
-    // ========== ОПРЕДЕЛЕНИЕ НОМЕРА ВОПРОСА ПО ТЕКСТУ ==========
     function findRecommendationNumberByQuestionText(questionText) {
         const lower = questionText.toLowerCase();
-        
-        // Вопрос 1: установление контакта
         if (lower.includes('первым') || (lower.includes('говорите') && lower.includes('первым')) || 
             (lower.includes('улыбаетесь') && lower.includes('контакт'))) return 1;
-        
-        // Вопрос 2: выявление потребностей
         if ((lower.includes('бюджет') || lower.includes('услышали бюджет')) && lower.includes('дальше')) return 2;
         if (lower.includes('уточняющие вопросы')) return 2;
-        
-        // Вопрос 3: дополнительная продажа
         if ((lower.includes('серьги') && lower.includes('коллекции')) || 
             (lower.includes('предложить серьги') && lower.includes('кольцо'))) return 3;
-        
-        // Вопрос 4: переориентация на золото
         if ((lower.includes('фианитами') && lower.includes('золото')) || lower.includes('переориентировать')) return 4;
-        
-        // Вопрос 5: футляр
         if ((lower.includes('футляр') && lower.includes('чистящих')) || 
             (lower.includes('оформляет покупку') && lower.includes('дополнительно'))) return 5;
-        
-        // Вопрос 6: работа с возражением "дороговато"
         if ((lower.includes('дороговато') || lower.includes('дешевле будет')) && lower.includes('отвечаете')) return 6;
         if (lower.includes('возражениями') && lower.includes('дороговато')) return 6;
-        
-        // Вопрос 7: нет размера
         if ((lower.includes('нет в наличии') && lower.includes('размера')) || lower.includes('размера нет')) return 7;
-        
-        // Вопрос 8: подарок маме
         if ((lower.includes('подарок') && lower.includes('маме')) || (lower.includes('юбилей') && lower.includes('презентуете'))) return 8;
-        
-        // Вопрос 9: другие модели
         if (lower.includes('другие модели') && lower.includes('отвечаете')) return 9;
-        
-        // Вопрос 10: Яндекс Сплит
         if (lower.includes('яндекс сплит') || lower.includes('альтернативные способы оплаты') || 
             (lower.includes('колеблется') && lower.includes('оплаты')) ||
-            lower.includes('65 000') || (lower.includes('кольцо') && lower.includes('65'))) return 10;
-        
-        // Вопрос 11: пассивный клиент
+            lower.includes('65 000')) return 10;
         if ((lower.includes('не останавливаясь') && lower.includes('витрины')) || 
             (lower.includes('медленно идти') && lower.includes('что делаете'))) return 11;
-        
         return 0;
     }
 
@@ -248,106 +248,26 @@
                 <small><i class="bi bi-chat-dots"></i> <strong>Сравните ответы:</strong></small>
                 <table class="comparison-table">
                     <tr><td class="table-wrong" width="45%">❌ Ваш ответ: ${escapeHtml(userAnswer) || '(пусто)'}</td>
-                    <td class="table-correct">✅ Правильный ответ: ${escapeHtml(correctAnswer) || '(пусто)'}</td>
+                    <td class="table-correct">✅ Правильный ответ: ${escapeHtml(correctAnswer) || '(пусто)'}</td></tr>
                 </table>
             </div>
         `;
     }
 
-    // Демо-данные для проверки (Котова Оксана с 3 ошибками)
-    const demoExcelRows = [
-        {
-            "ФИО": "Котова Оксана",
-            "Город": "Санкт-Петербург",
-            "Баллы": "8/11",
-            "Процент": "73%",
-            "Вопрос 1": "Клиентка заходит в магазин, проходит к витрине. Вы улыбаетесь, устанавливаете зрительный контакт. Что говорите ПЕРВЫМ?",
-            "Ответ сотрудника 1": "Здравствуйте!",
-            "Правильный ответ 1": "Добрый день! Выбираете подарок или себе?",
-            "Результат 1": "Ошибка",
-            "Вопрос 2": "Клиент говорит: «Мне нужно кольцо до 30 000 рублей». Вы услышали бюджет. Что делаете ДАЛЬШЕ?",
-            "Ответ сотрудника 2": "Показываю кольца до 30000",
-            "Правильный ответ 2": "Задаю уточняющие вопросы: «Для какого случая?», «Какой камень предпочитаете?»",
-            "Результат 2": "Ошибка",
-            "Вопрос 3": "Клиентка выбрала кольцо. Вы хотите предложить серьги из той же коллекции. Как говорите?",
-            "Ответ сотрудника 3": "Вот серьги, посмотрите",
-            "Правильный ответ 3": "К этому кольцу отлично подойдут серьги из этой же линейки, давайте покажу",
-            "Результат 3": "Ошибка",
-            "Вопрос 4": "Клиентка смотрит на серьги с фианитами за 15 000 ₽. Вы хотите мягко переориентировать на золото. Что говорите?",
-            "Ответ сотрудника 4": "Золото лучше",
-            "Правильный ответ 4": "Золото — это инвестиция в себя. Давайте посмотрим похожие модели в золоте",
-            "Результат 4": "",
-            "Вопрос 5": "Клиентка оформляет покупку. Что предлагаете дополнительно?",
-            "Ответ сотрудника 5": "Ничего",
-            "Правильный ответ 5": "Футляр для хранения и салфетку для ухода",
-            "Результат 5": "",
-            "Вопрос 6": "Клиентка выбрала кольцо за 45 000 ₽, но говорит: «Дороговато... Я думала, дешевле будет». Что отвечаете?",
-            "Ответ сотрудника 6": "Можем посмотреть дешевле",
-            "Правильный ответ 6": "Понимаю, цена важна. А с чем вы сравниваете?",
-            "Результат 6": "",
-            "Вопрос 7": "Клиент выбирает кольцо, но размера нет в наличии. Что говорите?",
-            "Ответ сотрудника 7": "Нет такого размера",
-            "Правильный ответ 7": "Этого размера сейчас нет, но мы можем заказать под ваш размер. Посмотрите каталог",
-            "Результат 7": "",
-            "Вопрос 8": "Клиентка выбирает подарок маме на юбилей. Как презентуете изделие?",
-            "Ответ сотрудника 8": "Хороший подарок",
-            "Правильный ответ 8": "Мама будет в восторге от такого подарка, это очень трогательный жест внимания",
-            "Результат 8": "",
-            "Вопрос 9": "Клиент спрашивает: «Можно посмотреть другие модели?». Как отвечаете?",
-            "Ответ сотрудника 9": "Да, конечно",
-            "Правильный ответ 9": "Конечно, давайте посмотрим. Что именно хотите видеть?",
-            "Результат 9": "",
-            "Вопрос 10": "Клиентка выбрала кольцо за 65 000 ₽, но колеблется. Вы знаете, что у магазина есть Яндекс Сплит. Когда и КАК вы упоминаете об этом?",
-            "Ответ сотрудника 10": "После того, как клиентка скажет «дорого» или «я подумаю»",
-            "Правильный ответ 10": "Во время презентации, ДО озвучивания итоговой цены: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»",
-            "Результат 10": "",
-            "Вопрос 11": "Клиентка зашла в магазин. Вы поздоровались, проговорили акцию. Она кивнула и продолжает медленно идти вдоль витрины, не останавливаясь. Что делаете?",
-            "Ответ сотрудника 11": "Жду, пока подойдёт",
-            "Правильный ответ 11": "Подойдите ближе, покажите аксессуар: «Посмотрите, новинка — очень популярная модель»",
-            "Результат 11": ""
-        }
-    ];
+    function updateCityFilter(employees) {
+        const cities = [...new Set(employees.map(e => e.city).filter(c => c))];
+        const select = document.getElementById('cityFilter');
+        select.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+        select.onchange = (e) => { currentCityFilter = e.target.value; renderEmployees(); };
+    }
 
-    function processData(rows) {
-        const employees = [];
-        for (const row of rows) {
-            const name = row['ФИО'] || '';
-            if (!name) continue;
-            const employee = {
-                id: employeeCounter++,
-                name: name,
-                city: row['Город'] || '',
-                score: 0,
-                total: 0,
-                errors: []
-            };
-            const scoreMatch = (row['Баллы'] || '').match(/(\d+)\/(\d+)/);
-            if (scoreMatch) {
-                employee.score = parseInt(scoreMatch[1]);
-                employee.total = parseInt(scoreMatch[2]);
-            }
-            for (let i = 1; i <= 11; i++) {
-                const result = row[`Результат ${i}`];
-                const questionText = row[`Вопрос ${i}`] || '';
-                const userAnswer = row[`Ответ сотрудника ${i}`] || '';
-                const correctAnswer = row[`Правильный ответ ${i}`] || '';
-                if (result === 'Ошибка' && questionText) {
-                    const recNumber = findRecommendationNumberByQuestionText(questionText);
-                    employee.errors.push({
-                        num: recNumber,
-                        originalColumnNum: i,
-                        question: questionText,
-                        userAnswer: userAnswer,
-                        correctAnswer: correctAnswer
-                    });
-                }
-            }
-            employees.push(employee);
-        }
+    function renderEmployees() {
+        let filtered = currentCityFilter === "all" ? allEmployeesData : allEmployeesData.filter(e => e.city === currentCityFilter);
+        if (filtered.length === 0 && allEmployeesData.length > 0) filtered = allEmployeesData;
         
-        const total = employees.length;
+        const total = filtered.length;
         let sumPercent = 0, totalErrorsCount = 0, perfectCount = 0;
-        employees.forEach(emp => {
+        filtered.forEach(emp => {
             const percent = emp.total > 0 ? (emp.score / emp.total) * 100 : 0;
             sumPercent += percent;
             totalErrorsCount += emp.errors.length;
@@ -362,7 +282,7 @@
         document.getElementById('perfectCount').innerText = perfectCount;
         
         let html = '<h3 class="mb-3"><i class="bi bi-person-lines-fill"></i> Результаты сотрудников</h3>';
-        for (const emp of employees) {
+        for (const emp of filtered) {
             const percent = emp.total > 0 ? Math.round((emp.score / emp.total) * 100) : 0;
             const errorCount = emp.errors.length;
             let errorsHtml = '';
@@ -403,6 +323,47 @@
         document.getElementById('resultsArea').innerHTML = html;
     }
 
+    function processData(rows) {
+        const employees = [];
+        for (const row of rows) {
+            const name = row['ФИО'] || '';
+            if (!name) continue;
+            const employee = {
+                id: employeeCounter++,
+                name: name,
+                city: row['Город'] || '',
+                score: 0,
+                total: 0,
+                errors: []
+            };
+            const scoreMatch = (row['Баллы'] || '').match(/(\d+)\/(\d+)/);
+            if (scoreMatch) {
+                employee.score = parseInt(scoreMatch[1]);
+                employee.total = parseInt(scoreMatch[2]);
+            }
+            for (let i = 1; i <= 11; i++) {
+                const result = row[`Результат ${i}`];
+                const questionText = row[`Вопрос ${i}`] || '';
+                const userAnswer = row[`Ответ сотрудника ${i}`] || '';
+                const correctAnswer = row[`Правильный ответ ${i}`] || '';
+                if (result === 'Ошибка' && questionText) {
+                    const recNumber = findRecommendationNumberByQuestionText(questionText);
+                    employee.errors.push({
+                        num: recNumber,
+                        originalColumnNum: i,
+                        question: questionText,
+                        userAnswer: userAnswer,
+                        correctAnswer: correctAnswer
+                    });
+                }
+            }
+            employees.push(employee);
+        }
+        allEmployeesData = employees;
+        updateCityFilter(employees);
+        renderEmployees();
+    }
+
     function toggleBody(header) {
         const body = header.nextElementSibling;
         if (body) body.classList.toggle('show');
@@ -439,7 +400,12 @@
         win.print();
     }
 
-    // Загрузка своего Excel
+    // Демо-данные
+    const demoExcelRows = [
+        { "ФИО": "Котова Оксана", "Город": "Санкт-Петербург", "Баллы": "8/11", "Вопрос 1": "Клиентка заходит в магазин... Что говорите ПЕРВЫМ?", "Ответ сотрудника 1": "Здравствуйте!", "Правильный ответ 1": "Добрый день! Выбираете подарок или себе?", "Результат 1": "Ошибка", "Вопрос 2": "Клиент говорит: «Мне нужно кольцо до 30 000 рублей». Что делаете ДАЛЬШЕ?", "Ответ сотрудника 2": "Показываю кольца до 30000", "Правильный ответ 2": "Задаю уточняющие вопросы: «Для какого случая?»", "Результат 2": "Ошибка", "Вопрос 3": "Клиентка выбрала кольцо. Как предложить серьги?", "Ответ сотрудника 3": "Вот серьги, посмотрите", "Правильный ответ 3": "К этому кольцу отлично подойдут серьги из этой же линейки", "Результат 3": "Ошибка" },
+        { "ФИО": "Иванов Петр", "Город": "Москва", "Баллы": "10/11", "Вопрос 1": "...", "Ответ сотрудника 1": "...", "Правильный ответ 1": "...", "Результат 1": "", "Вопрос 2": "...", "Ответ сотрудника 2": "...", "Правильный ответ 2": "...", "Результат 2": "", "Вопрос 3": "...", "Ответ сотрудника 3": "...", "Правильный ответ 3": "...", "Результат 3": "" }
+    ];
+
     document.getElementById('selectFileBtn').addEventListener('click', () => document.getElementById('fileInput').click());
     document.getElementById('resetBtn').addEventListener('click', () => location.reload());
     document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -459,7 +425,6 @@
         reader.readAsArrayBuffer(file);
     });
     
-    // Drag & drop
     const zone = document.getElementById('uploadZone');
     zone.addEventListener('dragover', (e) => e.preventDefault());
     zone.addEventListener('drop', (e) => {
@@ -474,7 +439,6 @@
         } else alert('Пожалуйста, загрузите Excel файл');
     });
     
-    // Автоматическая загрузка демо-данных для наглядности
     setTimeout(() => {
         if (document.getElementById('resultsArea').innerHTML === '') {
             document.getElementById('fileInfo').innerHTML = `<i class="bi bi-chart-line"></i> Демо-данные (нажмите "Выбрать файл" для своих данных)`;
