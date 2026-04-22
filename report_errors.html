@@ -123,6 +123,18 @@
             font-weight: 500;
             border: none;
         }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #8ba3bc;
+            background: white;
+            border-radius: 24px;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
         @media print {
             .no-print, .btn-pdf, .upload-zone, button, .filter-group { display: none !important; }
             .error-body { display: block !important; }
@@ -179,7 +191,13 @@
         <div id="fileInfo" class="mt-2 text-muted small"></div>
     </div>
 
-    <div id="resultsArea"></div>
+    <div id="resultsArea">
+        <div class="empty-state">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            <h3>Нет данных</h3>
+            <p>Загрузите Excel-файл с результатами тестирования</p>
+        </div>
+    </div>
     <footer class="no-print">Данные обрабатываются локально, ничего не уходит на сервер.</footer>
 </div>
 
@@ -248,7 +266,7 @@
                 <small><i class="bi bi-chat-dots"></i> <strong>Сравните ответы:</strong></small>
                 <table class="comparison-table">
                     <tr><td class="table-wrong" width="45%">❌ Ваш ответ: ${escapeHtml(userAnswer) || '(пусто)'}</td>
-                    <td class="table-correct">✅ Правильный ответ: ${escapeHtml(correctAnswer) || '(пусто)'}</td></tr>
+                    <td class="table-correct">✅ Правильный ответ: ${escapeHtml(correctAnswer) || '(пусто)'}</td>
                 </table>
             </div>
         `;
@@ -400,12 +418,6 @@
         win.print();
     }
 
-    // Демо-данные
-    const demoExcelRows = [
-        { "ФИО": "Котова Оксана", "Город": "Санкт-Петербург", "Баллы": "8/11", "Вопрос 1": "Клиентка заходит в магазин... Что говорите ПЕРВЫМ?", "Ответ сотрудника 1": "Здравствуйте!", "Правильный ответ 1": "Добрый день! Выбираете подарок или себе?", "Результат 1": "Ошибка", "Вопрос 2": "Клиент говорит: «Мне нужно кольцо до 30 000 рублей». Что делаете ДАЛЬШЕ?", "Ответ сотрудника 2": "Показываю кольца до 30000", "Правильный ответ 2": "Задаю уточняющие вопросы: «Для какого случая?»", "Результат 2": "Ошибка", "Вопрос 3": "Клиентка выбрала кольцо. Как предложить серьги?", "Ответ сотрудника 3": "Вот серьги, посмотрите", "Правильный ответ 3": "К этому кольцу отлично подойдут серьги из этой же линейки", "Результат 3": "Ошибка" },
-        { "ФИО": "Иванов Петр", "Город": "Москва", "Баллы": "10/11", "Вопрос 1": "...", "Ответ сотрудника 1": "...", "Правильный ответ 1": "...", "Результат 1": "", "Вопрос 2": "...", "Ответ сотрудника 2": "...", "Правильный ответ 2": "...", "Результат 2": "", "Вопрос 3": "...", "Ответ сотрудника 3": "...", "Правильный ответ 3": "...", "Результат 3": "" }
-    ];
-
     document.getElementById('selectFileBtn').addEventListener('click', () => document.getElementById('fileInput').click());
     document.getElementById('resetBtn').addEventListener('click', () => location.reload());
     document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -438,13 +450,6 @@
             input.dispatchEvent(new Event('change'));
         } else alert('Пожалуйста, загрузите Excel файл');
     });
-    
-    setTimeout(() => {
-        if (document.getElementById('resultsArea').innerHTML === '') {
-            document.getElementById('fileInfo').innerHTML = `<i class="bi bi-chart-line"></i> Демо-данные (нажмите "Выбрать файл" для своих данных)`;
-            processData(demoExcelRows);
-        }
-    }, 100);
 </script>
 </body>
 </html>
