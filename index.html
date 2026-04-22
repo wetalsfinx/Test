@@ -123,7 +123,6 @@
     </div>
 </div>
 
-<!-- Выбор теста -->
 <div class="test-selector">
     <div class="row align-items-center">
         <div class="col-md-4">
@@ -142,7 +141,6 @@
     </div>
 </div>
 
-<!-- Блок результатов -->
 <div id="resultsContainer" style="display:none">
     <div class="row mb-4">
         <div class="col-md-4"><div class="stats-card" onclick="resetFilters()"><div class="d-flex justify-content-between"><div><div class="small">Всего прошло</div><div class="h3 mb-0" id="total-count">0</div></div><i class="bi bi-people fs-1"></i></div></div></div>
@@ -185,7 +183,6 @@ let currentResults = [];
 let scoreChart = null;
 let cityChart = null;
 
-// ========== ТЁМНАЯ ТЕМА ==========
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -302,11 +299,21 @@ function renderResults() {
     area.innerHTML = '';
     filtered.forEach((r, idx) => {
         const p = Math.round(r.score/r.total*100);
+        
+        // ========== ИСПРАВЛЕННАЯ ЧАСТЬ — ТЕПЕРЬ С ТЕКСТОМ ВОПРОСА ==========
         let details = '';
         if(r.answers) r.answers.forEach((a,i) => {
             const ok = a.isCorrect === true || a.ok === true;
-            details += `<div class="small mb-2"><strong>В${i+1}:</strong> ${ok?'✅':'❌'} <span class="${ok?'correct':'wrong'}">${ok?'Верно':'Неверно'}</span>${!ok?`<div class="text-muted ms-3">✖ ${a.selected || a.sel}<br>✔ ${a.correct || a.cor}</div>`:''}</div>`;
+            const questionText = (a.question || a.qs || `Вопрос ${i+1}`).substring(0, 150);
+            details += `<div class="small mb-2 p-2" style="border-left:3px solid ${ok?'#4caf50':'#f44336'}; background:var(--user-log-bg); border-radius:4px;">
+                <strong>${ok?'✅':'❌'} ${escapeHtml(questionText)}</strong>
+                <div class="mt-1"><span class="${ok?'correct':'wrong'}">${ok?'Верно':'Ошибка'}</span></div>
+                ${!ok ? `<div class="text-muted ms-2 mt-1 small"><strong>✖ Ваш ответ:</strong> ${escapeHtml(a.selected || a.sel || '—')}<br>
+                <strong>✔ Правильный ответ:</strong> ${escapeHtml(a.correct || a.cor || '—')}</div>` : ''}
+            </div>`;
         });
+        // ========== КОНЕЦ ИСПРАВЛЕННОЙ ЧАСТИ ==========
+        
         const clr = p>=80?'success':p>=50?'warning':'danger';
         area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show'); this.classList.toggle('expanded')">
             <div class="d-flex justify-content-between align-items-start">
@@ -367,9 +374,10 @@ function generateUserReport(resultId) {
     if(userData.answers) {
         userData.answers.forEach((a, i) => {
             const isCorrect = a.isCorrect === true || a.ok === true;
+            const questionText = (a.question || a.qs || `Вопрос ${i+1}`).substring(0, 150);
             if (!isCorrect) {
                 answersHtml += `<div style="margin-bottom:15px;padding:12px;background:#ffebee;border-radius:8px">
-                    <strong>❌ Вопрос ${i+1}</strong><br>
+                    <strong>❌ ${escapeHtml(questionText)}</strong><br>
                     <div><strong>Ваш ответ:</strong> ${escapeHtml(a.selected || a.sel)}</div>
                     <div><strong>Правильный ответ:</strong> ${escapeHtml(a.correct || a.cor)}</div>
                 </div>`;
@@ -397,7 +405,6 @@ function generateUserReport(resultId) {
     win.document.close();
 }
 
-// ========== ЭКСПОРТ ==========
 function exportToExcel() {
     if (!currentResults.length) return alert("Нет данных");
     try {
@@ -460,7 +467,6 @@ function initRealtime() {
     document.getElementById('realtime-status').className = 'badge bg-success';
 }
 
-// ========== ОТЧЁТ ДЛЯ РУКОВОДИТЕЛЯ ==========
 function generateReport() {
     if (!currentResults.length) {
         alert('Нет данных для отчёта');
