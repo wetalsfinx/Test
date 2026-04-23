@@ -31,13 +31,10 @@
     .btn-outline-brand{background:transparent;border:1px solid var(--brand-red);color:var(--brand-red);padding:7px 19px;border-radius:40px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
     .btn-outline-brand:hover{background:var(--brand-red);color:#fff}
     .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;margin-bottom:2rem}
-    .kpi-card{background:#fff;border-radius:16px;padding:1.2rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.05);position:relative;border-left:4px solid var(--brand-red);cursor:help}
+    .kpi-card{background:#fff;border-radius:16px;padding:1.2rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.05);position:relative;border-left:4px solid var(--brand-red)}
     .kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.1)}
     .kpi-label{font-size:.75rem;text-transform:uppercase;color:#666;margin-bottom:8px;display:flex;align-items:center;gap:6px}
     .kpi-value{font-size:2.2rem;font-weight:800;color:var(--brand-red)}
-    .kpi-card .tooltip-text{visibility:hidden;opacity:0;background:#333;color:#fff;padding:5px 10px;border-radius:6px;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12px;transition:opacity .2s;pointer-events:none}
-    body.dark .kpi-card .tooltip-text{background:#555}
-    .kpi-card:hover .tooltip-text{visibility:visible;opacity:1}
     .charts-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:1.5rem;margin-bottom:2rem}
     .chart-card{background:#fff;border-radius:20px;padding:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,.05);border:1px solid #eee}
     .chart-title{font-weight:600;margin-bottom:1rem;font-size:1rem;display:flex;align-items:center;gap:8px;color:var(--brand-red);padding-bottom:6px;border-bottom:2px solid var(--brand-red)}
@@ -99,8 +96,8 @@
             <div class="col-md-2"><select id="city-filter" class="form-select"><option value="">Все города</option></select></div>
             <div class="col-md-2"><input type="date" id="date-from" class="form-control"></div>
             <div class="col-md-2"><input type="date" id="date-to" class="form-control"></div>
-            <div class="col-md-2"><div class="d-flex gap-2"><button class="btn-brand" style="padding:6px 12px" onclick="exportToExcel()">📎 Экспорт</button><button class="btn-brand" style="padding:6px 12px" onclick="exportDetailedToExcel()">📊 Детальный</button></div></div>
-            <div class="col-md-1"><button class="btn-brand" style="padding:6px 12px;width:100%" onclick="resetFilters()">Сброс</button></div>
+            <div class="col-md-2"><div class="d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" onclick="exportToExcel()">📎 Экспорт</button><button class="btn btn-sm btn-outline-secondary" onclick="exportDetailedToExcel()">📊 Детальный</button></div></div>
+            <div class="col-md-1"><button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()">Сброс</button></div>
         </div>
     </div>
     <div id="results-area"><div class="text-center py-4 text-muted">⏳ Выберите тест</div></div>
@@ -114,24 +111,6 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentTest = null;
 let currentResults = [];
 let scoreChart = null, cityChart = null, pieChart = null;
-
-// ДЕМО-ДАННЫЕ (чтобы страница не была пустой)
-const demoResults = [
-    { id: 1, name: "Коваль", surname: "Екатерина", city: "Новоуральск", score: 11, total: 11, user_id: "kovale", answers: [], created_at: new Date().toISOString() },
-    { id: 2, name: "Зуева", surname: "Елена", city: "Новоуральск", score: 11, total: 11, user_id: "zueva", answers: [], created_at: new Date().toISOString() },
-    { id: 3, name: "Исакова", surname: "Ирина", city: "Новоуральск", score: 11, total: 11, user_id: "isakova", answers: [], created_at: new Date().toISOString() },
-    { id: 4, name: "Хатюшина", surname: "Наталья", city: "Прохладный", score: 11, total: 11, user_id: "hatyushina", answers: [], created_at: new Date().toISOString() },
-    { id: 5, name: "Елшина", surname: "Ксения", city: "Пермь", score: 11, total: 11, user_id: "elshina", answers: [], created_at: new Date().toISOString() },
-    { id: 6, name: "Иванов", surname: "Алексей", city: "Москва", score: 9, total: 11, user_id: "ivanov", answers: [{ num: 1, isCorrect: false, question: "Тестовый вопрос 1", selected: "Неверный ответ", correct: "Правильный ответ" }], created_at: new Date().toISOString() },
-    { id: 7, name: "Петрова", surname: "Мария", city: "Москва", score: 8, total: 11, user_id: "petrova", answers: [], created_at: new Date().toISOString() }
-];
-
-const kpiTooltips = {
-    'Всего сотрудников': 'Общее количество сотрудников, прошедших тестирование',
-    'Средний балл': 'Средний процент правильных ответов',
-    'Отлично (≥80%)': 'Количество сотрудников, набравших 80% и выше',
-    'Всего ошибок': 'Общее количество ошибок по всем вопросам'
-};
 
 const questionTopics = {
     1: "Установление контакта", 2: "Выявление потребностей", 3: "Дополнительная продажа",
@@ -162,35 +141,35 @@ initTheme();
 async function loadTests() {
     const { data, error } = await sb.from('tests').select('*').order('created_at', { ascending: false });
     const selector = document.getElementById('testSelector');
-    if (error) { console.error('Ошибка Supabase:', error); selector.innerHTML = '<option value="">Ошибка загрузки</option>'; return; }
-    if (!data || data.length === 0) { selector.innerHTML = '<option value="">Нет тестов</option>'; return; }
+    if (error || !data || data.length === 0) {
+        selector.innerHTML = '<option value="">Нет тестов</option>';
+        console.error('Ошибка загрузки тестов:', error);
+        return;
+    }
     let options = '<option value="">-- Выберите тест --</option>';
     for (const test of data) {
         options += `<option value="${test.slug}" data-cities='${JSON.stringify(test.city_list || [])}'>${escapeHtml(test.name)} (${test.questions_count || '?'} вопросов)</option>`;
     }
     selector.innerHTML = options;
-    console.log('Тесты загружены:', data.length);
     
     selector.onchange = async (e) => {
         const slug = e.target.value;
-        if (!slug) { currentTest = null; document.getElementById('resultsContainer').style.display = 'none'; return; }
+        if (!slug) {
+            currentTest = null;
+            document.getElementById('resultsContainer').style.display = 'none';
+            return;
+        }
         const opt = selector.options[selector.selectedIndex];
         const citiesJson = opt.getAttribute('data-cities');
         currentTest = { slug: slug, name: opt.text, cities: JSON.parse(citiesJson || '[]') };
         const cityFilter = document.getElementById('city-filter');
         let cityOptions = '<option value="">Все города</option>';
-        for (const city of currentTest.cities) cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
-        cityFilter.innerHTML = cityOptions;
-        
-        // Пытаемся загрузить из Supabase
-        const { data: res } = await sb.from('results').select('*').eq('test_type', slug).order('created_at', { ascending: false });
-        if (res && res.length > 0) {
-            currentResults = res;
-        } else {
-            // Если в Supabase нет данных - показываем демо-данные
-            currentResults = demoResults.map(r => ({ ...r, test_type: slug }));
+        for (const city of currentTest.cities) {
+            cityOptions += `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`;
         }
-        console.log('Загружено результатов:', currentResults.length);
+        cityFilter.innerHTML = cityOptions;
+        const { data: res } = await sb.from('results').select('*').eq('test_type', slug).order('created_at', { ascending: false });
+        currentResults = res || [];
         document.getElementById('resultsContainer').style.display = 'block';
         renderAll();
     };
@@ -215,10 +194,10 @@ function renderAll() {
     const totalErrors = currentResults.reduce((s, r) => s + (r.total - r.score), 0);
     
     document.getElementById('kpiGrid').innerHTML = `
-        <div class="kpi-card"><div class="kpi-label"><i class="fas fa-users"></i> Всего сотрудников</div><div class="kpi-value">${total}</div><div class="tooltip-text">${kpiTooltips['Всего сотрудников']}</div></div>
-        <div class="kpi-card"><div class="kpi-label"><i class="fas fa-chart-line"></i> Средний балл</div><div class="kpi-value">${avgScore}%</div><div class="tooltip-text">${kpiTooltips['Средний балл']}</div></div>
-        <div class="kpi-card"><div class="kpi-label"><i class="fas fa-star"></i> Отлично (≥80%)</div><div class="kpi-value">${excellent}</div><div class="tooltip-text">${kpiTooltips['Отлично (≥80%)']}</div></div>
-        <div class="kpi-card"><div class="kpi-label"><i class="fas fa-times-circle"></i> Всего ошибок</div><div class="kpi-value">${totalErrors}</div><div class="tooltip-text">${kpiTooltips['Всего ошибок']}</div></div>
+        <div class="kpi-card"><div class="kpi-label"><i class="fas fa-users"></i> Всего сотрудников</div><div class="kpi-value">${total}</div></div>
+        <div class="kpi-card"><div class="kpi-label"><i class="fas fa-chart-line"></i> Средний балл</div><div class="kpi-value">${avgScore}%</div></div>
+        <div class="kpi-card"><div class="kpi-label"><i class="fas fa-star"></i> Отлично (≥80%)</div><div class="kpi-value">${excellent}</div></div>
+        <div class="kpi-card"><div class="kpi-label"><i class="fas fa-times-circle"></i> Всего ошибок</div><div class="kpi-value">${totalErrors}</div></div>
     `;
     
     const scores = currentResults.map(r => r.score / r.total * 100);
@@ -239,10 +218,10 @@ function renderAll() {
         options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
     });
     
-    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${c.city}${i === 0 ? ' 🥇' : ''}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.count}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px;border-bottom:1px solid #eee">${c.errors}</td></tr>`).join('');
+    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${c.city}${i === 0 ? ' 🥇' : ''}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.count}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px;border-bottom:1px solid #eee">${c.errors}</td onclick="applyCityFilter('${c.city}')"></td>`).join('');
     
     const top10 = [...currentResults].sort((a, b) => (b.score / b.total) - (a.score / a.total)).slice(0, 10);
-    document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${escapeHtml(e.surname || '')} ${escapeHtml(e.name || '')}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(e.city || '—')}</td><td style="padding:8px;border-bottom:1px solid #eee">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td></td>`).join('');
+    document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${escapeHtml(e.surname || '')} ${escapeHtml(e.name || '')}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(e.city || '—')}</td><td style="padding:8px;border-bottom:1px solid #eee">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td onclick="alert('${escapeHtml(e.name)}')"></td>`).join('');
     
     const errCount = {};
     for (const r of currentResults) { if (r.answers) { for (let i = 0; i < r.answers.length; i++) { const a = r.answers[i]; const ok = a.isCorrect === true || a.ok === true; if (!ok) { const topic = questionTopics[i+1] || `Вопрос ${i+1}`; errCount[topic] = (errCount[topic] || 0) + 1; } } } }
@@ -326,12 +305,12 @@ function generateReport() {
     const date = new Date().toLocaleDateString('ru-RU');
     
     let distRows = '', cityRows = '', topRows = '', errRows = '';
-    for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; distRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td>`; }
-    for (const [city, data] of Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count)) { const avg = Math.round(data.sumScore / data.sumTotal * 100), errs = data.sumTotal - data.sumScore; cityRows += `<tr><td style="padding:8px;border:1px solid #ddd">${city}<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${data.count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${avg}%</td onclick="applyCityFilter('${city}')"></td><td style="padding:8px;border:1px solid #ddd;text-align:center">${errs}</td>`; }
-    top5.forEach((e, i) => { const p = Math.round(e.score / e.total * 100), name = e.user_id || `${e.surname || ''} ${e.name || ''}`.trim(); topRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(name)}</td onclick="applyCityFilter('${e.city}')"></td><td style="padding:8px;border:1px solid #ddd;text-align:center">${e.score}/${e.total}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${p}%</td onclick="applyCityFilter('${e.city}')"></td>`; });
-    topErr.forEach(([t, c], i) => { const p = totalErrors ? Math.round(c / totalErrors * 100) : 0; errRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${t}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${c}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${p}%</td onclick="alert('Тема ошибки: ${t}')"></td>`; });
+    for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; distRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td onclick="alert('Категория: ${cat}')"></td>`; }
+    for (const [city, data] of Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count)) { const avg = Math.round(data.sumScore / data.sumTotal * 100), errs = data.sumTotal - data.sumScore; cityRows += `<tr><td style="padding:8px;border:1px solid #ddd">${city}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${data.count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${avg}%</td onclick="applyCityFilter('${city}')"></td><td style="padding:8px;border:1px solid #ddd;text-align:center">${errs}</td onclick="applyCityFilter('${city}')"></td>`; }
+    top5.forEach((e, i) => { const p = Math.round(e.score / e.total * 100), name = e.user_id || `${e.surname || ''} ${e.name || ''}`.trim(); topRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(name)}</td onclick="applyCityFilter('${e.city}')"></td><td style="padding:8px;border:1px solid #ddd;text-align:center">${e.score}/${e.total} </td onclick="applyCityFilter('${e.city}')"><td><td style="padding:8px;border:1px solid #ddd;text-align:center">${p}%</td onclick="applyCityFilter('${e.city}')"></td>`; });
+    topErr.forEach(([t, c], i) => { const p = totalErrors ? Math.round(c / totalErrors * 100) : 0; errRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${t}</td onclick="alert('Тема ошибки: ${t}')"></td><td style="padding:8px;border:1px solid #ddd;text-align:center">${c} </td onclick="alert('Тема ошибки: ${t}')"><tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${p}%</td onclick="alert('Тема ошибки: ${t}')"></td>`; });
     
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>585GOLD | Отчёт</title><style>body{font-family:'Segoe UI',Arial;margin:0;padding:20px;background:#f5f5f5}.container{max-width:1000px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;border-top:4px solid #E30613}h1{color:#E30613}h2{color:#E30613;border-bottom:2px solid #E30613;padding-bottom:5px;margin:20px 0 12px}.kpi{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}.kpi-item{background:#fff5f5;padding:15px;border-radius:12px;min-width:150px;text-align:center;border-left:4px solid #E30613}.kpi-value{font-size:28px;font-weight:bold;color:#E30613}.kpi-label{font-size:12px;color:#666;margin-top:5px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#E30613;color:#fff;padding:10px;text-align:left}td{padding:8px;border:1px solid #ddd}.footer{text-align:center;font-size:12px;color:#999;margin-top:30px;padding-top:20px;border-top:1px solid #eee}</style></head><body><div class="container"><h1>💎 585GOLD | ОТЧЁТ ПО ТЕСТУ</h1><p><strong>📋 Тест:</strong> ${escapeHtml(testName)}<br><strong>📅 Дата:</strong> ${date}</p><div class="kpi"><div class="kpi-item"><div class="kpi-value">${total}</div><div class="kpi-label">Всего сотрудников</div></div><div class="kpi-item"><div class="kpi-value">${avgScore}%</div><div class="kpi-label">Средний балл</div></div><div class="kpi-item"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div><div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div></div><h2>📊 Распределение баллов</h2><table><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></tr><h2>🏙️ Статистика по городам</h2><table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table><h2>🔝 Лучшие сотрудники</h2></table><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table><h2>📚 Частые ошибки</h2></table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errRows}</tbody></table><h2>💡 Рекомендации</h2><ul><li>Основные зоны роста: ${topErr.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение</li><li>Разберите типичные ошибки на планерке</li></ul><div class="footer">💎 585GOLD | Отчёт сгенерирован автоматически</div></div></body></html>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>585GOLD | Отчёт</title><style>body{font-family:'Segoe UI',Arial;margin:0;padding:20px;background:#f5f5f5}.container{max-width:1000px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;border-top:4px solid #E30613}h1{color:#E30613}h2{color:#E30613;border-bottom:2px solid #E30613;padding-bottom:5px;margin:20px 0 12px}.kpi{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}.kpi-item{background:#fff5f5;padding:15px;border-radius:12px;min-width:150px;text-align:center;border-left:4px solid #E30613}.kpi-value{font-size:28px;font-weight:bold;color:#E30613}.kpi-label{font-size:12px;color:#666;margin-top:5px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#E30613;color:#fff;padding:10px;text-align:left}td{padding:8px;border:1px solid #ddd}.footer{text-align:center;font-size:12px;color:#999;margin-top:30px;padding-top:20px;border-top:1px solid #eee}</style></head><body><div class="container"><h1>💎 585GOLD | ОТЧЁТ ПО ТЕСТУ</h1><p><strong>📋 Тест:</strong> ${escapeHtml(testName)}<br><strong>📅 Дата:</strong> ${date}</p><div class="kpi"><div class="kpi-item"><div class="kpi-value">${total}</div><div class="kpi-label">Всего сотрудников</div></div><div class="kpi-item"><div class="kpi-value">${avgScore}%</div><div class="kpi-label">Средний балл</div></div><div class="kpi-item"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div><div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div></div><h2>📊 Распределение баллов</h2><table><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table><h2>🏙️ Статистика по городам</h2><tr><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table><h2>🔝 Лучшие сотрудники</h2><tr><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table><h2>📚 Частые ошибки</h2></table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errRows}</tbody></table><h2>💡 Рекомендации</h2><ul><li>Основные зоны роста: ${topErr.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение</li><li>Разберите типичные ошибки на планерке</li></ul><div class="footer">💎 585GOLD | Отчёт сгенерирован автоматически</div></div></body></html>`;
     
     const blob = new Blob([html], { type: "text/html" });
     navigator.clipboard.write([new ClipboardItem({ "text/html": blob, "text/plain": new Blob([html.replace(/<[^>]*>/g, '')], { type: "text/plain" }) })]).then(() => alert('✅ Отчёт скопирован! Вставьте в Outlook (Ctrl+V)')).catch(() => { navigator.clipboard.writeText(html.replace(/<[^>]*>/g, '')); alert('❌ Ошибка копирования'); });
