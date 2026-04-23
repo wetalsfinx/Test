@@ -67,7 +67,7 @@
     .btn-copy-report:hover { background: #0b5ed7; }
     @media (max-width: 768px) { .user-log .d-flex { flex-direction: column; gap: 8px; } }
     
-    /* Стили для красивых графиков (из report_dashboard) */
+    /* Стили для красивых графиков */
     .dashboard-header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
     .dashboard-header h1 { font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, #1a4d6b, #2c7da0); -webkit-background-clip: text; background-clip: text; color: transparent; display: flex; align-items: center; gap: 12px; }
     body.dark .dashboard-header h1 { background: linear-gradient(135deg, #00ccff, #00ff88); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -91,6 +91,12 @@
     [data-tooltip] { position: relative; cursor: help; }
     [data-tooltip]:before { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 5px 10px; border-radius: 8px; font-size: 12px; white-space: nowrap; z-index: 1000; display: none; }
     [data-tooltip]:hover:before { display: block; }
+    .section-title { font-weight: 600; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; color: #2c5a7a; }
+    body.dark .section-title { color: #9ca3af; }
+    .stats-table { width: 100%; border-collapse: collapse; }
+    .stats-table th, .stats-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .stats-table th { font-weight: 600; color: #5c7f96; font-size: 0.8rem; }
+    body.dark .stats-table th { color: #9ca3af; }
 </style>
 </head>
 <body>
@@ -101,7 +107,10 @@
 <div class="dashboard-header">
     <h1><i class="fas fa-chart-pie"></i> Анализ результатов тестирования</h1>
     <div>
-        <button id="copyReportBtn" class="btn-copy-report me-2" title="Копировать отчёт для руководителя">📊 Копировать отчёт</button>
+        <button id="copyReportBtn" class="btn-copy-report me-2" title="Копировать отчёт для Outlook">📧 Копировать в Outlook</button>
+        <a href="https://wetalsfinx.github.io/Test/report_errors.html" target="_blank" class="btn btn-outline-info btn-sm me-2">
+            <i class="bi bi-file-text"></i> 📋 Разбор ошибок
+        </a>
         <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
     </div>
 </div>
@@ -115,32 +124,32 @@
 </div>
 
 <div id="resultsContainer" style="display:none">
-    <!-- ============ KPI КАРТОЧКИ (из report_dashboard) ============ -->
+    <!-- ============ KPI КАРТОЧКИ ============ -->
     <div class="kpi-grid" id="kpiGrid"></div>
     
     <!-- ============ КРАСИВЫЕ ГРАФИКИ ============ -->
     <div class="charts-row" id="chartsRow">
-        <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-bar"></i> Распределение баллов</div><div class="chart-container"><canvas id="scoreDistChart"></canvas></div></div>
-        <div class="chart-card"><div class="chart-title"><i class="fas fa-city"></i> Успеваемость по городам</div><div class="chart-container"><canvas id="cityChart"></canvas></div></div>
-        <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-pie"></i> Ошибки по темам вопросов</div><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
+        <div class="chart-card"><div class="section-title"><i class="fas fa-chart-bar"></i> Распределение баллов</div><div class="chart-container"><canvas id="scoreDistChart"></canvas></div></div>
+        <div class="chart-card"><div class="section-title"><i class="fas fa-city"></i> Успеваемость по городам</div><div class="chart-container"><canvas id="cityChart"></canvas></div></div>
+        <div class="chart-card"><div class="section-title"><i class="fas fa-chart-pie"></i> Ошибки по темам вопросов</div><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
     </div>
     
     <!-- ============ ТАБЛИЦА ГОРОДОВ ============ -->
     <div class="city-stats-card" style="background: var(--bg-card); border-radius: 24px; padding: 1.2rem 1.5rem; margin-bottom: 2rem;">
         <div class="section-title"><i class="fas fa-building"></i> Статистика по городам (сортировка по баллам)</div>
-        <table class="stats-table" style="width:100%; border-collapse: collapse;"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table>
+        <table class="stats-table" style="width:100%"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table>
     </div>
     
     <!-- ============ ЛУЧШИЕ СОТРУДНИКИ ============ -->
     <div class="top-employees-card" style="background: var(--bg-card); border-radius: 24px; padding: 1.2rem 1.5rem; margin-bottom: 2rem;">
         <div class="section-title"><i class="fas fa-trophy"></i> Лучшие сотрудники</div>
-        <table class="stats-table" style="width:100%; border-collapse: collapse;"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table>
+        <table class="stats-table" style="width:100%"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table>
     </div>
     
     <!-- ============ ЧАСТЫЕ ОШИБКИ ============ -->
     <div class="errors-card" style="background: var(--bg-card); border-radius: 24px; padding: 1.2rem 1.5rem; margin-bottom: 2rem;">
         <div class="section-title"><i class="fas fa-exclamation-triangle"></i> Частые ошибки</div>
-        <table class="stats-table" style="width:100%; border-collapse: collapse;"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во ошибок</th></tr></thead><tbody id="errorsBody"></tbody></table>
+        <table class="stats-table" style="width:100%"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во ошибок</th></tr></thead><tbody id="errorsBody"></tbody></table>
     </div>
     
     <!-- ============ ФИЛЬТРЫ И РЕЗУЛЬТАТЫ СОТРУДНИКОВ ============ -->
@@ -247,7 +256,7 @@ async function loadResults(slug) {
 function renderAll() {
     if (!currentTest) return;
     
-    // Фильтрация
+    // Фильтрация для списка сотрудников
     let filtered = [...currentResults];
     const search = document.getElementById('search-input')?.value.toLowerCase() || '';
     const cityF = document.getElementById('city-filter')?.value || '';
@@ -302,11 +311,11 @@ function renderAll() {
         type: 'bar', data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityData.map(c => c.avg), backgroundColor: '#2c7da0', borderRadius: 8 }] },
         options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
     });
-    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td>${c.city}${i === 0 ? ' <span class="leader-icon" data-tooltip="Лидер">🥇</span>' : ''}</td><td>${c.count}</td><td>${c.avg}%</td><td>${c.errors}</td></tr>`).join('');
+    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.city}${i === 0 ? ' <span class="leader-icon" data-tooltip="Лидер по среднему баллу">🥇</span>' : ''}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.count}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.avg}%</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.errors}</td></tr>`).join('');
     
     // Лучшие сотрудники
     const top10 = [...currentResults].sort((a, b) => (b.score / b.total) - (a.score / a.total)).slice(0, 10);
-    document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td>${i+1}</td><td><strong>${e.surname || ''} ${e.name || ''}</strong></td><td>${e.city || '—'}</td><td>${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td></tr>`).join('');
+    document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td style="padding:8px;border-bottom:1px solid var(--border-color)">${i+1}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)"><strong>${e.surname || ''} ${e.name || ''}</strong></td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${e.city || '—'}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td></tr>`).join('');
     
     // Частые ошибки (по темам)
     const errorCount = {};
@@ -323,7 +332,7 @@ function renderAll() {
         }
     }
     const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    document.getElementById('errorsBody').innerHTML = topErrors.map(([t, c], i) => `<tr><td>${i+1}</td><td><strong>${t}</strong></td><td>${c}</td></tr>`).join('');
+    document.getElementById('errorsBody').innerHTML = topErrors.map(([t, c], i) => `<tr><td style="padding:8px;border-bottom:1px solid var(--border-color)">${i+1}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c}</td></tr>`).join('');
     
     // Круговая диаграмма ошибок
     if (pieChart) pieChart.destroy();
@@ -425,36 +434,173 @@ function exportDetailedToExcel() {
     } catch(e) { alert('Ошибка при экспорте'); }
 }
 
-// ============ ОТЧЁТ ДЛЯ РУКОВОДИТЕЛЯ ============
+// ============ ОТЧЁТ ДЛЯ РУКОВОДИТЕЛЯ (HTML-ТАБЛИЦЫ ДЛЯ OUTLOOK) ============
 function generateReport() {
-    if (!currentResults.length) { alert('Нет данных'); return; }
-    const testName = currentTest?.name || 'Тест', total = currentResults.length;
+    if (!currentResults.length) {
+        alert('Нет данных для отчёта');
+        return;
+    }
+    
+    const testName = currentTest?.name || 'Тест';
+    const total = currentResults.length;
     const avgScore = Math.round(currentResults.reduce((s, r) => s + (r.score / r.total), 0) / total * 100);
     const excellent = currentResults.filter(r => (r.score / r.total) >= 0.8).length;
     const totalErrors = currentResults.reduce((s, r) => s + (r.total - r.score), 0);
     
+    // РАСПРЕДЕЛЕНИЕ БАЛЛОВ
     const dist = { 'Отлично (80-100%)': 0, 'Хорошо (60-79%)': 0, 'Удовлетворительно (40-59%)': 0, 'Плохо (0-39%)': 0 };
-    for (const r of currentResults) { const p = r.score / r.total * 100; if (p >= 80) dist['Отлично (80-100%)']++; else if (p >= 60) dist['Хорошо (60-79%)']++; else if (p >= 40) dist['Удовлетворительно (40-59%)']++; else dist['Плохо (0-39%)']++; }
+    for (const r of currentResults) {
+        const p = r.score / r.total * 100;
+        if (p >= 80) dist['Отлично (80-100%)']++;
+        else if (p >= 60) dist['Хорошо (60-79%)']++;
+        else if (p >= 40) dist['Удовлетворительно (40-59%)']++;
+        else dist['Плохо (0-39%)']++;
+    }
     
+    // СТАТИСТИКА ПО ГОРОДАМ
     const cityStats = {};
-    for (const r of currentResults) { const city = r.city || 'Не указан'; if (!cityStats[city]) cityStats[city] = { sumScore: 0, sumTotal: 0, count: 0 }; cityStats[city].sumScore += r.score; cityStats[city].sumTotal += r.total; cityStats[city].count++; }
+    for (const r of currentResults) {
+        const city = r.city || 'Не указан';
+        if (!cityStats[city]) cityStats[city] = { sumScore: 0, sumTotal: 0, count: 0 };
+        cityStats[city].sumScore += r.score;
+        cityStats[city].sumTotal += r.total;
+        cityStats[city].count++;
+    }
     
+    // ЛУЧШИЕ СОТРУДНИКИ
     const topEmployees = [...currentResults].sort((a, b) => (b.score / b.total) - (a.score / a.total)).slice(0, 5);
     
+    // ТЕМЫ ОШИБОК
     const errorCount = {};
-    for (const r of currentResults) if (r.answers) for (let i = 0; i < r.answers.length; i++) { const a = r.answers[i]; if (!(a.isCorrect === true || a.ok === true)) { const topic = questionTopics[i+1] || `Вопрос ${i+1}`; errorCount[topic] = (errorCount[topic] || 0) + 1; } }
+    for (const r of currentResults) {
+        if (r.answers) {
+            for (let i = 0; i < r.answers.length; i++) {
+                const a = r.answers[i];
+                const isCorrect = a.isCorrect === true || a.ok === true;
+                if (!isCorrect) {
+                    const topic = questionTopics[i+1] || `Вопрос ${i+1}`;
+                    errorCount[topic] = (errorCount[topic] || 0) + 1;
+                }
+            }
+        }
+    }
     const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
     
-    let report = `📊 ОТЧЁТ ПО ТЕСТУ\n${'━'.repeat(60)}\n📋 Тест: ${testName}\n📅 Дата: ${new Date().toLocaleDateString('ru-RU')}\n\n📈 ОБЩАЯ СТАТИСТИКА\n${'━'.repeat(60)}\nВсего сотрудников: ${total}\nСредний балл: ${avgScore}%\nОтлично (≥80%): ${excellent} человек\nВсего ошибок: ${totalErrors}\n\n📊 РАСПРЕДЕЛЕНИЕ БАЛЛОВ\n${'━'.repeat(60)}\nКатегория                    │ Кол-во │ %\n${'─'.repeat(60)}\n`;
-    for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; report += `${cat.padEnd(28)} │ ${String(count).padStart(5)} │ ${String(percent).padStart(3)}%\n`; }
-    report += `\n🏙️ СТАТИСТИКА ПО ГОРОДАМ\n${'━'.repeat(60)}\nГород                │ Сотр. │ Средний балл │ Ошибок\n${'─'.repeat(60)}\n`;
-    for (const [city, data] of Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count)) { const avg = Math.round(data.sumScore / data.sumTotal * 100); const errors = data.sumTotal - data.sumScore; report += `${city.padEnd(20)} │ ${String(data.count).padStart(5)} │ ${String(avg).padStart(12)}% │ ${String(errors).padStart(6)}\n`; }
-    report += `\n🔝 ЛУЧШИЕ СОТРУДНИКИ\n${'━'.repeat(60)}\n`;
-    topEmployees.forEach((emp, i) => { const percent = Math.round(emp.score / emp.total * 100); const name = emp.user_id || `${emp.surname || ''} ${emp.name || ''}`.trim(); report += `${i+1}. ${name} — ${emp.score}/${emp.total} (${percent}%)\n`; });
-    report += `\n📚 ЧАСТЫЕ ОШИБКИ (по темам)\n${'━'.repeat(60)}\n№ │ Тема ошибки                           │ Кол-во │ %\n${'─'.repeat(60)}\n`;
-    topErrors.forEach(([topic, count], i) => { const percent = totalErrors ? Math.round(count / totalErrors * 100) : 0; report += `${i+1} │ ${topic.padEnd(35)} │ ${String(count).padStart(5)} │ ${String(percent).padStart(3)}%\n`; });
-    report += `\n💡 РЕКОМЕНДАЦИИ ДЛЯ УЛУЧШЕНИЯ\n${'━'.repeat(60)}\n• Основные зоны роста: ${topErrors.slice(0,3).map(e=>e[0]).join(', ')}\n• Проведите дополнительное обучение по этим темам\n• Разберите типичные ошибки на планерке\n\n${'━'.repeat(60)}\nОтчёт сгенерирован автоматически`;
-    navigator.clipboard.writeText(report).then(() => alert('✅ Отчёт скопирован! Вставьте в письмо (Ctrl+V)')).catch(() => alert('❌ Ошибка копирования'));
+    const date = new Date().toLocaleDateString('ru-RU');
+    
+    // Таблица распределения баллов
+    let distTableRows = '';
+    for (const [cat, count] of Object.entries(dist)) {
+        const percent = total ? Math.round(count / total * 100) : 0;
+        distTableRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`;
+    }
+    
+    // Таблица городов
+    let cityTableRows = '';
+    for (const [city, data] of Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count)) {
+        const avg = Math.round(data.sumScore / data.sumTotal * 100);
+        const errors = data.sumTotal - data.sumScore;
+        cityTableRows += `<tr><td style="padding:8px;border:1px solid #ddd">${city}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${data.count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${avg}%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${errors}</td></tr>`;
+    }
+    
+    // Таблица лучших сотрудников
+    let topTableRows = '';
+    topEmployees.forEach((emp, i) => {
+        const percent = Math.round(emp.score / emp.total * 100);
+        const name = emp.user_id || `${emp.surname || ''} ${emp.name || ''}`.trim();
+        topTableRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${name}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${emp.score}/${emp.total}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`;
+    });
+    
+    // Таблица ошибок
+    let errorsTableRows = '';
+    topErrors.forEach(([topic, count], i) => {
+        const percent = totalErrors ? Math.round(count / totalErrors * 100) : 0;
+        errorsTableRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${topic}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`;
+    });
+    
+    // ПОЛНЫЙ HTML-ОТЧЁТ
+    const htmlReport = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Отчёт по тесту</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: #f0f2f8; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color: #1a4d6b; margin: 0 0 8px 0; }
+        h2 { color: #2c7da0; margin: 20px 0 12px 0; font-size: 18px; }
+        .kpi { display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
+        .kpi-item { background: #f5f7fa; padding: 15px; border-radius: 12px; min-width: 150px; text-align: center; }
+        .kpi-value { font-size: 28px; font-weight: bold; color: #1a4d6b; }
+        .kpi-label { font-size: 12px; color: #6c757d; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th { background: #2c7da0; color: white; padding: 10px; text-align: left; }
+        td { padding: 8px; border: 1px solid #ddd; }
+        .footer { text-align: center; font-size: 12px; color: #999; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📊 ОТЧЁТ ПО ТЕСТУ</h1>
+    <p><strong>📋 Тест:</strong> ${testName}<br><strong>📅 Дата:</strong> ${date}</p>
+    
+    <div class="kpi">
+        <div class="kpi-item"><div class="kpi-value">${total}</div><div class="kpi-label">Всего сотрудников</div></div>
+        <div class="kpi-item"><div class="kpi-value">${avgScore}%</div><div class="kpi-label">Средний балл</div></div>
+        <div class="kpi-item"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div>
+        <div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div>
+    </div>
+    
+    <h2>📊 РАСПРЕДЕЛЕНИЕ БАЛЛОВ</h2>
+    <table>
+        <thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead>
+        <tbody>${distTableRows}</tbody>
+    </table>
+    
+    <h2>🏙️ СТАТИСТИКА ПО ГОРОДАМ</h2>
+    <table>
+        <thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead>
+        <tbody>${cityTableRows}</tbody>
+    </table>
+    
+    <h2>🔝 ЛУЧШИЕ СОТРУДНИКИ</h2>
+    <table>
+        <thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead>
+        <tbody>${topTableRows}</tbody>
+    </table>
+    
+    <h2>📚 ЧАСТЫЕ ОШИБКИ (по темам)</h2>
+    <table>
+        <thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead>
+        <tbody>${errorsTableRows}</tbody>
+    </table>
+    
+    <h2>💡 РЕКОМЕНДАЦИИ ДЛЯ УЛУЧШЕНИЯ</h2>
+    <ul>
+        <li>Основные зоны роста: ${topErrors.slice(0,3).map(e=>e[0]).join(', ')}</li>
+        <li>Проведите дополнительное обучение по этим темам</li>
+        <li>Разберите типичные ошибки на планерке</li>
+    </ul>
+    
+    <div class="footer">Отчёт сгенерирован автоматически</div>
+</div>
+</body>
+</html>`;
+    
+    // Копируем HTML в буфер обмена
+    const blob = new Blob([htmlReport], { type: "text/html" });
+    const clipboardItem = new ClipboardItem({
+        "text/html": blob,
+        "text/plain": new Blob([htmlReport.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ')], { type: "text/plain" })
+    });
+    
+    navigator.clipboard.write([clipboardItem]).then(() => {
+        alert('✅ Отчёт скопирован в формате HTML!\n\nВставьте в Outlook (Ctrl+V) — будут красивые таблицы');
+    }).catch(() => {
+        navigator.clipboard.writeText(htmlReport.replace(/<[^>]*>/g, '')).then(() => {
+            alert('⚠️ HTML-копирование не поддерживается, скопирован обычный текст');
+        });
+    });
 }
 
 function resetFilters() {
@@ -465,12 +611,14 @@ function resetFilters() {
     renderAll();
 }
 
+// ============ ОБРАБОТЧИКИ ============
 document.getElementById('search-input')?.addEventListener('input', () => renderAll());
 document.getElementById('city-filter')?.addEventListener('change', () => renderAll());
 document.getElementById('date-from')?.addEventListener('change', () => renderAll());
 document.getElementById('date-to')?.addEventListener('change', () => renderAll());
 document.getElementById('copyReportBtn')?.addEventListener('click', generateReport);
 
+// ============ ЗАПУСК ============
 loadTests();
 </script>
 </body>
