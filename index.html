@@ -20,7 +20,7 @@
         padding: 15px;
         transition: background 0.3s, color 0.3s;
     }
-    /* ТЁМНАЯ ТЕМА — хорошая читаемость */
+    /* ТЁМНАЯ ТЕМА */
     body.dark {
         background: #121212;
         color: #e0e0e0;
@@ -45,7 +45,6 @@
         color: #e0e0e0;
         border-color: #444;
     }
-    
     .container-custom { max-width: 1400px; margin: 0 auto; }
     
     /* Цветовая гамма */
@@ -121,7 +120,7 @@
         transform: translateY(-2px);
     }
     
-    /* KPI карточки — без вопросика */
+    /* KPI карточки */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -156,7 +155,7 @@
         line-height: 1;
         color: var(--brand-red);
     }
-    /* Подсказка появляется при наведении, без вопросика */
+    /* Подсказка при наведении */
     .kpi-card {
         position: relative;
     }
@@ -185,7 +184,7 @@
         opacity: 1;
     }
     
-    /* Карточки графиков */
+    /* Графики */
     .charts-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -197,7 +196,6 @@
         border-radius: 20px;
         padding: 1.2rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        transition: all 0.2s;
         border: 1px solid #eee;
     }
     .chart-title {
@@ -362,7 +360,7 @@
     
     <div class="data-card">
         <div class="section-title"><i class="fas fa-trophy"></i> Лучшие сотрудники</div>
-        <table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></tr>
+        <table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table>
     </div>
     
     <div class="data-card">
@@ -370,6 +368,7 @@
         <table class="stats-table"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во ошибок</th></tr></thead><tbody id="errorsBody"></tbody></table>
     </div>
     
+    <!-- КНОПКИ ЭКСПОРТА ТЕПЕРЬ КРАСНЫЕ -->
     <div class="filter-bar no-print">
         <div class="row g-3">
             <div class="col-md-3"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div>
@@ -378,11 +377,11 @@
             <div class="col-md-2"><input type="date" id="date-to" class="form-control"></div>
             <div class="col-md-2">
                 <div class="d-flex gap-2">
-                    <button class="btn-brand" style="background: #6c757d; padding: 6px 12px;" onclick="exportToExcel()">📎 Экспорт</button>
-                    <button class="btn-brand" style="background: #6c757d; padding: 6px 12px;" onclick="exportDetailedToExcel()">📊 Детальный</button>
+                    <button class="btn-brand" style="padding: 6px 12px;" onclick="exportToExcel()">📎 Экспорт</button>
+                    <button class="btn-brand" style="padding: 6px 12px;" onclick="exportDetailedToExcel()">📊 Детальный</button>
                 </div>
             </div>
-            <div class="col-md-1"><button class="btn-brand" style="background: #6c757d; padding: 6px 12px; width: 100%;" onclick="resetFilters()">Сброс</button></div>
+            <div class="col-md-1"><button class="btn-brand" style="padding: 6px 12px; width: 100%;" onclick="resetFilters()">Сброс</button></div>
         </div>
     </div>
     
@@ -420,7 +419,7 @@ function toggleTheme() {
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 initTheme();
 
-// Подсказки для KPI (без вопросика)
+// Подсказки для KPI
 const kpiTooltips = {
     'Всего сотрудников': 'Общее количество сотрудников, прошедших тестирование',
     'Средний балл': 'Средний процент правильных ответов по всем сотрудникам',
@@ -494,7 +493,6 @@ function renderAll() {
     const excellent = currentResults.filter(r => (r.score / r.total) >= 0.8).length;
     const totalErrors = currentResults.reduce((s, r) => s + (r.total - r.score), 0);
     
-    // Создаём KPI с подсказками (без вопросика)
     document.getElementById('kpiGrid').innerHTML = `
         <div class="kpi-card">
             <div class="kpi-label"><i class="fas fa-users"></i> Всего сотрудников</div>
@@ -555,6 +553,7 @@ function renderAll() {
     const top10 = [...currentResults].sort((a, b) => (b.score / b.total) - (a.score / a.total)).slice(0, 10);
     document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${e.surname || ''} ${e.name || ''}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${e.city || '—'}</td><td style="padding:8px;border-bottom:1px solid #eee">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td></tr>`).join('');
     
+    // Частые ошибки — с ТЕМАМИ (не номерами вопросов)
     const errorCount = {};
     for (const r of currentResults) {
         if (r.answers) {
@@ -569,7 +568,7 @@ function renderAll() {
         }
     }
     const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    document.getElementById('errorsBody').innerHTML = topErrors.map(([t, c], i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${c}</td></table>`).join('');
+    document.getElementById('errorsBody').innerHTML = topErrors.map(([t, c], i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${c}</td></tr>`).join('');
     
     if (pieChart) pieChart.destroy();
     if (topErrors.length) {
@@ -701,7 +700,6 @@ function generateReport() {
         }
     }
     const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    
     const date = new Date().toLocaleDateString('ru-RU');
     
     let distRows = ''; for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; distRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; }
@@ -736,10 +734,10 @@ function generateReport() {
         <div class="kpi-item"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div>
         <div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div>
     </div>
-    <h2>📊 Распределение баллов</h2><tr><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table>
+    <h2>📊 Распределение баллов</h2></table><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table>
     <h2>🏙️ Статистика по городам</h2><table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table>
-    <h2>🔝 Лучшие сотрудники</h2><table><thead><table><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table>
-    <h2>📚 Частые ошибки (по темам)</h2><table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorRows}</tbody></table>
+    <h2>🔝 Лучшие сотрудники</h2><tr><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table>
+    <h2>📚 Частые ошибки (по темам)</h2><tr><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorRows}</tbody></table>
     <h2>💡 Рекомендации</h2><ul><li>Основные зоны роста: ${topErrors.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение по этим темам</li><li>Разберите типичные ошибки на планерке</li></ul>
     <div class="footer">💎 585GOLD | Отчёт сгенерирован автоматически</div>
 </div>
