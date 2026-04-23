@@ -45,14 +45,6 @@
         color: #e0e0e0;
         border-color: #444;
     }
-    body.dark .btn-outline-secondary {
-        border-color: #555;
-        color: #ccc;
-    }
-    body.dark .btn-outline-secondary:hover {
-        background: #444;
-        color: white;
-    }
     
     .container-custom { max-width: 1400px; margin: 0 auto; }
     
@@ -88,7 +80,7 @@
     }
     
     /* ЕДИНЫЙ СТИЛЬ ДЛЯ ВСЕХ КНОПОК */
-    .btn-brand, .btn-outline-brand, .btn-copy, .btn-pdf, .theme-toggle {
+    .btn-brand, .btn-copy, .btn-pdf, .theme-toggle {
         background: var(--brand-red);
         color: white;
         border: none;
@@ -112,6 +104,16 @@
         background: transparent;
         border: 1px solid var(--brand-red);
         color: var(--brand-red);
+        padding: 7px 19px;
+        border-radius: 40px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
     }
     .btn-outline-brand:hover {
         background: var(--brand-red);
@@ -119,7 +121,7 @@
         transform: translateY(-2px);
     }
     
-    /* KPI карточки */
+    /* KPI карточки — без вопросика */
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -134,7 +136,6 @@
         transition: all 0.2s;
         position: relative;
         overflow: hidden;
-        cursor: default;
         border-left: 4px solid var(--brand-red);
     }
     .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
@@ -154,6 +155,34 @@
         font-weight: 800;
         line-height: 1;
         color: var(--brand-red);
+    }
+    /* Подсказка появляется при наведении, без вопросика */
+    .kpi-card {
+        position: relative;
+    }
+    .kpi-card .tooltip-text {
+        visibility: hidden;
+        opacity: 0;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 5px 10px;
+        border-radius: 6px;
+        position: absolute;
+        z-index: 1;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: 12px;
+        font-weight: normal;
+        transition: opacity 0.2s;
+        pointer-events: none;
+    }
+    body.dark .kpi-card .tooltip-text { background-color: #555; }
+    .kpi-card:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
     }
     
     /* Карточки графиков */
@@ -283,23 +312,12 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     
-    /* Подсказки — вместо вопросика */
-    .kpi-card {
-        cursor: help;
-    }
-    .has-tooltip {
-        cursor: help;
-    }
-    .tooltip-text {
-        cursor: help;
-    }
-    
     @media (max-width: 768px) {
         body { padding: 10px; }
         .charts-row { grid-template-columns: 1fr; }
         .kpi-grid { grid-template-columns: repeat(2, 1fr); }
         .user-log .d-flex { flex-direction: column; gap: 8px; }
-        .btn-brand, .btn-outline-brand, .btn-copy { padding: 6px 12px; font-size: 11px; }
+        .btn-brand, .btn-outline-brand { padding: 6px 12px; font-size: 11px; }
     }
     @media print {
         .no-print, .theme-toggle, .filter-bar, .btn-pdf, .btn-outline-brand, .btn-brand { display: none !important; }
@@ -316,7 +334,7 @@
     <h1><i class="fas fa-gem"></i> 585GOLD | Анализ результатов тестирования</h1>
     <div class="no-print" style="display: flex; gap: 10px; flex-wrap: wrap;">
         <button id="copyReportBtn" class="btn-brand">📧 Копировать в Outlook</button>
-        <a href="https://wetalsfinx.github.io/Test/report_errors.html" target="_blank" class="btn-brand" style="background: transparent; border: 1px solid #E30613; color: #E30613;">📋 Разбор ошибок</a>
+        <a href="https://wetalsfinx.github.io/Test/report_errors.html" target="_blank" class="btn-outline-brand">📋 Разбор ошибок</a>
         <a href="?" class="btn-brand" style="background: #6c757d;">← Выход</a>
     </div>
 </div>
@@ -344,7 +362,7 @@
     
     <div class="data-card">
         <div class="section-title"><i class="fas fa-trophy"></i> Лучшие сотрудники</div>
-        <table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table>
+        <table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></tr>
     </div>
     
     <div class="data-card">
@@ -402,7 +420,7 @@ function toggleTheme() {
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 initTheme();
 
-// Подсказки для KPI
+// Подсказки для KPI (без вопросика)
 const kpiTooltips = {
     'Всего сотрудников': 'Общее количество сотрудников, прошедших тестирование',
     'Средний балл': 'Средний процент правильных ответов по всем сотрудникам',
@@ -476,21 +494,29 @@ function renderAll() {
     const excellent = currentResults.filter(r => (r.score / r.total) >= 0.8).length;
     const totalErrors = currentResults.reduce((s, r) => s + (r.total - r.score), 0);
     
-    // Создаём KPI с подсказками
+    // Создаём KPI с подсказками (без вопросика)
     document.getElementById('kpiGrid').innerHTML = `
-        <div class="kpi-card" data-tooltip="${kpiTooltips['Всего сотрудников']}"><div class="kpi-label"><i class="fas fa-users"></i> Всего сотрудников</div><div class="kpi-value">${total}</div></div>
-        <div class="kpi-card" data-tooltip="${kpiTooltips['Средний балл']}"><div class="kpi-label"><i class="fas fa-chart-line"></i> Средний балл</div><div class="kpi-value">${avgScore}%</div></div>
-        <div class="kpi-card" data-tooltip="${kpiTooltips['Отлично (≥80%)']}"><div class="kpi-label"><i class="fas fa-star"></i> Отлично (≥80%)</div><div class="kpi-value">${excellent}</div></div>
-        <div class="kpi-card" data-tooltip="${kpiTooltips['Всего ошибок']}"><div class="kpi-label"><i class="fas fa-times-circle"></i> Всего ошибок</div><div class="kpi-value">${totalErrors}</div></div>
+        <div class="kpi-card">
+            <div class="kpi-label"><i class="fas fa-users"></i> Всего сотрудников</div>
+            <div class="kpi-value">${total}</div>
+            <div class="tooltip-text">${kpiTooltips['Всего сотрудников']}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label"><i class="fas fa-chart-line"></i> Средний балл</div>
+            <div class="kpi-value">${avgScore}%</div>
+            <div class="tooltip-text">${kpiTooltips['Средний балл']}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label"><i class="fas fa-star"></i> Отлично (≥80%)</div>
+            <div class="kpi-value">${excellent}</div>
+            <div class="tooltip-text">${kpiTooltips['Отлично (≥80%)']}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label"><i class="fas fa-times-circle"></i> Всего ошибок</div>
+            <div class="kpi-value">${totalErrors}</div>
+            <div class="tooltip-text">${kpiTooltips['Всего ошибок']}</div>
+        </div>
     `;
-    
-    // Добавляем стиль для подсказок
-    const style = document.createElement('style');
-    style.textContent = `[data-tooltip] { position: relative; cursor: help; } [data-tooltip]:before { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 5px 10px; border-radius: 8px; font-size: 12px; white-space: nowrap; z-index: 1000; display: none; } [data-tooltip]:hover:before { display: block; } body.dark [data-tooltip]:before { background: #555; }`;
-    if (!document.querySelector('#tooltip-style')) {
-        style.id = 'tooltip-style';
-        document.head.appendChild(style);
-    }
     
     const scores = currentResults.map(r => r.score / r.total * 100);
     const cats = ['Отлично (80-100%)', 'Хорошо (60-79%)', 'Удовлетворительно (40-59%)', 'Плохо (0-39%)'];
@@ -543,7 +569,7 @@ function renderAll() {
         }
     }
     const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    document.getElementById('errorsBody').innerHTML = topErrors.map(([t, c], i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${c}</td></tr>`).join('');
+    document.getElementById('errorsBody').innerHTML = topErrors.map(([t, c], i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${c}</td></table>`).join('');
     
     if (pieChart) pieChart.destroy();
     if (topErrors.length) {
@@ -710,10 +736,10 @@ function generateReport() {
         <div class="kpi-item"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div>
         <div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div>
     </div>
-    <h2>📊 Распределение баллов</h2></table><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table>
-    <h2>🏙️ Статистика по городам</h2><table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></tr>
-    <h2>🔝 Лучшие сотрудники</h2><table><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table>
-    <h2>📚 Частые ошибки (по темам)</h2></table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorRows}</tbody></table>
+    <h2>📊 Распределение баллов</h2><tr><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table>
+    <h2>🏙️ Статистика по городам</h2><table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table>
+    <h2>🔝 Лучшие сотрудники</h2><table><thead><table><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table>
+    <h2>📚 Частые ошибки (по темам)</h2><table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorRows}</tbody></table>
     <h2>💡 Рекомендации</h2><ul><li>Основные зоны роста: ${topErrors.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение по этим темам</li><li>Разберите типичные ошибки на планерке</li></ul>
     <div class="footer">💎 585GOLD | Отчёт сгенерирован автоматически</div>
 </div>
