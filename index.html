@@ -91,8 +91,8 @@
         <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-pie"></i> Ошибки по темам</div><canvas id="pieChart"></canvas></div>
     </div>
     <div class="data-card"><div class="section-title"><i class="fas fa-building"></i> Статистика по городам</div><table class="stats-table"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table></div>
-    <div class="data-card"><div class="section-title"><i class="fas fa-trophy"></i> Лучшие сотрудники</div><table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table></div>
-    <div class="data-card"><div class="section-title"><i class="fas fa-exclamation-triangle"></i> Частые ошибки</div><table class="stats-table"><thead></tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th></tr></thead><tbody id="errorsBody"></tbody></table></div>
+    <div class="data-card"><div class="section-title"><i class="fas fa-trophy"></i> Лучшие сотрудники</div><table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></table></thead><tbody id="topEmployeesBody"></tbody></table></div>
+    <div class="data-card"><div class="section-title"><i class="fas fa-exclamation-triangle"></i> Частые ошибки</div><table class="stats-table"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th></tr></thead><tbody id="errorsBody"></tbody></table></div>
     <div class="filter-bar no-print">
         <div class="row g-3">
             <div class="col-md-3"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div>
@@ -244,10 +244,10 @@ function renderAll() {
         options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
     });
     
-    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td>${c.city}${i === 0 ? ' 🥇' : ''}</td><td>${c.count}</td><td>${c.avg}%</td><td>${c.errors}</td></tr>`).join('');
+    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${c.city}${i === 0 ? ' 🥇' : ''}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.count}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px;border-bottom:1px solid #eee">${c.errors}</td></tr>`).join('');
     
     const top10 = [...currentResults].sort((a, b) => (b.score / b.total) - (a.score / a.total)).slice(0, 10);
-    document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td>${i+1}</td><td><strong>${escapeHtml(e.surname || '')} ${escapeHtml(e.name || '')}</strong></td><td>${escapeHtml(e.city || '—')}</td><td>${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td></tr>`).join('');
+    document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${escapeHtml(e.surname || '')} ${escapeHtml(e.name || '')}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(e.city || '—')}</td><td style="padding:8px;border-bottom:1px solid #eee">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td></tr>`).join('');
     
     const errCount = {};
     for (const r of currentResults) {
@@ -263,7 +263,7 @@ function renderAll() {
         }
     }
     const topErr = Object.entries(errCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    document.getElementById('errorsBody').innerHTML = topErr.map(([t, c], i) => `<tr><td>${i+1}</td><td><strong>${t}</strong></td><td>${c}</td></tr>`).join('');
+    document.getElementById('errorsBody').innerHTML = topErr.map(([t, c], i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${c}</td></tr>`).join('');
     
     if (pieChart) pieChart.destroy();
     if (topErr.length) {
@@ -303,6 +303,11 @@ function renderAll() {
             <div class="answer-details mt-2"><div class="p-2 rounded" style="background:#f9f9f9">${details}</div></div>
         </div>`;
     }
+}
+
+function applyCityFilter(city) {
+    const select = document.getElementById('city-filter');
+    if (select) { select.value = city; renderAll(); }
 }
 
 function generateUserPDF(resultId) {
@@ -411,7 +416,7 @@ function generateReport() {
     const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>585GOLD | Отчёт</title>
 <style>body{font-family:'Segoe UI',Arial;margin:0;padding:20px;background:#f5f5f5}.container{max-width:1000px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;border-top:4px solid #E30613}h1{color:#E30613}h2{color:#E30613;border-bottom:2px solid #E30613;padding-bottom:5px;margin:20px 0 12px}.kpi{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}.kpi-item{background:#fff5f5;padding:15px;border-radius:12px;min-width:150px;text-align:center;border-left:4px solid #E30613}.kpi-value{font-size:28px;font-weight:bold;color:#E30613}.kpi-label{font-size:12px;color:#666;margin-top:5px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#E30613;color:#fff;padding:10px;text-align:left}td{padding:8px;border:1px solid #ddd}.footer{text-align:center;font-size:12px;color:#999;margin-top:30px;padding-top:20px;border-top:1px solid #eee}</style>
-</head><body><div class="container"><h1>💎 585GOLD | ОТЧЁТ ПО ТЕСТУ</h1><p><strong>📋 Тест:</strong> ${escapeHtml(testName)}<br><strong>📅 Дата:</strong> ${date}</p><div class="kpi"><div class="kpi-item"><div class="kpi-value">${total}</div><div class="kpi-label">Всего сотрудников</div></div><div class="kpi-item"><div class="kpi-value">${avgScore}%</div><div class="kpi-label">Средний балл</div></div><div class="kpi-item"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div><div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div></div><h2>📊 Распределение баллов</h2>${distRows}</table><h2>🏙️ Статистика по городам</h2><table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table><h2>🔝 Лучшие сотрудники</h2><table><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table><h2>📚 Частые ошибки</h2><table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errRows}</tbody></table><h2>💡 Рекомендации</h2><ul><li>Основные зоны роста: ${topErr.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение</li><li>Разберите типичные ошибки на планерке</li></ul><div class="footer">💎 585GOLD | Отчёт сгенерирован автоматически</div></div></body></html>`;
+</head><body><div class="container"><h1>💎 585GOLD | ОТЧЁТ ПО ТЕСТУ</h1><p><strong>📋 Тест:</strong> ${escapeHtml(testName)}<br><strong>📅 Дата:</strong> ${date}</p><div class="kpi"><div class="kpi-item"><div class="kpi-value">${total}</div><div class="kpi-label">Всего сотрудников</div></div><div class="kpi-item"><div class="kpi-value">${avgScore}%</div><div class="kpi-label">Средний балл</div></div><div class="kpi-item"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div><div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div></div><h2>📊 Распределение баллов</h2><table><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table><h2>🏙️ Статистика по городам</h2><tr><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table><h2>🔝 Лучшие сотрудники</h2><table><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table><h2>📚 Частые ошибки</h2><td><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errRows}</tbody></table><h2>💡 Рекомендации</h2><ul><li>Основные зоны роста: ${topErr.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение</li><li>Разберите типичные ошибки на планерке</li></ul><div class="footer">💎 585GOLD | Отчёт сгенерирован автоматически</div></div></body></html>`;
     
     const blob = new Blob([html], { type: "text/html" });
     navigator.clipboard.write([new ClipboardItem({ "text/html": blob, "text/plain": new Blob([html.replace(/<[^>]*>/g, '')], { type: "text/plain" }) })]).then(() => alert('✅ Отчёт скопирован! Вставьте в Outlook (Ctrl+V)')).catch(() => { navigator.clipboard.writeText(html.replace(/<[^>]*>/g, '')); alert('❌ Ошибка копирования'); });
