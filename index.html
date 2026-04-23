@@ -6,32 +6,31 @@
 <title>585GOLD | Анализ результатов тестирования</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        padding: 15px;
+    }
+    .container-custom { max-width: 1400px; margin: 0 auto; }
+    
+    /* Цветовая гамма 585GOLD — красный #E30613 */
     :root {
-        --gold: #D4AF37;
-        --gold-light: #F5E6B8;
-        --gold-dark: #B8960F;
-        --bg-body: #f8f6f0;
+        --brand-red: #E30613;
+        --brand-red-light: #ffebee;
+        --brand-red-dark: #c41c2a;
+        --bg-body: #f5f5f5;
         --bg-card: white;
-        --text-color: #2c2c2c;
-        --text-muted: #6c757d;
-        --border-color: #e9ecef;
-        --header-bg: linear-gradient(135deg, #F5E6B8 0%, #D4AF37 100%);
-        --filter-bg: white;
-        --user-log-bg: #f8f6f0;
-        --user-log-hover: #f0e6d0;
-        --user-log-border: var(--gold);
-        --expand-icon-color: #6c757d;
-        --btn-outline-border: #dee2e6;
-        --btn-outline-hover-bg: var(--gold-light);
-        --input-bg: white;
-        --input-border: #ced4da;
-        --chart-grid: #ddd;
+        --text-color: #333;
+        --text-muted: #666;
+        --border-color: #ddd;
     }
     body.dark {
         --bg-body: #1a1a1a;
@@ -39,102 +38,276 @@
         --text-color: #e0e0e0;
         --text-muted: #aaa;
         --border-color: #3d3d3d;
-        --header-bg: linear-gradient(135deg, #3d2e1a 0%, #6b5a2e 100%);
-        --filter-bg: #2d2d2d;
-        --user-log-bg: #2d2d2d;
-        --user-log-hover: #3d3d3d;
-        --user-log-border: var(--gold);
-        --expand-icon-color: #aaa;
-        --btn-outline-border: #3d3d3d;
-        --btn-outline-hover-bg: #3d3d3d;
-        --input-bg: #2d2d2d;
-        --input-border: #3d3d3d;
-        --chart-grid: #3d3d3d;
     }
-    body { background: var(--bg-body); font-family: 'Inter', sans-serif; transition: all 0.3s; color: var(--text-color); }
     
-    /* Заголовки */
-    h1, h2, h3, .section-title { font-family: 'Playfair Display', serif; }
+    /* Шапка */
+    .dashboard-header {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-top: 4px solid var(--brand-red);
+    }
+    .dashboard-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--brand-red);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+    }
+    body.dark .dashboard-header { background: var(--bg-card); }
     
-    /* Стили для золотых элементов */
-    .gold-text { color: var(--gold); }
-    .gold-border { border-color: var(--gold); }
-    .btn-gold {
-        background: var(--gold);
-        color: #2c2c2c;
+    /* Кнопки */
+    .btn-brand {
+        background: linear-gradient(135deg, var(--brand-red), var(--brand-red-dark));
+        color: white;
         border: none;
+        padding: 8px 20px;
+        border-radius: 40px;
+        font-size: 13px;
         font-weight: 600;
         transition: all 0.2s;
     }
-    .btn-gold:hover {
-        background: var(--gold-dark);
-        color: white;
-        transform: translateY(-2px);
-    }
-    .btn-outline-gold {
+    .btn-brand:hover { transform: translateY(-2px); opacity: 0.9; color: white; }
+    .btn-outline-brand {
         background: transparent;
-        border: 1px solid var(--gold);
-        color: var(--gold);
+        border: 1px solid var(--brand-red);
+        color: var(--brand-red);
         font-weight: 500;
+        padding: 6px 16px;
+        border-radius: 40px;
+        font-size: 13px;
+        transition: all 0.2s;
     }
-    .btn-outline-gold:hover {
-        background: var(--gold);
-        color: #2c2c2c;
+    .btn-outline-brand:hover { background: var(--brand-red); color: white; }
+    
+    /* KPI карточки */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.2rem;
+        margin-bottom: 2rem;
+    }
+    .kpi-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.2rem 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+        cursor: help;
+        border-left: 4px solid var(--brand-red);
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .kpi-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .kpi-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--brand-red);
+    }
+    body.dark .kpi-value { color: var(--brand-red); }
+    
+    /* Карточки графиков */
+    .charts-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .chart-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 1.2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+        border: 1px solid #eee;
+    }
+    .chart-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .chart-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--brand-red);
+        padding-bottom: 6px;
+        border-bottom: 2px solid var(--brand-red);
+    }
+    canvas { max-height: 250px; width: 100%; }
+    
+    /* Таблицы */
+    .data-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .section-title {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--brand-red);
+        padding-bottom: 6px;
+        border-bottom: 2px solid var(--brand-red);
+    }
+    .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .stats-table th, .stats-table td {
+        padding: 10px 8px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .stats-table th {
+        font-weight: 600;
+        color: var(--brand-red);
+        font-size: 0.8rem;
+    }
+    .leader-icon { font-size: 1.2rem; margin-left: 6px; cursor: help; }
+    
+    /* Фильтр */
+    .filter-bar {
+        background: var(--bg-card);
+        padding: 15px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+        border: 1px solid #eee;
+    }
+    .form-control, .form-select {
+        border-radius: 40px;
+        border: 1px solid #ddd;
+        padding: 8px 16px;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--brand-red);
+        box-shadow: 0 0 0 2px rgba(227,6,19,0.1);
+        outline: none;
     }
     
-    .user-log { border-left: 4px solid var(--user-log-border); padding: 12px; background: var(--user-log-bg); margin-bottom: 12px; border-radius: 0 8px 8px 0; cursor: pointer; transition: all 0.2s; color: var(--text-color); }
-    .user-log:hover { background: var(--user-log-hover); transform: translateX(4px); }
-    .correct { color: #198754; font-weight: 600; }
-    .wrong { color: #dc3545; font-weight: 600; }
+    /* Выбор теста */
+    .test-selector {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid #eee;
+    }
+    
+    /* Сотрудники */
+    .user-log {
+        border-left: 4px solid var(--brand-red);
+        padding: 12px;
+        background: var(--bg-card);
+        margin-bottom: 12px;
+        border-radius: 0 12px 12px 0;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .user-log:hover { background: var(--brand-red-light); transform: translateX(4px); }
+    body.dark .user-log:hover { background: #3d1a1a; }
+    .correct { color: #28a745; font-weight: 600; }
+    .wrong { color: var(--brand-red); font-weight: 600; }
     .answer-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
     .answer-details.show { display: block; }
-    .stats-card { background: var(--header-bg); color: #2c2c2c; border-radius: 10px; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: transform 0.2s; }
-    .stats-card:hover { transform: translateY(-3px); }
-    .filter-bar { background: var(--filter-bg); padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .chart-card { background: var(--bg-card); border-radius: 10px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .chart-container { height: 200px; position: relative; }
-    .test-selector { background: var(--bg-card); border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .theme-toggle { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #2c2c2c; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; cursor: pointer; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: all 0.2s; }
-    .theme-toggle:hover { transform: scale(1.1); background: var(--gold-dark); color: white; }
-    .btn-pdf { background: #dc3545; color: white; border: none; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-left: 8px; }
-    .btn-pdf:hover { background: #b02a37; }
-    @media (max-width: 768px) { .user-log .d-flex { flex-direction: column; gap: 8px; } }
+    .btn-pdf {
+        background: var(--brand-red);
+        color: white;
+        border: none;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        margin-left: 8px;
+        transition: all 0.2s;
+    }
+    .btn-pdf:hover { background: var(--brand-red-dark); transform: scale(1.02); }
     
-    .dashboard-header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-    .dashboard-header h1 { font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, #B8960F, #D4AF37, #F5E6B8); -webkit-background-clip: text; background-clip: text; color: transparent; display: flex; align-items: center; gap: 12px; }
-    body.dark .dashboard-header h1 { background: linear-gradient(135deg, #D4AF37, #F5E6B8); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
-    .kpi-card { background: var(--bg-card); border-radius: 24px; padding: 1.2rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--gold-light); transition: all 0.2s; position: relative; overflow: hidden; cursor: help; }
-    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--gold); }
-    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: var(--gold); }
-    .kpi-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    .kpi-value { font-size: 2.2rem; font-weight: 800; line-height: 1; background: linear-gradient(135deg, #B8960F, #D4AF37); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    body.dark .kpi-value { background: linear-gradient(135deg, #D4AF37, #F5E6B8); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .charts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-    canvas { max-height: 250px; width: 100%; }
-    .leader-icon { font-size: 1.2rem; margin-left: 6px; cursor: help; }
+    /* Тёмная тема */
+    .theme-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--brand-red);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
+        cursor: pointer;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        transition: all 0.2s;
+    }
+    .theme-toggle:hover { transform: scale(1.1); background: var(--brand-red-dark); }
+    
+    /* Подсказки */
     [data-tooltip] { position: relative; cursor: help; }
-    [data-tooltip]:before { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 5px 10px; border-radius: 8px; font-size: 12px; white-space: nowrap; z-index: 1000; display: none; }
+    [data-tooltip]:before {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        white-space: nowrap;
+        z-index: 1000;
+        display: none;
+    }
     [data-tooltip]:hover:before { display: block; }
-    .section-title { font-weight: 600; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; color: var(--gold-dark); font-family: 'Playfair Display', serif; }
-    body.dark .section-title { color: var(--gold); }
-    .stats-table { width: 100%; border-collapse: collapse; }
-    .stats-table th, .stats-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border-color); }
-    .stats-table th { font-weight: 600; color: var(--gold-dark); font-size: 0.8rem; }
-    body.dark .stats-table th { color: var(--gold); }
-    .btn-copy-report { background: var(--gold); color: #2c2c2c; border: none; padding: 8px 20px; border-radius: 40px; font-size: 13px; font-weight: 600; transition: all 0.2s; }
-    .btn-copy-report:hover { background: var(--gold-dark); color: white; transform: translateY(-2px); }
+    
+    @media (max-width: 768px) {
+        body { padding: 10px; }
+        .charts-row { grid-template-columns: 1fr; }
+        .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        .user-log .d-flex { flex-direction: column; gap: 8px; }
+    }
+    @media print {
+        .no-print, .theme-toggle, .filter-bar, .btn-pdf, .btn-outline-brand, .btn-brand { display: none !important; }
+        .answer-details { display: block !important; }
+        body { background: white; padding: 0; }
+    }
 </style>
 </head>
 <body>
-<button class="theme-toggle" id="themeToggle">🌙</button>
-<div class="container mt-4"><div class="row justify-content-center"><div class="col-md-10">
+<button class="theme-toggle no-print" id="themeToggle">🌙</button>
+<div class="container-custom">
 
 <div class="dashboard-header">
-    <h1><i class="fas fa-crown gold-text"></i> 585GOLD | Анализ результатов тестирования</h1>
-    <div>
-        <button id="copyReportBtn" class="btn-copy-report me-2" title="Копировать отчёт для Outlook">📧 Копировать в Outlook</button>
-        <a href="https://wetalsfinx.github.io/Test/report_errors.html" target="_blank" class="btn btn-outline-gold btn-sm me-2">
+    <h1><i class="fas fa-gem"></i> 585GOLD | Анализ результатов тестирования</h1>
+    <div class="no-print">
+        <button id="copyReportBtn" class="btn-brand me-2" title="Копировать отчёт для Outlook">📧 Копировать в Outlook</button>
+        <a href="https://wetalsfinx.github.io/Test/report_errors.html" target="_blank" class="btn-outline-brand me-2">
             <i class="bi bi-file-text"></i> 📋 Разбор ошибок
         </a>
         <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
@@ -150,28 +323,29 @@
 
 <div id="resultsContainer" style="display:none">
     <div class="kpi-grid" id="kpiGrid"></div>
-    <div class="charts-row" id="chartsRow">
-        <div class="chart-card"><div class="section-title"><i class="fas fa-chart-bar"></i> Распределение баллов</div><div class="chart-container"><canvas id="scoreDistChart"></canvas></div></div>
-        <div class="chart-card"><div class="section-title"><i class="fas fa-city"></i> Успеваемость по городам</div><div class="chart-container"><canvas id="cityChart"></canvas></div></div>
-        <div class="chart-card"><div class="section-title"><i class="fas fa-chart-pie"></i> Ошибки по темам вопросов</div><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
+    
+    <div class="charts-row">
+        <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-bar"></i> Распределение баллов</div><div class="chart-container"><canvas id="scoreDistChart"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><i class="fas fa-city"></i> Успеваемость по городам</div><div class="chart-container"><canvas id="cityChart"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-pie"></i> Ошибки по темам вопросов</div><div class="chart-container"><canvas id="pieChart"></canvas></div></div>
     </div>
     
-    <div class="city-stats-card" style="background: var(--bg-card); border-radius: 24px; padding: 1.2rem 1.5rem; margin-bottom: 2rem;">
+    <div class="data-card">
         <div class="section-title"><i class="fas fa-building"></i> Статистика по городам (сортировка по баллам)</div>
-        <table class="stats-table" style="width:100%"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table>
+        <table class="stats-table"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table>
     </div>
     
-    <div class="top-employees-card" style="background: var(--bg-card); border-radius: 24px; padding: 1.2rem 1.5rem; margin-bottom: 2rem;">
+    <div class="data-card">
         <div class="section-title"><i class="fas fa-trophy"></i> Лучшие сотрудники</div>
-        <table class="stats-table" style="width:100%"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table>
+        <table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table>
     </div>
     
-    <div class="errors-card" style="background: var(--bg-card); border-radius: 24px; padding: 1.2rem 1.5rem; margin-bottom: 2rem;">
+    <div class="data-card">
         <div class="section-title"><i class="fas fa-exclamation-triangle"></i> Частые ошибки</div>
-        <table class="stats-table" style="width:100%"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во ошибок</th></tr></thead><tbody id="errorsBody"></tbody></table>
+        <table class="stats-table"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во ошибок</th></tr></thead><tbody id="errorsBody"></tbody></table>
     </div>
     
-    <div class="filter-bar">
+    <div class="filter-bar no-print">
         <div class="row g-3">
             <div class="col-md-3"><input type="text" id="search-input" class="form-control" placeholder="🔍 Поиск по имени..."></div>
             <div class="col-md-2"><select id="city-filter" class="form-select"><option value="">Все города</option></select></div>
@@ -179,18 +353,18 @@
             <div class="col-md-2"><input type="date" id="date-to" class="form-control"></div>
             <div class="col-md-2">
                 <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()">📎 Экспорт</button>
-                    <button class="btn btn-sm btn-outline-primary" onclick="exportDetailedToExcel()">📊 Детальный</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exportToExcel()">📎 Экспорт</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exportDetailedToExcel()">📊 Детальный</button>
                 </div>
             </div>
-            <div class="col-md-1"><button class="btn btn-outline-secondary w-100" onclick="resetFilters()">Сброс</button></div>
+            <div class="col-md-1"><button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()">Сброс</button></div>
         </div>
     </div>
     
-    <div id="results-area"><div class="text-center py-4">⏳ Выберите тест</div></div>
+    <div id="results-area"><div class="text-center py-4 text-muted">⏳ Выберите тест</div></div>
 </div>
 
-</div></div></div>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
@@ -201,6 +375,7 @@ let currentTest = null;
 let currentResults = [];
 let scoreChart = null, cityChart = null, pieChart = null;
 
+// Тёмная тема
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -213,7 +388,7 @@ function toggleTheme() {
     const isDark = document.body.classList.contains('dark');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     document.getElementById('themeToggle').innerHTML = isDark ? '☀️' : '🌙';
-    updateCharts();
+    if (currentResults.length) setTimeout(() => { if (scoreChart) scoreChart.update(); if (cityChart) cityChart.update(); if (pieChart) pieChart.update(); }, 100);
 }
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 initTheme();
@@ -224,7 +399,6 @@ const questionTopics = {
     7: "Альтернатива/каталог", 8: "Презентация подарка", 9: "Дополнительные модели",
     10: "Яндекс Сплит", 11: "Инициатива в продажах"
 };
-function getTopicByQuestionNumber(q) { return questionTopics[q] || `Вопрос ${q}`; }
 function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
 async function loadTests() {
@@ -232,6 +406,7 @@ async function loadTests() {
     const selector = document.getElementById('testSelector');
     if (error || !data || data.length === 0) {
         selector.innerHTML = '<option value="">Нет тестов</option>';
+        console.error('Ошибка загрузки тестов:', error);
         return;
     }
     let options = '<option value="">-- Выберите тест --</option>';
@@ -301,7 +476,8 @@ function renderAll() {
     ];
     if (scoreChart) scoreChart.destroy();
     scoreChart = new Chart(document.getElementById('scoreDistChart'), {
-        type: 'bar', data: { labels: cats, datasets: [{ label: 'Количество сотрудников', data: dist, backgroundColor: ['#D4AF37', '#F5E6B8', '#B8960F', '#8B6914'], borderRadius: 8 }] },
+        type: 'bar',
+        data: { labels: cats, datasets: [{ label: 'Количество сотрудников', data: dist, backgroundColor: ['#E30613', '#c41c2a', '#E57373', '#EF9A9A'], borderRadius: 8 }] },
         options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
     });
     
@@ -317,9 +493,11 @@ function renderAll() {
     const cityData = Array.from(cityMap.entries()).map(([c, s]) => ({ city: c, count: s.count, avg: (s.sum / s.count).toFixed(0), errors: s.errors })).sort((a, b) => b.avg - a.avg);
     if (cityChart) cityChart.destroy();
     cityChart = new Chart(document.getElementById('cityChart'), {
-        type: 'bar', data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityData.map(c => c.avg), backgroundColor: '#D4AF37', borderRadius: 8 }] },
+        type: 'bar',
+        data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityData.map(c => c.avg), backgroundColor: '#E30613', borderRadius: 8 }] },
         options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
     });
+    
     document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.city}${i === 0 ? ' <span class="leader-icon" data-tooltip="Лидер по среднему баллу">🥇</span>' : ''}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.count}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.avg}%</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.errors}</td></tr>`).join('');
     
     const top10 = [...currentResults].sort((a, b) => (b.score / b.total) - (a.score / a.total)).slice(0, 10);
@@ -344,13 +522,17 @@ function renderAll() {
     if (pieChart) pieChart.destroy();
     if (topErrors.length) {
         pieChart = new Chart(document.getElementById('pieChart'), {
-            type: 'pie', data: { labels: topErrors.map(e => e[0]), datasets: [{ data: topErrors.map(e => e[1]), backgroundColor: ['#D4AF37', '#F5E6B8', '#B8960F', '#8B6914', '#6B4E0A'], borderWidth: 0 }] },
+            type: 'pie',
+            data: { labels: topErrors.map(e => e[0]), datasets: [{ data: topErrors.map(e => e[1]), backgroundColor: ['#E30613', '#c41c2a', '#E57373', '#EF9A9A', '#F5B7B7'], borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right' } } }
         });
+    } else {
+        const ctx = document.getElementById('pieChart').getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, 400, 250);
     }
     
     const area = document.getElementById('results-area');
-    if (!filtered.length) { area.innerHTML = '<div class="text-center py-4">📭 Нет результатов</div>'; return; }
+    if (!filtered.length) { area.innerHTML = '<div class="text-center py-4 text-muted">📭 Нет результатов</div>'; return; }
     area.innerHTML = '';
     for (const r of filtered) {
         const percent = Math.round(r.score / r.total * 100);
@@ -360,27 +542,25 @@ function renderAll() {
                 const a = r.answers[i];
                 const ok = a.isCorrect === true || a.ok === true;
                 const questionText = (a.question || a.qs || `Вопрос ${i+1}`).substring(0, 150);
-                details += `<div class="small mb-2 p-2" style="border-left:3px solid ${ok ? '#198754' : '#dc3545'}; background:var(--user-log-bg); border-radius:4px;">
+                details += `<div class="small mb-2 p-2" style="border-left:3px solid ${ok ? '#28a745' : '#E30613'}; background:var(--bg-card); border-radius:8px;">
                     <strong>${ok ? '✅' : '❌'} ${escapeHtml(questionText)}</strong>
                     <div><span class="${ok ? 'correct' : 'wrong'}">${ok ? 'Верно' : 'Ошибка'}</span></div>
                     ${!ok ? `<div class="mt-1 small"><strong>✖ Ваш ответ:</strong> ${escapeHtml(a.selected || a.sel || '—')}<br><strong>✔ Правильный ответ:</strong> ${escapeHtml(a.correct || a.cor || '—')}</div>` : ''}
                 </div>`;
             }
         }
-        const clr = percent >= 80 ? 'success' : (percent >= 50 ? 'warning' : 'danger');
+        const clr = percent >= 80 ? 'danger' : (percent >= 50 ? 'warning' : 'secondary');
         area.innerHTML += `<div class="user-log" onclick="if(event.target.tagName!=='BUTTON') this.querySelector('.answer-details').classList.toggle('show');">
-            <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                 <div><strong>${escapeHtml(r.surname || '')} ${escapeHtml(r.name || '')}</strong> <span class="text-muted">📍 ${escapeHtml(r.city || '—')}</span> <span class="badge bg-${clr}">${r.score}/${r.total} (${percent}%)</span></div>
                 <div><small>${new Date(r.created_at).toLocaleString()}</small>
                 <button class="btn-pdf" onclick="event.stopPropagation(); generateUserPDF('${r.id}')">📄 PDF</button>
                 <i class="bi bi-chevron-down ms-2"></i></div>
             </div>
-            <div class="answer-details mt-2"><div class="p-2 rounded" style="background:var(--user-log-bg);">${details}</div></div>
+            <div class="answer-details mt-2"><div class="p-2 rounded" style="background:var(--bg-card);">${details}</div></div>
         </div>`;
     }
 }
-
-function updateCharts() { if (currentResults.length) renderAll(); }
 
 function generateUserPDF(resultId) {
     const r = currentResults.find(r => r.id == resultId);
@@ -414,6 +594,7 @@ function exportToExcel() {
     const data = currentResults.map(r => ({ 'ФИО': `${r.surname || ''} ${r.name || ''}`.trim(), 'Город': r.city || '', 'Баллы': `${r.score}/${r.total}`, 'Процент': `${Math.round(r.score / r.total * 100)}%`, 'Дата': new Date(r.created_at).toLocaleString() }));
     const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Результаты'); XLSX.writeFile(wb, `${currentTest?.name || 'отчёт'}_${new Date().toLocaleDateString()}.xlsx`);
 }
+
 function exportDetailedToExcel() {
     if (!currentResults.length) return alert("Нет данных");
     try {
@@ -438,10 +619,7 @@ function exportDetailedToExcel() {
 }
 
 function generateReport() {
-    if (!currentResults.length) {
-        alert('Нет данных для отчёта');
-        return;
-    }
+    if (!currentResults.length) { alert('Нет данных для отчёта'); return; }
     
     const testName = currentTest?.name || 'Тест';
     const total = currentResults.length;
@@ -474,39 +652,31 @@ function generateReport() {
     
     const date = new Date().toLocaleDateString('ru-RU');
     
-    let distTableRows = '';
-    for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; distTableRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; }
-    
-    let cityTableRows = '';
-    for (const [city, data] of Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count)) { const avg = Math.round(data.sumScore / data.sumTotal * 100); const errors = data.sumTotal - data.sumScore; cityTableRows += `<tr><td style="padding:8px;border:1px solid #ddd">${city}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${data.count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${avg}%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${errors}</td></tr>`; }
-    
-    let topTableRows = '';
-    topEmployees.forEach((emp, i) => { const percent = Math.round(emp.score / emp.total * 100); const name = emp.user_id || `${emp.surname || ''} ${emp.name || ''}`.trim(); topTableRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${name}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${emp.score}/${emp.total}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; });
-    
-    let errorsTableRows = '';
-    topErrors.forEach(([topic, count], i) => { const percent = totalErrors ? Math.round(count / totalErrors * 100) : 0; errorsTableRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${topic}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; });
+    let distRows = ''; for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; distRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}<table><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; }
+    let cityRows = ''; for (const [city, data] of Object.entries(cityStats)) { const avg = Math.round(data.sumScore / data.sumTotal * 100); const errors = data.sumTotal - data.sumScore; cityRows += `<tr><td style="padding:8px;border:1px solid #ddd">${city}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${data.count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${avg}%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${errors}</td></tr>`; }
+    let topRows = ''; topEmployees.forEach((emp, i) => { const percent = Math.round(emp.score / emp.total * 100); const name = emp.user_id || `${emp.surname || ''} ${emp.name || ''}`.trim(); topRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${name}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${emp.score}/${emp.total}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; });
+    let errorRows = ''; topErrors.forEach(([topic, count], i) => { const percent = totalErrors ? Math.round(count / totalErrors * 100) : 0; errorRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${topic}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; });
     
     const htmlReport = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>585GOLD | Отчёт по тесту</title>
+<html><head><meta charset="UTF-8"><title>585GOLD | Отчёт по тесту</title>
 <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background: #f8f6f0; }
-    .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    h1 { color: #B8960F; margin: 0 0 8px 0; font-family: 'Playfair Display', serif; }
-    h2 { color: #D4AF37; margin: 20px 0 12px 0; font-size: 18px; font-family: 'Playfair Display', serif; }
+    body { font-family: 'Segoe UI', Arial; margin: 0; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-top: 4px solid #E30613; }
+    h1 { color: #E30613; margin: 0 0 8px; }
+    h2 { color: #E30613; margin: 20px 0 12px; font-size: 18px; border-bottom: 2px solid #E30613; padding-bottom: 5px; }
     .kpi { display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
-    .kpi-item { background: #f5f5f5; padding: 15px; border-radius: 12px; min-width: 150px; text-align: center; border-left: 4px solid #D4AF37; }
-    .kpi-value { font-size: 28px; font-weight: bold; color: #B8960F; }
-    .kpi-label { font-size: 12px; color: #6c757d; margin-top: 5px; }
+    .kpi-item { background: #fff5f5; padding: 15px; border-radius: 12px; min-width: 150px; text-align: center; border-left: 4px solid #E30613; }
+    .kpi-value { font-size: 28px; font-weight: bold; color: #E30613; }
+    .kpi-label { font-size: 12px; color: #666; margin-top: 5px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    th { background: #D4AF37; color: #2c2c2c; padding: 10px; text-align: left; }
+    th { background: #E30613; color: white; padding: 10px; text-align: left; }
     td { padding: 8px; border: 1px solid #ddd; }
     .footer { text-align: center; font-size: 12px; color: #999; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
 </style>
 </head>
 <body>
 <div class="container">
-    <h1>👑 585GOLD | ОТЧЁТ ПО ТЕСТУ</h1>
+    <h1>💎 585GOLD | ОТЧЁТ ПО ТЕСТУ</h1>
     <p><strong>📋 Тест:</strong> ${testName}<br><strong>📅 Дата:</strong> ${date}</p>
     <div class="kpi">
         <div class="kpi-item"><div class="kpi-value">${total}</div><div class="kpi-label">Всего сотрудников</div></div>
@@ -514,15 +684,14 @@ function generateReport() {
         <div class="kpi-item"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div>
         <div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div>
     </div>
-    <h2>📊 РАСПРЕДЕЛЕНИЕ БАЛЛОВ</h2><td><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distTableRows}</tbody></table>
-    <h2>🏙️ СТАТИСТИКА ПО ГОРОДАМ</h2><td><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityTableRows}</tbody></table>
-    <h2>🔝 ЛУЧШИЕ СОТРУДНИКИ</h2><tr><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topTableRows}</tbody></table>
-    <h2>📚 ЧАСТЫЕ ОШИБКИ (по темам)</h2><table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorsTableRows}</tbody></table>
-    <h2>💡 РЕКОМЕНДАЦИИ ДЛЯ УЛУЧШЕНИЯ</h2><ul><li>Основные зоны роста: ${topErrors.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение по этим темам</li><li>Разберите типичные ошибки на планерке</li></ul>
-    <div class="footer">Отчёт сгенерирован автоматически • 585GOLD</div>
+    <h2>📊 Распределение баллов</h2><table><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table>
+    <h2>🏙️ Статистика по городам</h2><table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table>
+    <h2>🔝 Лучшие сотрудники</h2><table><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table>
+    <h2>📚 Частые ошибки (по темам)</h2><table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorRows}</tbody></table>
+    <h2>💡 Рекомендации</h2><ul><li>Основные зоны роста: ${topErrors.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение по этим темам</li><li>Разберите типичные ошибки на планерке</li></ul>
+    <div class="footer">💎 585GOLD | Отчёт сгенерирован автоматически</div>
 </div>
-</body>
-</html>`;
+</body></html>`;
     
     const blob = new Blob([htmlReport], { type: "text/html" });
     const clipboardItem = new ClipboardItem({ "text/html": blob, "text/plain": new Blob([htmlReport.replace(/<[^>]*>/g, '')], { type: "text/plain" }) });
