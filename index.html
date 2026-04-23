@@ -131,6 +131,7 @@
         position: relative;
         overflow: hidden;
         border-left: 4px solid var(--brand-red);
+        cursor: help;
     }
     .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
     .kpi-label {
@@ -150,6 +151,7 @@
         line-height: 1;
         color: var(--brand-red);
     }
+    /* Подсказка при наведении */
     .kpi-card .tooltip-text {
         visibility: hidden;
         opacity: 0;
@@ -262,6 +264,11 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         border: 1px solid #eee;
     }
+
+    /* Прибиваем баг с кликом по иконке */
+    .leader-icon, .leader-icon * {
+        pointer-events: none;
+    }
     
     .user-log {
         border-left: 4px solid var(--brand-red);
@@ -350,7 +357,7 @@
     
     <div class="data-card">
         <div class="section-title"><i class="fas fa-exclamation-triangle"></i> Частые ошибки</div>
-        <table class="stats-table"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во ошибок</th></tr></thead><tbody id="errorsBody"></tbody></table>
+        <table class="stats-table"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во ошибок</th></tr></thead><tbody id="errorsBody"></tbody></tr>
     </div>
     
     <div class="filter-bar no-print">
@@ -420,6 +427,7 @@ const questionTopics = {
 function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
 async function loadTests() {
+    console.log('Загрузка тестов...');
     const { data, error } = await sb.from('tests').select('*').order('created_at', { ascending: false });
     const selector = document.getElementById('testSelector');
     if (error || !data || data.length === 0) {
@@ -432,6 +440,8 @@ async function loadTests() {
         options += `<option value="${test.slug}" data-cities='${JSON.stringify(test.city_list || [])}'>${escapeHtml(test.name)} (${test.questions_count || '?'} вопросов)</option>`;
     }
     selector.innerHTML = options;
+    console.log('Тесты загружены:', data.length);
+    
     selector.addEventListener('change', async (e) => {
         const slug = e.target.value;
         if (!slug) {
@@ -442,6 +452,7 @@ async function loadTests() {
         const selectedOption = selector.options[selector.selectedIndex];
         const citiesJson = selectedOption.getAttribute('data-cities');
         currentTest = { slug: slug, name: selectedOption.text, cities: JSON.parse(citiesJson || '[]') };
+        console.log('Выбран тест:', currentTest.name);
         const cityFilter = document.getElementById('city-filter');
         let cityOptions = '<option value="">Все города</option>';
         for (const city of currentTest.cities) {
@@ -454,8 +465,10 @@ async function loadTests() {
 }
 
 async function loadResults(slug) {
+    console.log('Загрузка результатов для теста:', slug);
     const { data, error } = await sb.from('results').select('*').eq('test_type', slug).order('created_at', { ascending: false });
     currentResults = error ? [] : (data || []);
+    console.log('Результатов загружено:', currentResults.length);
     renderAll();
 }
 
@@ -532,7 +545,7 @@ function renderAll() {
         options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
     });
     
-    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${c.city}${i === 0 ? ' <span class="leader-icon" title="Лидер по среднему баллу">🥇</span>' : ''}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.count}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.avg}%</td onclick="if(!window.event.target.closest('.leader-icon')){applyCityFilter('${c.city}')}"></td><td style="padding:8px;border-bottom:1px solid #eee">${c.errors}</td></tr>`).join('');
+    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${c.city}${i === 0 ? ' <span class="leader-icon" title="Лидер по среднему баллу">🥇</span>' : ''}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.count}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px;border-bottom:1px solid #eee">${c.errors}</td></tr>`).join('');
     
     const top10 = [...currentResults].sort((a, b) => (b.score / b.total) - (a.score / a.total)).slice(0, 10);
     document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${escapeHtml(e.surname || '')} ${escapeHtml(e.name || '')}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${escapeHtml(e.city || '—')}</td><td style="padding:8px;border-bottom:1px solid #eee">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td></tr>`).join('');
@@ -694,10 +707,10 @@ function generateReport() {
     const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const date = new Date().toLocaleDateString('ru-RU');
     
-    let distRows = ''; for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; distRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; }
-    let cityRows = ''; for (const [city, data] of Object.entries(cityStats)) { const avg = Math.round(data.sumScore / data.sumTotal * 100); const errors = data.sumTotal - data.sumScore; cityRows += `<tr><td style="padding:8px;border:1px solid #ddd">${city}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${data.count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${avg}%</td onclick="if(!window.event.target.closest('td')){alert('Фильтр по городу: ${city}')}"></td><td style="padding:8px;border:1px solid #ddd;text-align:center">${errors}</td><tr>`); }
-    let topRows = ''; topEmployees.forEach((emp, i) => { const percent = Math.round(emp.score / emp.total * 100); const name = emp.user_id || `${emp.surname || ''} ${emp.name || ''}`.trim(); topRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(name)}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${emp.score}/${emp.total}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td><tr>`; });
-    let errorRows = ''; topErrors.forEach(([topic, count], i) => { const percent = totalErrors ? Math.round(count / totalErrors * 100) : 0; errorRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${topic}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td><tr>`; });
+    let distRows = ''; for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; distRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; }
+    let cityRows = ''; for (const [city, data] of Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count)) { const avg = Math.round(data.sumScore / data.sumTotal * 100); const errors = data.sumTotal - data.sumScore; cityRows += `<tr><td style="padding:8px;border:1px solid #ddd">${city}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${data.count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${avg}%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${errors}</tr>`; }
+    let topRows = ''; topEmployees.forEach((emp, i) => { const percent = Math.round(emp.score / emp.total * 100); const name = emp.user_id || `${emp.surname || ''} ${emp.name || ''}`.trim(); topRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(name)}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${emp.score}/${emp.total}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</tr>`; });
+    let errorRows = ''; topErrors.forEach(([topic, count], i) => { const percent = totalErrors ? Math.round(count / totalErrors * 100) : 0; errorRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${topic}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</tr>`; });
     
     const htmlReport = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>585GOLD | Отчёт по тесту</title>
@@ -727,9 +740,9 @@ function generateReport() {
         <div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div>
     </div>
     <h2>📊 Распределение баллов</h2><tr><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table>
-    <h2>🏙️ Статистика по городам</h2></table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table>
-    <h2>🔝 Лучшие сотрудники</h2><table><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table>
-    <h2>📚 Частые ошибки (по темам)</h2></table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorRows}</tbody></table>
+    <h2>🏙️ Статистика по городам</h2><table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table>
+    <h2>🔝 Лучшие сотрудники</h2><tr><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table>
+    <h2>📚 Частые ошибки (по темам)</h2><tr><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorRows}</tbody></table>
     <h2>💡 Рекомендации</h2><ul><li>Основные зоны роста: ${topErrors.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение по этим темам</li><li>Разберите типичные ошибки на планерке</li></ul>
     <div class="footer">💎 585GOLD | Отчёт сгенерирован автоматически</div>
 </div>
@@ -754,6 +767,7 @@ document.getElementById('date-from')?.addEventListener('change', () => renderAll
 document.getElementById('date-to')?.addEventListener('change', () => renderAll());
 document.getElementById('copyReportBtn')?.addEventListener('click', generateReport);
 
+// Запуск загрузки тестов
 loadTests();
 </script>
 </body>
