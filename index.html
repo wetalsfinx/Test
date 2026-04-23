@@ -18,26 +18,49 @@
         background: #f5f5f5;
         color: #333;
         padding: 15px;
+        transition: background 0.3s, color 0.3s;
     }
+    /* ТЁМНАЯ ТЕМА — хорошая читаемость */
+    body.dark {
+        background: #121212;
+        color: #e0e0e0;
+    }
+    body.dark .dashboard-header,
+    body.dark .test-selector,
+    body.dark .chart-card,
+    body.dark .data-card,
+    body.dark .filter-bar,
+    body.dark .user-log {
+        background: #1e1e1e;
+        border-color: #333;
+    }
+    body.dark .dashboard-header h1 { color: #E30613; }
+    body.dark .kpi-card { background: #1e1e1e; border-color: #333; }
+    body.dark .kpi-value { color: #E30613; }
+    body.dark .stats-table th { color: #E30613; }
+    body.dark .stats-table td { border-bottom-color: #333; }
+    body.dark .text-muted { color: #aaa !important; }
+    body.dark .form-control, body.dark .form-select {
+        background: #2d2d2d;
+        color: #e0e0e0;
+        border-color: #444;
+    }
+    body.dark .btn-outline-secondary {
+        border-color: #555;
+        color: #ccc;
+    }
+    body.dark .btn-outline-secondary:hover {
+        background: #444;
+        color: white;
+    }
+    
     .container-custom { max-width: 1400px; margin: 0 auto; }
     
-    /* Цветовая гамма 585GOLD — красный #E30613 */
+    /* Цветовая гамма */
     :root {
         --brand-red: #E30613;
         --brand-red-light: #ffebee;
         --brand-red-dark: #c41c2a;
-        --bg-body: #f5f5f5;
-        --bg-card: white;
-        --text-color: #333;
-        --text-muted: #666;
-        --border-color: #ddd;
-    }
-    body.dark {
-        --bg-body: #1a1a1a;
-        --bg-card: #2d2d2d;
-        --text-color: #e0e0e0;
-        --text-muted: #aaa;
-        --border-color: #3d3d3d;
     }
     
     /* Шапка */
@@ -63,11 +86,10 @@
         gap: 10px;
         margin: 0;
     }
-    body.dark .dashboard-header { background: var(--bg-card); }
     
-    /* Кнопки */
-    .btn-brand {
-        background: linear-gradient(135deg, var(--brand-red), var(--brand-red-dark));
+    /* ЕДИНЫЙ СТИЛЬ ДЛЯ ВСЕХ КНОПОК */
+    .btn-brand, .btn-outline-brand, .btn-copy, .btn-pdf, .theme-toggle {
+        background: var(--brand-red);
         color: white;
         border: none;
         padding: 8px 20px;
@@ -75,19 +97,27 @@
         font-size: 13px;
         font-weight: 600;
         transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
     }
-    .btn-brand:hover { transform: translateY(-2px); opacity: 0.9; color: white; }
+    .btn-brand:hover, .btn-copy:hover, .theme-toggle:hover {
+        background: var(--brand-red-dark);
+        transform: translateY(-2px);
+        color: white;
+    }
     .btn-outline-brand {
         background: transparent;
         border: 1px solid var(--brand-red);
         color: var(--brand-red);
-        font-weight: 500;
-        padding: 6px 16px;
-        border-radius: 40px;
-        font-size: 13px;
-        transition: all 0.2s;
     }
-    .btn-outline-brand:hover { background: var(--brand-red); color: white; }
+    .btn-outline-brand:hover {
+        background: var(--brand-red);
+        color: white;
+        transform: translateY(-2px);
+    }
     
     /* KPI карточки */
     .kpi-grid {
@@ -97,14 +127,14 @@
         margin-bottom: 2rem;
     }
     .kpi-card {
-        background: var(--bg-card);
+        background: white;
         border-radius: 16px;
         padding: 1.2rem 1.5rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         transition: all 0.2s;
         position: relative;
         overflow: hidden;
-        cursor: help;
+        cursor: default;
         border-left: 4px solid var(--brand-red);
     }
     .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
@@ -112,19 +142,19 @@
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: var(--text-muted);
+        color: #666;
         margin-bottom: 8px;
         display: flex;
         align-items: center;
         gap: 6px;
     }
+    body.dark .kpi-label { color: #aaa; }
     .kpi-value {
         font-size: 2.2rem;
         font-weight: 800;
         line-height: 1;
         color: var(--brand-red);
     }
-    body.dark .kpi-value { color: var(--brand-red); }
     
     /* Карточки графиков */
     .charts-row {
@@ -134,14 +164,13 @@
         margin-bottom: 2rem;
     }
     .chart-card {
-        background: var(--bg-card);
+        background: white;
         border-radius: 20px;
         padding: 1.2rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         transition: all 0.2s;
         border: 1px solid #eee;
     }
-    .chart-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     .chart-title {
         font-weight: 600;
         margin-bottom: 1rem;
@@ -157,7 +186,7 @@
     
     /* Таблицы */
     .data-card {
-        background: var(--bg-card);
+        background: white;
         border-radius: 20px;
         padding: 1.2rem 1.5rem;
         margin-bottom: 2rem;
@@ -181,18 +210,19 @@
     .stats-table th, .stats-table td {
         padding: 10px 8px;
         text-align: left;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid #eee;
     }
     .stats-table th {
         font-weight: 600;
         color: var(--brand-red);
         font-size: 0.8rem;
     }
-    .leader-icon { font-size: 1.2rem; margin-left: 6px; cursor: help; }
+    body.dark .stats-table td { border-bottom-color: #333; }
+    .leader-icon { font-size: 1.2rem; margin-left: 6px; cursor: default; }
     
     /* Фильтр */
     .filter-bar {
-        background: var(--bg-card);
+        background: white;
         padding: 15px;
         border-radius: 16px;
         margin-bottom: 20px;
@@ -211,7 +241,7 @@
     
     /* Выбор теста */
     .test-selector {
-        background: var(--bg-card);
+        background: white;
         border-radius: 20px;
         padding: 15px 20px;
         margin-bottom: 20px;
@@ -223,7 +253,7 @@
     .user-log {
         border-left: 4px solid var(--brand-red);
         padding: 12px;
-        background: var(--bg-card);
+        background: white;
         margin-bottom: 12px;
         border-radius: 0 12px 12px 0;
         cursor: pointer;
@@ -231,66 +261,45 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .user-log:hover { background: var(--brand-red-light); transform: translateX(4px); }
-    body.dark .user-log:hover { background: #3d1a1a; }
+    body.dark .user-log:hover { background: #2a1a1a; }
     .correct { color: #28a745; font-weight: 600; }
     .wrong { color: var(--brand-red); font-weight: 600; }
-    .answer-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
+    .answer-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+    body.dark .answer-details { border-top-color: #333; }
     .answer-details.show { display: block; }
-    .btn-pdf {
-        background: var(--brand-red);
-        color: white;
-        border: none;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        margin-left: 8px;
-        transition: all 0.2s;
-    }
-    .btn-pdf:hover { background: var(--brand-red-dark); transform: scale(1.02); }
     
-    /* Тёмная тема */
+    /* Тёмная тема кнопка */
     .theme-toggle {
         position: fixed;
         bottom: 20px;
         right: 20px;
-        background: var(--brand-red);
-        color: white;
-        border: none;
-        border-radius: 50%;
         width: 50px;
         height: 50px;
+        border-radius: 50%;
+        padding: 0;
+        justify-content: center;
         font-size: 22px;
-        cursor: pointer;
         z-index: 1000;
         box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        transition: all 0.2s;
     }
-    .theme-toggle:hover { transform: scale(1.1); background: var(--brand-red-dark); }
     
-    /* Подсказки */
-    [data-tooltip] { position: relative; cursor: help; }
-    [data-tooltip]:before {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #333;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 8px;
-        font-size: 11px;
-        white-space: nowrap;
-        z-index: 1000;
-        display: none;
+    /* Подсказки — вместо вопросика */
+    .kpi-card {
+        cursor: help;
     }
-    [data-tooltip]:hover:before { display: block; }
+    .has-tooltip {
+        cursor: help;
+    }
+    .tooltip-text {
+        cursor: help;
+    }
     
     @media (max-width: 768px) {
         body { padding: 10px; }
         .charts-row { grid-template-columns: 1fr; }
         .kpi-grid { grid-template-columns: repeat(2, 1fr); }
         .user-log .d-flex { flex-direction: column; gap: 8px; }
+        .btn-brand, .btn-outline-brand, .btn-copy { padding: 6px 12px; font-size: 11px; }
     }
     @media print {
         .no-print, .theme-toggle, .filter-bar, .btn-pdf, .btn-outline-brand, .btn-brand { display: none !important; }
@@ -305,12 +314,10 @@
 
 <div class="dashboard-header">
     <h1><i class="fas fa-gem"></i> 585GOLD | Анализ результатов тестирования</h1>
-    <div class="no-print">
-        <button id="copyReportBtn" class="btn-brand me-2" title="Копировать отчёт для Outlook">📧 Копировать в Outlook</button>
-        <a href="https://wetalsfinx.github.io/Test/report_errors.html" target="_blank" class="btn-outline-brand me-2">
-            <i class="bi bi-file-text"></i> 📋 Разбор ошибок
-        </a>
-        <a href="?" class="btn btn-outline-secondary btn-sm">← Выход</a>
+    <div class="no-print" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button id="copyReportBtn" class="btn-brand">📧 Копировать в Outlook</button>
+        <a href="https://wetalsfinx.github.io/Test/report_errors.html" target="_blank" class="btn-brand" style="background: transparent; border: 1px solid #E30613; color: #E30613;">📋 Разбор ошибок</a>
+        <a href="?" class="btn-brand" style="background: #6c757d;">← Выход</a>
     </div>
 </div>
 
@@ -353,11 +360,11 @@
             <div class="col-md-2"><input type="date" id="date-to" class="form-control"></div>
             <div class="col-md-2">
                 <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="exportToExcel()">📎 Экспорт</button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="exportDetailedToExcel()">📊 Детальный</button>
+                    <button class="btn-brand" style="background: #6c757d; padding: 6px 12px;" onclick="exportToExcel()">📎 Экспорт</button>
+                    <button class="btn-brand" style="background: #6c757d; padding: 6px 12px;" onclick="exportDetailedToExcel()">📊 Детальный</button>
                 </div>
             </div>
-            <div class="col-md-1"><button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()">Сброс</button></div>
+            <div class="col-md-1"><button class="btn-brand" style="background: #6c757d; padding: 6px 12px; width: 100%;" onclick="resetFilters()">Сброс</button></div>
         </div>
     </div>
     
@@ -381,6 +388,8 @@ function initTheme() {
     if (savedTheme === 'dark') {
         document.body.classList.add('dark');
         document.getElementById('themeToggle').innerHTML = '☀️';
+    } else {
+        document.getElementById('themeToggle').innerHTML = '🌙';
     }
 }
 function toggleTheme() {
@@ -392,6 +401,14 @@ function toggleTheme() {
 }
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 initTheme();
+
+// Подсказки для KPI
+const kpiTooltips = {
+    'Всего сотрудников': 'Общее количество сотрудников, прошедших тестирование',
+    'Средний балл': 'Средний процент правильных ответов по всем сотрудникам',
+    'Отлично (≥80%)': 'Количество сотрудников, набравших 80% и выше',
+    'Всего ошибок': 'Общее количество ошибок по всем вопросам'
+};
 
 const questionTopics = {
     1: "Установление контакта", 2: "Выявление потребностей", 3: "Дополнительная продажа",
@@ -459,12 +476,21 @@ function renderAll() {
     const excellent = currentResults.filter(r => (r.score / r.total) >= 0.8).length;
     const totalErrors = currentResults.reduce((s, r) => s + (r.total - r.score), 0);
     
+    // Создаём KPI с подсказками
     document.getElementById('kpiGrid').innerHTML = `
-        <div class="kpi-card" data-tooltip="Общее количество сотрудников"><div class="kpi-label"><i class="fas fa-users"></i> Всего сотрудников</div><div class="kpi-value">${total}</div></div>
-        <div class="kpi-card" data-tooltip="Средний процент правильных ответов"><div class="kpi-label"><i class="fas fa-chart-line"></i> Средний балл</div><div class="kpi-value">${avgScore}%</div></div>
-        <div class="kpi-card" data-tooltip="Сотрудники с результатом ≥80%"><div class="kpi-label"><i class="fas fa-star"></i> Отлично (≥80%)</div><div class="kpi-value">${excellent}</div></div>
-        <div class="kpi-card" data-tooltip="Общее количество ошибок"><div class="kpi-label"><i class="fas fa-times-circle"></i> Всего ошибок</div><div class="kpi-value">${totalErrors}</div></div>
+        <div class="kpi-card" data-tooltip="${kpiTooltips['Всего сотрудников']}"><div class="kpi-label"><i class="fas fa-users"></i> Всего сотрудников</div><div class="kpi-value">${total}</div></div>
+        <div class="kpi-card" data-tooltip="${kpiTooltips['Средний балл']}"><div class="kpi-label"><i class="fas fa-chart-line"></i> Средний балл</div><div class="kpi-value">${avgScore}%</div></div>
+        <div class="kpi-card" data-tooltip="${kpiTooltips['Отлично (≥80%)']}"><div class="kpi-label"><i class="fas fa-star"></i> Отлично (≥80%)</div><div class="kpi-value">${excellent}</div></div>
+        <div class="kpi-card" data-tooltip="${kpiTooltips['Всего ошибок']}"><div class="kpi-label"><i class="fas fa-times-circle"></i> Всего ошибок</div><div class="kpi-value">${totalErrors}</div></div>
     `;
+    
+    // Добавляем стиль для подсказок
+    const style = document.createElement('style');
+    style.textContent = `[data-tooltip] { position: relative; cursor: help; } [data-tooltip]:before { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 5px 10px; border-radius: 8px; font-size: 12px; white-space: nowrap; z-index: 1000; display: none; } [data-tooltip]:hover:before { display: block; } body.dark [data-tooltip]:before { background: #555; }`;
+    if (!document.querySelector('#tooltip-style')) {
+        style.id = 'tooltip-style';
+        document.head.appendChild(style);
+    }
     
     const scores = currentResults.map(r => r.score / r.total * 100);
     const cats = ['Отлично (80-100%)', 'Хорошо (60-79%)', 'Удовлетворительно (40-59%)', 'Плохо (0-39%)'];
@@ -498,10 +524,10 @@ function renderAll() {
         options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
     });
     
-    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.city}${i === 0 ? ' <span class="leader-icon" data-tooltip="Лидер по среднему баллу">🥇</span>' : ''}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.count}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.avg}%</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c.errors}</td></tr>`).join('');
+    document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${c.city}${i === 0 ? ' <span class="leader-icon" title="Лидер по среднему баллу">🥇</span>' : ''}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.count}</td><td style="padding:8px;border-bottom:1px solid #eee">${c.avg}%</td><td style="padding:8px;border-bottom:1px solid #eee">${c.errors}</td></tr>`).join('');
     
     const top10 = [...currentResults].sort((a, b) => (b.score / b.total) - (a.score / a.total)).slice(0, 10);
-    document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td style="padding:8px;border-bottom:1px solid var(--border-color)">${i+1}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)"><strong>${e.surname || ''} ${e.name || ''}</strong></td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${e.city || '—'}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td></tr>`).join('');
+    document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${e.surname || ''} ${e.name || ''}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${e.city || '—'}</td><td style="padding:8px;border-bottom:1px solid #eee">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td></tr>`).join('');
     
     const errorCount = {};
     for (const r of currentResults) {
@@ -517,7 +543,7 @@ function renderAll() {
         }
     }
     const topErrors = Object.entries(errorCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    document.getElementById('errorsBody').innerHTML = topErrors.map(([t, c], i) => `<tr><td style="padding:8px;border-bottom:1px solid var(--border-color)">${i+1}</td><td style="padding:8px;border-bottom:1px solid var(--border-color)"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid var(--border-color)">${c}</td></tr>`).join('');
+    document.getElementById('errorsBody').innerHTML = topErrors.map(([t, c], i) => `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid #eee">${c}</td></tr>`).join('');
     
     if (pieChart) pieChart.destroy();
     if (topErrors.length) {
@@ -542,7 +568,7 @@ function renderAll() {
                 const a = r.answers[i];
                 const ok = a.isCorrect === true || a.ok === true;
                 const questionText = (a.question || a.qs || `Вопрос ${i+1}`).substring(0, 150);
-                details += `<div class="small mb-2 p-2" style="border-left:3px solid ${ok ? '#28a745' : '#E30613'}; background:var(--bg-card); border-radius:8px;">
+                details += `<div class="small mb-2 p-2" style="border-left:3px solid ${ok ? '#28a745' : '#E30613'}; background: #f9f9f9; border-radius:8px;">
                     <strong>${ok ? '✅' : '❌'} ${escapeHtml(questionText)}</strong>
                     <div><span class="${ok ? 'correct' : 'wrong'}">${ok ? 'Верно' : 'Ошибка'}</span></div>
                     ${!ok ? `<div class="mt-1 small"><strong>✖ Ваш ответ:</strong> ${escapeHtml(a.selected || a.sel || '—')}<br><strong>✔ Правильный ответ:</strong> ${escapeHtml(a.correct || a.cor || '—')}</div>` : ''}
@@ -554,10 +580,10 @@ function renderAll() {
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                 <div><strong>${escapeHtml(r.surname || '')} ${escapeHtml(r.name || '')}</strong> <span class="text-muted">📍 ${escapeHtml(r.city || '—')}</span> <span class="badge bg-${clr}">${r.score}/${r.total} (${percent}%)</span></div>
                 <div><small>${new Date(r.created_at).toLocaleString()}</small>
-                <button class="btn-pdf" onclick="event.stopPropagation(); generateUserPDF('${r.id}')">📄 PDF</button>
+                <button class="btn-brand" style="padding: 4px 12px; font-size: 11px; background: #E30613;" onclick="event.stopPropagation(); generateUserPDF('${r.id}')">📄 PDF</button>
                 <i class="bi bi-chevron-down ms-2"></i></div>
             </div>
-            <div class="answer-details mt-2"><div class="p-2 rounded" style="background:var(--bg-card);">${details}</div></div>
+            <div class="answer-details mt-2"><div class="p-2 rounded" style="background: #f9f9f9;">${details}</div></div>
         </div>`;
     }
 }
@@ -652,7 +678,7 @@ function generateReport() {
     
     const date = new Date().toLocaleDateString('ru-RU');
     
-    let distRows = ''; for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; distRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}<table><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; }
+    let distRows = ''; for (const [cat, count] of Object.entries(dist)) { const percent = total ? Math.round(count / total * 100) : 0; distRows += `<tr><td style="padding:8px;border:1px solid #ddd">${cat}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; }
     let cityRows = ''; for (const [city, data] of Object.entries(cityStats)) { const avg = Math.round(data.sumScore / data.sumTotal * 100); const errors = data.sumTotal - data.sumScore; cityRows += `<tr><td style="padding:8px;border:1px solid #ddd">${city}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${data.count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${avg}%</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${errors}</td></tr>`; }
     let topRows = ''; topEmployees.forEach((emp, i) => { const percent = Math.round(emp.score / emp.total * 100); const name = emp.user_id || `${emp.surname || ''} ${emp.name || ''}`.trim(); topRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${name}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${emp.score}/${emp.total}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; });
     let errorRows = ''; topErrors.forEach(([topic, count], i) => { const percent = totalErrors ? Math.round(count / totalErrors * 100) : 0; errorRows += `<tr><td style="padding:8px;border:1px solid #ddd;text-align:center">${i+1}</td><td style="padding:8px;border:1px solid #ddd">${topic}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${count}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${percent}%</td></tr>`; });
@@ -684,10 +710,10 @@ function generateReport() {
         <div class="kpi-item"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div>
         <div class="kpi-item"><div class="kpi-value">${totalErrors}</div><div class="kpi-label">Всего ошибок</div></div>
     </div>
-    <h2>📊 Распределение баллов</h2><table><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table>
-    <h2>🏙️ Статистика по городам</h2><table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></table>
+    <h2>📊 Распределение баллов</h2></table><thead><tr><th>Категория</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${distRows}</tbody></table>
+    <h2>🏙️ Статистика по городам</h2><table><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody>${cityRows}</tbody></tr>
     <h2>🔝 Лучшие сотрудники</h2><table><thead><tr><th>#</th><th>Сотрудник</th><th>Результат</th><th>%</th></tr></thead><tbody>${topRows}</tbody></table>
-    <h2>📚 Частые ошибки (по темам)</h2><table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorRows}</tbody></table>
+    <h2>📚 Частые ошибки (по темам)</h2></table><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th><th>%</th></tr></thead><tbody>${errorRows}</tbody></table>
     <h2>💡 Рекомендации</h2><ul><li>Основные зоны роста: ${topErrors.slice(0,3).map(e=>e[0]).join(', ')}</li><li>Проведите дополнительное обучение по этим темам</li><li>Разберите типичные ошибки на планерке</li></ul>
     <div class="footer">💎 585GOLD | Отчёт сгенерирован автоматически</div>
 </div>
