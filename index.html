@@ -1,138 +1,425 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>585GOLD | Анализ тестов</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 16px; border-top: 4px solid #E30613; }
-        select, button { padding: 10px; margin: 10px 0; border-radius: 40px; border: 1px solid #ddd; }
-        button { background: #E30613; color: white; border: none; cursor: pointer; }
-        .error { color: red; }
-        .success { color: green; }
-        pre { background: #f0f0f0; padding: 10px; border-radius: 8px; overflow: auto; font-size: 12px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>585GOLD | Анализ результатов тестирования</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        background: #f0f2f8;
+        font-family: 'Inter', sans-serif;
+        padding: 1.5rem;
+        color: #1a2c3e;
+        transition: all 0.3s ease;
+    }
+    body.dark-mode {
+        background: #0a0e1a;
+        color: #e0e4f0;
+    }
+    body.dark-mode .upload-card,
+    body.dark-mode .kpi-card,
+    body.dark-mode .chart-card,
+    body.dark-mode .city-stats-card,
+    body.dark-mode .top-employees-card,
+    body.dark-mode .errors-card {
+        background: #111827;
+        border: 1px solid #1f2a40;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+    }
+    body.dark-mode .kpi-card.good::before { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
+    body.dark-mode .kpi-card.warning::before { background: #ffaa00; box-shadow: 0 0 8px #ffaa00; }
+    body.dark-mode .kpi-card.danger::before { background: #ff4444; box-shadow: 0 0 8px #ff4444; }
+    body.dark-mode .kpi-card.info::before { background: #00ccff; box-shadow: 0 0 8px #00ccff; }
+    body.dark-mode .stats-table th { color: #9ca3af; }
+    body.dark-mode .stats-table td { border-bottom-color: #1f2a40; }
+    body.dark-mode .btn-reset { background: #1f2a40; color: #e0e4f0; }
+    body.dark-mode .filter-group { background: #1f2a40; }
+    body.dark-mode .filter-group select { background: #1f2a40; color: #e0e4f0; }
+    body.dark-mode .excel-badge { background: #1f2a40; color: #9ca3af; }
+    .dashboard { max-width: 1400px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #1a4d6b, #2c7da0);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    body.dark-mode .header h1 {
+        background: linear-gradient(135deg, #00ccff, #00ff88);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    .header-sub {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+        color: #5c7f96;
+        font-size: 0.85rem;
+    }
+    .excel-badge {
+        background: #e8f0f7;
+        padding: 6px 16px;
+        border-radius: 40px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .upload-card {
+        background: white;
+        border-radius: 24px;
+        padding: 1.2rem 1.8rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .btn-file, .btn-reset, .btn-copy, .btn-pdf, .theme-toggle {
+        border: none;
+        padding: 10px 24px;
+        border-radius: 40px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.2s;
+    }
+    .btn-file { background: #2c7da0; color: white; }
+    .btn-file:hover { background: #1f5e7e; }
+    .btn-reset { background: #eef2f7; }
+    .btn-copy { background: #198754; color: white; }
+    .btn-copy:hover { background: #157347; }
+    .btn-pdf { background: #dc3545; color: white; }
+    .btn-pdf:hover { background: #b02a37; }
+    .theme-toggle { background: #6c757d; color: white; }
+    .filter-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #f8fafd;
+        padding: 6px 16px;
+        border-radius: 40px;
+    }
+    .filter-group select { border: none; background: transparent; font-weight: 500; outline: none; padding: 6px; }
+    .threshold-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: #f8fafd;
+        padding: 6px 16px;
+        border-radius: 40px;
+    }
+    .threshold-group input { width: 60px; border: none; background: transparent; font-weight: 500; outline: none; }
+    #fileInfo { font-size: 0.85rem; color: #5c7f96; }
+    
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.2rem;
+        margin-bottom: 2rem;
+    }
+    .kpi-card {
+        background: white;
+        border-radius: 24px;
+        padding: 1.2rem 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border: 1px solid #eef2f0;
+        transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+        cursor: help;
+    }
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+    }
+    .kpi-card.good::before { background: #198754; }
+    .kpi-card.warning::before { background: #ffc107; }
+    .kpi-card.danger::before { background: #dc3545; }
+    .kpi-card.info::before { background: #0d6efd; }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+    .kpi-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #7a95ae; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .kpi-value { font-size: 2.2rem; font-weight: 800; color: #1a4d6b; line-height: 1; }
+    
+    .charts-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .chart-card {
+        background: white;
+        border-radius: 24px;
+        padding: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .chart-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        color: #2c5a7a;
+    }
+    canvas { max-height: 250px; width: 100%; cursor: pointer; }
+    
+    .city-stats-card, .top-employees-card, .errors-card {
+        background: white;
+        border-radius: 24px;
+        padding: 1.2rem 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+    .section-title {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #2c5a7a;
+    }
+    .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .stats-table th, .stats-table td {
+        padding: 10px 8px;
+        text-align: left;
+        border-bottom: 1px solid #edf2f7;
+    }
+    .stats-table th { font-weight: 600; color: #5c7f96; font-size: 0.8rem; }
+    .leader-icon { font-size: 1.2rem; margin-left: 6px; cursor: help; }
+    .empty-state { text-align: center; padding: 2rem; color: #8ba3bc; }
+    footer { text-align: center; margin-top: 2rem; font-size: 0.7rem; color: #8ba3bc; }
+    
+    [data-tooltip] {
+        position: relative;
+        cursor: help;
+    }
+    [data-tooltip]:before {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+        display: none;
+    }
+    [data-tooltip]:hover:before {
+        display: block;
+    }
+    
+    @media print { .no-print, .charts-row, .upload-card, .filter-group, .btn-pdf, .btn-copy, .theme-toggle { display: none !important; } }
+    @media (max-width: 700px) { body { padding: 1rem; } .charts-row { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
-<div class="container">
-    <h1>💎 585GOLD | Анализ результатов тестирования</h1>
-    
-    <div id="status">🔄 Проверка подключения к Supabase...</div>
-    
-    <hr>
-    
-    <div id="testBlock" style="display:none;">
-        <label>📋 Выберите тест:</label>
-        <select id="testSelector" style="width:100%;"></select>
-        <button id="loadResultsBtn">📊 Загрузить результаты</button>
+<div class="dashboard">
+    <div class="header">
+        <div>
+            <h1><i class="fas fa-chart-pie"></i> Анализ результатов тестирования</h1>
+            <div class="header-sub">
+                <div class="excel-badge"><i class="fas fa-file-excel"></i> Загрузите Excel-файл (кнопка «Детальный»)</div>
+                <div><i class="far fa-calendar"></i> <span id="dateSpan"></span></div>
+            </div>
+        </div>
+        <button class="theme-toggle no-print" id="themeToggleBtn"><i class="fas fa-moon"></i> Тёмная тема</button>
     </div>
-    
-    <div id="resultsBlock" style="display:none; margin-top:20px;">
-        <h3>Результаты</h3>
-        <pre id="resultsPre">Нет данных</pre>
+
+    <div class="upload-card no-print">
+        <div class="d-flex gap-2" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-file" id="selectFileBtn"><i class="fas fa-upload"></i> Выбрать Excel</button>
+            <button class="btn-reset" id="resetBtn"><i class="fas fa-sync-alt"></i> Сбросить</button>
+            <button class="btn-copy" id="copyReportBtn"><i class="fas fa-copy"></i> Копировать для Outlook</button>
+            <button class="btn-pdf" id="pdfReportBtn"><i class="fas fa-file-pdf"></i> Скачать PDF</button>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <div class="filter-group">
+                <i class="fas fa-filter"></i>
+                <select id="cityFilter"><option value="all">Все города</option></select>
+            </div>
+            <div class="threshold-group">
+                <i class="fas fa-star"></i>
+                <span>Отлично ≥</span>
+                <input type="number" id="excellentThreshold" value="85" min="0" max="100" step="5">
+                <span>%</span>
+            </div>
+        </div>
+        <div id="fileInfo"><i class="far fa-file"></i> Файл не выбран</div>
+        <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
     </div>
-    
-    <div id="errorBlock" style="display:none; margin-top:20px;" class="error"></div>
+
+    <div class="kpi-grid" id="kpiGrid" style="display: none;"></div>
+    <div class="charts-row" id="chartsRow" style="display: none;">
+        <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-bar"></i> Распределение баллов</div><canvas id="scoreDistChart" width="400" height="250"></canvas></div>
+        <div class="chart-card"><div class="chart-title"><i class="fas fa-city"></i> Успеваемость по городам</div><canvas id="cityChart" width="400" height="250"></canvas></div>
+        <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-pie"></i> Ошибки по темам вопросов</div><canvas id="pieChart" width="400" height="250"></canvas></div>
+    </div>
+    <div class="city-stats-card" id="cityStatsCard" style="display: none;"><div class="section-title"><i class="fas fa-building"></i> Статистика по городам (сортировка по баллам)</div><table class="stats-table"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table></div>
+    <div class="top-employees-card" id="topEmployeesCard" style="display: none;"><div class="section-title"><i class="fas fa-trophy"></i> Лучшие сотрудники</div><table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table></div>
+    <div class="errors-card" id="topErrorsCard" style="display: none;"><div class="section-title"><i class="fas fa-exclamation-triangle"></i> Частые ошибки</div><table class="stats-table"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во ошибок</th></tr></thead><tbody id="errorsBody"></tbody></table></div>
+    <footer class="no-print"><i class="fas fa-chart-line"></i> Наведите на элементы для подсказки</footer>
 </div>
 
 <script>
-const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const statusDiv = document.getElementById('status');
-const testBlock = document.getElementById('testBlock');
-const testSelector = document.getElementById('testSelector');
-const loadBtn = document.getElementById('loadResultsBtn');
-const resultsBlock = document.getElementById('resultsBlock');
-const resultsPre = document.getElementById('resultsPre');
-const errorDiv = document.getElementById('errorBlock');
-
-async function testConnection() {
-    statusDiv.innerHTML = '🔄 Проверка подключения...';
-    try {
-        const { data, error } = await sb.from('tests').select('count', { count: 'exact', head: true });
-        if (error) throw error;
-        statusDiv.innerHTML = '✅ Подключение к Supabase работает!';
-        loadTests();
-    } catch (err) {
-        statusDiv.innerHTML = '❌ Ошибка подключения: ' + err.message;
-        errorDiv.style.display = 'block';
-        errorDiv.innerHTML = 'Ошибка: ' + err.message;
-    }
-}
-
-async function loadTests() {
-    statusDiv.innerHTML = '🔄 Загрузка тестов...';
-    try {
-        const { data, error } = await sb.from('tests').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-        
-        if (!data || data.length === 0) {
-            statusDiv.innerHTML = '⚠️ Тесты не найдены. Создайте тест в Supabase.';
-            return;
-        }
-        
-        statusDiv.innerHTML = `✅ Загружено ${data.length} тестов`;
-        testSelector.innerHTML = '<option value="">-- Выберите тест --</option>';
-        for (const test of data) {
-            testSelector.innerHTML += `<option value="${test.slug}">${test.name} (${test.questions_count || '?'} вопросов)</option>`;
-        }
-        testBlock.style.display = 'block';
-        
-        // Автоматическая загрузка результатов для первого теста (опционально)
-        if (data.length > 0) {
-            // Не загружаем автоматически, ждём выбора
-        }
-    } catch (err) {
-        statusDiv.innerHTML = '❌ Ошибка загрузки тестов: ' + err.message;
-        errorDiv.style.display = 'block';
-        errorDiv.innerHTML = 'Ошибка: ' + err.message;
-    }
-}
-
-async function loadResults() {
-    const slug = testSelector.value;
-    if (!slug) {
-        alert('Выберите тест');
-        return;
-    }
+    const questionTopics = { 1:"Установление контакта",2:"Выявление потребностей",3:"Дополнительная продажа",4:"Переориентация на золото",5:"Футляр и уход",6:"Возражение по цене",7:"Альтернатива/каталог",8:"Презентация подарка",9:"Дополнительные модели",10:"Яндекс Сплит",11:"Инициатива в продажах" };
+    let currentData = [], scoreChart = null, cityChart = null, pieChart = null, currentCityFilter = "all", excellentThreshold = 85;
     
-    resultsBlock.style.display = 'block';
-    resultsPre.innerHTML = '🔄 Загрузка результатов...';
-    
-    try {
-        const { data, error } = await sb.from('results').select('*').eq('test_type', slug).order('created_at', { ascending: false });
-        if (error) throw error;
-        
-        if (!data || data.length === 0) {
-            resultsPre.innerHTML = 'Нет результатов для этого теста';
-            return;
-        }
-        
-        // Показываем первые 5 результатов для диагностики
-        const preview = data.slice(0, 5).map(r => ({
-            name: `${r.surname || ''} ${r.name || ''}`.trim(),
-            city: r.city,
-            score: `${r.score}/${r.total}`,
-            date: new Date(r.created_at).toLocaleString(),
-            answers_count: r.answers?.length || 0
-        }));
-        resultsPre.innerHTML = JSON.stringify(preview, null, 2);
-        
-        // Дополнительная статистика
-        const total = data.length;
-        const avgScore = Math.round(data.reduce((s, r) => s + (r.score / r.total), 0) / total * 100);
-        resultsPre.innerHTML += `\n\n📊 Статистика:\nВсего сотрудников: ${total}\nСредний балл: ${avgScore}%`;
-        
-    } catch (err) {
-        resultsPre.innerHTML = '❌ Ошибка: ' + err.message;
-    }
-}
+    function setDate() { document.getElementById('dateSpan').innerText = new Date().toLocaleDateString('ru-RU'); }
+    function getTopicByQuestionNumber(q) { return questionTopics[q] || `Вопрос ${q}`; }
+    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
 
-loadBtn.addEventListener('click', loadResults);
-testConnection();
+    function findRecNumber(questionText) {
+        const lower = questionText.toLowerCase();
+        if (lower.includes('первым') || (lower.includes('говорите') && lower.includes('первым'))) return 1;
+        if ((lower.includes('бюджет') || lower.includes('услышали бюджет')) && lower.includes('дальше')) return 2;
+        if (lower.includes('уточняющие вопросы')) return 2;
+        if ((lower.includes('серьги') && lower.includes('коллекции')) || (lower.includes('предложить серьги') && lower.includes('кольцо'))) return 3;
+        if ((lower.includes('фианитами') && lower.includes('золото')) || lower.includes('переориентировать')) return 4;
+        if ((lower.includes('футляр') && lower.includes('чистящих')) || (lower.includes('оформляет покупку') && lower.includes('дополнительно'))) return 5;
+        if ((lower.includes('дороговато') || lower.includes('дешевле будет')) && lower.includes('отвечаете')) return 6;
+        if (lower.includes('возражениями') && lower.includes('дороговато')) return 6;
+        if ((lower.includes('нет в наличии') && lower.includes('размера')) || lower.includes('размера нет')) return 7;
+        if ((lower.includes('подарок') && lower.includes('маме')) || (lower.includes('юбилей') && lower.includes('презентуете'))) return 8;
+        if (lower.includes('другие модели') && lower.includes('отвечаете')) return 9;
+        if (lower.includes('яндекс сплит') || lower.includes('альтернативные способы оплаты') || (lower.includes('колеблется') && lower.includes('оплаты')) || lower.includes('65 000')) return 10;
+        if ((lower.includes('не останавливаясь') && lower.includes('витрины')) || (lower.includes('медленно идти') && lower.includes('что делаете'))) return 11;
+        return 0;
+    }
+
+    function processData(employees) {
+        let filtered = currentCityFilter === "all" ? employees : employees.filter(e => e.city === currentCityFilter);
+        if (filtered.length === 0 && employees.length > 0) filtered = employees;
+        const total = filtered.length;
+        let sumPercent = 0, totalErrors = 0, perfect = 0;
+        filtered.forEach(emp => { const p = (emp.score / emp.total) * 100; sumPercent += p; totalErrors += emp.errors.length; if (p >= excellentThreshold) perfect++; });
+        const avgScore = total ? Math.round(sumPercent / total) : 0;
+        document.getElementById('kpiGrid').style.display = 'grid';
+        document.getElementById('chartsRow').style.display = 'grid';
+        document.getElementById('cityStatsCard').style.display = 'block';
+        document.getElementById('topEmployeesCard').style.display = 'block';
+        document.getElementById('topErrorsCard').style.display = 'block';
+        const kpiClass = (v,t) => { if (t==='avg') return v>=80?'good':(v>=60?'warning':'danger'); return 'info'; };
+        document.getElementById('kpiGrid').innerHTML = `
+            <div class="kpi-card ${kpiClass(total,'info')}" data-tooltip="Общее количество сотрудников"><div class="kpi-label"><i class="fas fa-users"></i> Всего сотрудников</div><div class="kpi-value">${total}</div></div>
+            <div class="kpi-card ${kpiClass(avgScore,'avg')}" data-tooltip="Средний процент правильных ответов"><div class="kpi-label"><i class="fas fa-chart-line"></i> Средний балл</div><div class="kpi-value">${avgScore}<span class="kpi-unit">%</span></div></div>
+            <div class="kpi-card ${kpiClass(perfect,'info')}" data-tooltip="Сотрудники с результатом ≥${excellentThreshold}%"><div class="kpi-label"><i class="fas fa-star"></i> Отлично (≥${excellentThreshold}%)</div><div class="kpi-value">${perfect}</div></div>
+            <div class="kpi-card ${kpiClass(totalErrors,'info')}" data-tooltip="Общее количество ошибок"><div class="kpi-label"><i class="fas fa-times-circle"></i> Всего ошибок</div><div class="kpi-value">${totalErrors}</div></div>
+        `;
+        const scores = filtered.map(e => (e.score/e.total)*100);
+        const cats = [{name:`Отлично (${excellentThreshold}-100%)`,min:excellentThreshold,max:100},{name:"Хорошо (60-79%)",min:60,max:excellentThreshold-1},{name:"Удовлетворительно (40-59%)",min:40,max:59},{name:"Плохо (0-39%)",min:0,max:39}];
+        const dist = cats.map(c=>scores.filter(s=>s>=c.min&&s<=c.max).length);
+        if(scoreChart) scoreChart.destroy();
+        scoreChart = new Chart(document.getElementById('scoreDistChart'),{type:'bar',data:{labels:cats.map(c=>c.name),datasets:[{label:'Количество сотрудников',data:dist,backgroundColor:['#198754','#ffc107','#fd7e14','#dc3545'],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top'}}}});
+        const cityMap = new Map();
+        filtered.forEach(emp => { const c = emp.city||"Другой"; const v = (emp.score/emp.total)*100; if(!cityMap.has(c)) cityMap.set(c,{sum:0,count:0,errors:0}); const s=cityMap.get(c); s.sum+=v; s.count++; s.errors+=emp.errors.length; });
+        const cityData = Array.from(cityMap.entries()).map(([c,s])=>({city:c,count:s.count,avg:(s.sum/s.count).toFixed(0),errors:s.errors})).sort((a,b)=>b.avg-a.avg);
+        if(cityChart) cityChart.destroy();
+        cityChart = new Chart(document.getElementById('cityChart'),{type:'bar',data:{labels:cityData.map(c=>c.city),datasets:[{label:'Средний балл (%)',data:cityData.map(c=>c.avg),backgroundColor:'#2c7da0',borderRadius:8}]},options:{responsive:true,scales:{y:{min:0,max:100}}}});
+        document.getElementById('cityStatsBody').innerHTML = cityData.map((c,i)=>`<tr><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.city}${i===0?' <span class="leader-icon" data-tooltip="Лидер по среднему баллу">🥇</span>':''}</td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.count}</td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.errors}</td></tr>`).join('');
+        const top10 = filtered.map(e=>({...e,percent:(e.score/e.total)*100})).sort((a,b)=>b.percent-a.percent).slice(0,10);
+        document.getElementById('topEmployeesBody').innerHTML = top10.map((e,i)=>`<tr><td style="padding:8px;border-bottom:1px solid #edf2f7">${i+1}</td><td style="padding:8px;border-bottom:1px solid #edf2f7"><strong>${e.name}</strong></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${e.city}</td><td style="padding:8px;border-bottom:1px solid #edf2f7">${e.score}/${e.total} (${Math.round(e.percent)}%)</td onclick="applyUserFilter('${e.name}')"></td></tr>`).join('');
+        const allTopics = []; filtered.forEach(e=>e.errors.forEach(q=>allTopics.push(getTopicByQuestionNumber(q))));
+        const freq = new Map(); allTopics.forEach(t=>freq.set(t,(freq.get(t)||0)+1));
+        const sorted = Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        document.getElementById('errorsBody').innerHTML = sorted.length?sorted.map(([t,c],i)=>`<tr><td style="padding:8px;border-bottom:1px solid #edf2f7">${i+1}</td><td style="padding:8px;border-bottom:1px solid #edf2f7"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c}</td></tr>`).join(''):'<tr><td colspan="3" class="empty-state">Нет ошибок</td</td>';
+        if(pieChart) pieChart.destroy();
+        if(sorted.length){
+            pieChart = new Chart(document.getElementById('pieChart'),{type:'pie',data:{labels:sorted.map(s=>s[0]),datasets:[{data:sorted.map(s=>s[1]),backgroundColor:['#dc3545','#fd7e14','#ffc107','#198754','#0d6efd'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'right'}}}});
+        }else{ document.getElementById('pieChart').getContext('2d').clearRect(0,0,400,250); }
+    }
+
+    function parseExcelAndUpdate(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet);
+            if (!rows.length) { alert("Файл пуст"); return; }
+            const employees = [];
+            for (const row of rows) {
+                const name = row['ФИО'] || '';
+                if (!name) continue;
+                let score = 0, total = 11;
+                const sm = (row['Баллы'] || '').match(/(\d+)\/(\d+)/);
+                if (sm) { score = parseInt(sm[1]); total = parseInt(sm[2]); }
+                else { const pm = (row['Процент'] || '').match(/(\d+)/); if (pm) score = Math.round(parseInt(pm[1]) / 100 * total); }
+                const errorsList = [];
+                for (let i = 1; i <= 11; i++) {
+                    if (row[`Результат ${i}`] === 'Ошибка') {
+                        errorsList.push(i);
+                    }
+                }
+                employees.push({ name, city: row['Город'] || '', score, total, errors: errorsList });
+            }
+            document.getElementById('fileInfo').innerHTML = `<i class="fas fa-check-circle text-success"></i> Загружено: ${employees.length} записей`;
+            currentData = employees;
+            const cities = [...new Set(employees.map(e=>e.city).filter(c=>c))];
+            const select = document.getElementById('cityFilter');
+            select.innerHTML = '<option value="all">Все города</option>' + cities.map(c=>`<option value="${c}">${c}</option>`).join('');
+            select.onchange = (e) => { currentCityFilter = e.target.value; processData(currentData); };
+            document.getElementById('excellentThreshold').onchange = (e) => { excellentThreshold = parseInt(e.target.value); processData(currentData); };
+            processData(employees);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function copyToOutlook() {
+        const container = document.querySelector('.dashboard').cloneNode(true);
+        container.querySelectorAll('.no-print, .btn-pdf, .btn-copy, .theme-toggle, button, .upload-card, .filter-group, .threshold-group').forEach(el=>el.remove());
+        const style = document.createElement('style');
+        style.textContent = 'body { font-family: "Segoe UI", Arial; padding: 20px; } table { border-collapse: collapse; width: 100%; margin-bottom: 20px; } th, td { border: 1px solid #ddd; padding: 8px; } th { background: #2c7da0; color: white; } .kpi-card { background: #f5f5f5; padding: 10px; margin: 5px; border-radius: 8px; }';
+        const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Отчёт по тесту</title></head><body>' + container.innerHTML + style.outerHTML + '</body></html>';
+        const blob = new Blob([html], { type: "text/html" });
+        const item = new ClipboardItem({ "text/html": blob, "text/plain": new Blob([html.replace(/<[^>]*>/g,'')], { type: "text/plain" }) });
+        navigator.clipboard.write([item]).then(()=>alert("✅ Отчёт скопирован! Вставьте в Outlook (Ctrl+V)")).catch(()=>alert("❌ Ошибка копирования"));
+    }
+
+    function downloadPDF() { html2pdf().set({margin:0.5,filename:`отчёт_${new Date().toISOString().slice(0,19)}.pdf`,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'in',format:'a4',orientation:'portrait'}}).from(document.querySelector('.dashboard')).save(); }
+
+    let isDark = false;
+    document.getElementById('themeToggleBtn').onclick = () => { isDark = !isDark; document.body.classList.toggle('dark-mode', isDark); document.getElementById('themeToggleBtn').innerHTML = isDark ? '<i class="fas fa-sun"></i> Светлая тема' : '<i class="fas fa-moon"></i> Тёмная тема'; };
+    document.getElementById('selectFileBtn').onclick = () => document.getElementById('fileInput').click();
+    document.getElementById('resetBtn').onclick = () => location.reload();
+    document.getElementById('copyReportBtn').onclick = copyToOutlook;
+    document.getElementById('pdfReportBtn').onclick = downloadPDF;
+    document.getElementById('fileInput').onchange = (e) => { if(e.target.files[0]) parseExcelAndUpdate(e.target.files[0]); };
+    setDate();
+    const demo = [{ name:"Коваль Екатерина", city:"Новоуральск", score:11, total:11, errors:[] },{ name:"Котова Оксана", city:"Санкт-Петербург", score:8, total:11, errors:[1,2,3] }];
+    setTimeout(()=>{ if(!currentData.length){ document.getElementById('fileInfo').innerHTML = '<i class="fas fa-chart-line"></i> Демо-данные'; currentData=demo; processData(currentData); } },100);
 </script>
 </body>
 </html>
