@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Диагностика Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .info { color: #ce9178; }
+        pre { background: #252526; padding: 10px; border-radius: 8px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+<h2>🔍 Диагностика Supabase</h2>
+<div id="output"></div>
+
+<script>
+const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const out = document.getElementById('output');
+
+function log(msg, type = 'info') {
+    const p = document.createElement('div');
+    p.innerHTML = msg;
+    p.className = type;
+    out.appendChild(p);
+}
+
+async function check() {
+    log('🔄 Проверка подключения...');
+    
+    // 1. Проверяем тесты
+    log('🔄 Загружаем тесты...');
+    const { data: tests, error: err1 } = await sb.from('tests').select('*');
+    if (err1) {
+        log('❌ Ошибка загрузки тестов: ' + JSON.stringify(err1), 'error');
+    } else {
+        log('✅ Тесты загружены: ' + (tests?.length || 0) + ' шт.', 'success');
+        log('<pre>' + JSON.stringify(tests, null, 2) + '</pre>', 'info');
+    }
+    
+    // 2. Проверяем результаты для первого теста
+    if (tests && tests.length > 0) {
+        const firstTest = tests[0];
+        log(`🔄 Загружаем результаты для теста "${firstTest.slug}"...`);
+        const { data: results, error: err2 } = await sb.from('results').select('*').eq('test_type', firstTest.slug);
+        if (err2) {
+            log('❌ Ошибка загрузки результатов: ' + JSON.stringify(err2), 'error');
+        } else {
+            log('✅ Результатов загружено: ' + (results?.length || 0), 'success');
+            if (results && results.length > 0) {
+                log('<pre>' + JSON.stringify(results.slice(0, 3), null, 2) + '</pre>', 'info');
+                log(`📊 Первый результат: ${results[0].surname} ${results[0].name} — ${results[0].score}/${results[0].total}`, 'success');
+            } else {
+                log('⚠️ Таблица "results" пуста. Нужно добавить результаты.', 'error');
+            }
+        }
+    }
+    
+    log('🔍 Диагностика завершена', 'info');
+}
+
+check();
+</script>
+</body>
+</html>
