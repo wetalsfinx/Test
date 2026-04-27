@@ -187,7 +187,7 @@
         gap: 8px;
         color: #2c5a7a;
     }
-    canvas { max-height: 250px; width: 100%; cursor: pointer; }
+    canvas { max-height: 250px; width: 100%; }
     
     .city-stats-card, .top-employees-card, .errors-card {
         background: white;
@@ -259,7 +259,7 @@
         <button class="theme-toggle no-print" id="themeToggleBtn"><i class="fas fa-moon"></i> Тёмная тема</button>
     </div>
 
-    <!-- Supabase: выбор теста (показывается, если есть данные) -->
+    <!-- Supabase: выбор теста -->
     <div class="test-selector no-print" id="testSelectorBlock" style="display:none">
         <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center; width: 100%;">
             <div><i class="fas fa-cloud-upload-alt"></i> <strong>Загрузка из Supabase:</strong></div>
@@ -271,7 +271,7 @@
         </div>
     </div>
 
-    <!-- Excel: загрузка файла (показывается, если Supabase не работает или пользователь переключился) -->
+    <!-- Excel: загрузка файла -->
     <div class="upload-card no-print" id="excelBlock" style="display:none">
         <div class="d-flex gap-2" style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button class="btn-file" id="selectFileBtn"><i class="fas fa-upload"></i> Выбрать Excel</button>
@@ -303,7 +303,7 @@
         <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-pie"></i> Ошибки по темам вопросов</div><canvas id="pieChart" width="400" height="250"></canvas></div>
     </div>
     <div class="city-stats-card" id="cityStatsCard" style="display: none;"><div class="section-title"><i class="fas fa-building"></i> Статистика по городам (сортировка по баллам)</div><table class="stats-table"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table></div>
-    <div class="top-employees-card" id="topEmployeesCard" style="display: none;"><div class="section-title"><i class="fas fa-trophy"></i> Лучшие сотрудники</div><table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></td></div>
+    <div class="top-employees-card" id="topEmployeesCard" style="display: none;"><div class="section-title"><i class="fas fa-trophy"></i> Лучшие сотрудники</div><table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table></div>
     <div class="errors-card" id="topErrorsCard" style="display: none;"><div class="section-title"><i class="fas fa-exclamation-triangle"></i> Частые ошибки</div><table class="stats-table"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во ошибок</th></tr></thead><tbody id="errorsBody"></tbody></table></div>
     <footer class="no-print"><i class="fas fa-chart-line"></i> Наведите на элементы для подсказки</footer>
 </div>
@@ -312,9 +312,9 @@
     // Supabase настройки
     const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
-    let currentMode = 'excel'; // 'supabase' или 'excel'
+    let currentMode = 'excel';
     let currentData = [];
     let currentTest = null;
     let scoreChart = null, cityChart = null, pieChart = null;
@@ -327,7 +327,6 @@
     function getTopicByQuestionNumber(q) { return questionTopics[q] || `Вопрос ${q}`; }
     function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
     
-    // Процесс данных (общий для Supabase и Excel)
     function processData(employees) {
         let filtered = currentCityFilter === "all" ? employees : employees.filter(e => e.city === currentCityFilter);
         if (filtered.length === 0 && employees.length > 0) filtered = employees;
@@ -357,13 +356,13 @@
         const cityData = Array.from(cityMap.entries()).map(([c,s])=>({city:c,count:s.count,avg:(s.sum/s.count).toFixed(0),errors:s.errors})).sort((a,b)=>b.avg-a.avg);
         if(cityChart) cityChart.destroy();
         cityChart = new Chart(document.getElementById('cityChart'),{type:'bar',data:{labels:cityData.map(c=>c.city),datasets:[{label:'Средний балл (%)',data:cityData.map(c=>c.avg),backgroundColor:'#2c7da0',borderRadius:8}]},options:{responsive:true,scales:{y:{min:0,max:100}}}});
-        document.getElementById('cityStatsBody').innerHTML = cityData.map((c,i)=>`<tr><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.city}${i===0?' <span class="leader-icon" data-tooltip="Лидер по среднему баллу">🥇</span>':''}</td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.count}</td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.errors}</td耶`).join('');
+        document.getElementById('cityStatsBody').innerHTML = cityData.map((c,i)=>`<tr><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.city}${i===0?' <span class="leader-icon" data-tooltip="Лидер по среднему баллу">🥇</span>':''}</td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.count}</td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.avg}%</td></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c.errors}</td耶`).join('');
         const top10 = filtered.map(e=>({...e,percent:(e.score/e.total)*100})).sort((a,b)=>b.percent-a.percent).slice(0,10);
-        document.getElementById('topEmployeesBody').innerHTML = top10.map((e,i)=>`<tr><td style="padding:8px;border-bottom:1px solid #edf2f7">${i+1}</td><td style="padding:8px;border-bottom:1px solid #edf2f7"><strong>${e.name}</strong></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${e.city}</td onclick="applyUserFilter('${e.name}')"></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${e.score}/${e.total} (${Math.round(e.percent)}%)</td耶`).join('');
+        document.getElementById('topEmployeesBody').innerHTML = top10.map((e,i)=>`<tr><td style="padding:8px;border-bottom:1px solid #edf2f7">${i+1}</td><td style="padding:8px;border-bottom:1px solid #edf2f7"><strong>${e.name}</strong></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${e.city}</td></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${e.score}/${e.total} (${Math.round(e.percent)}%)</td耶`).join('');
         const allTopics = []; filtered.forEach(e=>e.errors.forEach(q=>allTopics.push(getTopicByQuestionNumber(q))));
         const freq = new Map(); allTopics.forEach(t=>freq.set(t,(freq.get(t)||0)+1));
         const sorted = Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5);
-        document.getElementById('errorsBody').innerHTML = sorted.length?sorted.map(([t,c],i)=>`</tr><td style="padding:8px;border-bottom:1px solid #edf2f7">${i+1}</td><td style="padding:8px;border-bottom:1px solid #edf2f7"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c}</td耶`).join(''):'<tr><td colspan="3" class="empty-state">Нет ошибок</td></tr>';
+        document.getElementById('errorsBody').innerHTML = sorted.length?sorted.map(([t,c],i)=>`<tr><td style="padding:8px;border-bottom:1px solid #edf2f7">${i+1}</td><td style="padding:8px;border-bottom:1px solid #edf2f7"><strong>${t}</strong></td><td style="padding:8px;border-bottom:1px solid #edf2f7">${c}</td耶`).join(''):'<tr><td colspan="3" class="empty-state">Нет ошибок</td</td>';
         if(pieChart) pieChart.destroy();
         if(sorted.length){
             pieChart = new Chart(document.getElementById('pieChart'),{type:'pie',data:{labels:sorted.map(s=>s[0]),datasets:[{data:sorted.map(s=>s[1]),backgroundColor:['#dc3545','#fd7e14','#ffc107','#198754','#0d6efd'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'right'}}}});
@@ -373,7 +372,7 @@
     // Загрузка тестов из Supabase
     async function loadSupabaseTests() {
         try {
-            const { data, error } = await sb.from('tests').select('*').order('created_at', { ascending: false });
+            const { data, error } = await supabaseClient.from('tests').select('*').order('created_at', { ascending: false });
             if (error) throw error;
             if (data && data.length > 0) {
                 const selector = document.getElementById('testSelector');
@@ -394,20 +393,24 @@
     async function loadSupabaseResults() {
         const slug = document.getElementById('testSelector').value;
         if (!slug) { alert('Выберите тест'); return; }
-        const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
-        if (error) { alert('Ошибка загрузки результатов'); return; }
-        if (!data || data.length === 0) { alert('Нет результатов для этого теста'); return; }
-        const employees = data.map(r => ({
-            name: `${r.surname || ''} ${r.name || ''}`.trim() || r.user_id || 'Сотрудник',
-            city: r.city || '',
-            score: r.score,
-            total: r.total,
-            errors: []
-        }));
-        currentData = employees;
-        document.getElementById('fileInfo').innerHTML = `<i class="fas fa-check-circle text-success"></i> Загружено из Supabase: ${employees.length} записей`;
-        currentMode = 'supabase';
-        processData(currentData);
+        try {
+            const { data, error } = await supabaseClient.from('results').select('*').eq('test_type', slug);
+            if (error) throw error;
+            if (!data || data.length === 0) { alert('Нет результатов для этого теста'); return; }
+            const employees = data.map(r => ({
+                name: `${r.surname || ''} ${r.name || ''}`.trim() || r.user_id || 'Сотрудник',
+                city: r.city || '',
+                score: r.score || 0,
+                total: r.total || 11,
+                errors: []
+            }));
+            currentData = employees;
+            document.getElementById('fileInfo').innerHTML = `<i class="fas fa-check-circle text-success"></i> Загружено из Supabase: ${employees.length} записей`;
+            currentMode = 'supabase';
+            processData(currentData);
+        } catch(e) {
+            alert('Ошибка загрузки: ' + e.message);
+        }
     }
     
     // Загрузка из Excel
@@ -460,13 +463,7 @@
         html2pdf().set({margin:0.5,filename:`отчёт_${new Date().toISOString().slice(0,19)}.pdf`,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'in',format:'a4',orientation:'portrait'}}).from(document.querySelector('.dashboard')).save(); 
     }
     
-    function applyCityFilter(city) {
-        const select = document.getElementById('cityFilter');
-        if (select) { select.value = city; currentCityFilter = city; processData(currentData); }
-    }
-    
     function resetFilters() {
-        document.getElementById('search-input')?.remove();
         document.getElementById('cityFilter').value = 'all';
         currentCityFilter = 'all';
         processData(currentData);
@@ -475,7 +472,6 @@
     let isDark = false;
     document.getElementById('themeToggleBtn').onclick = () => { isDark = !isDark; document.body.classList.toggle('dark-mode', isDark); document.getElementById('themeToggleBtn').innerHTML = isDark ? '<i class="fas fa-sun"></i> Светлая тема' : '<i class="fas fa-moon"></i> Тёмная тема'; };
     
-    // Инициализация
     async function init() {
         setDate();
         const hasTests = await loadSupabaseTests();
@@ -488,13 +484,11 @@
             document.getElementById('excelBlock').style.display = 'flex';
             currentMode = 'excel';
         }
-        // Демо-данные для первого показа
         const demo = [{ name:"Коваль Екатерина", city:"Новоуральск", score:11, total:11, errors:[] },{ name:"Котова Оксана", city:"Санкт-Петербург", score:8, total:11, errors:[1,2,3] }];
         currentData = demo;
         processData(currentData);
     }
     
-    // Обработчики событий
     document.getElementById('loadSupabaseBtn')?.addEventListener('click', loadSupabaseResults);
     document.getElementById('switchToExcelBtn')?.addEventListener('click', () => {
         document.getElementById('testSelectorBlock').style.display = 'none';
