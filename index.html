@@ -2,44 +2,145 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>585GOLD | Тесты</title>
+    <title>585GOLD | Админка</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border-top: 4px solid #E30613; }
+        .btn { background: #E30613; color: white; border: none; padding: 8px 20px; border-radius: 40px; cursor: pointer; margin: 5px; }
+        select, button { margin: 5px; padding: 8px; }
+        .kpi { display: flex; gap: 15px; flex-wrap: wrap; }
+        .kpi-item { background: white; padding: 15px; border-radius: 12px; text-align: center; min-width: 120px; }
+        .kpi-value { font-size: 28px; font-weight: bold; color: #E30613; }
+        canvas { max-height: 200px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+    </style>
 </head>
 <body>
-    <h2>Список тестов из Supabase:</h2>
-    <ul id="list"></ul>
-    <pre id="debug"></pre>
+<div class="card">
+    <h1>💎 585GOLD | Анализ результатов</h1>
+    <div>
+        <select id="testSelector"></select>
+        <button class="btn" id="loadBtn">📊 Загрузить результаты</button>
+        <button class="btn" id="copyBtn">📧 Копировать отчёт</button>
+    </div>
+    <div id="info" style="margin-top: 10px; color: #666;"></div>
+</div>
 
-    <script>
-        const supabaseUrl = 'https://qtostraaqrnjbxiydlip.supabase.co';
-        const supabaseKey = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
-        const sb = supabase.createClient(supabaseUrl, supabaseKey);
-        
-        async function showTests() {
-            const debug = document.getElementById('debug');
-            debug.innerText = 'Загрузка...';
-            
-            try {
-                const { data, error } = await sb.from('tests').select('*');
-                if (error) {
-                    debug.innerText = 'Ошибка: ' + JSON.stringify(error);
-                    return;
-                }
-                debug.innerText = 'Успешно! Найдено ' + (data?.length || 0) + ' тестов:\n' + JSON.stringify(data, null, 2);
-                
-                const list = document.getElementById('list');
-                list.innerHTML = '';
-                for (const test of data) {
-                    const li = document.createElement('li');
-                    li.textContent = `${test.name} (slug: ${test.slug})`;
-                    list.appendChild(li);
-                }
-            } catch(e) {
-                debug.innerText = 'Исключение: ' + e.message;
-            }
+<div id="results" style="display: none;">
+    <div class="kpi" id="kpi"></div>
+    <div class="card"><h3>📊 Распределение баллов</h3><canvas id="scoreChart"></canvas></div>
+    <div class="card"><h3>🏙️ Статистика по городам</h3><table id="cityTable"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityBody"></tbody></table></div>
+    <div class="card"><h3>🏆 Лучшие сотрудники</h3><table id="topTable"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topBody"></tbody></table></div>
+</div>
+
+<script>
+    const supabaseUrl = 'https://qtostraaqrnjbxiydlip.supabase.co';
+    const supabaseKey = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
+    const sb = supabase.createClient(supabaseUrl, supabaseKey);
+    
+    let currentData = [];
+    let scoreChart = null;
+    
+    async function loadTests() {
+        const { data, error } = await sb.from('tests').select('*');
+        if (error) {
+            document.getElementById('info').innerHTML = '❌ Ошибка: ' + error.message;
+            return;
         }
+        const selector = document.getElementById('testSelector');
+        selector.innerHTML = '<option value="">-- Выберите тест --</option>';
+        for (const test of data) {
+            selector.innerHTML += `<option value="${test.slug}">${test.name}</option>`;
+        }
+        document.getElementById('info').innerHTML = `✅ Загружено тестов: ${data.length}`;
+    }
+    
+    async function loadResults() {
+        const slug = document.getElementById('testSelector').value;
+        if (!slug) { alert('Выберите тест'); return; }
+        document.getElementById('info').innerHTML = '🔄 Загрузка результатов...';
         
-        showTests();
-    </script>
+        const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
+        if (error) { alert('Ошибка: ' + error.message); return; }
+        if (!data || data.length === 0) { alert('Нет результатов для этого теста'); return; }
+        
+        currentData = data.map(row => ({
+            name: row.user_id || 'Сотрудник',
+            city: row.city || 'Не указан',
+            score: row.score || 0,
+            total: row.total || 11
+        }));
+        
+        document.getElementById('info').innerHTML = `✅ Загружено сотрудников: ${currentData.length}`;
+        document.getElementById('results').style.display = 'block';
+        renderStats();
+    }
+    
+    function renderStats() {
+        const total = currentData.length;
+        let sumScore = 0, errors = 0;
+        for (const e of currentData) {
+            sumScore += e.score / e.total;
+            errors += (e.total - e.score);
+        }
+        const avg = Math.round(sumScore / total * 100);
+        
+        document.getElementById('kpi').innerHTML = `
+            <div class="kpi-item"><div class="kpi-value">${total}</div><div>Сотрудников</div></div>
+            <div class="kpi-item"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div>
+            <div class="kpi-item"><div class="kpi-value">${errors}</div><div>Ошибок</div></div>
+        `;
+        
+        const scores = currentData.map(e => (e.score/e.total)*100);
+        const cats = ['Отлично (80-100%)', 'Хорошо (60-79%)', 'Удовлетворительно (40-59%)', 'Плохо (0-39%)'];
+        const dist = [
+            scores.filter(s => s >= 80).length,
+            scores.filter(s => s >= 60 && s < 80).length,
+            scores.filter(s => s >= 40 && s < 60).length,
+            scores.filter(s => s < 40).length
+        ];
+        if (scoreChart) scoreChart.destroy();
+        scoreChart = new Chart(document.getElementById('scoreChart'), {
+            type: 'bar', data: { labels: cats, datasets: [{ label: 'Количество', data: dist, backgroundColor: '#E30613' }] }
+        });
+        
+        const cityMap = new Map();
+        for (const e of currentData) {
+            const city = e.city;
+            const p = (e.score/e.total)*100;
+            if (!cityMap.has(city)) cityMap.set(city, { sum: 0, count: 0, errors: 0 });
+            const s = cityMap.get(city);
+            s.sum += p;
+            s.count++;
+            s.errors += (e.total - e.score);
+        }
+        const cityData = Array.from(cityMap.entries()).map(([c, s]) => ({ city: c, count: s.count, avg: (s.sum/s.count).toFixed(0), errors: s.errors })).sort((a,b) => b.avg - a.avg);
+        document.getElementById('cityBody').innerHTML = cityData.map(c => `<tr><td style="padding:8px">${c.city}</td><td style="padding:8px">${c.count}</td><td style="padding:8px">${c.avg}%</td><td style="padding:8px">${c.errors}</td>`).join('');
+        
+        const top10 = [...currentData].sort((a,b) => (b.score/b.total) - (a.score/a.total)).slice(0,10);
+        document.getElementById('topBody').innerHTML = top10.map((e,i) => `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${e.name}</strong></td><td style="padding:8px">${e.city}</td><td style="padding:8px">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td>`).join('');
+    }
+    
+    function generateReport() {
+        if (!currentData.length) { alert('Нет данных'); return; }
+        let text = '📊 ОТЧЁТ ПО ТЕСТУ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+        text += `📅 Дата: ${new Date().toLocaleDateString()}\n\n`;
+        const total = currentData.length;
+        const avg = Math.round(currentData.reduce((s,e) => s + (e.score/e.total), 0) / total * 100);
+        const errors = currentData.reduce((s,e) => s + (e.total - e.score), 0);
+        text += `📈 ОБЩАЯ СТАТИСТИКА\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        text += `Всего сотрудников: ${total}\nСредний балл: ${avg}%\nВсего ошибок: ${errors}\n\n`;
+        text += `🔝 ЛУЧШИЕ СОТРУДНИКИ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        const top5 = [...currentData].sort((a,b) => (b.score/b.total) - (a.score/a.total)).slice(0,5);
+        top5.forEach((e,i) => { const p = Math.round(e.score/e.total*100); text += `${i+1}. ${e.name} — ${e.score}/${e.total} (${p}%)\n`; });
+        navigator.clipboard.writeText(text).then(() => alert('✅ Отчёт скопирован!'));
+    }
+    
+    document.getElementById('loadBtn').onclick = loadResults;
+    document.getElementById('copyBtn').onclick = generateReport;
+    loadTests();
+</script>
 </body>
 </html>
