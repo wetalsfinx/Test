@@ -2,17 +2,18 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>585GOLD | Админка</title>
+    <title>585GOLD | Анализ результатов</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
-        .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border-top: 4px solid #E30613; }
+        body { font-family: Arial; background: #f5f5f5; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-top: 4px solid #E30613; }
         .btn { background: #E30613; color: white; border: none; padding: 8px 20px; border-radius: 40px; cursor: pointer; margin: 5px; }
-        select, button { margin: 5px; padding: 8px; }
+        select, button { padding: 8px; margin: 5px; }
         .kpi { display: flex; gap: 15px; flex-wrap: wrap; }
         .kpi-item { background: white; padding: 15px; border-radius: 12px; text-align: center; min-width: 120px; }
         .kpi-value { font-size: 28px; font-weight: bold; color: #E30613; }
-        canvas { max-height: 200px; }
+        canvas { max-height: 200px; width: 100%; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
     </style>
@@ -25,7 +26,7 @@
         <button class="btn" id="loadBtn">📊 Загрузить результаты</button>
         <button class="btn" id="copyBtn">📧 Копировать отчёт</button>
     </div>
-    <div id="info" style="margin-top: 10px; color: #666;"></div>
+    <div id="info" style="margin-top: 10px;"></div>
 </div>
 
 <div id="results" style="display: none;">
@@ -46,7 +47,7 @@
     async function loadTests() {
         const { data, error } = await sb.from('tests').select('*');
         if (error) {
-            document.getElementById('info').innerHTML = '❌ Ошибка: ' + error.message;
+            document.getElementById('info').innerHTML = '❌ Ошибка загрузки тестов: ' + error.message;
             return;
         }
         const selector = document.getElementById('testSelector');
@@ -62,12 +63,28 @@
         if (!slug) { alert('Выберите тест'); return; }
         document.getElementById('info').innerHTML = '🔄 Загрузка результатов...';
         
+        console.log('🔍 Загружаем slug:', slug);
+        
         const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
-        if (error) { alert('Ошибка: ' + error.message); return; }
-        if (!data || data.length === 0) { alert('Нет результатов для этого теста'); return; }
+        
+        console.log('📦 Результат запроса:', { dataLength: data?.length, error });
+        if (data && data.length > 0) {
+            console.log('📋 Первая запись:', data[0]);
+        }
+        
+        if (error) {
+            document.getElementById('info').innerHTML = '❌ Ошибка: ' + error.message;
+            alert('Ошибка: ' + error.message);
+            return;
+        }
+        if (!data || data.length === 0) {
+            document.getElementById('info').innerHTML = '⚠️ Нет результатов для этого теста';
+            alert('Нет результатов для этого теста');
+            return;
+        }
         
         currentData = data.map(row => ({
-            name: row.user_id || 'Сотрудник',
+            name: row.user_id || row.name || 'Сотрудник',
             city: row.city || 'Не указан',
             score: row.score || 0,
             total: row.total || 11
@@ -117,10 +134,10 @@
             s.errors += (e.total - e.score);
         }
         const cityData = Array.from(cityMap.entries()).map(([c, s]) => ({ city: c, count: s.count, avg: (s.sum/s.count).toFixed(0), errors: s.errors })).sort((a,b) => b.avg - a.avg);
-        document.getElementById('cityBody').innerHTML = cityData.map(c => `<tr><td style="padding:8px">${c.city}</td><td style="padding:8px">${c.count}</td><td style="padding:8px">${c.avg}%</td><td style="padding:8px">${c.errors}</td>`).join('');
+        document.getElementById('cityBody').innerHTML = cityData.map(c => `<tr><td style="padding:8px">${c.city}</td><td style="padding:8px">${c.count}</td><td style="padding:8px">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.errors}</td耶`).join('');
         
         const top10 = [...currentData].sort((a,b) => (b.score/b.total) - (a.score/a.total)).slice(0,10);
-        document.getElementById('topBody').innerHTML = top10.map((e,i) => `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${e.name}</strong></td><td style="padding:8px">${e.city}</td><td style="padding:8px">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td>`).join('');
+        document.getElementById('topBody').innerHTML = top10.map((e,i) => `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${e.name}</strong></td><td style="padding:8px">${e.city} </td onclick="applyUserFilter('${e.name}')"></td><td style="padding:8px">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td耶`).join('');
     }
     
     function generateReport() {
