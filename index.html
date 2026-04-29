@@ -18,24 +18,24 @@
         .card{background:#fff;border-radius:24px;padding:1.5rem;margin-bottom:1.5rem;border-top:4px solid #E30613}
         .card h1{color:#E30613;margin-bottom:.5rem;font-size:1.8rem}
         .btn-brand{background:#E30613;color:#fff;border:none;padding:8px 20px;border-radius:40px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
-        .btn-brand:hover{background:#c41c2a;transform:translateY(-2px)}
-        .btn-outline-brand{background:transparent;border:1px solid #E30613;color:#E30613;padding:7px 19px;border-radius:40px;font-weight:600;cursor:pointer}
-        .btn-outline-brand:hover{background:#E30613;color:#fff}
+        .btn-brand:hover{background:#c41c2a}
         .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;margin-bottom:1.5rem}
-        .kpi-card{background:#fff;border-radius:20px;padding:1.2rem 1.5rem;border-left:4px solid #E30613}
+        .kpi-card{background:#fff;border-radius:20px;padding:1.2rem 1.5rem;border-left:4px solid #E30613;text-align:center}
         .kpi-value{font-size:2.2rem;font-weight:800;color:#E30613}
         .charts-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:1.5rem;margin-bottom:1.5rem}
         .chart-card{background:#fff;border-radius:20px;padding:1.2rem}
         .chart-title{font-weight:600;margin-bottom:1rem;color:#E30613;border-bottom:2px solid #E30613;padding-bottom:5px}
         canvas{max-height:250px;width:100%}
         .stats-table{width:100%;border-collapse:collapse}
-        .stats-table th,.stats-table td{padding:10px 8px;border-bottom:1px solid #eee}
+        .stats-table th,.stats-table td{padding:10px 8px;text-align:left;border-bottom:1px solid #eee}
         .stats-table th{color:#E30613}
         .filter-bar{background:#fff;padding:15px;border-radius:16px;margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
         .form-control,.form-select{border-radius:40px;border:1px solid #ddd;padding:8px 16px}
         .upload-area{border:2px dashed #ddd;padding:20px;text-align:center;cursor:pointer;border-radius:20px}
         .upload-area:hover{border-color:#E30613;background:#fff5f5}
-        .mode-active{background:#c41c2a!important}
+        .employee-item{padding:10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+        .employee-name{font-weight:600}
+        .employee-score{color:#E30613;font-weight:600}
         @media (max-width:768px){.charts-row{grid-template-columns:1fr}}
         @media print{.no-print{display:none!important}}
     </style>
@@ -85,15 +85,15 @@
             <div class="chart-card"><div class="chart-title">🏙️ Успеваемость по городам</div><canvas id="cityChart"></canvas></div>
             <div class="chart-card"><div class="chart-title">🥧 Ошибки по темам</div><canvas id="pieChart"></canvas></div>
         </div>
-        <div class="card"><h3>🏙️ Статистика по городам</h3><table class="stats-table"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table></div>
-        <div class="card"><h3>🏆 Лучшие сотрудники</h3><table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody><tr></div>
-        <div class="card"><h3>❗ Частые ошибки</h3><table class="stats-table"><thead></table><th>#</th><th>Тема ошибки</th><th>Кол-во</th></tr></thead><tbody id="errorsBody"></tbody></tr></div>
+        <div class="card"><h3>🏙️ Статистика по городам</h3><table class="stats-table" id="cityTable"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table></div>
+        <div class="card"><h3>🏆 Лучшие сотрудники</h3><table class="stats-table" id="topTable"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table></div>
+        <div class="card"><h3>❗ Частые ошибки</h3><table class="stats-table" id="errorsTable"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th></tr></thead><tbody id="errorsBody"></tbody></table></div>
         <div class="filter-bar">
             <input type="text" id="searchInput" class="form-control" placeholder="🔍 Поиск по имени..." style="width:200px">
             <select id="cityFilter" class="form-select" style="width:150px"><option value="all">Все города</option></select>
             <button class="btn-brand" onclick="resetFilters()" style="background:#6c757d;padding:6px 16px">Сброс фильтров</button>
         </div>
-        <div id="employeesList" class="card"></div>
+        <div class="card" id="employeesList"></div>
     </div>
 </div>
 
@@ -107,7 +107,6 @@
     let currentSlug = null;
     let scoreChart = null, cityChart = null, pieChart = null;
     let currentCityFilter = "all";
-    let currentMode = 'supabase';
     
     const questionTopics = {
         1: "Установление контакта", 2: "Выявление потребностей", 3: "Дополнительная продажа",
@@ -152,7 +151,6 @@
         renderAll();
     }
     
-    // Экспорт детального Excel из Supabase
     function exportDetailedExcel() {
         if (!currentSupabaseData.length) { alert('Нет данных для экспорта'); return; }
         const excelData = currentSupabaseData.map(r => ({
@@ -237,6 +235,7 @@
             <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок</div></div>
         `;
         
+        // График распределения баллов
         const scores = filtered.map(e => (e.score/e.total)*100);
         const cats = ['Отлично (80-100%)', 'Хорошо (60-79%)', 'Удовлетворительно (40-59%)', 'Плохо (0-39%)'];
         const dist = [
@@ -247,9 +246,11 @@
         ];
         if (scoreChart) scoreChart.destroy();
         scoreChart = new Chart(document.getElementById('scoreChart'), {
-            type: 'bar', data: { labels: cats, datasets: [{ label: 'Количество', data: dist, backgroundColor: '#E30613' }] }
+            type: 'bar', data: { labels: cats, datasets: [{ label: 'Количество', data: dist, backgroundColor: '#E30613', borderRadius: 8 }] },
+            options: { responsive: true, maintainAspectRatio: true }
         });
         
+        // Города
         const cityMap = new Map();
         for (const e of filtered) {
             const city = e.city;
@@ -263,13 +264,19 @@
         const cityData = Array.from(cityMap.entries()).map(([c, s]) => ({ city: c, count: s.count, avg: (s.sum/s.count).toFixed(0), errors: s.errors })).sort((a,b) => b.avg - a.avg);
         if (cityChart) cityChart.destroy();
         cityChart = new Chart(document.getElementById('cityChart'), {
-            type: 'bar', data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityData.map(c => c.avg), backgroundColor: '#E30613' }] }
+            type: 'bar', data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityData.map(c => c.avg), backgroundColor: '#E30613', borderRadius: 8 }] },
+            options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
         });
         document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px">${c.city}${i === 0 ? ' 🥇' : ''}</td><td style="padding:8px">${c.count}</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.errors}</td耶`).join('');
         
+        // Лучшие сотрудники
         const top10 = [...filtered].sort((a,b) => (b.score/b.total) - (a.score/a.total)).slice(0, 10);
-        document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `｜DSML｜<td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${escapeHtml(e.name)}</strong></td><td style="padding:8px">${escapeHtml(e.city)}</td onclick="applyCityFilter('${e.city}')"></td><td style="padding:8px">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td耶`).join('');
+        document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => {
+            const percent = Math.round(e.score/e.total*100);
+            return `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${escapeHtml(e.name)}</strong></td><td style="padding:8px">${escapeHtml(e.city)}</td onclick="applyCityFilter('${e.city}')"><td><td style="padding:8px">${e.score}/${e.total} (${percent}%)</td耶`;
+        }).join('');
         
+        // Ошибки по темам (только из Excel, в Supabase нет деталей)
         const errCount = {};
         for (const e of filtered) {
             for (const err of e.errors) {
@@ -277,18 +284,31 @@
             }
         }
         const topErr = Object.entries(errCount).sort((a,b) => b[1] - a[1]).slice(0, 5);
-        document.getElementById('errorsBody').innerHTML = topErr.length ? topErr.map(([t, c], i) => `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${t}</strong></td><td style="padding:8px">${c}</td></tr>`).join('') : '<tr><td colspan="3">Нет ошибок</td</tr>';
+        document.getElementById('errorsBody').innerHTML = topErr.length ? topErr.map(([t, c], i) => `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${t}</strong></td><td style="padding:8px">${c}<td><tr>`).join('') : '<tr><td colspan="3">Нет ошибок</td</tr>';
+        
+        // Круговая диаграмма ошибок
         if (pieChart) pieChart.destroy();
         if (topErr.length) {
             pieChart = new Chart(document.getElementById('pieChart'), {
-                type: 'pie', data: { labels: topErr.map(e => e[0]), datasets: [{ data: topErr.map(e => e[1]), backgroundColor: ['#E30613', '#c41c2a', '#E57373', '#EF9A9A', '#F5B7B7'] }] }
+                type: 'pie', data: { labels: topErr.map(e => e[0]), datasets: [{ data: topErr.map(e => e[1]), backgroundColor: ['#E30613', '#c41c2a', '#E57373', '#EF9A9A', '#F5B7B7'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right' } } }
+            });
+        } else {
+            pieChart = new Chart(document.getElementById('pieChart'), {
+                type: 'pie', data: { labels: ['Нет данных об ошибках'], datasets: [{ data: [1], backgroundColor: ['#ccc'] }] },
+                options: { responsive: true }
             });
         }
         
+        // Список сотрудников
         const employeesHtml = filtered.map(e => {
             const percent = Math.round(e.score/e.total*100);
-            const color = percent >= 80 ? '🟢' : (percent >= 50 ? '🟡' : '🔴');
-            return `<div style="padding: 8px; border-bottom: 1px solid #eee;">${color} <strong>${escapeHtml(e.name)}</strong> — ${e.score}/${e.total} (${percent}%) — ${escapeHtml(e.city)}</div>`;
+            const color = percent >= 80 ? '#28a745' : (percent >= 50 ? '#ffc107' : '#dc3545');
+            return `<div class="employee-item">
+                <span class="employee-name">${escapeHtml(e.name)}</span>
+                <span class="employee-score">${e.score}/${e.total} (${percent}%)</span>
+                <span class="text-muted">${escapeHtml(e.city)}</span>
+            </div>`;
         }).join('');
         document.getElementById('employeesList').innerHTML = `<h3>📋 Список сотрудников (${filtered.length})</h3>${employeesHtml || '<div>Нет данных</div>'}`;
     }
@@ -305,17 +325,11 @@
     
     // Переключение режимов
     document.getElementById('modeSupabaseBtn').onclick = () => {
-        currentMode = 'supabase';
-        document.getElementById('modeSupabaseBtn').classList.add('mode-active');
-        document.getElementById('modeExcelBtn').classList.remove('mode-active');
         document.getElementById('supabaseBlock').style.display = 'block';
         document.getElementById('excelBlock').style.display = 'none';
         loadSupabaseTests();
     };
     document.getElementById('modeExcelBtn').onclick = () => {
-        currentMode = 'excel';
-        document.getElementById('modeExcelBtn').classList.add('mode-active');
-        document.getElementById('modeSupabaseBtn').classList.remove('mode-active');
         document.getElementById('supabaseBlock').style.display = 'none';
         document.getElementById('excelBlock').style.display = 'block';
     };
@@ -333,346 +347,6 @@
     zone.addEventListener('dragover', (e) => e.preventDefault());
     zone.addEventListener('drop', (e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file && file.name.match(/\.xlsx?$/i)) parseExcel(file); else alert('Загрузите Excel файл'); });
     
-    // Запуск
-    loadSupabaseTests();
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>585GOLD | Анализ результатов</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter','Segoe UI',sans-serif;background:#f5f5f5;color:#1a2c3e;padding:1.5rem}
-        .container{max-width:1400px;margin:0 auto}
-        .card{background:#fff;border-radius:24px;padding:1.5rem;margin-bottom:1.5rem;border-top:4px solid #E30613}
-        .card h1{color:#E30613;margin-bottom:.5rem;font-size:1.8rem}
-        .btn-brand{background:#E30613;color:#fff;border:none;padding:8px 20px;border-radius:40px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
-        .btn-brand:hover{background:#c41c2a;transform:translateY(-2px)}
-        .btn-outline-brand{background:transparent;border:1px solid #E30613;color:#E30613;padding:7px 19px;border-radius:40px;font-weight:600;cursor:pointer}
-        .btn-outline-brand:hover{background:#E30613;color:#fff}
-        .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;margin-bottom:1.5rem}
-        .kpi-card{background:#fff;border-radius:20px;padding:1.2rem 1.5rem;border-left:4px solid #E30613}
-        .kpi-value{font-size:2.2rem;font-weight:800;color:#E30613}
-        .charts-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:1.5rem;margin-bottom:1.5rem}
-        .chart-card{background:#fff;border-radius:20px;padding:1.2rem}
-        .chart-title{font-weight:600;margin-bottom:1rem;color:#E30613;border-bottom:2px solid #E30613;padding-bottom:5px}
-        canvas{max-height:250px;width:100%}
-        .stats-table{width:100%;border-collapse:collapse}
-        .stats-table th,.stats-table td{padding:10px 8px;border-bottom:1px solid #eee}
-        .stats-table th{color:#E30613}
-        .filter-bar{background:#fff;padding:15px;border-radius:16px;margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-        .form-control,.form-select{border-radius:40px;border:1px solid #ddd;padding:8px 16px}
-        .upload-area{border:2px dashed #ddd;padding:20px;text-align:center;cursor:pointer;border-radius:20px}
-        .upload-area:hover{border-color:#E30613;background:#fff5f5}
-        .mode-active{background:#c41c2a!important}
-        @media (max-width:768px){.charts-row{grid-template-columns:1fr}}
-        @media print{.no-print{display:none!important}}
-    </style>
-</head>
-<body>
-<div class="container">
-    <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
-            <div><h1><i class="fas fa-gem"></i> 585GOLD | Анализ результатов</h1><p class="text-muted mb-0">Выберите режим работы</p></div>
-            <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap">
-                <button class="btn-brand" id="modeSupabaseBtn">☁️ Supabase</button>
-                <button class="btn-brand" id="modeExcelBtn" style="background:#6c757d">📂 Excel</button>
-                <button class="btn-brand" id="copyReportBtn">📧 Копировать в Outlook</button>
-                <button class="btn-brand" id="pdfReportBtn">📄 Скачать PDF</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Supabase блок -->
-    <div id="supabaseBlock" class="card">
-        <div style="display:flex;gap:15px;flex-wrap:wrap;align-items:center">
-            <label class="fw-bold">📋 Выберите тест:</label>
-            <select id="testSelector" class="form-select" style="width:auto;min-width:300px">
-                <option value="">-- Загрузка тестов... --</option>
-            </select>
-            <button class="btn-brand" id="loadSupabaseBtn" style="background:#2c7da0">📊 Загрузить результаты</button>
-            <button class="btn-brand" id="exportExcelBtn" style="background:#198754">📎 Выгрузить детальный Excel</button>
-            <span id="status" class="text-muted"></span>
-        </div>
-    </div>
-
-    <!-- Excel блок -->
-    <div id="excelBlock" class="card" style="display:none">
-        <div class="upload-area" id="uploadZone">
-            <i class="fas fa-file-excel fa-3x" style="color:#E30613"></i>
-            <p class="mt-2"><strong>Нажмите или перетащите Excel-файл</strong><br>(кнопка «Детальный» из админки)</p>
-            <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
-            <button class="btn-brand" id="selectFileBtn">📂 Выбрать файл</button>
-            <div id="excelInfo" class="mt-2 text-muted"></div>
-        </div>
-    </div>
-
-    <div id="resultsArea" style="display:none">
-        <div class="kpi-grid" id="kpi"></div>
-        <div class="charts-row">
-            <div class="chart-card"><div class="chart-title">📊 Распределение баллов</div><canvas id="scoreChart"></canvas></div>
-            <div class="chart-card"><div class="chart-title">🏙️ Успеваемость по городам</div><canvas id="cityChart"></canvas></div>
-            <div class="chart-card"><div class="chart-title">🥧 Ошибки по темам</div><canvas id="pieChart"></canvas></div>
-        </div>
-        <div class="card"><h3>🏙️ Статистика по городам</h3><table class="stats-table"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table></div>
-        <div class="card"><h3>🏆 Лучшие сотрудники</h3><table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody><tr></div>
-        <div class="card"><h3>❗ Частые ошибки</h3><table class="stats-table"><thead></table><th>#</th><th>Тема ошибки</th><th>Кол-во</th></tr></thead><tbody id="errorsBody"></tbody></tr></div>
-        <div class="filter-bar">
-            <input type="text" id="searchInput" class="form-control" placeholder="🔍 Поиск по имени..." style="width:200px">
-            <select id="cityFilter" class="form-select" style="width:150px"><option value="all">Все города</option></select>
-            <button class="btn-brand" onclick="resetFilters()" style="background:#6c757d;padding:6px 16px">Сброс фильтров</button>
-        </div>
-        <div id="employeesList" class="card"></div>
-    </div>
-</div>
-
-<script>
-    const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    
-    let currentData = [];
-    let currentSupabaseData = [];
-    let currentSlug = null;
-    let scoreChart = null, cityChart = null, pieChart = null;
-    let currentCityFilter = "all";
-    let currentMode = 'supabase';
-    
-    const questionTopics = {
-        1: "Установление контакта", 2: "Выявление потребностей", 3: "Дополнительная продажа",
-        4: "Переориентация на золото", 5: "Футляр и уход", 6: "Возражение по цене",
-        7: "Альтернатива/каталог", 8: "Презентация подарка", 9: "Дополнительные модели",
-        10: "Яндекс Сплит", 11: "Инициатива в продажах"
-    };
-    
-    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-    function getTopic(num) { return questionTopics[num] || `Вопрос ${num}`; }
-    
-    // ============ SUPABASE ============
-    async function loadSupabaseTests() {
-        const { data, error } = await sb.from('tests').select('slug, name');
-        if (error) { console.error(error); return; }
-        const selector = document.getElementById('testSelector');
-        selector.innerHTML = '<option value="">-- Выберите тест --</option>';
-        for (const test of data) {
-            selector.innerHTML += `<option value="${test.slug}">${test.name}</option>`;
-        }
-    }
-    
-    async function loadSupabaseResults() {
-        const slug = document.getElementById('testSelector').value;
-        if (!slug) { alert('Выберите тест'); return; }
-        currentSlug = slug;
-        document.getElementById('status').innerHTML = '🔄 Загрузка...';
-        const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
-        if (error) { alert('Ошибка: ' + error.message); return; }
-        if (!data || data.length === 0) { alert('Нет результатов'); return; }
-        currentSupabaseData = data;
-        currentData = data.map(row => ({
-            name: row.user_id || row.name || 'Сотрудник',
-            city: row.city || 'Не указан',
-            score: row.score || 0,
-            total: row.total || 11,
-            errors: []
-        }));
-        document.getElementById('status').innerHTML = `✅ Загружено ${currentData.length} сотрудников`;
-        document.getElementById('resultsArea').style.display = 'block';
-        updateCityFilter();
-        renderAll();
-    }
-    
-    // Экспорт детального Excel из Supabase
-    function exportDetailedExcel() {
-        if (!currentSupabaseData.length) { alert('Нет данных для экспорта'); return; }
-        const excelData = currentSupabaseData.map(r => ({
-            'ФИО': r.user_id || '',
-            'Город': r.city || '',
-            'Баллы': `${r.score}/${r.total}`,
-            'Процент': `${Math.round(r.score/r.total*100)}%`,
-            'Дата': new Date(r.created_at).toLocaleString()
-        }));
-        const ws = XLSX.utils.json_to_sheet(excelData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Результаты');
-        XLSX.writeFile(wb, `детальный_отчёт_${new Date().toLocaleDateString()}.xlsx`);
-        alert('✅ Excel-файл скачан');
-    }
-    
-    // ============ EXCEL ============
-    function parseExcel(file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(sheet);
-            if (!rows.length) { alert("Файл пуст"); return; }
-            const employees = [];
-            for (const row of rows) {
-                const name = row['ФИО'] || '';
-                if (!name) continue;
-                let score = 0, total = 0;
-                const scoreMatch = (row['Баллы'] || '').match(/(\d+)\/(\d+)/);
-                if (scoreMatch) { score = parseInt(scoreMatch[1]); total = parseInt(scoreMatch[2]); }
-                else { total = 11; const pm = (row['Процент'] || '').match(/(\d+)/); if (pm) score = Math.round(parseInt(pm[1]) / 100 * total); }
-                const errorsList = [];
-                for (let i = 1; i <= 11; i++) {
-                    if (row[`Результат ${i}`] === 'Ошибка') {
-                        errorsList.push({
-                            num: i,
-                            topic: getTopic(i),
-                            question: row[`Вопрос ${i}`] || '',
-                            userAnswer: row[`Ответ сотрудника ${i}`] || '',
-                            correctAnswer: row[`Правильный ответ ${i}`] || ''
-                        });
-                    }
-                }
-                employees.push({ name, city: row['Город'] || '', score, total, errors: errorsList });
-            }
-            currentData = employees;
-            document.getElementById('excelInfo').innerHTML = `✅ Загружено ${employees.length} сотрудников`;
-            document.getElementById('resultsArea').style.display = 'block';
-            updateCityFilter();
-            renderAll();
-        };
-        reader.readAsArrayBuffer(file);
-    }
-    
-    function updateCityFilter() {
-        const cities = [...new Set(currentData.map(e => e.city).filter(c => c && c !== 'Не указан'))];
-        const citySelect = document.getElementById('cityFilter');
-        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-    
-    function renderAll() {
-        let filtered = currentCityFilter === "all" ? currentData : currentData.filter(e => e.city === currentCityFilter);
-        const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
-        if (search) filtered = filtered.filter(e => e.name.toLowerCase().includes(search));
-        
-        const total = filtered.length;
-        let sumScore = 0, excellent = 0, errors = 0;
-        for (const e of filtered) {
-            const p = (e.score / e.total) * 100;
-            sumScore += p;
-            if (p >= 80) excellent++;
-            errors += (e.total - e.score);
-        }
-        const avg = total ? Math.round(sumScore / total) : 0;
-        
-        document.getElementById('kpi').innerHTML = `
-            <div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div>
-            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div>
-            <div class="kpi-card"><div class="kpi-value">${excellent}</div><div>Отлично (≥80%)</div></div>
-            <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок</div></div>
-        `;
-        
-        const scores = filtered.map(e => (e.score/e.total)*100);
-        const cats = ['Отлично (80-100%)', 'Хорошо (60-79%)', 'Удовлетворительно (40-59%)', 'Плохо (0-39%)'];
-        const dist = [
-            scores.filter(s => s >= 80).length,
-            scores.filter(s => s >= 60 && s < 80).length,
-            scores.filter(s => s >= 40 && s < 60).length,
-            scores.filter(s => s < 40).length
-        ];
-        if (scoreChart) scoreChart.destroy();
-        scoreChart = new Chart(document.getElementById('scoreChart'), {
-            type: 'bar', data: { labels: cats, datasets: [{ label: 'Количество', data: dist, backgroundColor: '#E30613' }] }
-        });
-        
-        const cityMap = new Map();
-        for (const e of filtered) {
-            const city = e.city;
-            const p = (e.score/e.total)*100;
-            if (!cityMap.has(city)) cityMap.set(city, { sum: 0, count: 0, errors: 0 });
-            const s = cityMap.get(city);
-            s.sum += p;
-            s.count++;
-            s.errors += (e.total - e.score);
-        }
-        const cityData = Array.from(cityMap.entries()).map(([c, s]) => ({ city: c, count: s.count, avg: (s.sum/s.count).toFixed(0), errors: s.errors })).sort((a,b) => b.avg - a.avg);
-        if (cityChart) cityChart.destroy();
-        cityChart = new Chart(document.getElementById('cityChart'), {
-            type: 'bar', data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityData.map(c => c.avg), backgroundColor: '#E30613' }] }
-        });
-        document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px">${c.city}${i === 0 ? ' 🥇' : ''}</td><td style="padding:8px">${c.count}</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.errors}</td耶`).join('');
-        
-        const top10 = [...filtered].sort((a,b) => (b.score/b.total) - (a.score/a.total)).slice(0, 10);
-        document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `｜DSML｜<td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${escapeHtml(e.name)}</strong></td><td style="padding:8px">${escapeHtml(e.city)}</td onclick="applyCityFilter('${e.city}')"></td><td style="padding:8px">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td耶`).join('');
-        
-        const errCount = {};
-        for (const e of filtered) {
-            for (const err of e.errors) {
-                errCount[err.topic] = (errCount[err.topic] || 0) + 1;
-            }
-        }
-        const topErr = Object.entries(errCount).sort((a,b) => b[1] - a[1]).slice(0, 5);
-        document.getElementById('errorsBody').innerHTML = topErr.length ? topErr.map(([t, c], i) => `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${t}</strong></td><td style="padding:8px">${c}</td></tr>`).join('') : '<tr><td colspan="3">Нет ошибок</td</tr>';
-        if (pieChart) pieChart.destroy();
-        if (topErr.length) {
-            pieChart = new Chart(document.getElementById('pieChart'), {
-                type: 'pie', data: { labels: topErr.map(e => e[0]), datasets: [{ data: topErr.map(e => e[1]), backgroundColor: ['#E30613', '#c41c2a', '#E57373', '#EF9A9A', '#F5B7B7'] }] }
-            });
-        }
-        
-        const employeesHtml = filtered.map(e => {
-            const percent = Math.round(e.score/e.total*100);
-            const color = percent >= 80 ? '🟢' : (percent >= 50 ? '🟡' : '🔴');
-            return `<div style="padding: 8px; border-bottom: 1px solid #eee;">${color} <strong>${escapeHtml(e.name)}</strong> — ${e.score}/${e.total} (${percent}%) — ${escapeHtml(e.city)}</div>`;
-        }).join('');
-        document.getElementById('employeesList').innerHTML = `<h3>📋 Список сотрудников (${filtered.length})</h3>${employeesHtml || '<div>Нет данных</div>'}`;
-    }
-    
-    function generateReport() {
-        if (!currentData.length) { alert('Нет данных'); return; }
-        let text = `📊 ОТЧЁТ ПО ТЕСТУ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 Дата: ${new Date().toLocaleDateString()}\n\n📈 ОБЩАЯ СТАТИСТИКА\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nВсего сотрудников: ${currentData.length}\nСредний балл: ${Math.round(currentData.reduce((s,e) => s + (e.score/e.total), 0) / currentData.length * 100)}%\nВсего ошибок: ${currentData.reduce((s,e) => s + (e.total - e.score), 0)}\n\n`;
-        navigator.clipboard.writeText(text).then(() => alert('✅ Отчёт скопирован!'));
-    }
-    
-    function downloadPDF() { if (currentData.length) html2pdf().set({margin:0.5,filename:`отчёт_${new Date().toISOString().slice(0,19)}.pdf`}).from(document.querySelector('.container')).save(); else alert('Нет данных'); }
-    function resetFilters() { document.getElementById('searchInput').value = ''; document.getElementById('cityFilter').value = 'all'; currentCityFilter = 'all'; renderAll(); }
-    function applyCityFilter(city) { document.getElementById('cityFilter').value = city; currentCityFilter = city; renderAll(); }
-    
-    // Переключение режимов
-    document.getElementById('modeSupabaseBtn').onclick = () => {
-        currentMode = 'supabase';
-        document.getElementById('modeSupabaseBtn').classList.add('mode-active');
-        document.getElementById('modeExcelBtn').classList.remove('mode-active');
-        document.getElementById('supabaseBlock').style.display = 'block';
-        document.getElementById('excelBlock').style.display = 'none';
-        loadSupabaseTests();
-    };
-    document.getElementById('modeExcelBtn').onclick = () => {
-        currentMode = 'excel';
-        document.getElementById('modeExcelBtn').classList.add('mode-active');
-        document.getElementById('modeSupabaseBtn').classList.remove('mode-active');
-        document.getElementById('supabaseBlock').style.display = 'none';
-        document.getElementById('excelBlock').style.display = 'block';
-    };
-    
-    document.getElementById('loadSupabaseBtn').onclick = loadSupabaseResults;
-    document.getElementById('exportExcelBtn').onclick = exportDetailedExcel;
-    document.getElementById('selectFileBtn').onclick = () => document.getElementById('fileInput').click();
-    document.getElementById('fileInput').onchange = (e) => { if (e.target.files[0]) parseExcel(e.target.files[0]); };
-    document.getElementById('copyReportBtn').onclick = generateReport;
-    document.getElementById('pdfReportBtn').onclick = downloadPDF;
-    document.getElementById('searchInput').addEventListener('input', () => renderAll());
-    document.getElementById('cityFilter').addEventListener('change', (e) => { currentCityFilter = e.target.value; renderAll(); });
-    
-    const zone = document.getElementById('uploadZone');
-    zone.addEventListener('dragover', (e) => e.preventDefault());
-    zone.addEventListener('drop', (e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file && file.name.match(/\.xlsx?$/i)) parseExcel(file); else alert('Загрузите Excel файл'); });
-    
-    // Запуск
     loadSupabaseTests();
 </script>
 </body>
