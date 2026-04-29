@@ -15,27 +15,23 @@
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Inter','Segoe UI',sans-serif;background:#f5f5f5;color:#1a2c3e;padding:1.5rem;transition:all .3s}
         body.dark-mode{background:#0a0e1a;color:#e0e4f0}
-        body.dark-mode .card,body.dark-mode .kpi-card,body.dark-mode .chart-card,body.dark-mode .filter-bar{background:#111827;border:1px solid #1f2a40;box-shadow:0 0 10px rgba(255,255,255,.05)}
+        body.dark-mode .card,body.dark-mode .kpi-card,body.dark-mode .chart-card,body.dark-mode .filter-bar{background:#111827;border:1px solid #1f2a40}
         body.dark-mode .stats-table th{color:#9ca3af}
         body.dark-mode .stats-table td{border-bottom-color:#1f2a40}
         body.dark-mode .form-control,body.dark-mode .form-select{background:#2d2d2d;color:#e0e4f0;border-color:#444}
         .container{max-width:1400px;margin:0 auto}
-        .card{background:#fff;border-radius:24px;padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 8px 20px rgba(0,0,0,.05);transition:transform .2s;border-top:4px solid #E30613}
-        .card:hover{transform:translateY(-2px)}
+        .card{background:#fff;border-radius:24px;padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 8px 20px rgba(0,0,0,.05);border-top:4px solid #E30613}
         .card h1{color:#E30613;margin-bottom:.5rem;font-size:1.8rem}
         .card h3{color:#E30613;font-size:1.2rem;margin-bottom:1rem}
         .btn-brand{background:#E30613;color:#fff;border:none;padding:8px 20px;border-radius:40px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
         .btn-brand:hover{background:#c41c2a;transform:translateY(-2px)}
-        .btn-outline-brand{background:transparent;border:1px solid #E30613;color:#E30613;padding:7px 19px;border-radius:40px;font-weight:600;cursor:pointer}
-        .btn-outline-brand:hover{background:#E30613;color:#fff}
         .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;margin-bottom:1.5rem}
-        .kpi-card{background:#fff;border-radius:20px;padding:1.2rem 1.5rem;box-shadow:0 4px 12px rgba(0,0,0,.04);border-left:4px solid #E30613;transition:all .2s}
-        .kpi-card:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(0,0,0,.08)}
+        .kpi-card{background:#fff;border-radius:20px;padding:1.2rem 1.5rem;box-shadow:0 4px 12px rgba(0,0,0,.04);border-left:4px solid #E30613}
+        .kpi-card:hover{transform:translateY(-2px)}
         .kpi-label{font-size:.75rem;text-transform:uppercase;color:#7a95ae;margin-bottom:8px}
         .kpi-value{font-size:2.2rem;font-weight:800;color:#E30613;line-height:1}
         .charts-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:1.5rem;margin-bottom:1.5rem}
-        .chart-card{background:#fff;border-radius:20px;padding:1.2rem;box-shadow:0 4px 12px rgba(0,0,0,.05);transition:all .2s}
-        .chart-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.08)}
+        .chart-card{background:#fff;border-radius:20px;padding:1.2rem;box-shadow:0 4px 12px rgba(0,0,0,.05)}
         .chart-title{font-weight:600;margin-bottom:1rem;font-size:1rem;color:#E30613;border-bottom:2px solid #E30613;padding-bottom:5px;display:flex;align-items:center;gap:8px}
         canvas{max-height:250px;width:100%}
         .stats-table{width:100%;border-collapse:collapse}
@@ -53,7 +49,7 @@
 <div class="container">
     <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
-            <div><h1><i class="fas fa-gem"></i> 585GOLD | Анализ результатов</h1><p class="text-muted mb-0">Выберите тест для онлайн-мониторинга</p></div>
+            <div><h1><i class="fas fa-gem"></i> 585GOLD | Анализ результатов тестирования</h1><p class="text-muted mb-0">Выберите тест для онлайн-мониторинга</p></div>
             <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap">
                 <button class="btn-brand" id="copyReportBtn">📧 Копировать в Outlook</button>
                 <button class="btn-brand" id="pdfReportBtn">📄 Скачать PDF</button>
@@ -80,8 +76,8 @@
             <div class="chart-card"><div class="chart-title"><i class="fas fa-chart-pie"></i> Ошибки по темам</div><canvas id="pieChart"></canvas></div>
         </div>
         <div class="card"><h3><i class="fas fa-building"></i> Статистика по городам</h3><table class="stats-table"><thead><tr><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityStatsBody"></tbody></table></div>
-        <div class="card"><h3><i class="fas fa-trophy"></i> Лучшие сотрудники</h3><table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topEmployeesBody"></tbody></table></div>
-        <div class="card"><h3><i class="fas fa-exclamation-triangle"></i> Частые ошибки</h3><table class="stats-table"><thead><td><th>#</th><th>Тема ошибки</th><th>Кол-во</th></tr></thead><tbody id="errorsBody"></tbody></table></div>
+        <div class="card"><h3><i class="fas fa-trophy"></i> Лучшие сотрудники</h3><table class="stats-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th><tr></thead><tbody id="topEmployeesBody"></tbody></table></div>
+        <div class="card"><h3><i class="fas fa-exclamation-triangle"></i> Частые ошибки</h3><table class="stats-table"><thead><tr><th>#</th><th>Тема ошибки</th><th>Кол-во</th></tr></thead><tbody id="errorsBody"></tbody></table></div>
         <div class="filter-bar">
             <input type="text" id="searchInput" class="form-control" placeholder="🔍 Поиск по имени..." style="width:200px">
             <select id="cityFilter" class="form-select" style="width:150px"><option value="all">Все города</option></select>
@@ -101,15 +97,6 @@
     let scoreChart = null, cityChart = null, pieChart = null;
     let currentSlug = null;
     let currentCityFilter = "all";
-    
-    const questionTopics = {
-        1: "Установление контакта", 2: "Выявление потребностей", 3: "Дополнительная продажа",
-        4: "Переориентация на золото", 5: "Футляр и уход", 6: "Возражение по цене",
-        7: "Альтернатива/каталог", 8: "Презентация подарка", 9: "Дополнительные модели",
-        10: "Яндекс Сплит", 11: "Инициатива в продажах"
-    };
-    
-    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
     
     async function loadTests() {
         const { data, error } = await sb.from('tests').select('slug, name');
@@ -208,9 +195,12 @@
         document.getElementById('cityStatsBody').innerHTML = cityData.map((c, i) => `<tr><td style="padding:8px">${c.city}${i === 0 ? ' 🥇' : ''}</td><td style="padding:8px">${c.count}</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.errors}</td耶`).join('');
         
         const top10 = [...filtered].sort((a,b) => (b.score/b.total) - (a.score/a.total)).slice(0, 10);
-        document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${e.name}</strong></td><td style="padding:8px">${e.city}</td onclick="applyCityFilter('${e.city}')"></td><td style="padding:8px">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</td耶`).join('');
+        document.getElementById('topEmployeesBody').innerHTML = top10.map((e, i) => {
+            const percent = Math.round(e.score/e.total*100);
+            return `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${escapeHtml(e.name)}</strong></td><td style="padding:8px">${escapeHtml(e.city)}</td onclick="applyCityFilter('${e.city}')"><td><td style="padding:8px">${e.score}/${e.total} (${percent}%)</td耶`;
+        }).join('');
         
-        document.getElementById('errorsBody').innerHTML = '<tr><td colspan="3">Детальные ошибки доступны при загрузке Excel</td</tr>';
+        document.getElementById('errorsBody').innerHTML = '<table><td colspan="3">Детальные ошибки доступны при загрузке Excel</td</tr>';
         if (pieChart) pieChart.destroy();
         pieChart = new Chart(document.getElementById('pieChart'), {
             type: 'pie', data: { labels: ['Нет детальных данных'], datasets: [{ data: [1], backgroundColor: ['#ccc'] }] },
@@ -220,10 +210,12 @@
         const employeesHtml = filtered.map(e => {
             const percent = Math.round(e.score/e.total*100);
             const color = percent >= 80 ? '🟢' : (percent >= 50 ? '🟡' : '🔴');
-            return `<div style="padding: 8px; border-bottom: 1px solid #eee;">${color} <strong>${e.name}</strong> — ${e.score}/${e.total} (${percent}%) — ${e.city}</div>`;
+            return `<div style="padding: 8px; border-bottom: 1px solid #eee;">${color} <strong>${escapeHtml(e.name)}</strong> — ${e.score}/${e.total} (${percent}%) — ${escapeHtml(e.city)}</div>`;
         }).join('');
         document.getElementById('employeesList').innerHTML = `<h3><i class="fas fa-users"></i> Список сотрудников (${filtered.length})</h3>${employeesHtml || '<div>Нет данных</div>'}`;
     }
+    
+    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
     
     function generateReport() {
         if (!currentData.length) { alert('Нет данных'); return; }
