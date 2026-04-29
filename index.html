@@ -8,9 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body{background:#f5f5f5;padding:20px;font-family:'Segoe UI',sans-serif}
-        .card{background:#fff;border-radius:20px;padding:20px;margin-bottom:20px;border-top:4px solid #E30613}
-        .btn{background:#E30613;color:#fff;border:none;padding:8px 20px;border-radius:40px;margin:5px;cursor:pointer}
+        body{background:#f0f2f8;padding:20px;font-family:'Segoe UI',sans-serif}
+        .card{background:#fff;border-radius:20px;padding:20px;margin-bottom:20px;border-top:4px solid #E30613;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+        .btn{background:#E30613;color:#fff;border:none;padding:8px 20px;border-radius:40px;margin:5px;cursor:pointer;transition:0.2s}
         .btn:hover{background:#c41c2a}
         .kpi-grid{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
         .kpi-card{background:#fff;padding:20px;border-radius:16px;border-left:4px solid #E30613;min-width:150px;text-align:center}
@@ -20,10 +20,11 @@
         th,td{padding:12px;text-align:left;border-bottom:1px solid #eee}
         th{color:#E30613;font-weight:600}
         select{padding:8px;border-radius:40px;border:1px solid #ddd;margin:5px;width:300px}
-        .filter-bar{background:#fff;padding:15px;border-radius:16px;margin:15px 0;display:flex;gap:10px;flex-wrap:wrap}
+        .filter-bar{background:#fff;padding:15px;border-radius:16px;margin:15px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
         input,select{padding:8px 15px;border-radius:40px;border:1px solid #ddd}
         canvas{max-height:200px;width:100%}
         .employee-item{padding:10px;border-bottom:1px solid #eee}
+        .employee-item:hover{background:#fef5f5}
     </style>
 </head>
 <body>
@@ -31,7 +32,7 @@
     <div class="card">
         <h1><i class="bi bi-gem"></i> 585GOLD | Анализ результатов</h1>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px">
-            <select id="testSelector">
+            <select id="testSelector" style="width:280px">
                 <option value="">-- Загрузка тестов... --</option>
             </select>
             <button class="btn" id="loadBtn">📊 Загрузить результаты</button>
@@ -44,17 +45,30 @@
     <div id="results" style="display:none">
         <div class="kpi-grid" id="kpi"></div>
         <div class="row">
-            <div class="col-md-6"><div class="card"><h3>📊 Распределение баллов</h3><canvas id="scoreChart"></canvas></div></div>
-            <div class="col-md-6"><div class="card"><h3>🏙️ Успеваемость по городам</h3><canvas id="cityChart"></canvas></div></div>
+            <div class="col-md-6"><div class="card"><h3><i class="bi bi-bar-chart-steps"></i> Распределение баллов</h3><canvas id="scoreChart"></canvas></div></div>
+            <div class="col-md-6"><div class="card"><h3><i class="bi bi-building"></i> Успеваемость по городам</h3><canvas id="cityChart"></canvas></div></div>
         </div>
-        <div class="card"><h3>🏙️ Статистика по городам</h3><table><thead><tr style="background:#E30613;color:white"><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead><tbody id="cityBody"></tbody></table></div>
-        <div class="card"><h3>🏆 Лучшие сотрудники</h3><tr><thead><tr style="background:#E30613;color:white"><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topBody"></tbody></table></div>
+        <div class="card"><h3><i class="bi bi-table"></i> Статистика по городам</h3>
+            <table class="table">
+                <thead><tr style="background:#E30613;color:white"><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Ошибок</th></tr></thead>
+                <tbody id="cityBody"></tbody>
+            </table>
+        </div>
+        <div class="card"><h3><i class="bi bi-trophy"></i> Лучшие сотрудники</h3>
+            <table class="table">
+                <thead><tr style="background:#E30613;color:white"><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead>
+                <tbody id="topBody"></tbody>
+            </table>
+        </div>
         <div class="filter-bar">
-            <input type="text" id="searchInput" placeholder="🔍 Поиск по имени...">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Поиск по имени...">
             <select id="cityFilter"><option value="all">Все города</option></select>
-            <button class="btn" onclick="resetFilters()" style="background:#6c757d">Сброс</button>
+            <button class="btn" onclick="resetFilters()" style="background:#6c757d;padding:6px 18px">Сброс</button>
         </div>
-        <div class="card"><h3>📋 Список сотрудников (<span id="employeeCount">0</span>)</h3><div id="employeesList"></div></div>
+        <div class="card"><h3><i class="bi bi-people"></i> Список сотрудников (<span id="employeeCount">0</span>)</h3>
+            <div id="employeesList"></div>
+        </div>
     </div>
 </div>
 
@@ -71,10 +85,7 @@
     async function loadTests() {
         const { data, error } = await sb.from('tests').select('slug, name');
         const selector = document.getElementById('testSelector');
-        if (error) {
-            selector.innerHTML = '<option value="">Ошибка</option>';
-            return;
-        }
+        if (error) { selector.innerHTML = '<option value="">Ошибка</option>'; return; }
         selector.innerHTML = '<option value="">-- Выберите тест --</option>';
         for (const test of data) {
             selector.innerHTML += `<option value="${test.slug}">${test.name}</option>`;
@@ -84,15 +95,15 @@
     async function loadResults() {
         const slug = document.getElementById('testSelector').value;
         if (!slug) { alert('Выберите тест'); return; }
-        document.getElementById('status').innerHTML = '🔄 Загрузка результатов...';
+        document.getElementById('status').innerHTML = '<i class="bi bi-hourglass-split"></i> Загрузка...';
         
         const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
         if (error) {
-            document.getElementById('status').innerHTML = '❌ Ошибка: ' + error.message;
+            document.getElementById('status').innerHTML = '<i class="bi bi-exclamation-triangle"></i> Ошибка: ' + error.message;
             return;
         }
         if (!data || data.length === 0) {
-            document.getElementById('status').innerHTML = '⚠️ Нет результатов для этого теста';
+            document.getElementById('status').innerHTML = '<i class="bi bi-info-circle"></i> Нет результатов';
             return;
         }
         
@@ -103,7 +114,7 @@
             total: row.total || 11
         }));
         
-        document.getElementById('status').innerHTML = `✅ Загружено ${currentData.length} сотрудников`;
+        document.getElementById('status').innerHTML = '<i class="bi bi-check-circle"></i> Загружено ' + currentData.length + ' сотрудников';
         document.getElementById('results').style.display = 'block';
         
         const cities = [...new Set(currentData.map(e => e.city).filter(c => c && c !== 'Не указан'))];
@@ -129,12 +140,13 @@
         const avg = total ? Math.round(sumScore / total) : 0;
         
         document.getElementById('kpi').innerHTML = `
-            <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-label">Сотрудников</div></div>
-            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div class="kpi-label">Средний балл</div></div>
-            <div class="kpi-card"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div>
-            <div class="kpi-card"><div class="kpi-value">${errors}</div><div class="kpi-label">Ошибок</div></div>
+            <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-label"><i class="bi bi-people"></i> Сотрудников</div></div>
+            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div class="kpi-label"><i class="bi bi-graph-up"></i> Средний балл</div></div>
+            <div class="kpi-card"><div class="kpi-value">${excellent}</div><div class="kpi-label"><i class="bi bi-star-fill"></i> Отлично (≥80%)</div></div>
+            <div class="kpi-card"><div class="kpi-value">${errors}</div><div class="kpi-label"><i class="bi bi-x-circle"></i> Ошибок</div></div>
         `;
         
+        // График 1
         const scores = currentData.map(e => (e.score/e.total)*100);
         const dist = [
             scores.filter(s => s >= 80).length,
@@ -144,10 +156,11 @@
         ];
         if (scoreChart) scoreChart.destroy();
         scoreChart = new Chart(document.getElementById('scoreChart'), {
-            type: 'bar', data: { labels: ['Отлично (80-100%)', 'Хорошо (60-79%)', 'Удовл. (40-59%)', 'Плохо (0-39%)'], datasets: [{ label: 'Количество', data: dist, backgroundColor: '#E30613', borderRadius: 8 }] },
-            options: { responsive: true }
+            type: 'bar', data: { labels: ['Отлично (80-100%)', 'Хорошо (60-79%)', 'Удовл. (40-59%)', 'Плохо (0-39%)'], datasets: [{ label: 'Количество', data: dist, backgroundColor: '#E30613', borderRadius: 10 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
         });
         
+        // График 2
         const cityMap = new Map();
         for (const e of currentData) {
             const city = e.city;
@@ -162,23 +175,49 @@
         const cityData = Array.from(cityMap.entries()).map(([c, s]) => ({ city: c, count: s.count, avg: (s.sum/s.count).toFixed(0), errors: s.errors })).sort((a,b) => b.avg - a.avg);
         if (cityChart) cityChart.destroy();
         cityChart = new Chart(document.getElementById('cityChart'), {
-            type: 'bar', data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityData.map(c => c.avg), backgroundColor: '#E30613', borderRadius: 8 }] },
-            options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
+            type: 'bar', data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityData.map(c => c.avg), backgroundColor: '#E30613', borderRadius: 10 }] },
+            options: { responsive: true, scales: { y: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
         });
-        document.getElementById('cityBody').innerHTML = cityData.map(c => `<tr><td style="padding:8px">${c.city}${c.avg === '100' ? ' 🥇' : ''}</td><td style="padding:8px">${c.count} </td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.errors}</td耶`).join('');
         
+        // Таблица городов
+        document.getElementById('cityBody').innerHTML = cityData.map(c => `
+            <tr>
+                <td style="padding:12px"><strong>${c.city}</strong>${c.avg === '100' ? ' 🥇' : ''}</td>
+                <td style="padding:12px">${c.count}</td>
+                <td style="padding:12px"><span style="background:#E30613;color:#fff;padding:4px 12px;border-radius:40px">${c.avg}%</span></td>
+                <td style="padding:12px">${c.errors}</td>
+            </tr>
+        `).join('');
+        
+        // Лучшие сотрудники
         const top10 = [...currentData].sort((a,b) => (b.score/b.total) - (a.score/a.total)).slice(0, 10);
         document.getElementById('topBody').innerHTML = top10.map((e, i) => {
             const p = Math.round(e.score/e.total*100);
-            return `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${e.name}</strong></td><td style="padding:8px">${e.city}</td onclick="applyCityFilter('${e.city}')"></td><td style="padding:8px">${e.score}/${e.total} (${p}%)</td耶`;
+            let medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ''));
+            return `
+                <tr>
+                    <td style="padding:12px"><strong>${i+1}</strong> ${medal}</td>
+                    <td style="padding:12px">${e.name}</td>
+                    <td style="padding:12px">${e.city}</td>
+                    <td style="padding:12px"><span style="background:#28a745;color:#fff;padding:4px 12px;border-radius:40px">${e.score}/${e.total} (${p}%)</span></td>
+                </tr>
+            `;
         }).join('');
         
+        // Список сотрудников
         document.getElementById('employeeCount').innerText = filtered.length;
         const employeesHtml = filtered.map(e => {
             const p = Math.round(e.score/e.total*100);
-            return `<div class="employee-item"><strong>${e.name}</strong> — ${e.score}/${e.total} (${p}%) — ${e.city}</div>`;
+            let color = p >= 80 ? '#28a745' : (p >= 50 ? '#ffc107' : '#dc3545');
+            return `
+                <div class="employee-item">
+                    <strong>${e.name}</strong> — 
+                    <span style="background:${color};color:#fff;padding:2px 10px;border-radius:40px;font-size:12px">${e.score}/${e.total} (${p}%)</span> — 
+                    ${e.city}
+                </div>
+            `;
         }).join('');
-        document.getElementById('employeesList').innerHTML = employeesHtml || '<div>Нет данных</div>';
+        document.getElementById('employeesList').innerHTML = employeesHtml || '<div class="text-muted">Нет данных</div>';
     }
     
     function resetFilters() { 
