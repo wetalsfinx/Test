@@ -51,7 +51,7 @@
         <div class="card"><h3>🏙️ Статистика по городам</h3>
             <table class="table"><thead><tr style="background:#E30613;color:white"><th>Город</th><th>Сотр.</th><th>Средний балл</th><th>Ошибок</th></tr></thead>
             <tbody id="cityBody"></tbody>
-        </table>
+        <tr>
         </div>
         <div class="card"><h3>🏆 Лучшие сотрудники (топ-10)</h3>
             <table class="table"><thead><tr style="background:#E30613;color:white"><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead>
@@ -59,11 +59,11 @@
         </table>
         </div>
         <div class="filter-bar">
-            <input type="text" id="searchInput" class="form-control" placeholder="🔍 Поиск по имени..." style="width:200px">
+            <input type="text" id="searchInput" class="form-control" placeholder="Поиск по имени..." style="width:200px">
             <select id="cityFilter" class="form-select" style="width:150px"><option value="all">Все города</option></select>
             <button class="btn" onclick="resetFilters()" style="background:#6c757d;padding:6px 16px">Сброс фильтров</button>
         </div>
-        <div class="card"><h3>📋 Список сотрудников (<span id="employeeCount">0</span>)</h3>
+        <div class="card"><h3>Список сотрудников (<span id="employeeCount">0</span>)</h3>
             <div id="employeesList"></div>
         </div>
     </div>
@@ -80,48 +80,48 @@
     
     async function loadTests() {
         const status = document.getElementById('status');
-        status.innerHTML = '🔄 Загрузка тестов...';
+        status.innerHTML = 'Loading tests...';
         const { data, error } = await sb.from('tests').select('slug, name');
         if (error) {
-            status.innerHTML = '❌ Ошибка: ' + error.message;
+            status.innerHTML = 'Error: ' + error.message;
             return;
         }
         const selector = document.getElementById('testSelector');
-        selector.innerHTML = '<option value="">-- Выберите тест --</option>';
+        selector.innerHTML = '<option value="">-- Select test --</option>';
         for (const test of data) {
             selector.innerHTML += `<option value="${test.slug}">${test.name}</option>`;
         }
-        status.innerHTML = `✅ Загружено тестов: ${data.length}`;
+        status.innerHTML = 'Loaded ' + data.length + ' tests';
     }
     
     async function loadResults() {
         const slug = document.getElementById('testSelector').value;
-        if (!slug) { alert('Выберите тест'); return; }
+        if (!slug) { alert('Select test'); return; }
         const status = document.getElementById('status');
-        status.innerHTML = '🔄 Загрузка результатов...';
+        status.innerHTML = 'Loading results...';
         const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
         if (error) {
-            status.innerHTML = '❌ Ошибка: ' + error.message;
+            status.innerHTML = 'Error: ' + error.message;
             return;
         }
         if (!data || data.length === 0) {
-            status.innerHTML = '⚠️ Нет результатов для этого теста';
+            status.innerHTML = 'No results for this test';
             return;
         }
         
         currentData = data.map(row => ({
-            name: row.user_id || row.name || 'Сотрудник',
-            city: row.city || 'Не указан',
+            name: row.user_id || row.name || 'Employee',
+            city: row.city || 'Unknown',
             score: row.score || 0,
             total: row.total || 11
         }));
         
-        status.innerHTML = `✅ Загружено ${currentData.length} сотрудников`;
+        status.innerHTML = 'Loaded ' + currentData.length + ' employees';
         document.getElementById('results').style.display = 'block';
         
-        const cities = [...new Set(currentData.map(e => e.city).filter(c => c && c !== 'Не указан'))];
+        const cities = [...new Set(currentData.map(e => e.city).filter(c => c && c !== 'Unknown'))];
         const citySelect = document.getElementById('cityFilter');
-        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+        citySelect.innerHTML = '<option value="all">All cities</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
         
         renderAll();
     }
@@ -142,15 +142,14 @@
         const avg = total ? Math.round(sumScore / total) : 0;
         
         document.getElementById('kpi').innerHTML = `
-            <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-label">Сотрудников</div></div>
-            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div class="kpi-label">Средний балл</div></div>
-            <div class="kpi-card"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div>
-            <div class="kpi-card"><div class="kpi-value">${errors}</div><div class="kpi-label">Ошибок</div></div>
+            <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-label">Employees</div></div>
+            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div class="kpi-label">Average score</div></div>
+            <div class="kpi-card"><div class="kpi-value">${excellent}</div><div class="kpi-label">Excellent (>=80%)</div></div>
+            <div class="kpi-card"><div class="kpi-value">${errors}</div><div class="kpi-label">Errors</div></div>
         `;
         
-        // График распределения баллов
         const scores = currentData.map(e => (e.score/e.total)*100);
-        const cats = ['Отлично (80-100%)', 'Хорошо (60-79%)', 'Удовлетворительно (40-59%)', 'Плохо (0-39%)'];
+        const cats = ['Excellent (80-100%)', 'Good (60-79%)', 'Satisfactory (40-59%)', 'Poor (0-39%)'];
         const dist = [
             scores.filter(s => s >= 80).length,
             scores.filter(s => s >= 60 && s < 80).length,
@@ -159,15 +158,14 @@
         ];
         if (scoreChart) scoreChart.destroy();
         scoreChart = new Chart(document.getElementById('scoreChart'), {
-            type: 'bar', data: { labels: cats, datasets: [{ label: 'Количество', data: dist, backgroundColor: '#E30613', borderRadius: 8 }] },
+            type: 'bar', data: { labels: cats, datasets: [{ label: 'Count', data: dist, backgroundColor: '#E30613', borderRadius: 8 }] },
             options: { responsive: true }
         });
         
-        // Города
         const cityMap = new Map();
         for (const e of currentData) {
             const city = e.city;
-            if (city === 'Не указан') continue;
+            if (city === 'Unknown') continue;
             const p = (e.score/e.total)*100;
             if (!cityMap.has(city)) cityMap.set(city, { sum: 0, count: 0, errors: 0 });
             const s = cityMap.get(city);
@@ -178,38 +176,47 @@
         const cityData = Array.from(cityMap.entries()).map(([c, s]) => ({ city: c, count: s.count, avg: (s.sum/s.count).toFixed(0), errors: s.errors })).sort((a,b) => b.avg - a.avg);
         if (cityChart) cityChart.destroy();
         cityChart = new Chart(document.getElementById('cityChart'), {
-            type: 'bar', data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityData.map(c => c.avg), backgroundColor: '#E30613', borderRadius: 8 }] },
+            type: 'bar', data: { labels: cityData.map(c => c.city), datasets: [{ label: 'Average score (%)', data: cityData.map(c => c.avg), backgroundColor: '#E30613', borderRadius: 8 }] },
             options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
         });
-        document.getElementById('cityBody').innerHTML = cityData.map(c => `<tr><td style="padding:8px">${c.city}${c.avg === '100' ? ' 🥇' : ''}</td><td style="padding:8px">${c.count}</td><td style="padding:8px">${c.avg}%</td onclick="applyCityFilter('${c.city}')"></td><td style="padding:8px">${c.errors}</td>`).join('');
+        document.getElementById('cityBody').innerHTML = cityData.map(c => `<tr><td>${c.city}${c.avg === '100' ? ' 🥇' : ''}</td><td>${c.count}</td><td>${c.avg}%</td><td>${c.errors}</td></tr>`).join('');
         
-        // Лучшие сотрудники
         const top10 = [...currentData].sort((a,b) => (b.score/b.total) - (a.score/a.total)).slice(0, 10);
         document.getElementById('topBody').innerHTML = top10.map((e, i) => {
             const p = Math.round(e.score/e.total*100);
-            return `<tr><td style="padding:8px">${i+1}</td><td style="padding:8px"><strong>${e.name}</strong></td><td style="padding:8px">${e.city}</td><td style="padding:8px">${e.score}/${e.total} (${p}%)</td>`三农;
+            return `<tr><td>${i+1}</td><td><strong>${escapeHtml(e.name)}</strong></td><td>${escapeHtml(e.city)}</td><td>${e.score}/${e.total} (${p}%)</td></tr>`;
         }).join('');
         
-        // Список сотрудников
         document.getElementById('employeeCount').innerText = filtered.length;
         const employeesHtml = filtered.map(e => {
             const p = Math.round(e.score/e.total*100);
             return `<div class="employee-item"><span class="employee-name">${escapeHtml(e.name)}</span><span class="employee-score">${e.score}/${e.total} (${p}%)</span><span class="text-muted">${escapeHtml(e.city)}</span></div>`;
         }).join('');
-        document.getElementById('employeesList').innerHTML = employeesHtml || '<div class="text-muted">Нет данных</div>';
+        document.getElementById('employeesList').innerHTML = employeesHtml || '<div class="text-muted">No data</div>';
     }
     
-    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+    function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
     function resetFilters() { document.getElementById('searchInput').value = ''; document.getElementById('cityFilter').value = 'all'; currentCityFilter = 'all'; renderAll(); }
     function applyCityFilter(city) { document.getElementById('cityFilter').value = city; currentCityFilter = city; renderAll(); }
-    function generateReport() { if (!currentData.length) { alert('Нет данных'); return; } let text = `📊 ОТЧЁТ ПО ТЕСТУ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 Дата: ${new Date().toLocaleDateString()}\n\n📈 ОБЩАЯ СТАТИСТИКА\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nВсего сотрудников: ${currentData.length}\nСредний балл: ${Math.round(currentData.reduce((s,e) => s + (e.score/e.total), 0) / currentData.length * 100)}%\nВсего ошибок: ${currentData.reduce((s,e) => s + (e.total - e.score), 0)}\n\n`; navigator.clipboard.writeText(text).then(() => alert('✅ Отчёт скопирован!')); }
-    function downloadPDF() { if (currentData.length) html2pdf().set({margin:0.5,filename:`отчёт_${new Date().toISOString().slice(0,19)}.pdf`}).from(document.querySelector('.container')).save(); else alert('Нет данных'); }
+    
+    function generateReport() {
+        if (!currentData.length) { alert('No data'); return; }
+        let text = 'REPORT\n' + '='.repeat(60) + '\n';
+        text += 'Date: ' + new Date().toLocaleDateString() + '\n\n';
+        text += 'STATISTICS\n' + '='.repeat(60) + '\n';
+        text += 'Total employees: ' + currentData.length + '\n';
+        text += 'Average score: ' + Math.round(currentData.reduce((s,e) => s + (e.score/e.total), 0) / currentData.length * 100) + '%\n';
+        text += 'Total errors: ' + currentData.reduce((s,e) => s + (e.total - e.score), 0) + '\n\n';
+        navigator.clipboard.writeText(text).then(() => alert('Report copied!'));
+    }
+    
+    function downloadPDF() { if (currentData.length) html2pdf().set({margin:0.5,filename:'report_' + new Date().toISOString().slice(0,19) + '.pdf'}).from(document.querySelector('.container')).save(); else alert('No data'); }
     
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('copyBtn').onclick = generateReport;
     document.getElementById('pdfBtn').onclick = downloadPDF;
-    document.getElementById('searchInput').addEventListener('input', () => renderAll());
-    document.getElementById('cityFilter').addEventListener('change', (e) => { currentCityFilter = e.target.value; renderAll(); });
+    document.getElementById('searchInput').addEventListener('input', function() { renderAll(); });
+    document.getElementById('cityFilter').addEventListener('change', function(e) { currentCityFilter = e.target.value; renderAll(); });
     
     loadTests();
 </script>
