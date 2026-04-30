@@ -102,13 +102,17 @@
 </div>
 
 <script>
-    const sb = supabase.createClient('https://qtostraaqrnjbxiydlip.supabase.co', 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7');
-    
+    // Инициализация Supabase
+    const supabase = supabase.createClient(
+        'https://qtostraaqrnjbxiydlip.supabase.co',
+        'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
+    );
+
     let allData = [], excelErrors = [], scoreChart = null, cityChart = null;
     let cityFilter = "all", currentMode = 'supabase';
     
     async function loadTests() {
-        const { data } = await sb.from('tests').select('slug, name');
+        const { data } = await supabase.from('tests').select('slug, name');
         const sel = document.getElementById('testSelector');
         sel.innerHTML = '<option value="">-- Выберите тест --</option>';
         for (const t of data) sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
@@ -118,7 +122,7 @@
         const slug = document.getElementById('testSelector').value;
         if (!slug) { alert('Выберите тест'); return; }
         document.getElementById('status').innerHTML = 'Загрузка...';
-        const { data } = await sb.from('results').select('*').eq('test_type', slug);
+        const { data } = await supabase.from('results').select('*').eq('test_type', slug);
         if (!data || !data.length) { alert('Нет данных'); return; }
         allData = data.map(r => ({ name: r.user_id || r.name || 'Сотрудник', city: r.city || 'Не указан', score: r.score || 0, total: r.total || 11 }));
         excelErrors = [];
@@ -127,6 +131,243 @@
         updateCityFilter();
         renderAll();
     }
+    
+    function parseExcel(file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const sheet = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }).Sheets[0];
+            const rows = XLSX.utils.sheet_to_json(sheet);
+            if (!rows.length) return alert('Файл пуст');
+            const employees = [], errors = [];
+            for (const row of rows) {
+                const name = row['ФИО'] || '';
+                if (!name) continue;
+                let score = 0, total = 11;
+                const match = (row['Баллы'] || '').match(/(\d+)\/(\d+)/);
+                if (match) { score = +match[1]; total = +match[2]; }
+                employees.push({ name, city: row['Город'] || '', score, total });
+            }
+            allData = employees;
+            excelErrors = [];
+            document.getElementById('status').innerHTML = `✅ ${employees.length} сотрудников из Excel`;
+            document.getElementById('results').style.display = 'block';
+            updateCityFilter();
+            renderAll();
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    
+    function updateCityFilter() {
+        const cities = [...new Set(allData.map(e => e.city).filter(c => c && c !== 'Не указан'))];
+        const sel = document.getElementById('cityFilter');
+        sel.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    
+    function renderAll() {
+        let filtered = cityFilter === 'all' ? allData : allData.filter(e => e.city === cityFilter);
+        const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+        if (search) filtered = filtered.filter(e => e.name.toLowerCase().includes(search));
+        
+        const total = filtered.length, sum = filtered.reduce((s,e) => s + (e.score/e.total)*100, 0);
+        const avg = total ? Math.round(sum/total) : 0;
+        const excellent = filtered.filter(e => (e.score/e.total)*100 >= 80).length;
+        const errors = filtered.reduce((s,e) => s + (e.total - e.score), 0);
+        
+        document.getElementById('kpi').innerHTML = `
+            <div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div>
+            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div>
+            <div class="kpi-card"><div class="kpi-value">${excellent}</div><div>Отлично (≥80%)</div></div>
+            <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок</div></div>
+        `;
+        
+        const scores = allData.map(e => e.score/e.total*100);
+        const dist = [scores.filter(s=>s>=80).length, scores.filter(s=>s>=60&&s<80).length, scores.filter(s=>s>=40&&s<60).length, scores.filter(s=>s<40).length];
+        if (scoreChart) scoreChart.destroy();
+        scoreChart = new Chart(document.getElementById('scoreChart'), { type: 'bar', data: { labels: ['80-100%','60-79%','40-59%','0-39%'], datasets: [{ label: 'Кол-во', data: dist, backgroundColor: '#E30613' }] } });
+        
+        const cityMap = new Map();
+        for (const e of allData) {
+            if (e.city === 'Не указан') continue;
+            const p = e.score/e.total*100;
+            const s = cityMap.get(e.city) || { sum:0, count:0, errors:0 };
+            s.sum += p; s.count++; s.errors += e.total - e.score;
+            cityMap.set(e.city, s);
+        }
+        const cityData = Array.from(cityMap.entries()).map(([c,s]) => ({ city:c, count:s.count, avg: (s.sum/s.count).toFixed(0), errors: s.errors })).sort((a,b)=>b.avg-a.avg);
+        if (cityChart) cityChart.destroy();
+        cityChart = new Chart(document.getElementById('cityChart'), { type: 'bar', data: { labels: cityData.map(c=>c.city), datasets: [{ label: 'Средний балл %', data: cityData.map(c=>c.avg), backgroundColor: '#E30613' }] } });
+        
+        document.getElementById('cityStats').innerHTML = cityData.map(c => `
+            <div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; cityFilter='${c.city}'; renderAll()">
+                <div class="city-name"><span class="city-badge">${c.city}</span>${c.avg=='100'?'🥇':''}</div>
+                <div class="city-stats-info">
+                    <div class="city-stat"><div class="city-stat-value">${c.count}</div><div class="city-stat-label">сотр.</div></div>
+                    <div class="city-stat"><div class="city-stat-value">${c.avg}%</div><div class="city-stat-label">средний</div></div>
+                    <div class="city-stat"><div class="city-stat-value">${c.errors}</div><div class="city-stat-label">ошибок</div></div>
+                </div>
+            </div>
+        `).join('');
+        
+        const top10 = [...allData].sort((a,b)=>b.score/b.total - a.score/a.total).slice(0,10);
+        document.getElementById('topList').innerHTML = top10.map((e,i)=>`
+            <tr onclick="document.getElementById('cityFilter').value='${e.city}'; cityFilter='${e.city}'; renderAll()">
+                <td><strong>${i+1}</strong>${i==0?'🥇':i==1?'🥈':i==2?'🥉':''}</td>
+                <td>${e.name}</td>
+                <td>${e.city}</td>
+                <td><span style="background:#28a745;color:#fff;padding:4px 12px;border-radius:40px">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</span></td>
+            </tr>
+        `).join('');
+        
+        document.getElementById('empCount').innerText = filtered.length;
+        document.getElementById('empList').innerHTML = filtered.map(e => {
+            const p = Math.round(e.score/e.total*100);
+            return `<div class="employee-item" onclick="document.getElementById('cityFilter').value='${e.city}'; cityFilter='${e.city}'; renderAll()">
+                <span class="employee-name">${e.name}</span>
+                <span class="employee-score" style="background:${p>=80?'#28a745':p>=50?'#ffc107':'#dc3545'}">${e.score}/${e.total} (${p}%)</span>
+                <span class="employee-city"><i class="bi bi-geo-alt"></i> ${e.city}</span>
+            </div>`;
+        }).join('');
+    }
+    
+    function resetFilters() { document.getElementById('searchInput').value = ''; document.getElementById('cityFilter').value = 'all'; cityFilter = 'all'; renderAll(); }
+    
+    // Блок для тренировки продаж
+    async function loadTrainerResults() {
+        const { data, error } = await supabase
+            .from('trainer_results')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Ошибка загрузки:', error);
+            document.getElementById('trainerList').innerHTML = '<div style="padding:20px;text-align:center">Ошибка загрузки данных</div>';
+            return;
+        }
+        
+        if (!data || data.length === 0) {
+            document.getElementById('trainerList').innerHTML = '<div style="padding:20px;text-align:center">Пока нет результатов тренировки</div>';
+            document.getElementById('trainerKpi').innerHTML = '';
+            return;
+        }
+        
+        renderTrainerStats(data);
+    }
+
+    function renderTrainerStats(data) {
+        const search = document.getElementById('trainerSearch')?.value.toLowerCase() || '';
+        const city = document.getElementById('trainerCityFilter')?.value || 'all';
+        
+        let filtered = data;
+        if (city !== 'all') filtered = filtered.filter(r => r.city === city);
+        if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
+        
+        const total = filtered.length;
+        const successCount = filtered.filter(r => r.success === true).length;
+        const avgRules = filtered.reduce((sum, r) => sum + (r.rules_count || 0), 0) / (total || 1);
+        
+        document.getElementById('trainerKpi').innerHTML = `
+            <div class="kpi-card"><div class="kpi-value">${total}</div><div>Прошло тест</div></div>
+            <div class="kpi-card"><div class="kpi-value">${Math.round(successCount/total*100)||0}%</div><div>Успешно</div></div>
+            <div class="kpi-card"><div class="kpi-value">${avgRules.toFixed(1)}</div><div>Ср. правил</div></div>
+        `;
+        
+        const cities = [...new Set(data.map(r => r.city).filter(c => c))];
+        const citySelect = document.getElementById('trainerCityFilter');
+        if (citySelect) {
+            citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+            citySelect.value = city;
+        }
+        
+        document.getElementById('trainerList').innerHTML = filtered.map(r => {
+            const percent = Math.round(r.rules_count / 6 * 100);
+            const statusColor = r.success ? '#28a745' : '#dc3545';
+            return `
+                <div class="employee-item">
+                    <span class="employee-name">${escapeHtml(r.user_name)}</span>
+                    <span class="employee-score" style="background:${statusColor}">${r.rules_count}/6 (${percent}%)</span>
+                    <span class="employee-city"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.city)}</span>
+                    <span style="font-size:11px;color:#999">${new Date(r.created_at).toLocaleDateString()}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function escapeHtml(str) { return str?.replace(/[&<>]/g, function(m){if(m==='&')return'&amp;';if(m==='<')return'&lt;';if(m==='>')return'&gt;';return m;}) || ''; }
+
+    function exportTrainerToCSV() {
+        supabase.from('trainer_results').select('*').then(({data}) => {
+            if (!data || !data.length) return alert('Нет данных');
+            let csv = '\uFEFFИмя,Город,Правил применено,Успех,Дата\n';
+            data.forEach(r => csv += `"${r.user_name}","${r.city}",${r.rules_count},${r.success ? "Да" : "Нет"},"${new Date(r.created_at).toLocaleString()}"\n`);
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `trainer_results_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        });
+    }
+
+    // Кнопка "Тренировка продаж"
+    const trainerBtn = document.createElement('button');
+    trainerBtn.className = 'btn';
+    trainerBtn.innerHTML = '🎯 Тренировка продаж';
+    trainerBtn.onclick = () => {
+        const panel = document.getElementById('trainerPanel');
+        if (panel) {
+            panel.style.display = 'block';
+            loadTrainerResults();
+            panel.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+    const btnContainer = document.querySelector('.mode-buttons');
+    if (btnContainer) btnContainer.appendChild(trainerBtn);
+
+    // Обработчики для фильтров (добавляем после загрузки DOM)
+    setTimeout(() => {
+        const resetBtn = document.getElementById('resetTrainerBtn');
+        if (resetBtn) resetBtn.onclick = () => {
+            const search = document.getElementById('trainerSearch');
+            const citySel = document.getElementById('trainerCityFilter');
+            if (search) search.value = '';
+            if (citySel) citySel.value = 'all';
+            loadTrainerResults();
+        };
+        const exportBtn = document.getElementById('exportTrainerCsvBtn');
+        if (exportBtn) exportBtn.onclick = exportTrainerToCSV;
+        const searchInput = document.getElementById('trainerSearch');
+        if (searchInput) searchInput.oninput = () => loadTrainerResults();
+        const cityFilter = document.getElementById('trainerCityFilter');
+        if (cityFilter) cityFilter.onchange = () => loadTrainerResults();
+    }, 500);
+
+    // Основные обработчики
+    document.getElementById('modeSupabaseBtn').onclick = () => {
+        currentMode = 'supabase';
+        document.getElementById('modeSupabaseBtn').classList.add('mode-active');
+        document.getElementById('modeExcelBtn').classList.remove('mode-active');
+        document.getElementById('testSelector').style.display = 'inline-block';
+        document.getElementById('loadBtn').style.display = 'inline-block';
+        document.getElementById('excelUpload').style.display = 'none';
+        loadTests();
+    };
+    document.getElementById('modeExcelBtn').onclick = () => {
+        currentMode = 'excel';
+        document.getElementById('modeExcelBtn').classList.add('mode-active');
+        document.getElementById('modeSupabaseBtn').classList.remove('mode-active');
+        document.getElementById('testSelector').style.display = 'none';
+        document.getElementById('loadBtn').style.display = 'none';
+        document.getElementById('excelUpload').style.display = 'block';
+    };
+    document.getElementById('loadBtn').onclick = loadSupabase;
+    document.getElementById('selectFileBtn').onclick = () => document.getElementById('fileInput').click();
+    document.getElementById('fileInput').onchange = e => e.target.files[0] && parseExcel(e.target.files[0]);
+    document.getElementById('copyBtn').onclick = () => { if(allData.length) navigator.clipboard.writeText(`Отчёт ${new Date().toLocaleDateString()}\nСотрудников: ${allData.length}\nСредний балл: ${Math.round(allData.reduce((s,e)=>s+e.score/e.total,0)/allData.length*100)}%`).then(()=>alert('Скопировано!')); else alert('Нет данных'); };
+    document.getElementById('pdfBtn').onclick = () => { if(allData.length) html2pdf().set({margin:0.5,filename:'отчёт.pdf'}).from(document.querySelector('.container')).save(); else alert('Нет данных'); };
+    document.getElementById('searchInput').addEventListener('input', () => renderAll());
+    document.getElementById('cityFilter').addEventListener('change', (e) => { cityFilter = e.target.value; renderAll(); });
+    
+    loadTests();
+</script>
     
     function parseExcel(file) {
         const reader = new FileReader();
