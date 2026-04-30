@@ -252,5 +252,125 @@
     
     loadTests();
 </script>
+<!-- Блок для тренировки продаж -->
+<div id="trainerPanel" style="display:none; margin-top:20px;">
+    <div class="card">
+        <h3>🎯 Результаты тренировки продаж</h3>
+        <div class="kpi-grid" id="trainerKpi"></div>
+        <div class="filter-bar">
+            <input type="text" id="trainerSearch" placeholder="Поиск по имени...">
+            <select id="trainerCityFilter"><option value="all">Все города</option></select>
+            <button class="btn" id="resetTrainerBtn" style="background:#6c757d">Сброс</button>
+            <button class="btn" id="exportTrainerCsvBtn">📥 CSV</button>
+        </div>
+        <div class="employees-container" id="trainerList"></div>
+    </div>
+</div>
+
+<script>
+// Загрузка результатов тренировки из Supabase
+async function loadTrainerResults() {
+    const { data, error } = await supabase
+        .from('trainer_results')
+        .select('*')
+        .order('created_at', { ascending: false });
+    
+    if (error) {
+        console.error('Ошибка загрузки:', error);
+        document.getElementById('trainerList').innerHTML = '<div style="padding:20px;text-align:center">Ошибка загрузки данных</div>';
+        return;
+    }
+    
+    if (!data || data.length === 0) {
+        document.getElementById('trainerList').innerHTML = '<div style="padding:20px;text-align:center">Пока нет результатов тренировки</div>';
+        document.getElementById('trainerKpi').innerHTML = '';
+        return;
+    }
+    
+    renderTrainerStats(data);
+}
+
+function renderTrainerStats(data) {
+    // Фильтры
+    const search = document.getElementById('trainerSearch')?.value.toLowerCase() || '';
+    const city = document.getElementById('trainerCityFilter')?.value || 'all';
+    
+    let filtered = data;
+    if (city !== 'all') filtered = filtered.filter(r => r.city === city);
+    if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
+    
+    // KPI
+    const total = filtered.length;
+    const successCount = filtered.filter(r => r.success === true).length;
+    const avgRules = filtered.reduce((sum, r) => sum + (r.rules_count || 0), 0) / (total || 1);
+    
+    document.getElementById('trainerKpi').innerHTML = `
+        <div class="kpi-card"><div class="kpi-value">${total}</div><div>Прошло тест</div></div>
+        <div class="kpi-card"><div class="kpi-value">${Math.round(successCount/total*100)||0}%</div><div>Успешно</div></div>
+        <div class="kpi-card"><div class="kpi-value">${avgRules.toFixed(1)}</div><div>Ср. правил</div></div>
+    `;
+    
+    // Города для фильтра
+    const cities = [...new Set(data.map(r => r.city).filter(c => c))];
+    const citySelect = document.getElementById('trainerCityFilter');
+    if (citySelect) {
+        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+        citySelect.value = city;
+    }
+    
+    // Список
+    document.getElementById('trainerList').innerHTML = filtered.map(r => {
+        const percent = Math.round(r.rules_count / 6 * 100);
+        const statusColor = r.success ? '#28a745' : '#dc3545';
+        return `
+            <div class="employee-item">
+                <span class="employee-name">${escapeHtml(r.user_name)}</span>
+                <span class="employee-score" style="background:${statusColor}">${r.rules_count}/6 (${percent}%)</span>
+                <span class="employee-city"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.city)}</span>
+                <span style="font-size:11px;color:#999">${new Date(r.created_at).toLocaleDateString()}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function escapeHtml(str) { return str?.replace(/[&<>]/g, function(m){if(m==='&')return'&amp;';if(m==='<')return'&lt;';if(m==='>')return'&gt;';return m;}) || ''; }
+
+function exportTrainerToCSV() {
+    supabase.from('trainer_results').select('*').then(({data}) => {
+        if (!data || !data.length) return alert('Нет данных');
+        let csv = '\uFEFFИмя,Город,Правил применено,Успех,Дата\n';
+        data.forEach(r => csv += `"${r.user_name}","${r.city}",${r.rules_count},${r.success ? "Да" : "Нет"},"${new Date(r.created_at).toLocaleString()}"\n`);
+        const blob = new Blob([csv], {type: 'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `trainer_results_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+    });
+}
+
+// Добавляем кнопку в меню
+const trainerBtn = document.createElement('button');
+trainerBtn.className = 'btn';
+trainerBtn.id = 'showTrainerBtn';
+trainerBtn.innerHTML = '🎯 Тренировка продаж';
+trainerBtn.onclick = () => {
+    document.getElementById('trainerPanel').style.display = 'block';
+    loadTrainerResults();
+    // Прокрутка к блоку
+    document.getElementById('trainerPanel').scrollIntoView({ behavior: 'smooth' });
+};
+const btnContainer = document.querySelector('.mode-buttons') || document.querySelector('.card div');
+if (btnContainer) btnContainer.appendChild(trainerBtn);
+
+// Сброс фильтров
+document.getElementById('resetTrainerBtn')?.addEventListener('click', () => {
+    document.getElementById('trainerSearch').value = '';
+    document.getElementById('trainerCityFilter').value = 'all';
+    loadTrainerResults();
+});
+document.getElementById('exportTrainerCsvBtn')?.addEventListener('click', exportTrainerToCSV);
+document.getElementById('trainerSearch')?.addEventListener('input', () => loadTrainerResults());
+document.getElementById('trainerCityFilter')?.addEventListener('change', () => loadTrainerResults());
+</script>
 </body>
 </html>
