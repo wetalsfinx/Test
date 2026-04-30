@@ -18,20 +18,16 @@
         .kpi-grid{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
         .kpi-card{background:#fff;padding:20px;border-radius:16px;border-left:4px solid #E30613;min-width:150px;text-align:center}
         .kpi-value{font-size:32px;font-weight:bold;color:#E30613}
-        .kpi-label{font-size:12px;color:#666;margin-top:5px}
-        canvas{max-height:200px;width:100%}
         .mode-buttons{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
         select,input{padding:8px 15px;border-radius:40px;border:1px solid #ddd}
         .filter-bar{background:#fff;padding:15px;border-radius:16px;margin:15px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
         .employees-container{max-height:400px;overflow-y:auto;border-radius:16px}
-        .employee-item{padding:12px;border-bottom:1px solid #eee;cursor:pointer;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-        .employee-item:hover{background:#fef5f5}
+        .employee-item{padding:12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
         .employee-name{font-weight:600}
         .employee-score{background:#E30613;color:#fff;padding:4px 12px;border-radius:40px;font-size:12px;font-weight:600}
         .employee-city{color:#6c757d;font-size:13px}
         .city-stats{display:flex;flex-direction:column;gap:12px}
-        .city-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f8f9fa;border-radius:12px;cursor:pointer}
-        .city-row:hover{background:#fef5f5;transform:translateX(5px)}
+        .city-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f8f9fa;border-radius:12px}
         .city-name{font-weight:600;display:flex;align-items:center;gap:8px}
         .city-badge{background:#E30613;color:#fff;padding:4px 12px;border-radius:40px;font-size:14px;font-weight:600}
         .city-stats-info{display:flex;gap:20px}
@@ -41,7 +37,6 @@
         .best-table{width:100%;border-collapse:collapse}
         .best-table th,.best-table td{padding:12px;text-align:left;border-bottom:1px solid #eee}
         .best-table th{background:#E30613;color:#fff}
-        .best-table tr:hover td{background:#fef5f5;cursor:pointer}
     </style>
 </head>
 <body>
@@ -51,7 +46,7 @@
         <div class="mode-buttons">
             <button class="btn mode-active" id="modeSupabaseBtn">☁️ Supabase</button>
             <button class="btn btn-secondary" id="modeExcelBtn">📂 Excel</button>
-            <button class="btn" id="trainerStatsBtn">🎯 Тренировка продаж</button>
+            <button class="btn" id="trainerStatsBtn" style="background:#28a745">🎯 Тренировка продаж</button>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
             <select id="testSelector" style="width:280px">
@@ -62,47 +57,31 @@
             <button class="btn" id="pdfBtn">📄 PDF</button>
         </div>
         <div id="excelUpload" style="display:none; margin-top:15px">
-            <div style="border:2px dashed #ddd;border-radius:20px;padding:20px;text-align:center;cursor:pointer" id="uploadZone">
-                <i class="bi bi-file-excel" style="font-size:32px;color:#E30613"></i>
-                <p>Загрузите Excel-файл (кнопка «Детальный» из админки)</p>
-                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
-                <button class="btn" id="selectFileBtn">📂 Выбрать файл</button>
-            </div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
+            <button class="btn" id="selectFileBtn">📂 Выбрать файл Excel</button>
         </div>
         <div id="status" class="mt-2 text-muted"></div>
     </div>
 
+    <!-- Блок результатов основного тестирования -->
     <div id="results" style="display:none">
         <div class="kpi-grid" id="kpi"></div>
         <div class="row">
             <div class="col-md-6"><div class="card"><h3>📊 Распределение баллов</h3><canvas id="scoreChart"></canvas></div></div>
             <div class="col-md-6"><div class="card"><h3>🏙️ Успеваемость по городам</h3><canvas id="cityChart"></canvas></div></div>
         </div>
-        
-        <div class="card">
-            <h3>🏙️ Статистика по городам</h3>
-            <div class="city-stats" id="cityStats"></div>
-        </div>
-        
-        <div class="card">
-            <h3>🏆 Лучшие сотрудники</h3>
-            <table class="best-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topList"></tbody></table>
-        </div>
-        
+        <div class="card"><h3>🏙️ Статистика по городам</h3><div class="city-stats" id="cityStats"></div></div>
+        <div class="card"><h3>🏆 Лучшие сотрудники</h3><table class="best-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead><tbody id="topList"></tbody></table></div>
         <div class="filter-bar">
             <input type="text" id="searchInput" placeholder="Поиск...">
             <select id="cityFilter"><option value="all">Все города</option></select>
             <button class="btn" onclick="resetFilters()" style="background:#6c757d">Сброс</button>
         </div>
-        
-        <div class="card">
-            <h3>📋 Список сотрудников (<span id="empCount">0</span>)</h3>
-            <div class="employees-container" id="empList"></div>
-        </div>
+        <div class="card"><h3>📋 Список сотрудников (<span id="empCount">0</span>)</h3><div class="employees-container" id="empList"></div></div>
     </div>
 
-    <!-- Блок для тренировки продаж -->
-    <div id="trainerPanel" style="display:none; margin-top:20px;">
+    <!-- Блок для тренировки продаж (виден сразу) -->
+    <div id="trainerPanel" style="margin-top:20px;">
         <div class="card">
             <h3>🎯 Результаты тренировки продаж</h3>
             <div class="kpi-grid" id="trainerKpi"></div>
@@ -112,29 +91,32 @@
                 <button class="btn" id="resetTrainerBtn" style="background:#6c757d">Сброс</button>
                 <button class="btn" id="exportTrainerCsvBtn">📥 CSV</button>
             </div>
-            <div class="employees-container" id="trainerList"></div>
+            <div class="employees-container" id="trainerList">
+                <div style="padding:20px;text-align:center">Загрузка результатов тренировки...</div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // ========== ИНИЦИАЛИЗАЦИЯ SUPABASE ==========
+    // Supabase
     const supabase = supabase.createClient(
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
 
-    let allData = [], excelErrors = [], scoreChart = null, cityChart = null;
+    let allData = [], scoreChart = null, cityChart = null;
     let cityFilter = "all", currentMode = 'supabase';
     
-    // ========== ЗАГРУЗКА ТЕСТОВ И ДАННЫХ ==========
+    // Загрузка списка тестов
     async function loadTests() {
         const { data } = await supabase.from('tests').select('slug, name');
         const sel = document.getElementById('testSelector');
         sel.innerHTML = '<option value="">-- Выберите тест --</option>';
-        for (const t of data) sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
+        if (data) for (const t of data) sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
     }
     
+    // Загрузка данных из Supabase
     async function loadSupabase() {
         const slug = document.getElementById('testSelector').value;
         if (!slug) { alert('Выберите тест'); return; }
@@ -142,13 +124,13 @@
         const { data } = await supabase.from('results').select('*').eq('test_type', slug);
         if (!data || !data.length) { alert('Нет данных'); return; }
         allData = data.map(r => ({ name: r.user_id || r.name || 'Сотрудник', city: r.city || 'Не указан', score: r.score || 0, total: r.total || 11 }));
-        excelErrors = [];
         document.getElementById('status').innerHTML = `✅ ${allData.length} сотрудников`;
         document.getElementById('results').style.display = 'block';
         updateCityFilter();
         renderAll();
     }
     
+    // Загрузка Excel
     function parseExcel(file) {
         const reader = new FileReader();
         reader.onload = e => {
@@ -165,7 +147,6 @@
                 employees.push({ name, city: row['Город'] || '', score, total });
             }
             allData = employees;
-            excelErrors = [];
             document.getElementById('status').innerHTML = `✅ ${employees.length} сотрудников из Excel`;
             document.getElementById('results').style.display = 'block';
             updateCityFilter();
@@ -180,7 +161,6 @@
         sel.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
     }
     
-    // ========== ОТРИСОВКА ГРАФИКОВ И ТАБЛИЦ ==========
     function renderAll() {
         let filtered = cityFilter === 'all' ? allData : allData.filter(e => e.city === cityFilter);
         const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
@@ -216,35 +196,15 @@
         if (cityChart) cityChart.destroy();
         cityChart = new Chart(document.getElementById('cityChart'), { type: 'bar', data: { labels: cityData.map(c=>c.city), datasets: [{ label: 'Средний балл %', data: cityData.map(c=>c.avg), backgroundColor: '#E30613' }] } });
         
-        document.getElementById('cityStats').innerHTML = cityData.map(c => `
-            <div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; cityFilter='${c.city}'; renderAll()">
-                <div class="city-name"><span class="city-badge">${c.city}</span>${c.avg=='100'?'🥇':''}</div>
-                <div class="city-stats-info">
-                    <div class="city-stat"><div class="city-stat-value">${c.count}</div><div class="city-stat-label">сотр.</div></div>
-                    <div class="city-stat"><div class="city-stat-value">${c.avg}%</div><div class="city-stat-label">средний</div></div>
-                    <div class="city-stat"><div class="city-stat-value">${c.errors}</div><div class="city-stat-label">ошибок</div></div>
-                </div>
-            </div>
-        `).join('');
+        document.getElementById('cityStats').innerHTML = cityData.map(c => `<div class="city-row"><div class="city-name"><span class="city-badge">${c.city}</span></div><div class="city-stats-info"><div class="city-stat"><div class="city-stat-value">${c.count}</div><div class="city-stat-label">сотр.</div></div><div class="city-stat"><div class="city-stat-value">${c.avg}%</div><div class="city-stat-label">средний</div></div><div class="city-stat"><div class="city-stat-value">${c.errors}</div><div class="city-stat-label">ошибок</div></div></div></div>`).join('');
         
         const top10 = [...allData].sort((a,b)=>b.score/b.total - a.score/a.total).slice(0,10);
-        document.getElementById('topList').innerHTML = top10.map((e,i)=>`
-            <tr onclick="document.getElementById('cityFilter').value='${e.city}'; cityFilter='${e.city}'; renderAll()">
-                <td><strong>${i+1}</strong>${i==0?'🥇':i==1?'🥈':i==2?'🥉':''}</td>
-                <td>${e.name}</td>
-                <td>${e.city}</td>
-                <td><span style="background:#28a745;color:#fff;padding:4px 12px;border-radius:40px">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</span></td>
-            </tr>
-        `).join('');
+        document.getElementById('topList').innerHTML = top10.map((e,i)=>`<tr><td><strong>${i+1}</strong>${i==0?'🥇':i==1?'🥈':i==2?'🥉':''}</td><td>${e.name}</td><td>${e.city}</td><td><span style="background:#28a745;color:#fff;padding:4px 12px;border-radius:40px">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</span></td></tr>`).join('');
         
         document.getElementById('empCount').innerText = filtered.length;
         document.getElementById('empList').innerHTML = filtered.map(e => {
             const p = Math.round(e.score/e.total*100);
-            return `<div class="employee-item" onclick="document.getElementById('cityFilter').value='${e.city}'; cityFilter='${e.city}'; renderAll()">
-                <span class="employee-name">${e.name}</span>
-                <span class="employee-score" style="background:${p>=80?'#28a745':p>=50?'#ffc107':'#dc3545'}">${e.score}/${e.total} (${p}%)</span>
-                <span class="employee-city"><i class="bi bi-geo-alt"></i> ${e.city}</span>
-            </div>`;
+            return `<div class="employee-item"><span class="employee-name">${e.name}</span><span class="employee-score" style="background:${p>=80?'#28a745':p>=50?'#ffc107':'#dc3545'}">${e.score}/${e.total} (${p}%)</span><span class="employee-city"><i class="bi bi-geo-alt"></i> ${e.city}</span></div>`;
         }).join('');
     }
     
@@ -258,56 +218,37 @@
             .order('created_at', { ascending: false });
         
         if (error) {
-            console.error(error);
             document.getElementById('trainerList').innerHTML = '<div style="padding:20px;text-align:center">Ошибка загрузки</div>';
             return;
         }
         if (!data || !data.length) {
-            document.getElementById('trainerList').innerHTML = '<div style="padding:20px;text-align:center">Пока нет результатов</div>';
+            document.getElementById('trainerList').innerHTML = '<div style="padding:20px;text-align:center">Пока нет результатов тренировки</div>';
             document.getElementById('trainerKpi').innerHTML = '';
             return;
         }
-        renderTrainerStats(data);
-    }
-
-    function renderTrainerStats(data) {
-        const search = document.getElementById('trainerSearch')?.value.toLowerCase() || '';
-        const city = document.getElementById('trainerCityFilter')?.value || 'all';
-        let filtered = data;
-        if (city !== 'all') filtered = filtered.filter(r => r.city === city);
-        if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
         
-        const total = filtered.length;
-        const successCount = filtered.filter(r => r.success === true).length;
-        const avgRules = filtered.reduce((sum, r) => sum + (r.rules_count || 0), 0) / (total || 1);
+        const total = data.length;
+        const successCount = data.filter(r => r.success === true).length;
+        const avgRules = data.reduce((sum, r) => sum + (r.rules_count || 0), 0) / total;
         
         document.getElementById('trainerKpi').innerHTML = `
             <div class="kpi-card"><div class="kpi-value">${total}</div><div>Прошло тест</div></div>
-            <div class="kpi-card"><div class="kpi-value">${Math.round(successCount/total*100)||0}%</div><div>Успешно</div></div>
+            <div class="kpi-card"><div class="kpi-value">${Math.round(successCount/total*100)}%</div><div>Успешно</div></div>
             <div class="kpi-card"><div class="kpi-value">${avgRules.toFixed(1)}</div><div>Ср. правил</div></div>
         `;
         
-        const cities = [...new Set(data.map(r => r.city).filter(c => c))];
-        const citySelect = document.getElementById('trainerCityFilter');
-        if (citySelect) {
-            citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
-            citySelect.value = city;
-        }
-        
-        document.getElementById('trainerList').innerHTML = filtered.map(r => {
+        document.getElementById('trainerList').innerHTML = data.map(r => {
             const percent = Math.round(r.rules_count / 6 * 100);
             const statusColor = r.success ? '#28a745' : '#dc3545';
             return `<div class="employee-item">
-                <span class="employee-name">${escapeHtml(r.user_name)}</span>
+                <span class="employee-name">${r.user_name}</span>
                 <span class="employee-score" style="background:${statusColor}">${r.rules_count}/6 (${percent}%)</span>
-                <span class="employee-city"><i class="bi bi-geo-alt"></i> ${escapeHtml(r.city)}</span>
+                <span class="employee-city"><i class="bi bi-geo-alt"></i> ${r.city}</span>
                 <span style="font-size:11px;color:#999">${new Date(r.created_at).toLocaleDateString()}</span>
             </div>`;
         }).join('');
     }
-
-    function escapeHtml(str) { return str?.replace(/[&<>]/g, function(m){if(m==='&')return'&amp;';if(m==='<')return'&lt;';if(m==='>')return'&gt;';return m;}) || ''; }
-
+    
     function exportTrainerToCSV() {
         supabase.from('trainer_results').select('*').then(({data}) => {
             if (!data || !data.length) return alert('Нет данных');
@@ -320,36 +261,8 @@
             a.click();
         });
     }
-
-    // ========== КНОПКА ТРЕНИРОВКИ (обработчик) ==========
-    document.getElementById('trainerStatsBtn').onclick = () => {
-        const panel = document.getElementById('trainerPanel');
-        if (panel) {
-            panel.style.display = 'block';
-            loadTrainerResults();
-            panel.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
-    // ========== ОБРАБОТЧИКИ ФИЛЬТРОВ ТРЕНИРОВКИ ==========
-    setTimeout(() => {
-        const resetBtn = document.getElementById('resetTrainerBtn');
-        if (resetBtn) resetBtn.onclick = () => {
-            const search = document.getElementById('trainerSearch');
-            const citySel = document.getElementById('trainerCityFilter');
-            if (search) search.value = '';
-            if (citySel) citySel.value = 'all';
-            loadTrainerResults();
-        };
-        const exportBtn = document.getElementById('exportTrainerCsvBtn');
-        if (exportBtn) exportBtn.onclick = exportTrainerToCSV;
-        const searchInput = document.getElementById('trainerSearch');
-        if (searchInput) searchInput.oninput = () => loadTrainerResults();
-        const cityFilter = document.getElementById('trainerCityFilter');
-        if (cityFilter) cityFilter.onchange = () => loadTrainerResults();
-    }, 500);
-
-    // ========== ОСНОВНЫЕ ОБРАБОТЧИКИ ==========
+    
+    // ========== ОБРАБОТЧИКИ ==========
     document.getElementById('modeSupabaseBtn').onclick = () => {
         currentMode = 'supabase';
         document.getElementById('modeSupabaseBtn').classList.add('mode-active');
@@ -374,8 +287,13 @@
     document.getElementById('pdfBtn').onclick = () => { if(allData.length) html2pdf().set({margin:0.5,filename:'отчёт.pdf'}).from(document.querySelector('.container')).save(); else alert('Нет данных'); };
     document.getElementById('searchInput').addEventListener('input', () => renderAll());
     document.getElementById('cityFilter').addEventListener('change', (e) => { cityFilter = e.target.value; renderAll(); });
+    document.getElementById('resetTrainerBtn').onclick = () => loadTrainerResults();
+    document.getElementById('exportTrainerCsvBtn').onclick = exportTrainerToCSV;
+    document.getElementById('trainerSearch').addEventListener('input', () => loadTrainerResults());
+    document.getElementById('trainerCityFilter').addEventListener('change', () => loadTrainerResults());
     
     loadTests();
+    loadTrainerResults();
 </script>
 </body>
 </html>
