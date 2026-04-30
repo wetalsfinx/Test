@@ -51,6 +51,7 @@
         <div class="mode-buttons">
             <button class="btn mode-active" id="modeSupabaseBtn">☁️ Supabase</button>
             <button class="btn btn-secondary" id="modeExcelBtn">📂 Excel</button>
+            <button class="btn" id="trainerStatsBtn">🎯 Тренировка продаж</button>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
             <select id="testSelector" style="width:280px">
@@ -320,11 +321,8 @@
         });
     }
 
-    // ========== КНОПКА ТРЕНИРОВКИ ==========
-    const trainerBtn = document.createElement('button');
-    trainerBtn.className = 'btn';
-    trainerBtn.innerHTML = '🎯 Тренировка продаж';
-    trainerBtn.onclick = () => {
+    // ========== КНОПКА ТРЕНИРОВКИ (обработчик) ==========
+    document.getElementById('trainerStatsBtn').onclick = () => {
         const panel = document.getElementById('trainerPanel');
         if (panel) {
             panel.style.display = 'block';
@@ -332,8 +330,6 @@
             panel.scrollIntoView({ behavior: 'smooth' });
         }
     };
-    const btnContainer = document.querySelector('.mode-buttons');
-    if (btnContainer) btnContainer.appendChild(trainerBtn);
 
     // ========== ОБРАБОТЧИКИ ФИЛЬТРОВ ТРЕНИРОВКИ ==========
     setTimeout(() => {
