@@ -19,14 +19,12 @@
             body { padding: 8px; }
             .employee-view { padding: 20px; }
             .choice-btn { font-size: 14px; padding: 12px 14px; }
-            .next-btn { font-size: 16px; padding: 12px 20px; }
         }
         :root {
             --primary-red: #c41e3a;
             --primary-rose: #e8a0b4;
             --primary-white: #ffffff;
             --light-rose: #fff0f3;
-            --dark-red: #8b1a2c;
             --green-success: #2c6e2c;
         }
         .employee-view {
@@ -93,8 +91,6 @@
             margin-bottom: 10px;
             font-size: 14px;
             cursor: pointer;
-            transition: 0.2s;
-            color: #333;
         }
         .choice-btn.selected {
             background: var(--primary-rose);
@@ -150,7 +146,6 @@
             margin: 0 18px 20px 18px;
             width: calc(100% - 36px);
             cursor: pointer;
-            font-weight: bold;
         }
         .current-user {
             background: var(--light-rose);
@@ -171,7 +166,7 @@
         <h1>🎯 585GOLD | Тренировка продаж</h1>
         <p style="text-align: center; color: #666; font-size: 14px;">Пройди диалог с клиентом</p>
         <div class="register-form" id="registerForm">
-            <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
+            <input type="text" id="userName" placeholder="Введите имя и фамилию">
             <select id="userCity">
                 <option value="">Выберите город</option>
                 <option value="Санкт-Петербург">Санкт-Петербург</option>
@@ -205,19 +200,19 @@
 </div>
 
 <script>
-    // Supabase
+    // Инициализация Supabase (твои ключи)
     const supabase = supabase.createClient(
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
 
     const ALL_RULES = [
-        { id: "initiative", name: "Проявляй инициативу", recommendation: "Не ждите, пока клиент сам позовёт. Через 20-30 секунд подойдите и спросите: «Какое изделие выбираете? Для себя или в подарок?»" },
-        { id: "askBeforeShow", name: "Задавай вопросы ДО показа", recommendation: "Сначала спросите «для какого случая?», «кто получатель?», «какие предпочтения?». Только потом показывайте украшения." },
-        { id: "emotionalHPW", name: "Презентуй с эмоцией (ХПВ)", recommendation: "Привязывайте украшение к событию: «Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите»." },
-        { id: "fittingOffer", name: "Предлагай примерку через «Давайте»", recommendation: "Всегда предлагайте примерку фразой «Давайте примерим». Клиент, который примерил, покупает в 3 раза чаще." },
-        { id: "alternative", name: "Не отпускай без альтернативы", recommendation: "Если нет размера или модели — сразу покажите похожие варианты и каталог заказов." },
-        { id: "warmClosing", name: "Завершай с теплотой", recommendation: "Завершайте с теплотой: «Спасибо, что зашли! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»." }
+        { id: "initiative", name: "Проявляй инициативу" },
+        { id: "askBeforeShow", name: "Задавай вопросы ДО показа" },
+        { id: "emotionalHPW", name: "Презентуй с эмоцией (ХПВ)" },
+        { id: "fittingOffer", name: "Предлагай примерку через «Давайте»" },
+        { id: "alternative", name: "Не отпускай без альтернативы" },
+        { id: "warmClosing", name: "Завершай с теплотой" }
     ];
 
     const QUESTIONS = [
@@ -228,7 +223,7 @@
             choices: [
                 "«Добрый день! Выбираете что-то конкретное или просто смотрите?»",
                 "«Добрый день. У нас сегодня скидка 30% на бриллианты. Какое изделие выбираете? Для себя или в подарок?»",
-                "«Здравствуйте! Если нужна помощь — обращайтесь» (и отхожу)"
+                "«Здравствуйте! Если нужна помощь — обращайтесь»"
             ]
         },
         {
@@ -236,49 +231,49 @@
             ruleId: "askBeforeShow",
             correct: 1,
             choices: [
-                "«Отлично! Давайте посмотрим вот эту коллекцию — она как раз в вашем бюджете»",
+                "«Отлично! Давайте посмотрим вот эту коллекцию»",
                 "«А для какого случая? Что ей нравится?»",
-                "«40 тысяч — хороший бюджет. Покажу несколько вариантов в нейтральном стиле, а вы выберете»"
+                "«40 тысяч — хороший бюджет. Покажу несколько вариантов»"
             ]
         },
         {
-            client: "Клиент: «Годовщина 10 лет. Жена любит винтажный стиль». Показываете кольцо. Что говорите?",
+            client: "Клиент: «Годовщина 10 лет. Жена любит винтажный стиль». Что говорите?",
             ruleId: "emotionalHPW",
             correct: 2,
             choices: [
-                "«Это кольцо из нашей винтажной коллекции. Очень качественная огранка, хорошая цена»",
-                "«Такие кольца сейчас хорошо покупают — это тренд сезона»",
-                "«Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите. Оно создано для таких моментов»"
+                "«Это кольцо из винтажной коллекции, хорошая цена»",
+                "«Такие кольца сейчас в тренде»",
+                "«Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите»"
             ]
         },
         {
-            client: "Клиент заинтересовался: «Да, это близко. Можно посмотреть?»",
+            client: "Клиент: «Можно посмотреть?»",
             ruleId: "fittingOffer",
             correct: 1,
             choices: [
-                "«Хотите, чтобы я показала это кольцо поближе?»",
-                "«Давайте посмотрим на него вблизи — так вы сразу увидите, как оно прекрасно. Давайте примерим?»",
-                "«У нас есть зеркало вон там — можете померить, если захотите»"
+                "«Хотите, я покажу поближе?»",
+                "«Давайте примерим — так вы сразу увидите, как оно сидит»",
+                "«У нас есть зеркало, можете померить»"
             ]
         },
         {
-            client: "Клиент посмотрел кольцо, улыбается: «Красиво… но размера 16,5 нет в наличии». Что делаете?",
+            client: "Клиент: «Красиво… но размера 16,5 нет в наличии». Что делаете?",
             ruleId: "alternative",
             correct: 0,
             choices: [
-                "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ — сможем заказать точно под размер»",
-                "«Как жаль! Давайте посмотрим, что ещё есть в этой витрине»",
-                "«Можем заказать с доставкой через 2-3 недели. Внесёте предоплату?»"
+                "«Давайте покажу похожие кольца в наличии и каталог на заказ»",
+                "«Как жаль! Давайте посмотрим что-то ещё»",
+                "«Можем заказать, внесёте предоплату?»"
             ]
         },
         {
-            client: "Клиент выбрал похожую модель, оформил заказ. Прощается. Что говорите?",
+            client: "Клиент оформил заказ. Прощается. Что говорите?",
             ruleId: "warmClosing",
             correct: 2,
             choices: [
                 "«Спасибо за покупку! Хорошего дня»",
-                "«Будем рады видеть вас снова. У нас обновления коллекции каждую неделю»",
-                "«Спасибо, что зашли к нам! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»"
+                "«Будем рады видеть вас снова»",
+                "«Спасибо, что зашли! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»"
             ]
         }
     ];
@@ -288,7 +283,7 @@
 
     async function saveToSupabase(success, rulesArray, answersArray) {
         try {
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('trainer_results')
                 .insert([{
                     user_name: currentUserName,
@@ -298,9 +293,15 @@
                     success: success,
                     answers: answersArray
                 }]);
-            if (error) console.error('Supabase error:', error);
-            else console.log('Saved to Supabase!');
-        } catch(e) { console.error(e); }
+            if (error) {
+                console.error('Ошибка Supabase:', error);
+                alert('Ошибка сохранения результата. Сообщите администратору.');
+            } else {
+                console.log('Результат сохранён в Supabase!');
+            }
+        } catch(e) {
+            console.error(e);
+        }
     }
 
     function nextStep() {
@@ -333,10 +334,12 @@
             resultDiv.innerHTML = "<h2>🏆 ПОБЕДА!</h2><p>Вы применили все 6 правил!</p>";
         } else {
             const missing = ALL_RULES.filter(r => !appliedRules.includes(r.name));
-            resultDiv.innerHTML = `<h2>😞 ТЕСТ НЕ ПРОЙДЕН</h2><p>Применено правил: ${appliedRules.length}/6</p><ul style="text-align:left">${missing.map(r => `<li>${r.name}</li>`).join('')}</ul>`;
+            resultDiv.innerHTML = `<h2>😞 ТЕСТ НЕ ПРОЙДЕН</h2><p>Правил применено: ${appliedRules.length}/6</p><ul>${missing.map(r => `<li>${r.name}</li>`).join('')}</ul>`;
         }
+        
         // Сохраняем в Supabase
         saveToSupabase(success, appliedRules, currentAnswers);
+        
         const btn = document.createElement("button");
         btn.className = "restart-btn";
         btn.innerText = "🔄 Пройти заново";
@@ -387,7 +390,12 @@
         renderQuestion();
     }
 
-    function resetGame() { startGame(currentUserName, currentUserCity); }
+    function resetGame() { 
+        document.getElementById("resultCard").innerHTML = '<div id="resultMessage"></div>';
+        const oldBtn = document.querySelector(".restart-btn");
+        if (oldBtn) oldBtn.remove();
+        startGame(currentUserName, currentUserCity); 
+    }
 
     document.getElementById("startGameBtn").onclick = () => {
         const name = document.getElementById("userName").value.trim();
