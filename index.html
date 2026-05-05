@@ -2,367 +2,307 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>585GOLD | Анализ результатов</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>585GOLD | Аналитика тестов</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body{background:#f0f2f8;padding:20px;font-family:'Segoe UI',sans-serif}
-        .card{background:#fff;border-radius:20px;padding:20px;margin-bottom:20px;border-top:4px solid #E30613;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
-        .btn{background:#E30613;color:#fff;border:none;padding:8px 20px;border-radius:40px;margin:5px;cursor:pointer;transition:0.2s}
-        .btn:hover{background:#c41c2a}
-        .btn-secondary{background:#6c757d}
-        .kpi-grid{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
-        .kpi-card{background:#fff;padding:20px;border-radius:16px;border-left:4px solid #E30613;min-width:150px;text-align:center}
-        .kpi-value{font-size:32px;font-weight:bold;color:#E30613}
-        .kpi-label{font-size:12px;color:#666;margin-top:5px}
-        .filter-bar{background:#fff;padding:15px;border-radius:16px;margin:15px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-        .employees-container{max-height:400px;overflow-y:auto;border-radius:16px}
-        .employee-item{padding:12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-        .employee-item:hover{background:#fef5f5;cursor:pointer}
-        .employee-name{font-weight:600}
-        .employee-score{background:#E30613;color:#fff;padding:4px 12px;border-radius:40px;font-size:12px;font-weight:600}
-        .employee-city{color:#6c757d;font-size:13px}
-        .best-table{width:100%;border-collapse:collapse}
-        .best-table th,.best-table td{padding:12px;text-align:left;border-bottom:1px solid #eee}
-        .best-table th{background:#E30613;color:#fff}
-        .best-table tr:hover td{background:#fef5f5}
-        canvas{max-height:200px;width:100%}
-        #status{min-height:24px}
-        .loading{opacity:0.6;pointer-events:none}
+        :root { --brand: #E30613; --brand-hover: #c41c2a; --bg: #f8f9fa; }
+        body { background: var(--bg); font-family: system-ui, -apple-system, sans-serif; padding: 20px; }
+        .card { border: none; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .btn-brand { background: var(--brand); color: white; border: none; border-radius: 40px; padding: 8px 20px; transition: 0.2s; }
+        .btn-brand:hover { background: var(--brand-hover); color: white; }
+        .kpi { text-align: center; padding: 15px; border-left: 4px solid var(--brand); background: white; border-radius: 12px; }
+        .kpi-val { font-size: 28px; font-weight: 800; color: var(--brand); }
+        .kpi-lbl { font-size: 12px; color: #6c757d; margin-top: 4px; }
+        .emp-row { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .emp-row:hover { background: #fef5f5; cursor: pointer; }
+        .badge-score { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .loading { opacity: 0.5; pointer-events: none; }
+        canvas { max-height: 220px; }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="card">
-        <h1><i class="bi bi-gem"></i> 585GOLD | Анализ результатов</h1>
-        
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px">
-            <select id="testSelector" style="width:280px">
-                <option value="">-- Загрузка тестов... --</option>
-            </select>
-            <button class="btn" id="loadBtn">📊 Загрузить результаты</button>
-            <button class="btn btn-secondary" id="copyBtn">📋 Копировать сводку</button>
-            <button class="btn btn-secondary" id="debugBtn">🔧 Проверить базу</button>
+    <!-- Шапка -->
+    <div class="card p-4">
+        <h2 class="mb-3"><i class="bi bi-gem"></i> 585GOLD | Аналитика тестов</h2>
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <select id="testSelect" class="form-select form-select-lg">
+                    <option value="">⏳ Загрузка тестов...</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button id="btnLoad" class="btn btn-brand w-100 btn-lg">📊 Загрузить</button>
+            </div>
+            <div class="col-md-5 text-md-end mt-2 mt-md-0">
+                <button id="btnExport" class="btn btn-outline-secondary btn-sm"><i class="bi bi-download"></i> CSV</button>
+                <button id="btnReset" class="btn btn-outline-danger btn-sm ms-1"><i class="bi bi-arrow-counterclockwise"></i> Сброс</button>
+            </div>
         </div>
-        <div id="status" class="mt-2 text-muted"></div>
+        <div id="status" class="mt-2 text-muted small"></div>
     </div>
 
-    <div id="results" style="display:none">
-        <div class="kpi-grid" id="kpi"></div>
+    <!-- Дашборд -->
+    <div id="dashboard" class="d-none">
+        <!-- KPI -->
+        <div class="row g-3 mb-3" id="kpiArea"></div>
         
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card"><h3>📊 Распределение баллов</h3><canvas id="scoreChart"></canvas></div>
+        <!-- Графики -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-6"><div class="card p-3"><h5 class="mb-3">📊 Распределение баллов</h5><canvas id="chartScore"></canvas></div></div>
+            <div class="col-md-6"><div class="card p-3"><h5 class="mb-3">🏙️ По городам</h5><canvas id="chartCity"></canvas></div></div>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="card p-3 mb-3">
+            <div class="row g-2">
+                <div class="col-md-4"><input id="filterSearch" type="text" class="form-control" placeholder="🔍 Поиск по имени"></div>
+                <div class="col-md-3"><select id="filterCity" class="form-select"><option value="all">Все города</option></select></div>
+                <div class="col-md-2"><button id="btnApplyFilter" class="btn btn-brand w-100">Применить</button></div>
             </div>
-            <div class="col-md-6">
-                <div class="card"><h3>🏙️ По городам</h3><canvas id="cityChart"></canvas></div>
-            </div>
         </div>
-        
-        <div class="card">
-            <h3>🏆 Топ-10 сотрудников</h3>
-            <table class="best-table">
-                <thead><tr><th>#</th><th>Сотрудник</th><th>Город</th><th>Результат</th></tr></thead>
-                <tbody id="topList"></tbody>
-            </table>
-        </div>
-        
-        <div class="filter-bar">
-            <input type="text" id="searchInput" placeholder="🔍 Поиск по имени..." style="flex:1;min-width:200px">
-            <select id="cityFilter"><option value="all">Все города</option></select>
-            <button class="btn btn-secondary" onclick="resetFilters()">Сброс</button>
-        </div>
-        
-        <div class="card">
-            <h3>📋 Все сотрудники (<span id="empCount">0</span>)</h3>
-            <div class="employees-container" id="empList"></div>
+
+        <!-- Топ и список -->
+        <div class="row g-3">
+            <div class="col-md-5"><div class="card p-3"><h5>🏆 Топ-5</h5><div id="topList"></div></div></div>
+            <div class="col-md-7"><div class="card p-3"><h5>📋 Все сотрудники (<span id="countAll">0</span>)</h5><div id="empList" style="max-height:400px;overflow-y:auto"></div></div></div>
         </div>
     </div>
 </div>
 
 <script>
-    // ✅ ПРАВИЛЬНЫЙ URL
+    //  Подключение к Supabase
     const sb = supabase.createClient(
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
 
-    let allData = [], scoreChart = null, cityChart = null, cityFilter = "all";
+    // 📦 Состояние
+    let rawData = [], filteredData = [];
+    let chartScore = null, chartCity = null;
+    const DOM = {
+        testSelect: document.getElementById('testSelect'),
+        btnLoad: document.getElementById('btnLoad'),
+        dashboard: document.getElementById('dashboard'),
+        status: document.getElementById('status'),
+        kpiArea: document.getElementById('kpiArea'),
+        chartScore: document.getElementById('chartScore'),
+        chartCity: document.getElementById('cityChart'),
+        filterSearch: document.getElementById('filterSearch'),
+        filterCity: document.getElementById('filterCity'),
+        btnApplyFilter: document.getElementById('btnApplyFilter'),
+        topList: document.getElementById('topList'),
+        empList: document.getElementById('empList'),
+        countAll: document.getElementById('countAll'),
+        btnExport: document.getElementById('btnExport'),
+        btnReset: document.getElementById('btnReset')
+    };
 
-    // Загрузка списка тестов
-    async function loadTests() {
-        const sel = document.getElementById('testSelector');
-        sel.innerHTML = '<option value="">-- Загрузка... --</option>';
-        
+    // 🔄 Инициализация
+    async function init() {
+        setStatus('Подключение к базе...', 'info');
         try {
-            const { data, error } = await sb.from('tests').select('slug, name');
-            
+            const { data: tests, error } = await sb.from('tests').select('slug, name').order('name');
             if (error) throw error;
             
-            if (!data || data.length === 0) {
-                sel.innerHTML = '<option value="">⚠️ Нет тестов в базе</option>';
-                document.getElementById('status').innerHTML = 'ℹ️ Таблица "tests" пуста';
-                return;
-            }
-            
-            sel.innerHTML = '<option value="">-- Выберите тест --</option>';
-            data.forEach(t => {
-                sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
+            DOM.testSelect.innerHTML = '<option value="">-- Выберите тест --</option>';
+            tests.forEach(t => {
+                DOM.testSelect.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
             });
-            console.log('✅ Загружено тестов:', data.length);
-            console.log('📋 Список тестов:', data);
-            document.getElementById('status').innerHTML = `✅ Найдено тестов: ${data.length}`;
-            
+            setStatus(`✅ Загружено ${tests.length} тестов. Выберите и нажмите "Загрузить".`, 'success');
         } catch (err) {
-            console.error('❌ Ошибка загрузки тестов:', err);
-            sel.innerHTML = '<option value="">❌ Ошибка подключения</option>';
-            document.getElementById('status').innerHTML = `<span style="color:#dc3545">Ошибка: ${err.message}</span>`;
+            console.error(err);
+            setStatus('❌ Ошибка подключения. Проверьте URL и ключ.', 'danger');
         }
     }
 
-    // Загрузка результатов (с логированием)
-    async function loadSupabase() {
-        const slug = document.getElementById('testSelector').value;
-        if (!slug) { alert('Выберите тест из списка'); return; }
+    //  Загрузка результатов
+    async function loadResults() {
+        const slug = DOM.testSelect.value;
+        if (!slug) return alert('Сначала выберите тест!');
         
-        console.log('🔍 Загрузка результатов для теста:', slug);
-        
-        const loadBtn = document.getElementById('loadBtn');
-        loadBtn.classList.add('loading');
-        loadBtn.innerHTML = '⏳ Загрузка...';
-        document.getElementById('status').innerHTML = 'Загрузка результатов...';
-        document.getElementById('results').style.display = 'none';
-        
+        DOM.btnLoad.classList.add('loading');
+        DOM.btnLoad.innerHTML = '⏳ Загрузка...';
+        DOM.dashboard.classList.add('d-none');
+        setStatus('Загрузка данных...', 'info');
+
         try {
-            console.log('📡 Запрос к Supabase: test_type =', slug);
+            // Фильтруем только активные (не архивные) записи
+            const { data, error } = await sb.from('results')
+                .select('*')
+                .eq('test_type', slug)
+                .eq('is_archived', false) // Игнорирует архив, если колонка есть
+                .order('created_at', { ascending: false });
+
+            if (error && error.code !== '42703') throw error; // 42703 = колонка не существует, игнорируем
             
-            const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
-            
-            if (error) {
-                console.error('❌ Ошибка от Supabase:', error);
-                throw error;
-            }
-            
-            console.log('✅ Найдено записей:', data ? data.length : 0);
-            if (data && data.length > 0) {
-                console.log('📋 Пример первой записи:', data[0]);
-                console.log('📋 Поля в записи:', Object.keys(data[0]));
-            }
-            
-            if (!data || data.length === 0) {
-                document.getElementById('status').innerHTML = `⚠️ Нет результатов для теста "${slug}"`;
-                console.warn('⚠️ В таблице results нет записей где test_type =', slug);
-                console.log('💡 Проверь в Supabase: Table Editor → results → есть ли записи с test_type="' + slug + '"');
+            rawData = data || [];
+            if (!rawData.length) {
+                setStatus('⚠️ Нет результатов для этого теста.', 'warning');
+                DOM.btnLoad.classList.remove('loading');
+                DOM.btnLoad.innerHTML = ' Загрузить';
                 return;
             }
-            
-            allData = data.map(r => ({
-                name: r.user_id || r.name || 'Сотрудник',
-                city: r.city || 'Не указан',
-                score: r.score || 0,
-                total: r.total || 7
-            }));
-            
-            console.log('✅ Данные преобразованы, сотрудников:', allData.length);
-            document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} сотрудников`;
-            document.getElementById('results').style.display = 'block';
-            
-            updateCityFilter();
+
+            filteredData = [...rawData];
             renderAll();
-            
+            DOM.dashboard.classList.remove('d-none');
+            setStatus(`✅ Загружено: ${rawData.length} сотрудников`, 'success');
         } catch (err) {
-            console.error('❌ Ошибка загрузки результатов:', err);
-            document.getElementById('status').innerHTML = `<span style="color:#dc3545">Ошибка: ${err.message}</span>`;
+            console.error(err);
+            setStatus('❌ Ошибка загрузки: ' + err.message, 'danger');
         } finally {
-            loadBtn.classList.remove('loading');
-            loadBtn.innerHTML = '📊 Загрузить результаты';
+            DOM.btnLoad.classList.remove('loading');
+            DOM.btnLoad.innerHTML = ' Загрузить';
         }
     }
 
-    // Обновление фильтра по городам
-    function updateCityFilter() {
-        const cities = [...new Set(allData.map(e => e.city).filter(c => c && c !== 'Не указан'))].sort();
-        const sel = document.getElementById('cityFilter');
-        sel.innerHTML = '<option value="all">Все города</option>' + 
+    // 🎨 Отрисовка всего
+    function renderAll() {
+        renderKPI();
+        renderCharts();
+        renderLists();
+    }
+
+    // 📊 KPI
+    function renderKPI() {
+        const total = filteredData.length;
+        if (!total) { DOM.kpiArea.innerHTML = ''; return; }
+        
+        const avg = Math.round(filteredData.reduce((s, r) => s + (r.score / r.total) * 100, 0) / total);
+        const excellent = filteredData.filter(r => (r.score / r.total) >= 0.8).length;
+        const errors = filteredData.reduce((s, r) => s + (r.total - r.score), 0);
+
+        DOM.kpiArea.innerHTML = `
+            <div class="col-6 col-md-3"><div class="kpi"><div class="kpi-val">${total}</div><div class="kpi-lbl">Сотрудников</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi"><div class="kpi-val">${avg}%</div><div class="kpi-lbl">Средний балл</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi"><div class="kpi-val">${excellent}</div><div class="kpi-lbl">Отлично (≥80%)</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi"><div class="kpi-val">${errors}</div><div class="kpi-lbl">Ошибок всего</div></div></div>
+        `;
+    }
+
+    // 📈 Графики
+    function renderCharts() {
+        const scores = filteredData.map(r => (r.score / r.total) * 100);
+        const dist = [
+            scores.filter(s => s >= 80).length,
+            scores.filter(s => s >= 60 && s < 80).length,
+            scores.filter(s => s >= 40 && s < 60).length,
+            scores.filter(s => s < 40).length
+        ];
+
+        if (chartScore) chartScore.destroy();
+        chartScore = new Chart(DOM.chartScore, {
+            type: 'bar',
+             {
+                labels: ['80-100%', '60-79%', '40-59%', '0-39%'],
+                datasets: [{ label: 'Кол-во',  dist, backgroundColor: '#E30613', borderRadius: 6 }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+
+        // По городам
+        const cityMap = {};
+        filteredData.forEach(r => {
+            const c = r.city || 'Не указан';
+            if (!cityMap[c]) cityMap[c] = { sum: 0, count: 0 };
+            cityMap[c].sum += (r.score / r.total) * 100;
+            cityMap[c].count++;
+        });
+        const cities = Object.keys(cityMap).sort();
+        const cityAvgs = cities.map(c => Math.round(cityMap[c].sum / cityMap[c].count));
+
+        if (chartCity) chartCity.destroy();
+        chartCity = new Chart(DOM.chartCity, {
+            type: 'bar',
+             {
+                labels: cities,
+                datasets: [{ label: 'Средний %', data: cityAvgs, backgroundColor: '#495057', borderRadius: 6 }]
+            },
+            options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { max: 100 } } }
+        });
+
+        // Заполняем фильтр городов
+        DOM.filterCity.innerHTML = '<option value="all">Все города</option>' + 
             cities.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
-    // Отрисовка всех данных
-    function renderAll() {
-        let filtered = cityFilter === 'all' ? allData : allData.filter(e => e.city === cityFilter);
-        const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
-        if (search) filtered = filtered.filter(e => e.name.toLowerCase().includes(search));
+    // 📋 Списки
+    function renderLists() {
+        DOM.countAll.textContent = filteredData.length;
         
-        const total = filtered.length;
-        const avg = total ? Math.round(filtered.reduce((s,e) => s + (e.score/e.total)*100, 0) / total) : 0;
-        const excellent = filtered.filter(e => (e.score/e.total)*100 >= 80).length;
-        const errors = filtered.reduce((s,e) => s + (e.total - e.score), 0);
-        
-        document.getElementById('kpi').innerHTML = `
-            <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-label">Сотрудников</div></div>
-            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div class="kpi-label">Средний балл</div></div>
-            <div class="kpi-card"><div class="kpi-value">${excellent}</div><div class="kpi-label">Отлично (≥80%)</div></div>
-            <div class="kpi-card"><div class="kpi-value">${errors}</div><div class="kpi-label">Ошибок</div></div>
-        `;
-        
-        const scores = allData.map(e => e.score/e.total*100);
-        const dist = [
-            scores.filter(s=>s>=80).length,
-            scores.filter(s=>s>=60&&s<80).length,
-            scores.filter(s=>s>=40&&s<60).length,
-            scores.filter(s=>s<40).length
-        ];
-        if (scoreChart) scoreChart.destroy();
-        scoreChart = new Chart(document.getElementById('scoreChart'), {
-            type: 'bar',
-            data: {
-                labels: ['80-100%','60-79%','40-59%','0-39%'],
-                datasets: [{ label: 'Кол-во', data: dist, backgroundColor: '#E30613', borderRadius: 4 }]
-            },
-            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-        });
-        
-        const cityMap = new Map();
-        allData.forEach(e => {
-            if (e.city === 'Не указан') return;
-            const p = e.score/e.total*100;
-            const s = cityMap.get(e.city) || { sum:0, count:0 };
-            s.sum += p; s.count++;
-            cityMap.set(e.city, s);
-        });
-        const cityData = Array.from(cityMap.entries())
-            .map(([c,s]) => ({ city:c, count:s.count, avg: Math.round(s.sum/s.count) }))
-            .sort((a,b) => b.avg - a.avg);
-        
-        if (cityChart) cityChart.destroy();
-        cityChart = new Chart(document.getElementById('cityChart'), {
-            type: 'bar',
-            data: {
-                labels: cityData.map(c => c.city),
-                datasets: [{ label: 'Средний балл %', data: cityData.map(c => c.avg), backgroundColor: '#E30613', borderRadius: 4 }]
-            },
-            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
-        });
-        
-        const top10 = [...allData].sort((a,b) => b.score/b.total - a.score/a.total).slice(0, 10);
-        document.getElementById('topList').innerHTML = top10.map((e,i) => {
-            const p = Math.round(e.score/e.total*100);
-            const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-            return `<tr>
-                <td><strong>${i+1}</strong> ${medal}</td>
-                <td>${e.name}</td>
-                <td>${e.city}</td>
-                <td><span style="background:${p>=80?'#28a745':p>=50?'#ffc107':'#dc3545'};color:#fff;padding:4px 12px;border-radius:40px;font-size:12px">${e.score}/${e.total} (${p}%)</span></td>
-            </tr>`;
-        }).join('');
-        
-        document.getElementById('empCount').innerText = filtered.length;
-        document.getElementById('empList').innerHTML = filtered.map(e => {
-            const p = Math.round(e.score/e.total*100);
+        // Топ-5
+        const top5 = [...filteredData].sort((a, b) => (b.score/b.total) - (a.score/a.total)).slice(0, 5);
+        DOM.topList.innerHTML = top5.map((r, i) => {
+            const p = Math.round((r.score/r.total)*100);
+            const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'🏅';
+            return `<div class="emp-row"><span>${medal} ${r.name || r.user_id}</span><span class="badge-score" style="background:${p>=80?'#28a745':p>=50?'#ffc107':'#dc3545'};color:white">${p}%</span></div>`;
+        }).join('') || '<div class="text-muted p-2">Нет данных</div>';
+
+        // Все сотрудники
+        DOM.empList.innerHTML = filteredData.map(r => {
+            const p = Math.round((r.score/r.total)*100);
             const color = p>=80?'#28a745':p>=50?'#ffc107':'#dc3545';
-            return `<div class="employee-item">
-                <span class="employee-name">${e.name}</span>
-                <span class="employee-score" style="background:${color}">${e.score}/${e.total} (${p}%)</span>
-                <span class="employee-city"><i class="bi bi-geo-alt"></i> ${e.city}</span>
+            return `<div class="emp-row">
+                <span><strong>${r.name || r.user_id}</strong> <small class="text-muted">(${r.city || '-'})</small></span>
+                <span class="badge-score" style="background:${color};color:white">${r.score}/${r.total} (${p}%)</span>
             </div>`;
-        }).join('') || '<div class="text-center py-3 text-muted">Нет данных</div>';
+        }).join('') || '<div class="text-muted p-2">Список пуст</div>';
     }
 
-    function resetFilters() {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('cityFilter').value = 'all';
-        cityFilter = 'all';
+    // 🔍 Фильтрация
+    function applyFilters() {
+        const search = DOM.filterSearch.value.toLowerCase();
+        const city = DOM.filterCity.value;
+        
+        filteredData = rawData.filter(r => {
+            const name = (r.name || r.user_id || '').toLowerCase();
+            const rCity = r.city || '';
+            return (!search || name.includes(search)) && (city === 'all' || rCity === city);
+        });
         renderAll();
     }
 
-    // Копирование сводки
-    document.getElementById('copyBtn').onclick = () => {
-        if (!allData.length) return alert('Нет данных для копирования');
-        const total = allData.length;
-        const avg = Math.round(allData.reduce((s,e) => s + e.score/e.total, 0) / total * 100);
-        const excellent = allData.filter(e => e.score/e.total >= 0.8).length;
-        const text = `📊 ОТЧЁТ 585GOLD — ${new Date().toLocaleDateString('ru-RU')}\n\n` +
-            `👥 Сотрудников: ${total}\n` +
-            `📈 Средний балл: ${avg}%\n` +
-            `⭐ Отлично (≥80%): ${excellent} (${Math.round(excellent/total*100)}%)\n\n` +
-            `🔗 Сформировано в админ-панели`;
-        navigator.clipboard.writeText(text).then(() => alert('✅ Сводка скопирована в буфер!'));
-    };
+    // 📤 Экспорт CSV
+    function exportCSV() {
+        if (!filteredData.length) return alert('Нет данных для экспорта');
+        const headers = ['Имя', 'Город', 'Баллы', 'Всего', 'Процент', 'Дата'];
+        const rows = filteredData.map(r => [
+            `"${r.name || r.user_id}"`,
+            `"${r.city || ''}"`,
+            r.score,
+            r.total,
+            Math.round((r.score/r.total)*100) + '%',
+            new Date(r.created_at).toLocaleString()
+        ]);
+        const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `585gold_results_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click(); URL.revokeObjectURL(url);
+    }
 
-    // 🔧 КНОПКА ПРОВЕРКИ БАЗЫ
-    document.getElementById('debugBtn').onclick = async () => {
-        console.log('🔍 ========== ПРОВЕРКА БАЗЫ ДАННЫХ ==========');
-        
-        // 1. Проверяем таблицу tests
-        console.log('📋 1. Таблица tests:');
-        const { data: tests, error: testsError } = await sb.from('tests').select('*');
-        if (testsError) {
-            console.error('❌ Ошибка при чтении tests:', testsError);
-        } else {
-            console.log('✅ Найдено тестов:', tests.length);
-            tests.forEach((t, i) => {
-                console.log(`  [${i}] slug="${t.slug}", name="${t.name}"`);
-            });
-        }
-        
-        // 2. Проверяем таблицу results
-        console.log('\n📋 2. Таблица results (последние 20 записей):');
-        const { data: results, error: resultsError } = await sb.from('results').select('*').order('created_at', {ascending:false}).limit(20);
-        if (resultsError) {
-            console.error('❌ Ошибка при чтении results:', resultsError);
-        } else {
-            console.log('✅ Всего записей в results:', results.length);
-            
-            // Группируем по test_type
-            const byType = {};
-            results.forEach(r => {
-                const type = r.test_type || 'не указан';
-                byType[type] = (byType[type] || 0) + 1;
-            });
-            
-            console.log('\n📊 Распределение по test_type:');
-            Object.keys(byType).forEach(type => {
-                console.log(`  - "${type}": ${byType[type]} записей`);
-            });
-            
-            // Показываем пример
-            if (results.length > 0) {
-                console.log('\n📋 Пример первой записи:');
-                console.log(results[0]);
-            }
-        }
-        
-        // 3. Сравниваем
-        console.log('\n🔍 3. СРАВНЕНИЕ:');
-        if (tests && results) {
-            const testSlugs = tests.map(t => t.slug);
-            const resultTypes = [...new Set(results.map(r => r.test_type))];
-            
-            console.log('Slug в tests:', testSlugs);
-            console.log('test_type в results:', resultTypes);
-            
-            const missing = testSlugs.filter(slug => !resultTypes.includes(slug));
-            if (missing.length > 0) {
-                console.warn('⚠️ Эти тесты есть в tests, но НЕТ результатов:', missing);
-            }
-        }
-        
-        console.log('\n==========================================');
-        alert('📋 Открой консоль (F12) — там полная информация о базе!');
-    };
+    // 🛠 Утилиты
+    function setStatus(msg, type='info') {
+        DOM.status.innerHTML = `<span class="badge bg-${type}">${msg}</span>`;
+    }
 
-    // Обработчики
-    document.getElementById('loadBtn').onclick = loadSupabase;
-    document.getElementById('searchInput').addEventListener('input', renderAll);
-    document.getElementById('cityFilter').addEventListener('change', (e) => { cityFilter = e.target.value; renderAll(); });
+    // 🎛 Обработчики
+    DOM.btnLoad.addEventListener('click', loadResults);
+    DOM.btnApplyFilter.addEventListener('click', applyFilters);
+    DOM.filterSearch.addEventListener('input', applyFilters);
+    DOM.filterCity.addEventListener('change', applyFilters);
+    DOM.btnExport.addEventListener('click', exportCSV);
+    DOM.btnReset.addEventListener('click', () => location.reload());
 
-    // Запуск
-    console.log('🚀 585GOLD Admin Panel загружается...');
-    console.log('🔗 Supabase URL:', 'https://qtostraaqrnjbxiydlip.supabase.co');
-    loadTests();
+    // 🚀 Запуск
+    console.log('🧼 585GOLD Admin | Чистый лист');
+    init();
 </script>
 </body>
 </html>
