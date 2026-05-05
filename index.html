@@ -14,7 +14,6 @@
         .btn{background:#E30613;color:#fff;border:none;padding:8px 20px;border-radius:40px;margin:5px;cursor:pointer;transition:0.2s}
         .btn:hover{background:#c41c2a}
         .btn-secondary{background:#6c757d}
-        .mode-active{background:#c41c2a}
         .kpi-grid{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
         .kpi-card{background:#fff;padding:20px;border-radius:16px;border-left:4px solid #E30613;min-width:150px;text-align:center}
         .kpi-value{font-size:32px;font-weight:bold;color:#E30613}
@@ -32,6 +31,7 @@
         .best-table tr:hover td{background:#fef5f5}
         canvas{max-height:200px;width:100%}
         #status{min-height:24px}
+        .loading{opacity:0.6;pointer-events:none}
     </style>
 </head>
 <body>
@@ -83,9 +83,9 @@
 </div>
 
 <script>
-    // ✅ ПРАВИЛЬНО: используем 'sb' вместо 'supabase', чтобы не было конфликта
+    // ✅ ПРАВИЛЬНЫЙ URL: qtostraaqrnjbxiydlip (две "a" после qtostr, "i" перед ydlip)
     const sb = supabase.createClient(
-        'https://qtostraaqrnjbxlydlip.supabase.co',
+        'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
 
@@ -96,26 +96,28 @@
         const sel = document.getElementById('testSelector');
         sel.innerHTML = '<option value="">-- Загрузка... --</option>';
         
-        const { data, error } = await sb.from('tests').select('slug, name');
-        
-        if (error) {
-            console.error('❌ Ошибка загрузки тестов:', error);
+        try {
+            const { data, error } = await sb.from('tests').select('slug, name');
+            
+            if (error) throw error;
+            
+            if (!data || data.length === 0) {
+                sel.innerHTML = '<option value="">⚠️ Нет тестов в базе</option>';
+                document.getElementById('status').innerHTML = 'ℹ️ Таблица "tests" пуста';
+                return;
+            }
+            
+            sel.innerHTML = '<option value="">-- Выберите тест --</option>';
+            data.forEach(t => {
+                sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
+            });
+            document.getElementById('status').innerHTML = `✅ Найдено тестов: ${data.length}`;
+            
+        } catch (err) {
+            console.error('❌ Ошибка загрузки тестов:', err);
             sel.innerHTML = '<option value="">❌ Ошибка подключения</option>';
-            document.getElementById('status').innerHTML = `<span style="color:#dc3545">Ошибка: ${error.message}</span>`;
-            return;
+            document.getElementById('status').innerHTML = `<span style="color:#dc3545">Ошибка: ${err.message}</span>`;
         }
-        
-        if (!data || data.length === 0) {
-            sel.innerHTML = '<option value="">⚠️ Нет тестов в базе</option>';
-            document.getElementById('status').innerHTML = 'Нет тестов в таблице "tests"';
-            return;
-        }
-        
-        sel.innerHTML = '<option value="">-- Выберите тест --</option>';
-        data.forEach(t => {
-            sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
-        });
-        document.getElementById('status').innerHTML = `✅ Найдено тестов: ${data.length}`;
     }
 
     // Загрузка результатов из таблицы 'results'
@@ -123,35 +125,43 @@
         const slug = document.getElementById('testSelector').value;
         if (!slug) { alert('Выберите тест из списка'); return; }
         
-        document.getElementById('status').innerHTML = '⏳ Загрузка результатов...';
+        const loadBtn = document.getElementById('loadBtn');
+        loadBtn.classList.add('loading');
+        loadBtn.innerHTML = '⏳ Загрузка...';
+        document.getElementById('status').innerHTML = 'Загрузка результатов...';
         document.getElementById('results').style.display = 'none';
         
-        const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
-        
-        if (error) {
-            console.error('❌ Ошибка загрузки результатов:', error);
-            document.getElementById('status').innerHTML = `<span style="color:#dc3545">Ошибка: ${error.message}</span>`;
-            return;
+        try {
+            const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
+            
+            if (error) throw error;
+            
+            if (!data || data.length === 0) {
+                document.getElementById('status').innerHTML = '⚠️ Нет результатов для этого теста';
+                return;
+            }
+            
+            // Преобразуем данные
+            allData = data.map(r => ({
+                name: r.user_id || r.name || 'Сотрудник',
+                city: r.city || 'Не указан',
+                score: r.score || 0,
+                total: r.total || 7
+            }));
+            
+            document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} сотрудников`;
+            document.getElementById('results').style.display = 'block';
+            
+            updateCityFilter();
+            renderAll();
+            
+        } catch (err) {
+            console.error('❌ Ошибка загрузки результатов:', err);
+            document.getElementById('status').innerHTML = `<span style="color:#dc3545">Ошибка: ${err.message}</span>`;
+        } finally {
+            loadBtn.classList.remove('loading');
+            loadBtn.innerHTML = '📊 Загрузить результаты';
         }
-        
-        if (!data || data.length === 0) {
-            document.getElementById('status').innerHTML = '⚠️ Нет результатов для этого теста';
-            return;
-        }
-        
-        // Преобразуем данные
-        allData = data.map(r => ({
-            name: r.user_id || r.name || 'Сотрудник',
-            city: r.city || 'Не указан',
-            score: r.score || 0,
-            total: r.total || 7
-        }));
-        
-        document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} сотрудников`;
-        document.getElementById('results').style.display = 'block';
-        
-        updateCityFilter();
-        renderAll();
     }
 
     // Обновление фильтра по городам
@@ -275,7 +285,8 @@
     document.getElementById('cityFilter').addEventListener('change', (e) => { cityFilter = e.target.value; renderAll(); });
 
     // Запуск при загрузке
-    console.log('🚀 Админка загружается...');
+    console.log('🚀 Админка 585GOLD загружается...');
+    console.log('🔗 Supabase URL:', 'https://qtostraaqrnjbxiydlip.supabase.co');
     loadTests();
 </script>
 </body>
