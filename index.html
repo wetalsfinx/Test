@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>585GOLD | Входной тест</title>
+    <title>585GOLD | Результаты входного теста</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -11,6 +11,9 @@
         .badge-success { background: #28a745; color: white; padding: 4px 12px; border-radius: 30px; }
         .badge-warning { background: #ffc107; color: black; padding: 4px 12px; border-radius: 30px; }
         .badge-danger { background: #dc3545; color: white; padding: 4px 12px; border-radius: 30px; }
+        .kpi { text-align: center; padding: 10px; background: #f8f9fa; border-radius: 16px; }
+        .kpi h2 { font-size: 28px; font-weight: bold; color: #E30613; margin: 0; }
+        .kpi div { font-size: 12px; color: #6c757d; }
     </style>
 </head>
 <body>
@@ -57,7 +60,8 @@
 </div>
 
 <script>
-    const supabase = supabase.createClient(
+    // твой supabase клиент
+    const sb = supabase.createClient(
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
@@ -66,7 +70,7 @@
     let filteredData = [];
 
     async function loadTests() {
-        const { data } = await supabase.from('tests').select('slug, name');
+        const { data } = await sb.from('tests').select('slug, name');
         const sel = document.getElementById('testSelect');
         sel.innerHTML = '<option value="">-- Выберите тест --</option>';
         if (data) {
@@ -84,23 +88,23 @@
         }
         document.getElementById('status').innerHTML = 'Загрузка...';
         document.getElementById('statsBlock').style.display = 'none';
-        
-        const { data, error } = await supabase
+
+        const { data, error } = await sb
             .from('results')
             .select('*')
             .eq('test_type', slug)
             .order('created_at', { ascending: false });
-        
+
         if (error) {
             document.getElementById('status').innerHTML = 'Ошибка: ' + error.message;
             return;
         }
-        
+
         if (!data || data.length === 0) {
             document.getElementById('status').innerHTML = 'Нет результатов';
             return;
         }
-        
+
         allData = data.map(r => ({
             name: r.user_id || r.name || 'Аноним',
             city: r.city || 'Не указан',
@@ -108,26 +112,26 @@
             total: r.total || 11,
             date: r.created_at
         }));
-        
+
         filteredData = [...allData];
         renderStats();
         document.getElementById('statsBlock').style.display = 'block';
         document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} записей`;
     }
-    
+
     function renderStats() {
         const total = filteredData.length;
         const avg = total ? Math.round(filteredData.reduce((s, e) => s + (e.score/e.total)*100, 0) / total) : 0;
         const excellent = filteredData.filter(e => (e.score/e.total) >= 0.8).length;
         const errors = filteredData.reduce((s, e) => s + (e.total - e.score), 0);
-        
+
         document.getElementById('kpi').innerHTML = `
             <div class="col-6 col-md-3"><div class="kpi"><h2>${total}</h2><div>Сотрудников</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi"><h2>${avg}%</h2><div>Средний балл</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi"><h2>${excellent}</h2><div>Отлично (≥80%)</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi"><h2>${errors}</h2><div>Ошибок</div></div></div>
         `;
-        
+
         const top10 = [...filteredData].sort((a,b) => (b.score/b.total) - (a.score/a.total)).slice(0,10);
         document.getElementById('topList').innerHTML = top10.map((e,i) => `
             <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
@@ -135,7 +139,7 @@
                 <span class="badge ${(e.score/e.total)>=0.8?'badge-success':(e.score/e.total)>=0.5?'badge-warning':'badge-danger'}">${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</span>
             </div>
         `).join('');
-        
+
         document.getElementById('empCount').innerText = filteredData.length;
         document.getElementById('empList').innerHTML = filteredData.map(e => `
             <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
@@ -144,13 +148,13 @@
             </div>
         `).join('');
     }
-    
+
     function filterData() {
         const search = document.getElementById('searchInput').value.toLowerCase();
         filteredData = allData.filter(e => e.name.toLowerCase().includes(search));
         renderStats();
     }
-    
+
     function exportCSV() {
         let csv = "Имя,Город,Баллы,Всего,Процент,Дата\n";
         filteredData.forEach(e => {
@@ -162,11 +166,11 @@
         link.download = `results_${new Date().toISOString().slice(0,10)}.csv`;
         link.click();
     }
-    
+
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('exportBtn').onclick = exportCSV;
     document.getElementById('searchInput').addEventListener('input', filterData);
-    
+
     loadTests();
 </script>
 </body>
