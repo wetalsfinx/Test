@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>585GOLD | Результаты тестов</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="card p-4 shadow-sm">
+        <h2 class="mb-3">Результаты тестов</h2>
+        <div class="row g-2">
+            <div class="col-md-6">
+                <select id="testSelector" class="form-select">
+                    <option value="">-- Загрузка тестов --</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" id="loadBtn">Загрузить</button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-secondary w-100" id="exportBtn">CSV</button>
+            </div>
+        </div>
+        <div id="status" class="mt-2 text-muted small"></div>
+    </div>
+
+    <div id="stats" style="display: none;">
+        <div class="row mt-3" id="kpi"></div>
+        <div class="row">
+            <div class="col-md-5">
+                <div class="card p-3"><h5>Топ-10</h5><div id="topList"></div></div>
+            </div>
+            <div class="col-md-7">
+                <div class="card p-3">
+                    <h5>Все сотрудники</h5>
+                    <input type="text" id="search" class="form-control mb-2" placeholder="Поиск...">
+                    <div id="empList" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
+    const supabaseCli = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let allRows = [];
+    let filteredRows = [];
+
+    async function loadTests() {
+        const { data, error } = await supabaseCli.from('tests').select('slug, name').order('name');
+        const sel = document.getElementById('testSelector');
+        if (error || !data || data.length === 0) {
+            sel.innerHTML = '<option value="">Ошибка загрузки тестов</option>';
+            return;
+        }
+        sel.innerHTML = '<option value="">-- Выберите тест --</option>';
+        data.forEach(t => {
+            sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
+        });
+        setStatus('Тесты загружены', 'success');
+    }
+
+    async function loadResults() {
+        const slug = document.getElementById('testSelector').value;
+        if (!slug) return alert('Выберите тест');
+        setStatus('Загрузка...', 'info');
+        document.getElementById('stats').style.display = 'none';
+
+        const { data, error } = await supabaseCli
+            .from('results')
+            .select('*')
+            .eq('test_type', slug)
+            .order('created_at', { ascending: false });
+
+        if (error) return setStatus('Ошибка: ' + error.message, 'danger');
+        if (!data || data.length === 0) return setStatus('Нет результатов', 'warning');
+
+        allRows = data.map(r => ({
+            name: r.name || r.user_id || 'Аноним',
+            city: r.city || 'Не указан',
+            score: r.score,
+            total: r.total || 11,
+            date: r.created_at
+        }));
+        filteredRows = [...allRows];
+        render();
+        document.getElementById('stats').style.display = 'block';
+        setStatus(`${allRows.length} записей`, 'success');
+    }
+
+    function render() {
+        const total = filteredRows.length;
+        const avgScore = total ? Math.round(filteredRows.reduce((s, e) => s + (e.score/e.total)*100, 0) / total) : 0;
+        const high = filteredRows.filter(e => (e.score/e.total) >= 0.8).length;
+        const allErrors = filteredRows.reduce((s, e) => s + (e.total - e.score), 0);
+
+        const kpi = `
+            <div class="col-md-3"><div class="p-3 bg-light rounded"><h4>${total}</h4><div>Сотрудников</div></div></div>
+            <div class="col-md-3"><div class="p-3 bg-light rounded"><h4>${avgScore}%</h4><div>Средний балл</div></div></div>
+            <div class="col-md-3"><div class="p-3 bg-light rounded"><h4>${high}</h4><div>Отлично</div></div></div>
+            <div class="col-md-3"><div class="p-3 bg-light rounded"><h4>${allErrors}</h4><div>Ошибок</div></div></div>
+        `;
+        document.getElementById('kpi').innerHTML = kpi;
+
+        const top10 = [...filteredRows].sort((a,b)=>((b.score/b.total)-(a.score/a.total))).slice(0,10);
+        document.getElementById('topList').innerHTML = top10.map(e => `
+            <div class="d-flex justify-content-between border-bottom py-2"><div><b>${e.name}</b> (${e.city})</div><div>${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</div></div>
+        `).join('');
+
+        document.getElementById('empList').innerHTML = filteredRows.map(e => `
+            <div class="d-flex justify-content-between border-bottom py-2"><div>${e.name} (${e.city})</div><div>${e.score}/${e.total} (${Math.round(e.score/e.total*100)}%)</div></div>
+        `).join('');
+    }
+
+    function searchFilter() {
+        const q = document.getElementById('search').value.toLowerCase();
+        filteredRows = allRows.filter(r => r.name.toLowerCase().includes(q));
+        render();
+    }
+
+    function exportCSV() {
+        if (!filteredRows.length) return alert('Нет данных для выгрузки');
+        let csv = "Имя,Город,Баллы,Всего,Процент\n";
+        filteredRows.forEach(e => {
+            csv += `"${e.name}","${e.city}",${e.score},${e.total},${Math.round(e.score/e.total*100)}%\n`;
+        });
+        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `data.csv`;
+        a.click();
+    }
+
+    function setStatus(msg, type) {
+        const el = document.getElementById('status');
+        el.innerHTML = msg;
+        el.className = 'mt-2 text-muted small text-' + (type === 'danger' ? 'danger' : type === 'success' ? 'success' : 'info');
+    }
+
+    document.getElementById('loadBtn').onclick = loadResults;
+    document.getElementById('exportBtn').onclick = exportCSV;
+    document.getElementById('search').addEventListener('input', searchFilter);
+
+    loadTests();
+</script>
+</body>
+</html>
