@@ -45,6 +45,7 @@
             </select>
             <button class="btn" id="loadBtn">📊 Загрузить результаты</button>
             <button class="btn btn-secondary" id="copyBtn">📋 Копировать сводку</button>
+            <button class="btn btn-secondary" id="debugBtn">🔧 Проверить базу</button>
         </div>
         <div id="status" class="mt-2 text-muted"></div>
     </div>
@@ -83,7 +84,7 @@
 </div>
 
 <script>
-    // ✅ ПРАВИЛЬНЫЙ URL: qtostraaqrnjbxiydlip (две "a" после qtostr, "i" перед ydlip)
+    // ✅ ПРАВИЛЬНЫЙ URL
     const sb = supabase.createClient(
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
@@ -91,7 +92,7 @@
 
     let allData = [], scoreChart = null, cityChart = null, cityFilter = "all";
 
-    // Загрузка списка тестов из таблицы 'tests'
+    // Загрузка списка тестов
     async function loadTests() {
         const sel = document.getElementById('testSelector');
         sel.innerHTML = '<option value="">-- Загрузка... --</option>';
@@ -111,6 +112,8 @@
             data.forEach(t => {
                 sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
             });
+            console.log('✅ Загружено тестов:', data.length);
+            console.log('📋 Список тестов:', data);
             document.getElementById('status').innerHTML = `✅ Найдено тестов: ${data.length}`;
             
         } catch (err) {
@@ -120,10 +123,12 @@
         }
     }
 
-    // Загрузка результатов из таблицы 'results'
+    // Загрузка результатов (с логированием)
     async function loadSupabase() {
         const slug = document.getElementById('testSelector').value;
         if (!slug) { alert('Выберите тест из списка'); return; }
+        
+        console.log('🔍 Загрузка результатов для теста:', slug);
         
         const loadBtn = document.getElementById('loadBtn');
         loadBtn.classList.add('loading');
@@ -132,16 +137,28 @@
         document.getElementById('results').style.display = 'none';
         
         try {
+            console.log('📡 Запрос к Supabase: test_type =', slug);
+            
             const { data, error } = await sb.from('results').select('*').eq('test_type', slug);
             
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Ошибка от Supabase:', error);
+                throw error;
+            }
+            
+            console.log('✅ Найдено записей:', data ? data.length : 0);
+            if (data && data.length > 0) {
+                console.log('📋 Пример первой записи:', data[0]);
+                console.log('📋 Поля в записи:', Object.keys(data[0]));
+            }
             
             if (!data || data.length === 0) {
-                document.getElementById('status').innerHTML = '⚠️ Нет результатов для этого теста';
+                document.getElementById('status').innerHTML = `⚠️ Нет результатов для теста "${slug}"`;
+                console.warn('⚠️ В таблице results нет записей где test_type =', slug);
+                console.log('💡 Проверь в Supabase: Table Editor → results → есть ли записи с test_type="' + slug + '"');
                 return;
             }
             
-            // Преобразуем данные
             allData = data.map(r => ({
                 name: r.user_id || r.name || 'Сотрудник',
                 city: r.city || 'Не указан',
@@ -149,6 +166,7 @@
                 total: r.total || 7
             }));
             
+            console.log('✅ Данные преобразованы, сотрудников:', allData.length);
             document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} сотрудников`;
             document.getElementById('results').style.display = 'block';
             
@@ -178,7 +196,6 @@
         const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
         if (search) filtered = filtered.filter(e => e.name.toLowerCase().includes(search));
         
-        // KPI
         const total = filtered.length;
         const avg = total ? Math.round(filtered.reduce((s,e) => s + (e.score/e.total)*100, 0) / total) : 0;
         const excellent = filtered.filter(e => (e.score/e.total)*100 >= 80).length;
@@ -191,7 +208,6 @@
             <div class="kpi-card"><div class="kpi-value">${errors}</div><div class="kpi-label">Ошибок</div></div>
         `;
         
-        // График распределения
         const scores = allData.map(e => e.score/e.total*100);
         const dist = [
             scores.filter(s=>s>=80).length,
@@ -209,7 +225,6 @@
             options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
         
-        // График по городам
         const cityMap = new Map();
         allData.forEach(e => {
             if (e.city === 'Не указан') return;
@@ -232,7 +247,6 @@
             options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
         });
         
-        // Топ-10
         const top10 = [...allData].sort((a,b) => b.score/b.total - a.score/a.total).slice(0, 10);
         document.getElementById('topList').innerHTML = top10.map((e,i) => {
             const p = Math.round(e.score/e.total*100);
@@ -245,7 +259,6 @@
             </tr>`;
         }).join('');
         
-        // Список сотрудников
         document.getElementById('empCount').innerText = filtered.length;
         document.getElementById('empList').innerHTML = filtered.map(e => {
             const p = Math.round(e.score/e.total*100);
@@ -279,13 +292,75 @@
         navigator.clipboard.writeText(text).then(() => alert('✅ Сводка скопирована в буфер!'));
     };
 
+    // 🔧 КНОПКА ПРОВЕРКИ БАЗЫ
+    document.getElementById('debugBtn').onclick = async () => {
+        console.log('🔍 ========== ПРОВЕРКА БАЗЫ ДАННЫХ ==========');
+        
+        // 1. Проверяем таблицу tests
+        console.log('📋 1. Таблица tests:');
+        const { data: tests, error: testsError } = await sb.from('tests').select('*');
+        if (testsError) {
+            console.error('❌ Ошибка при чтении tests:', testsError);
+        } else {
+            console.log('✅ Найдено тестов:', tests.length);
+            tests.forEach((t, i) => {
+                console.log(`  [${i}] slug="${t.slug}", name="${t.name}"`);
+            });
+        }
+        
+        // 2. Проверяем таблицу results
+        console.log('\n📋 2. Таблица results (последние 20 записей):');
+        const { data: results, error: resultsError } = await sb.from('results').select('*').order('created_at', {ascending:false}).limit(20);
+        if (resultsError) {
+            console.error('❌ Ошибка при чтении results:', resultsError);
+        } else {
+            console.log('✅ Всего записей в results:', results.length);
+            
+            // Группируем по test_type
+            const byType = {};
+            results.forEach(r => {
+                const type = r.test_type || 'не указан';
+                byType[type] = (byType[type] || 0) + 1;
+            });
+            
+            console.log('\n📊 Распределение по test_type:');
+            Object.keys(byType).forEach(type => {
+                console.log(`  - "${type}": ${byType[type]} записей`);
+            });
+            
+            // Показываем пример
+            if (results.length > 0) {
+                console.log('\n📋 Пример первой записи:');
+                console.log(results[0]);
+            }
+        }
+        
+        // 3. Сравниваем
+        console.log('\n🔍 3. СРАВНЕНИЕ:');
+        if (tests && results) {
+            const testSlugs = tests.map(t => t.slug);
+            const resultTypes = [...new Set(results.map(r => r.test_type))];
+            
+            console.log('Slug в tests:', testSlugs);
+            console.log('test_type в results:', resultTypes);
+            
+            const missing = testSlugs.filter(slug => !resultTypes.includes(slug));
+            if (missing.length > 0) {
+                console.warn('⚠️ Эти тесты есть в tests, но НЕТ результатов:', missing);
+            }
+        }
+        
+        console.log('\n==========================================');
+        alert('📋 Открой консоль (F12) — там полная информация о базе!');
+    };
+
     // Обработчики
     document.getElementById('loadBtn').onclick = loadSupabase;
     document.getElementById('searchInput').addEventListener('input', renderAll);
     document.getElementById('cityFilter').addEventListener('change', (e) => { cityFilter = e.target.value; renderAll(); });
 
-    // Запуск при загрузке
-    console.log('🚀 Админка 585GOLD загружается...');
+    // Запуск
+    console.log('🚀 585GOLD Admin Panel загружается...');
     console.log('🔗 Supabase URL:', 'https://qtostraaqrnjbxiydlip.supabase.co');
     loadTests();
 </script>
