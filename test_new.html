@@ -6,9 +6,7 @@
     <title>585GOLD | Тест</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: #fff0f0;
@@ -16,10 +14,7 @@
             padding: 16px;
             min-height: 100vh;
         }
-        .test-container {
-            max-width: 700px;
-            margin: 0 auto;
-        }
+        .test-container { max-width: 700px; margin: 0 auto; }
         .card {
             background: white;
             border-radius: 28px;
@@ -28,20 +23,9 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             border: 1px solid #e8a0b4;
         }
-        h1, h2 {
-            color: #c41e3a;
-            text-align: center;
-            margin-top: 0;
-        }
-        .form-group {
-            margin-bottom: 16px;
-        }
-        label {
-            font-weight: 600;
-            display: block;
-            margin-bottom: 6px;
-            color: #333;
-        }
+        h1, h2 { color: #c41e3a; text-align: center; margin-top: 0; }
+        .form-group { margin-bottom: 16px; }
+        label { font-weight: 600; display: block; margin-bottom: 6px; color: #333; }
         input, select {
             width: 100%;
             padding: 14px 16px;
@@ -62,24 +46,15 @@
             width: 100%;
             transition: 0.2s;
         }
-        button:hover {
-            background: #8b1a2c;
-        }
-        button:disabled {
-            background: #e8a0b4;
-            cursor: not-allowed;
-        }
+        button:hover { background: #8b1a2c; }
+        button:disabled { background: #e8a0b4; cursor: not-allowed; }
         .question-block {
             background: #fff0f3;
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 20px;
         }
-        .question-text {
-            font-weight: 700;
-            margin-bottom: 16px;
-            font-size: 18px;
-        }
+        .question-text { font-weight: 700; margin-bottom: 16px; font-size: 18px; }
         .option {
             background: white;
             border: 1px solid #e8a0b4;
@@ -89,45 +64,18 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .option:hover {
-            background: #ffe0e0;
-        }
-        .option.selected {
-            background: #c41e3a;
-            color: white;
-            border-color: #c41e3a;
-        }
-        .result {
-            text-align: center;
-            padding: 24px;
-            border-radius: 28px;
-        }
-        .result.success {
-            background: #e8f0e8;
-            border-left: 6px solid #2c6e2c;
-        }
-        .result.fail {
-            background: #ffe0e0;
-            border-left: 6px solid #c41e3a;
-        }
-        .progress {
-            font-size: 14px;
-            color: #666;
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        .hidden {
-            display: none;
-        }
-        .restart-btn {
-            background: #c41e3a;
-            margin-top: 20px;
-        }
+        .option:hover { background: #ffe0e0; }
+        .option.selected { background: #c41e3a; color: white; border-color: #c41e3a; }
+        .result { text-align: center; padding: 24px; border-radius: 28px; }
+        .result.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
+        .result.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
+        .progress { font-size: 14px; color: #666; text-align: center; margin-bottom: 16px; }
+        .hidden { display: none; }
+        .restart-btn { background: #c41e3a; margin-top: 20px; }
     </style>
 </head>
 <body>
 <div class="test-container" id="app">
-    <!-- Регистрация -->
     <div id="registration" class="card">
         <h1>🎯 585GOLD | Тест</h1>
         <div class="form-group">
@@ -149,7 +97,6 @@
         <button id="startBtn">Начать тест</button>
     </div>
 
-    <!-- Тестирование -->
     <div id="testArea" class="hidden">
         <div class="card">
             <div class="progress">Вопрос <span id="qNum">1</span> из <span id="qTotal">11</span></div>
@@ -159,12 +106,15 @@
         </div>
     </div>
 
-    <!-- Результат -->
     <div id="resultArea" class="hidden card"></div>
 </div>
 
 <script>
-    // === ВОПРОСЫ ТЕСТА ===
+    const supabase = supabase.createClient(
+        'https://qtostraaqrnjbxiydlip.supabase.co',
+        'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
+    );
+
     const QUESTIONS = [
         {
             text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?",
@@ -278,17 +228,10 @@
         }
     ];
 
-    // Supabase
-    const supabase = supabase.createClient(
-        'https://qtostraaqrnjbxiydlip.supabase.co',
-        'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
-    );
-
     let currentUser = { name: '', city: '' };
     let currentQuestion = 0;
-    let userAnswers = []; // массив { selected, correct, answerText }
+    let userAnswers = [];
     let selectedOption = null;
-    let testStarted = false;
 
     function renderQuestion() {
         const q = QUESTIONS[currentQuestion];
@@ -304,7 +247,6 @@
         html += '</div>';
         document.getElementById('question').innerHTML = html;
         
-        // Добавляем обработчики
         document.querySelectorAll('.option').forEach(opt => {
             opt.addEventListener('click', () => {
                 document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
@@ -339,8 +281,7 @@
         const percent = Math.round(correctCount / QUESTIONS.length * 100);
         const passed = percent >= 85;
         
-        // Сохраняем в Supabase
-        const { data, error } = await supabase
+        const { error } = await supabase
             .from('results_new')
             .insert([{
                 test_slug: 'prodazhi_2025',
@@ -352,12 +293,8 @@
                 answers: answersForSave
             }]);
         
-        if (error) {
-            console.error('Ошибка сохранения:', error);
-            alert('Ошибка сохранения результата. Сообщите администратору.');
-        }
+        if (error) console.error('Ошибка:', error);
         
-        // Показываем результат
         const resultDiv = document.getElementById('resultArea');
         resultDiv.classList.remove('hidden');
         resultDiv.innerHTML = `
@@ -374,16 +311,10 @@
     function nextQuestion() {
         if (selectedOption === null) return;
         
-        // Сохраняем ответ
-        userAnswers.push({
-            selected: selectedOption,
-            correct: (selectedOption === QUESTIONS[currentQuestion].correct)
-        });
-        
+        userAnswers.push({ selected: selectedOption });
         currentQuestion++;
         
         if (currentQuestion >= QUESTIONS.length) {
-            // Тест закончен
             document.getElementById('testArea').classList.add('hidden');
             saveResult();
         } else {
@@ -395,19 +326,12 @@
         const name = document.getElementById('userName').value.trim();
         const city = document.getElementById('userCity').value;
         
-        if (!name) {
-            alert('Введите имя и фамилию');
-            return;
-        }
-        if (!city) {
-            alert('Выберите город');
-            return;
-        }
+        if (!name) { alert('Введите имя'); return; }
+        if (!city) { alert('Выберите город'); return; }
         
         currentUser = { name, city };
         currentQuestion = 0;
         userAnswers = [];
-        testStarted = true;
         
         document.getElementById('registration').classList.add('hidden');
         document.getElementById('testArea').classList.remove('hidden');
