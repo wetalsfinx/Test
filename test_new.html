@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>585GOLD | Тест</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #fff0f0;
+            margin: 0;
+            padding: 16px;
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid #e8a0b4;
+        }
+        h1, h2 {
+            color: #c41e3a;
+            text-align: center;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 30px;
+            border: 1px solid #e8a0b4;
+            font-size: 16px;
+            background: white;
+        }
+        button {
+            background: #c41e3a;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #8b1a2c;
+        }
+        button:disabled {
+            background: #e8a0b4;
+            cursor: not-allowed;
+        }
+        .question-block {
+            background: #fff0f3;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-weight: 700;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .option {
+            background: white;
+            border: 1px solid #e8a0b4;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .option:hover {
+            background: #ffe0e0;
+        }
+        .option.selected {
+            background: #c41e3a;
+            color: white;
+            border-color: #c41e3a;
+        }
+        .result {
+            text-align: center;
+            padding: 24px;
+            border-radius: 28px;
+        }
+        .result.success {
+            background: #e8f0e8;
+            border-left: 6px solid #2c6e2c;
+        }
+        .result.fail {
+            background: #ffe0e0;
+            border-left: 6px solid #c41e3a;
+        }
+        .progress {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .hidden {
+            display: none;
+        }
+        .restart-btn {
+            background: #c41e3a;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="test-container" id="app">
+    <!-- Регистрация -->
+    <div id="registration" class="card">
+        <h1>🎯 585GOLD | Тест</h1>
+        <div class="form-group">
+            <label>Ваше имя и фамилия</label>
+            <input type="text" id="userName" placeholder="Например: Иванова Анна">
+        </div>
+        <div class="form-group">
+            <label>Город</label>
+            <select id="userCity">
+                <option value="">-- Выберите город --</option>
+                <option value="Сыктывкар">Сыктывкар</option>
+                <option value="Оренбург">Оренбург</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Ульяновск">Ульяновск</option>
+                <option value="Нижний Новгород">Нижний Новгород</option>
+            </select>
+        </div>
+        <button id="startBtn">Начать тест</button>
+    </div>
+
+    <!-- Тестирование -->
+    <div id="testArea" class="hidden">
+        <div class="card">
+            <div class="progress">Вопрос <span id="qNum">1</span> из <span id="qTotal">11</span></div>
+            <div id="question"></div>
+            <div id="optionsArea"></div>
+            <button id="nextBtn" disabled>➡ Далее</button>
+        </div>
+    </div>
+
+    <!-- Результат -->
+    <div id="resultArea" class="hidden card"></div>
+</div>
+
+<script>
+    // === ВОПРОСЫ ТЕСТА ===
+    const QUESTIONS = [
+        {
+            text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?",
+            options: [
+                "«Добрый день! Чем могу помочь?»",
+                "«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?»",
+                "«Добрый день! Присмотритесь к нашим новинкам»",
+                "«Здравствуйте! Если нужны будут рекомендации — обращайтесь»"
+            ],
+            correct: 1
+        },
+        {
+            text: "Клиент говорит: «Мне нужно кольцо до 25 000 рублей». Вы услышали бюджет. Что делаете ДАЛЬШЕ?",
+            options: [
+                "Сразу показываете 3-4 кольца в пределах 25 000 ₽",
+                "Показываете сначала кольцо за 28 000 ₽ (якорь), затем за 25 000 ₽",
+                "Спрашиваете: «А для какого случая? Это подарок или для себя?»",
+                "Спрашиваете: «А готовы добавить за лучшее качество?»"
+            ],
+            correct: 2
+        },
+        {
+            text: "Клиентка выбрала кольцо. Вы хотите предложить серьги из той же коллекции. Как говорите?",
+            options: [
+                "«У нас есть ещё серьги, посмотрите?»",
+                "«Можно подобрать серьги к этому кольцу?»",
+                "«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»",
+                "«К этому кольцу обычно берут серьги»"
+            ],
+            correct: 2
+        },
+        {
+            text: "Клиентка смотрит на серьги из серебра за 12 000 ₽. Вы хотите мягко переориентировать на золото. Что говорите?",
+            options: [
+                "«Золото лучше — оно дороже и качественнее»",
+                "«У нас акция на золото — скидка 30%»",
+                "«Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»",
+                "«Золото 585 пробы служит дольше»"
+            ],
+            correct: 2
+        },
+        {
+            text: "Клиентка оформляет покупку кольца. Вы:",
+            options: [
+                "«Футляр нужен будет?»",
+                "«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»",
+                "«У нас есть футляры и средства для чистки. Показать?»",
+                "«Можем предложить футляр»"
+            ],
+            correct: 1
+        },
+        {
+            text: "Клиентка выбрала кольцо за 38 000 ₽, но говорит: «Дороговато... Я думала, дешевле будет». Что отвечаете?",
+            options: [
+                "«Так вы же золото покупаете, а не бижутерию»",
+                "«Это кольцо с бриллиантом высокой чистоты»",
+                "«Понимаю, цена важна. А с чем вы сравниваете?»",
+                "«Давайте посмотрю, что есть подешевле»"
+            ],
+            correct: 2
+        },
+        {
+            text: "Клиент выбирает кольцо, но размера нет в наличии. Что говорите?",
+            options: [
+                "«Можем заказать — доставка 3-5 дней»",
+                "«Этот размер закончился, но скоро привезут»",
+                "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»",
+                "«Приходите завтра — возможно, будет в наличии»"
+            ],
+            correct: 2
+        },
+        {
+            text: "Клиентка выбирает подарок маме на юбилей. Как презентуете изделие?",
+            options: [
+                "«Это кольцо из золота 585 пробы, вес 3 грамма»",
+                "«Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нем, глядя на ваш подарок»",
+                "«Красивое кольцо, маме понравится»",
+                "«Это кольцо с бриллиантом, очень популярная модель»"
+            ],
+            correct: 1
+        },
+        {
+            text: "Клиент спрашивает: «Можно посмотреть другие модели?». Как отвечаете?",
+            options: [
+                "«Да, конечно. Какие именно?»",
+                "«Смотрите, у нас много всего»",
+                "«Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»",
+                "«Конечно, вот каталог»"
+            ],
+            correct: 2
+        },
+        {
+            text: "Клиентка выбрала кольцо за 55 000 ₽, но колеблется. Вы знаете, что у магазина есть Яндекс Сплит. Когда и КАК вы упоминаете об этом?",
+            options: [
+                "Только если клиентка скажет «дорого» или «я подумаю»",
+                "Только на кассе при оформлении покупки",
+                "Во время презентации, ДО озвучивания итоговой цены: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»",
+                "Когда клиентка сама спросит про рассрочку"
+            ],
+            correct: 2
+        },
+        {
+            text: "Клиентка зашла в магазин. Вы поздоровались, проговорили акцию. Она кивнула и продолжает медленно идти вдоль витрины, не останавливаясь. Что делаете?",
+            options: [
+                "Сразу подходите и спрашиваете: «Что-то присмотрели?»",
+                "Ждёте 20-30 секунд, даёте клиентке освоиться, затем мягко начинаете диалог: «Какое изделие выбираете? Для себя или в подарок?»",
+                "Подходите через 5 минут",
+                "Наблюдаете, но не подходите, пока клиентка сама не обратится"
+            ],
+            correct: 1
+        }
+    ];
+
+    // Supabase
+    const supabase = supabase.createClient(
+        'https://qtostraaqrnjbxiydlip.supabase.co',
+        'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
+    );
+
+    let currentUser = { name: '', city: '' };
+    let currentQuestion = 0;
+    let userAnswers = []; // массив { selected, correct, answerText }
+    let selectedOption = null;
+    let testStarted = false;
+
+    function renderQuestion() {
+        const q = QUESTIONS[currentQuestion];
+        document.getElementById('qNum').innerText = currentQuestion + 1;
+        document.getElementById('qTotal').innerText = QUESTIONS.length;
+        
+        let html = `<div class="question-text">${q.text}</div>`;
+        html += '<div id="optionsList">';
+        q.options.forEach((opt, idx) => {
+            const letter = String.fromCharCode(65 + idx);
+            html += `<div class="option" data-idx="${idx}">${letter}) ${opt}</div>`;
+        });
+        html += '</div>';
+        document.getElementById('question').innerHTML = html;
+        
+        // Добавляем обработчики
+        document.querySelectorAll('.option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+                selectedOption = parseInt(opt.dataset.idx);
+                document.getElementById('nextBtn').disabled = false;
+            });
+        });
+        
+        selectedOption = null;
+        document.getElementById('nextBtn').disabled = true;
+    }
+
+    async function saveResult() {
+        let correctCount = 0;
+        const answersForSave = [];
+        
+        for (let i = 0; i < QUESTIONS.length; i++) {
+            const userAns = userAnswers[i];
+            const isCorrect = (userAns.selected === QUESTIONS[i].correct);
+            if (isCorrect) correctCount++;
+            answersForSave.push({
+                question: i,
+                selected: userAns.selected,
+                correct: isCorrect,
+                questionText: QUESTIONS[i].text,
+                selectedText: QUESTIONS[i].options[userAns.selected],
+                correctText: QUESTIONS[i].options[QUESTIONS[i].correct]
+            });
+        }
+        
+        const percent = Math.round(correctCount / QUESTIONS.length * 100);
+        const passed = percent >= 85;
+        
+        // Сохраняем в Supabase
+        const { data, error } = await supabase
+            .from('results_new')
+            .insert([{
+                test_slug: 'prodazhi_2025',
+                user_name: currentUser.name,
+                city: currentUser.city,
+                score: correctCount,
+                total: QUESTIONS.length,
+                percent: percent,
+                answers: answersForSave
+            }]);
+        
+        if (error) {
+            console.error('Ошибка сохранения:', error);
+            alert('Ошибка сохранения результата. Сообщите администратору.');
+        }
+        
+        // Показываем результат
+        const resultDiv = document.getElementById('resultArea');
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <div class="result ${passed ? 'success' : 'fail'}">
+                <h2>${passed ? '🏆 Победа!' : '😞 Тест не пройден'}</h2>
+                <p>Правильных ответов: ${correctCount} из ${QUESTIONS.length}</p>
+                <p>Ваш результат: ${percent}%</p>
+                <p>${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите материалы и попробуйте снова.'}</p>
+                <button class="restart-btn" onclick="location.reload()">Пройти заново</button>
+            </div>
+        `;
+    }
+
+    function nextQuestion() {
+        if (selectedOption === null) return;
+        
+        // Сохраняем ответ
+        userAnswers.push({
+            selected: selectedOption,
+            correct: (selectedOption === QUESTIONS[currentQuestion].correct)
+        });
+        
+        currentQuestion++;
+        
+        if (currentQuestion >= QUESTIONS.length) {
+            // Тест закончен
+            document.getElementById('testArea').classList.add('hidden');
+            saveResult();
+        } else {
+            renderQuestion();
+        }
+    }
+
+    document.getElementById('startBtn').onclick = () => {
+        const name = document.getElementById('userName').value.trim();
+        const city = document.getElementById('userCity').value;
+        
+        if (!name) {
+            alert('Введите имя и фамилию');
+            return;
+        }
+        if (!city) {
+            alert('Выберите город');
+            return;
+        }
+        
+        currentUser = { name, city };
+        currentQuestion = 0;
+        userAnswers = [];
+        testStarted = true;
+        
+        document.getElementById('registration').classList.add('hidden');
+        document.getElementById('testArea').classList.remove('hidden');
+        renderQuestion();
+    };
+    
+    document.getElementById('nextBtn').onclick = nextQuestion;
+</script>
+</body>
+</html>
