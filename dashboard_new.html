@@ -6,19 +6,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: #f0f2f5;
             margin: 0;
             padding: 20px;
         }
-        .dashboard {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+        .dashboard { max-width: 1400px; margin: 0 auto; }
         .card {
             background: white;
             border-radius: 24px;
@@ -27,16 +22,8 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             border-top: 4px solid #c41e3a;
         }
-        h2, h3 {
-            color: #c41e3a;
-            margin-top: 0;
-        }
-        .flex-row {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-        }
+        h2, h3 { color: #c41e3a; margin-top: 0; }
+        .flex-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
         select, button {
             padding: 10px 16px;
             border-radius: 30px;
@@ -49,9 +36,7 @@
             border: none;
             cursor: pointer;
         }
-        button:hover {
-            background: #8b1a2c;
-        }
+        button:hover { background: #8b1a2c; }
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -64,11 +49,7 @@
             padding: 15px;
             text-align: center;
         }
-        .kpi-value {
-            font-size: 32px;
-            font-weight: bold;
-            color: #c41e3a;
-        }
+        .kpi-value { font-size: 32px; font-weight: bold; color: #c41e3a; }
         .top-employee, .city-row {
             display: flex;
             justify-content: space-between;
@@ -77,9 +58,7 @@
             border-bottom: 1px solid #eee;
             cursor: pointer;
         }
-        .top-employee:hover, .city-row:hover, .employee-item:hover {
-            background: #fff0f3;
-        }
+        .top-employee:hover, .city-row:hover, .employee-item:hover { background: #fff0f3; }
         .badge {
             background: #c41e3a;
             color: white;
@@ -87,13 +66,7 @@
             border-radius: 30px;
             font-size: 12px;
         }
-        .badge.gold { background: #ffc107; color: black; }
-        .badge.silver { background: #adb5bd; }
-        .badge.bronze { background: #cd7f32; }
-        .employee-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
+        .employee-list { max-height: 400px; overflow-y: auto; }
         .employee-item {
             display: flex;
             justify-content: space-between;
@@ -136,24 +109,11 @@
             padding: 12px;
             margin-bottom: 12px;
         }
-        .answer-correct {
-            border-left: 4px solid #28a745;
-        }
-        .answer-wrong {
-            border-left: 4px solid #c41e3a;
-        }
-        .charts-row {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .chart-box {
-            flex: 1;
-            min-width: 250px;
-        }
-        canvas {
-            max-height: 250px;
-        }
+        .answer-correct { border-left: 4px solid #28a745; }
+        .answer-wrong { border-left: 4px solid #c41e3a; }
+        .charts-row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .chart-box { flex: 1; min-width: 250px; }
+        canvas { max-height: 250px; }
     </style>
 </head>
 <body>
@@ -170,7 +130,7 @@
             <button id="loadBtn">Загрузить данные</button>
             <button id="exportCsvBtn">📎 CSV</button>
         </div>
-        <div id="status" class="text-muted" style="margin-top: 10px;"></div>
+        <div id="status" style="margin-top: 10px; color: #666;"></div>
     </div>
 
     <div id="statsArea" style="display: none;">
@@ -187,7 +147,7 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap;">
             <div class="card" style="flex:1">
                 <h3>🏆 Топ сотрудников (≥85%)</h3>
                 <div id="topEmployees"></div>
@@ -205,7 +165,6 @@
     </div>
 </div>
 
-<!-- Модальное окно для деталей -->
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3 id="modalTitle"></h3>
@@ -215,6 +174,7 @@
 </div>
 
 <script>
+    // ОДИН клиент Supabase
     const supabase = supabase.createClient(
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
@@ -229,21 +189,24 @@
         const { data } = await supabase.from('tests_new').select('slug, name');
         const sel = document.getElementById('testSelect');
         sel.innerHTML = '<option value="">-- Выберите тест --</option>';
-        if (data) {
+        if (data && data.length) {
             data.forEach(t => {
                 sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
             });
+        } else {
+            sel.innerHTML = '<option value="">-- Нет тестов --</option>';
         }
     }
 
     async function loadResults() {
         const testSlug = document.getElementById('testSelect').value;
         if (!testSlug) {
-            alert('Выберите тест');
+            alert('Выберите тест из списка');
             return;
         }
 
-        document.getElementById('status').innerHTML = 'Загрузка...';
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerHTML = 'Загрузка...';
         document.getElementById('statsArea').style.display = 'none';
 
         const { data, error } = await supabase
@@ -253,19 +216,19 @@
             .order('created_at', { ascending: false });
 
         if (error) {
-            document.getElementById('status').innerHTML = 'Ошибка: ' + error.message;
+            statusDiv.innerHTML = 'Ошибка: ' + error.message;
             return;
         }
 
         if (!data || data.length === 0) {
-            document.getElementById('status').innerHTML = 'Нет результатов для этого теста';
+            statusDiv.innerHTML = 'Нет результатов для этого теста';
             return;
         }
 
         allResults = data;
         applyFilters();
         document.getElementById('statsArea').style.display = 'block';
-        document.getElementById('status').innerHTML = `✅ Загружено: ${allResults.length} записей`;
+        statusDiv.innerHTML = `✅ Загружено: ${allResults.length} записей`;
     }
 
     function applyFilters() {
@@ -294,10 +257,7 @@
             .slice(0,5);
         
         document.getElementById('topEmployees').innerHTML = top5.map((r, i) => {
-            let medal = '';
-            if (i === 0) medal = '🥇';
-            else if (i === 1) medal = '🥈';
-            else if (i === 2) medal = '🥉';
+            let medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : ''));
             return `<div class="top-employee" onclick="showEmployeeDetails(${r.id})">
                 <span><b>${i+1}</b> ${medal} ${r.user_name} (${r.city})</span>
                 <span class="badge">${r.percent}%</span>
@@ -335,12 +295,13 @@
         // Обновляем фильтр городов
         const currentCityFilter = document.getElementById('cityFilter').value;
         const citySelect = document.getElementById('cityFilter');
+        const uniqueCities = [...new Set(allResults.map(r => r.city))];
         citySelect.innerHTML = '<option value="all">Все города</option>' + 
-            [...new Set(allResults.map(r => r.city))].map(c => `<option value="${c}" ${currentCityFilter===c ? 'selected' : ''}>${c}</option>`).join('');
+            uniqueCities.map(c => `<option value="${c}" ${currentCityFilter===c ? 'selected' : ''}>${c}</option>`).join('');
 
         // Гистограмма
         if (scoreChart) scoreChart.destroy();
-        const bins = [0, 0, 0, 0, 0];
+        const bins = [0,0,0,0,0];
         filteredResults.forEach(r => {
             if (r.percent <= 20) bins[0]++;
             else if (r.percent <= 40) bins[1]++;
@@ -348,8 +309,7 @@
             else if (r.percent <= 80) bins[3]++;
             else bins[4]++;
         });
-        const scoreCtx = document.getElementById('scoreHistogram').getContext('2d');
-        scoreChart = new Chart(scoreCtx, {
+        scoreChart = new Chart(document.getElementById('scoreHistogram'), {
             type: 'bar',
             data: {
                 labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
@@ -359,8 +319,7 @@
 
         // График городов
         if (cityChart) cityChart.destroy();
-        const cityCtx = document.getElementById('cityChart').getContext('2d');
-        cityChart = new Chart(cityCtx, {
+        cityChart = new Chart(document.getElementById('cityChart'), {
             type: 'bar',
             data: {
                 labels: cityRating.map(c => c.city),
@@ -378,13 +337,12 @@
         
         let html = `<p>Правильных ответов: ${employee.score} из ${employee.total}</p>`;
         answers.forEach((a, i) => {
-            const isCorrect = a.correct;
             html += `
-                <div class="answer-item ${isCorrect ? 'answer-correct' : 'answer-wrong'}">
+                <div class="answer-item ${a.correct ? 'answer-correct' : 'answer-wrong'}">
                     <b>Вопрос ${i+1}:</b> ${a.questionText}<br>
                     <b>Ваш ответ:</b> ${a.selectedText}<br>
-                    ${!isCorrect ? `<b>Правильный ответ:</b> ${a.correctText}<br>` : ''}
-                    ${!isCorrect ? `<b>Рекомендация:</b> Изучите правило подробнее.` : ''}
+                    ${!a.correct ? `<b>Правильный ответ:</b> ${a.correctText}<br>` : ''}
+                    ${!a.correct ? `<b>Рекомендация:</b> Изучите правило подробнее.` : ''}
                 </div>
             `;
         });
@@ -412,6 +370,8 @@
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('exportCsvBtn').onclick = exportCSV;
     document.getElementById('cityFilter').addEventListener('change', applyFilters);
+    window.showEmployeeDetails = showEmployeeDetails;
+    window.closeModal = closeModal;
 
     loadTests();
 </script>
