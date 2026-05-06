@@ -118,7 +118,11 @@
         .question-stats-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .question-stats-table th, .question-stats-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
         .question-stats-table th { background: #c41e3a; color: white; }
-        .question-stats-table td:first-child { max-width: 500px; word-break: break-word; }
+        .question-stats-table td:first-child { word-break: break-word; }
+        .question-options { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.3; }
+        body.dark .question-options { color: #aaa; }
+        .correct-answer { font-size: 11px; color: #2c6e2c; margin-top: 4px; font-weight: normal; }
+        body.dark .correct-answer { color: #6fbf6f; }
         .reset-btn { background: #6c757d; }
         .search-input { width: 200px; }
         .print-dashboard-btn { background: #2c6e2c; }
@@ -155,7 +159,12 @@
         
         <div class="card">
             <h3>📊 Статистика по вопросам (ошибки)</h3>
-            <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>犯<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody>能得到</div>
+            <div style="overflow-x: auto;">
+                <table class="question-stats-table" id="questionStatsTable">
+                    <thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></thead>
+                    <tbody></tbody>
+                没人
+            </div>
         </div>
         
         <div class="charts-row">
@@ -289,23 +298,64 @@
 
     function renderQuestionStats() {
         if (!filteredResults.length) return;
-        const questionErrors = [];
+        
+        // Собираем статистику по вопросам
+        const questionStats = [];
         filteredResults.forEach(r => {
             if (r.answers) {
                 r.answers.forEach((a, idx) => {
-                    if (!questionErrors[idx]) questionErrors[idx] = { total: 0, errors: 0, text: a.questionText };
-                    questionErrors[idx].total++;
-                    if (!a.correct) questionErrors[idx].errors++;
+                    if (!questionStats[idx]) {
+                        questionStats[idx] = { 
+                            total: 0, 
+                            errors: 0, 
+                            text: a.questionText,
+                            options: a.options || null, // если есть варианты
+                            correctAnswer: a.correctText || ''
+                        };
+                    }
+                    questionStats[idx].total++;
+                    if (!a.correct) questionStats[idx].errors++;
                 });
             }
         });
+        
         const tbody = document.querySelector('#questionStatsTable tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
-        questionErrors.forEach((q, i) => {
+        
+        // Маппинг правильных ответов по вопросам (берём из первого попавшегося результата)
+        const correctAnswersMap = {};
+        if (filteredResults.length > 0 && filteredResults[0].answers) {
+            filteredResults[0].answers.forEach((a, idx) => {
+                correctAnswersMap[idx] = a.correctText || '';
+            });
+        }
+        
+        questionStats.forEach((q, i) => {
             const percent = Math.round((q.errors / q.total) * 100);
             const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<b>${i+1}.</b> ${q.text}`;
+            
+            // Формируем текст вопроса с вариантами (если они есть в answers)
+            let questionHtml = `<b>${i+1}.</b> ${q.text}`;
+            
+            // Пытаемся извлечь варианты из ответов (берём из первой записи)
+            if (filteredResults.length > 0 && filteredResults[0].answers && filteredResults[0].answers[i]) {
+                const answerData = filteredResults[0].answers[i];
+                if (answerData.options && answerData.options.length) {
+                    const optionsText = answerData.options.map((opt, optIdx) => {
+                        const letter = String.fromCharCode(65 + optIdx);
+                        return `${letter}) ${opt}`;
+                    }).join('<br>');
+                    questionHtml += `<div class="question-options">📌 <b>Варианты:</b><br>${optionsText}</div>`;
+                }
+            }
+            
+            // Добавляем правильный ответ
+            if (correctAnswersMap[i]) {
+                questionHtml += `<div class="correct-answer">✅ <b>Правильный ответ:</b> ${correctAnswersMap[i]}</div>`;
+            }
+            
+            row.insertCell(0).innerHTML = questionHtml;
             row.insertCell(1).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${q.errors}/${q.total}</span>`;
             row.insertCell(2).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${percent}%</span>`;
         });
@@ -320,7 +370,7 @@
             document.getElementById('employeeList').innerHTML = '';
             document.getElementById('empCount').innerText = '0';
             const tbody = document.querySelector('#questionStatsTable tbody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="3">Нет数据</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="3">Нет данных</td></tr>';
             return;
         }
         
