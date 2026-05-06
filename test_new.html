@@ -2,19 +2,25 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>585GOLD | Тест</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>585GOLD — Тест продаж</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #fff0f0;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #fff0f0;
             padding: 16px;
             min-height: 100vh;
         }
-        .test-container { max-width: 700px; margin: 0 auto; }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
         .card {
             background: white;
             border-radius: 28px;
@@ -23,13 +29,25 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             border: 1px solid #e8a0b4;
         }
-        h1, h2 { color: #c41e3a; text-align: center; margin-top: 0; }
-        .form-group { margin-bottom: 16px; }
-        label { font-weight: 600; display: block; margin-bottom: 6px; color: #333; }
+        h1, h2 {
+            color: #c41e3a;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 26px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+        }
         input, select {
             width: 100%;
             padding: 14px 16px;
-            border-radius: 30px;
+            border-radius: 40px;
             border: 1px solid #e8a0b4;
             font-size: 16px;
             background: white;
@@ -46,40 +64,71 @@
             width: 100%;
             transition: 0.2s;
         }
-        button:hover { background: #8b1a2c; }
-        button:disabled { background: #e8a0b4; cursor: not-allowed; }
-        .question-block {
-            background: #fff0f3;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
+        button:active {
+            transform: scale(0.98);
         }
-        .question-text { font-weight: 700; margin-bottom: 16px; font-size: 18px; }
+        button:disabled {
+            background: #e8a0b4;
+            cursor: not-allowed;
+        }
+        .question-text {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
         .option {
-            background: white;
-            border: 1px solid #e8a0b4;
-            border-radius: 16px;
+            background: #f8f4f0;
+            border: 1px solid #e2d6cc;
+            border-radius: 20px;
             padding: 12px 16px;
             margin-bottom: 10px;
             cursor: pointer;
             transition: 0.2s;
         }
-        .option:hover { background: #ffe0e0; }
-        .option.selected { background: #c41e3a; color: white; border-color: #c41e3a; }
-        .result { text-align: center; padding: 24px; border-radius: 28px; }
-        .result.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
-        .result.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
-        .progress { font-size: 14px; color: #666; text-align: center; margin-bottom: 16px; }
-        .hidden { display: none; }
-        .restart-btn { background: #c41e3a; margin-top: 20px; }
+        .option:hover {
+            background: #ffe0e0;
+        }
+        .option.selected {
+            background: #c41e3a;
+            color: white;
+            border-color: #c41e3a;
+        }
+        .progress {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .hidden {
+            display: none;
+        }
+        .result-box {
+            text-align: center;
+            padding: 20px;
+            border-radius: 24px;
+        }
+        .result-box.success {
+            background: #e8f0e8;
+            border-left: 6px solid #2c6e2c;
+        }
+        .result-box.fail {
+            background: #ffe0e0;
+            border-left: 6px solid #c41e3a;
+        }
+        .restart-btn {
+            background: #c41e3a;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-<div class="test-container" id="app">
-    <div id="registration" class="card">
-        <h1>🎯 585GOLD | Тест</h1>
+<div class="container" id="app">
+    <!-- Регистрация -->
+    <div id="regScreen" class="card">
+        <h1>🎯 585GOLD | Тест продаж</h1>
         <div class="form-group">
-            <label>Ваше имя и фамилия</label>
+            <label>Имя и фамилия</label>
             <input type="text" id="userName" placeholder="Например: Иванова Анна">
         </div>
         <div class="form-group">
@@ -94,27 +143,31 @@
                 <option value="Нижний Новгород">Нижний Новгород</option>
             </select>
         </div>
-        <button id="startBtn">Начать тест</button>
+        <button id="startTestBtn">Начать тест</button>
     </div>
 
-    <div id="testArea" class="hidden">
+    <!-- Экран теста -->
+    <div id="quizScreen" class="hidden">
         <div class="card">
             <div class="progress">Вопрос <span id="qNum">1</span> из <span id="qTotal">11</span></div>
-            <div id="question"></div>
-            <div id="optionsArea"></div>
-            <button id="nextBtn" disabled>➡ Далее</button>
+            <div id="questionText" class="question-text"></div>
+            <div id="optionsContainer"></div>
+            <button id="nextQuestionBtn" disabled>➡ Далее</button>
         </div>
     </div>
 
-    <div id="resultArea" class="hidden card"></div>
+    <!-- Результат -->
+    <div id="resultScreen" class="hidden card"></div>
 </div>
 
 <script>
-    const supabase = supabase.createClient(
+    // Supabase
+    const supabaseClient = supabase.createClient(
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
 
+    // Вопросы
     const QUESTIONS = [
         {
             text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?",
@@ -229,59 +282,72 @@
     ];
 
     let currentUser = { name: '', city: '' };
-    let currentQuestion = 0;
-    let userAnswers = [];
-    let selectedOption = null;
+    let currentIndex = 0;
+    let userSelections = []; // храним индексы выбранных ответов
+    let currentSelectedOption = null;
+
+    // DOM элементы
+    const regScreen = document.getElementById('regScreen');
+    const quizScreen = document.getElementById('quizScreen');
+    const resultScreen = document.getElementById('resultScreen');
+    const startBtn = document.getElementById('startTestBtn');
+    const nextBtn = document.getElementById('nextQuestionBtn');
+    const qNumSpan = document.getElementById('qNum');
+    const qTotalSpan = document.getElementById('qTotal');
+    const questionTextDiv = document.getElementById('questionText');
+    const optionsContainer = document.getElementById('optionsContainer');
 
     function renderQuestion() {
-        const q = QUESTIONS[currentQuestion];
-        document.getElementById('qNum').innerText = currentQuestion + 1;
-        document.getElementById('qTotal').innerText = QUESTIONS.length;
-        
-        let html = `<div class="question-text">${q.text}</div>`;
-        html += '<div id="optionsList">';
+        const q = QUESTIONS[currentIndex];
+        questionTextDiv.innerText = q.text;
+        qNumSpan.innerText = currentIndex + 1;
+        qTotalSpan.innerText = QUESTIONS.length;
+
+        // очищаем контейнер
+        optionsContainer.innerHTML = '';
+        currentSelectedOption = null;
+        nextBtn.disabled = true;
+
+        // создаём варианты
         q.options.forEach((opt, idx) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'option';
             const letter = String.fromCharCode(65 + idx);
-            html += `<div class="option" data-idx="${idx}">${letter}) ${opt}</div>`;
-        });
-        html += '</div>';
-        document.getElementById('question').innerHTML = html;
-        
-        document.querySelectorAll('.option').forEach(opt => {
-            opt.addEventListener('click', () => {
-                document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-                opt.classList.add('selected');
-                selectedOption = parseInt(opt.dataset.idx);
-                document.getElementById('nextBtn').disabled = false;
+            optionDiv.innerText = `${letter}) ${opt}`;
+            optionDiv.dataset.idx = idx;
+            optionDiv.addEventListener('click', () => {
+                // убираем выделение у всех
+                document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+                optionDiv.classList.add('selected');
+                currentSelectedOption = idx;
+                nextBtn.disabled = false;
             });
+            optionsContainer.appendChild(optionDiv);
         });
-        
-        selectedOption = null;
-        document.getElementById('nextBtn').disabled = true;
     }
 
     async function saveResult() {
         let correctCount = 0;
-        const answersForSave = [];
-        
+        const answersDetail = [];
+
         for (let i = 0; i < QUESTIONS.length; i++) {
-            const userAns = userAnswers[i];
-            const isCorrect = (userAns.selected === QUESTIONS[i].correct);
+            const selectedIdx = userSelections[i];
+            const isCorrect = (selectedIdx === QUESTIONS[i].correct);
             if (isCorrect) correctCount++;
-            answersForSave.push({
+            answersDetail.push({
                 question: i,
-                selected: userAns.selected,
+                selected: selectedIdx,
                 correct: isCorrect,
                 questionText: QUESTIONS[i].text,
-                selectedText: QUESTIONS[i].options[userAns.selected],
+                selectedText: QUESTIONS[i].options[selectedIdx],
                 correctText: QUESTIONS[i].options[QUESTIONS[i].correct]
             });
         }
-        
-        const percent = Math.round(correctCount / QUESTIONS.length * 100);
+        const percent = Math.round((correctCount / QUESTIONS.length) * 100);
         const passed = percent >= 85;
-        
-        const { error } = await supabase
+
+        // сохраняем в Supabase
+        const { error } = await supabaseClient
             .from('results_new')
             .insert([{
                 test_slug: 'prodazhi_2025',
@@ -290,55 +356,64 @@
                 score: correctCount,
                 total: QUESTIONS.length,
                 percent: percent,
-                answers: answersForSave
+                answers: answersDetail
             }]);
-        
-        if (error) console.error('Ошибка:', error);
-        
-        const resultDiv = document.getElementById('resultArea');
-        resultDiv.classList.remove('hidden');
-        resultDiv.innerHTML = `
-            <div class="result ${passed ? 'success' : 'fail'}">
+        if (error) console.error('Ошибка сохранения:', error);
+
+        // показываем результат
+        resultScreen.classList.remove('hidden');
+        resultScreen.innerHTML = `
+            <div class="result-box ${passed ? 'success' : 'fail'}">
                 <h2>${passed ? '🏆 Победа!' : '😞 Тест не пройден'}</h2>
                 <p>Правильных ответов: ${correctCount} из ${QUESTIONS.length}</p>
                 <p>Ваш результат: ${percent}%</p>
-                <p>${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите материалы и попробуйте снова.'}</p>
-                <button class="restart-btn" onclick="location.reload()">Пройти заново</button>
+                <p>${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
+                <button class="restart-btn" id="restartTestBtn">Пройти заново</button>
             </div>
         `;
+        const restartBtnElem = document.getElementById('restartTestBtn');
+        if (restartBtnElem) restartBtnElem.onclick = () => location.reload();
     }
 
-    function nextQuestion() {
-        if (selectedOption === null) return;
-        
-        userAnswers.push({ selected: selectedOption });
-        currentQuestion++;
-        
-        if (currentQuestion >= QUESTIONS.length) {
-            document.getElementById('testArea').classList.add('hidden');
-            saveResult();
-        } else {
+    function nextQuestionHandler() {
+        if (currentSelectedOption === null) return;
+
+        // сохраняем выбранный ответ
+        userSelections[currentIndex] = currentSelectedOption;
+        currentIndex++;
+
+        if (currentIndex < QUESTIONS.length) {
             renderQuestion();
+        } else {
+            // тест закончен
+            quizScreen.classList.add('hidden');
+            saveResult();
         }
     }
 
-    document.getElementById('startBtn').onclick = () => {
+    // Старт теста
+    startBtn.onclick = () => {
         const name = document.getElementById('userName').value.trim();
         const city = document.getElementById('userCity').value;
-        
-        if (!name) { alert('Введите имя'); return; }
-        if (!city) { alert('Выберите город'); return; }
-        
+        if (!name) {
+            alert('Введите имя и фамилию');
+            return;
+        }
+        if (!city) {
+            alert('Выберите город из списка');
+            return;
+        }
         currentUser = { name, city };
-        currentQuestion = 0;
-        userAnswers = [];
-        
-        document.getElementById('registration').classList.add('hidden');
-        document.getElementById('testArea').classList.remove('hidden');
+        currentIndex = 0;
+        userSelections = [];
+        currentSelectedOption = null;
+
+        regScreen.classList.add('hidden');
+        quizScreen.classList.remove('hidden');
         renderQuestion();
     };
-    
-    document.getElementById('nextBtn').onclick = nextQuestion;
+
+    nextBtn.onclick = nextQuestionHandler;
 </script>
 </body>
 </html>
