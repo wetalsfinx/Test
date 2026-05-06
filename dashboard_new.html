@@ -116,8 +116,9 @@
         .theme-toggle { margin-left: auto; }
         body.dark .employee-item, body.dark .city-row, body.dark .top-employee { border-bottom-color: #0f3460; }
         .question-stats-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .question-stats-table th, .question-stats-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+        .question-stats-table th, .question-stats-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
         .question-stats-table th { background: #c41e3a; color: white; }
+        .question-stats-table td:first-child { max-width: 500px; word-break: break-word; }
         .new-badge { background: #28a745; color: white; border-radius: 20px; padding: 2px 8px; font-size: 11px; margin-left: 8px; }
         .reset-btn { background: #6c757d; }
         .search-input { width: 200px; }
@@ -156,7 +157,7 @@
         
         <div class="card">
             <h3>📊 Статистика по вопросам (ошибки)</h3>
-            <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead><tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody></table></div>
+            <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead><table><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody></table></div>
         </div>
         
         <div class="charts-row">
@@ -267,7 +268,6 @@
         else if (range === 'week') { const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7); filtered = filtered.filter(r => new Date(r.created_at) >= weekAgo); }
         else if (range === 'month') { const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30); filtered = filtered.filter(r => new Date(r.created_at) >= monthAgo); }
         
-        // Поиск по фамилии (после пробела или в конце)
         const surname = document.getElementById('surnameSearch').value.toLowerCase().trim();
         if (surname) {
             filtered = filtered.filter(r => {
@@ -296,7 +296,7 @@
         filteredResults.forEach(r => {
             if (r.answers) {
                 r.answers.forEach((a, idx) => {
-                    if (!questionErrors[idx]) questionErrors[idx] = { total: 0, errors: 0, text: a.questionText.substring(0, 80) };
+                    if (!questionErrors[idx]) questionErrors[idx] = { total: 0, errors: 0, text: a.questionText };
                     questionErrors[idx].total++;
                     if (!a.correct) questionErrors[idx].errors++;
                 });
@@ -307,7 +307,8 @@
         questionErrors.forEach((q, i) => {
             const percent = Math.round((q.errors / q.total) * 100);
             const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<b>${i+1}.</b> ${q.text}${q.text.length > 80 ? '…' : ''}`;
+            // ПОЛНЫЙ ТЕКСТ ВОПРОСА (без обрезания)
+            row.insertCell(0).innerHTML = `<b>${i+1}.</b> ${q.text}`;
             row.insertCell(1).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${q.errors}/${q.total}</span>`;
             row.insertCell(2).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${percent}%</span>`;
         });
