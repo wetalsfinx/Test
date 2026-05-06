@@ -5,7 +5,6 @@
     <title>585GOLD | Дашборд тестов</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -141,6 +140,17 @@
             width: auto;
             padding: 8px 20px;
         }
+        /* Стили для печати PDF */
+        @media print {
+            body { background: white; padding: 0; margin: 0; }
+            .no-print, .modal, .dashboard .card:first-child, .kpi-grid, .charts-row, .employee-list, .employee-actions, button, .modal-actions, #statsArea .card:first-child { display: none; }
+            .print-report { display: block; padding: 20px; font-size: 12pt; }
+            .print-report h1 { color: #c41e3a; }
+            .print-answer { margin-bottom: 15px; padding: 8px; border-left: 3px solid #ddd; }
+            .print-answer.correct { border-left-color: #28a745; }
+            .print-answer.wrong { border-left-color: #c41e3a; }
+            .print-recommendation { background: #e8f0e8; padding: 8px; margin-top: 8px; border-radius: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -207,7 +217,6 @@
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
 
-    // БАНК РЕКОМЕНДАЦИЙ (по ключевым словам в вопросах)
     function getRecommendation(questionText, correctAnswer) {
         const q = questionText.toLowerCase();
         if (q.includes('первым') || q.includes('зрительный контакт')) {
@@ -220,13 +229,13 @@
             return '💡 Правило «Презентуй с эмоцией»: предложите собрать образ целиком: «Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»';
         }
         if (q.includes('серебра') && q.includes('золото')) {
-            return '💡 Правило «Предлагай примерку через «Давайте»»: сравните оба варианта вживую: «Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»';
+            return '💡 Правило «Предлагай примерку»: сравните оба варианта вживую: «Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»';
         }
         if (q.includes('футляр') || q.includes('оформляет покупку')) {
             return '💡 Правило «Не отпускай без альтернативы»: презентуйте аксессуар как часть образа: «Давайте выберем красивый футляр и чистящее средство, чтобы украшение всегда выглядело безупречно»';
         }
         if (q.includes('дороговато')) {
-            return '💡 Правило отработки возражений: не соглашайтесь сразу на скидку, а спросите: «Понимаю, цена важна. А с чем вы сравниваете?» — так вы поймёте истинную причину сомнений.';
+            return '💡 Правило отработки возражений: спросите: «Понимаю, цена важна. А с чем вы сравниваете?» — так вы поймёте истинную причину сомнений.';
         }
         if (q.includes('размера нет')) {
             return '💡 Правило «Не отпускай без альтернативы»: предложите похожие модели и каталог заказов: «Давайте покажу похожие кольца в наличии и каталог на заказ»';
@@ -238,7 +247,7 @@
             return '💡 Правило «Проявляй инициативу»: подхватите интерес и предложите идеи: «Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»';
         }
         if (q.includes('яндекс сплит')) {
-            return '💡 Правило работы с ценой: расскажите о Сплите ДО озвучивания итоговой цены, как о дополнительной возможности: «Можно оформить Сплит — 4 платежа без переплат»';
+            return '💡 Правило работы с ценой: расскажите о Сплите ДО озвучивания итоговой цены: «Можно оформить Сплит — 4 платежа без переплат»';
         }
         if (q.includes('пауза') || q.includes('идти вдоль витрины')) {
             return '💡 Правило «Проявляй инициативу»: после паузы 20-30 секунд мягко начинайте диалог: «Какое изделие выбираете? Для себя или в подарок?»';
@@ -418,16 +427,20 @@
         if (!currentSelectedEmployee) return;
         const employee = currentSelectedEmployee;
         const answers = employee.answers || [];
+        
         let html = `
-            <html><head><meta charset="UTF-8"><title>Отчёт ${employee.user_name}</title>
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><title>Отчёт ${employee.user_name}</title>
             <style>
-                body { font-family: 'Segoe UI', sans-serif; padding: 30px; }
+                body { font-family: 'Segoe UI', sans-serif; padding: 20px; }
                 h1 { color: #c41e3a; }
                 .answer { margin-bottom: 15px; padding: 10px; border-left: 4px solid #ddd; }
                 .correct { border-left-color: #28a745; }
                 .wrong { border-left-color: #c41e3a; }
-                .recommendation { background: #e8f0e8; padding: 8px; margin-top: 8px; border-radius: 8px; color: #2c6e2c; }
-            </style></head>
+                .recommendation { background: #e8f0e8; padding: 8px; margin-top: 8px; border-radius: 8px; }
+            </style>
+            </head>
             <body>
             <h1>585GOLD | Отчёт по тесту</h1>
             <p><strong>Сотрудник:</strong> ${employee.user_name}</p>
@@ -437,20 +450,25 @@
             <hr>
             <h3>Детальные ответы</h3>
         `;
+        
         answers.forEach((a, i) => {
-            const rec = !a.correct ? getRecommendation(a.questionText, a.correctText) : '';
+            const isCorrect = a.correct;
+            const rec = !isCorrect ? getRecommendation(a.questionText, a.correctText) : '';
             html += `
-                <div class="answer ${a.correct ? 'correct' : 'wrong'}">
+                <div class="answer ${isCorrect ? 'correct' : 'wrong'}">
                     <b>${i+1}. ${a.questionText}</b><br>
                     <b>Ваш ответ:</b> ${a.selectedText}<br>
-                    ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br>` : ''}
-                    ${!a.correct ? `<div class="recommendation">${rec}</div>` : ''}
+                    ${!isCorrect ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br>` : ''}
+                    ${!isCorrect ? `<div class="recommendation">${rec}</div>` : ''}
                 </div>
             `;
         });
         html += `</body></html>`;
-        const opt = { margin: 0.5, filename: `report_${employee.user_name}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4' } };
-        html2pdf().set(opt).from(html).save();
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.print();
     }
 
     function exportCSV() {
