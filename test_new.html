@@ -105,7 +105,7 @@
         }
         .result-box {
             text-align: center;
-            padding: 20px;
+            padding: 24px;
             border-radius: 24px;
         }
         .result-box.success {
@@ -157,17 +157,15 @@
     </div>
 
     <!-- Результат -->
-    <div id="resultScreen" class="hidden card"></div>
+    <div id="resultScreen" class="hidden"></div>
 </div>
 
 <script>
-    // Supabase
     const supabaseClient = supabase.createClient(
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
 
-    // Вопросы
     const QUESTIONS = [
         {
             text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?",
@@ -283,10 +281,9 @@
 
     let currentUser = { name: '', city: '' };
     let currentIndex = 0;
-    let userSelections = []; // храним индексы выбранных ответов
+    let userSelections = [];
     let currentSelectedOption = null;
 
-    // DOM элементы
     const regScreen = document.getElementById('regScreen');
     const quizScreen = document.getElementById('quizScreen');
     const resultScreen = document.getElementById('resultScreen');
@@ -303,12 +300,10 @@
         qNumSpan.innerText = currentIndex + 1;
         qTotalSpan.innerText = QUESTIONS.length;
 
-        // очищаем контейнер
         optionsContainer.innerHTML = '';
         currentSelectedOption = null;
         nextBtn.disabled = true;
 
-        // создаём варианты
         q.options.forEach((opt, idx) => {
             const optionDiv = document.createElement('div');
             optionDiv.className = 'option';
@@ -316,7 +311,6 @@
             optionDiv.innerText = `${letter}) ${opt}`;
             optionDiv.dataset.idx = idx;
             optionDiv.addEventListener('click', () => {
-                // убираем выделение у всех
                 document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
                 optionDiv.classList.add('selected');
                 currentSelectedOption = idx;
@@ -346,7 +340,6 @@
         const percent = Math.round((correctCount / QUESTIONS.length) * 100);
         const passed = percent >= 85;
 
-        // сохраняем в Supabase
         const { error } = await supabaseClient
             .from('results_new')
             .insert([{
@@ -360,15 +353,14 @@
             }]);
         if (error) console.error('Ошибка сохранения:', error);
 
-        // показываем результат
         resultScreen.classList.remove('hidden');
         resultScreen.innerHTML = `
             <div class="result-box ${passed ? 'success' : 'fail'}">
                 <h2>${passed ? '🏆 Победа!' : '😞 Тест не пройден'}</h2>
-                <p>Правильных ответов: ${correctCount} из ${QUESTIONS.length}</p>
-                <p>Ваш результат: ${percent}%</p>
-                <p>${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
-                <button class="restart-btn" id="restartTestBtn">Пройти заново</button>
+                <p style="font-size: 18px; margin: 15px 0;">Правильных ответов: ${correctCount} из ${QUESTIONS.length}</p>
+                <p style="font-size: 24px; font-weight: bold; margin: 10px 0;">Ваш результат: ${percent}%</p>
+                <p style="margin: 15px 0;">${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите материалы и попробуйте снова.'}</p>
+                <button class="restart-btn" id="restartTestBtn" style="margin-top: 20px;">🔄 Пройти заново</button>
             </div>
         `;
         const restartBtnElem = document.getElementById('restartTestBtn');
@@ -378,20 +370,17 @@
     function nextQuestionHandler() {
         if (currentSelectedOption === null) return;
 
-        // сохраняем выбранный ответ
         userSelections[currentIndex] = currentSelectedOption;
         currentIndex++;
 
         if (currentIndex < QUESTIONS.length) {
             renderQuestion();
         } else {
-            // тест закончен
             quizScreen.classList.add('hidden');
             saveResult();
         }
     }
 
-    // Старт теста
     startBtn.onclick = () => {
         const name = document.getElementById('userName').value.trim();
         const city = document.getElementById('userCity').value;
