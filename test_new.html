@@ -10,61 +10,57 @@
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             background: #fff0f0;
-            padding: 16px;
-            min-height: 100vh;
+            padding: 12px;
         }
-        .container { max-width: 700px; margin: 0 auto; }
+        .container { max-width: 650px; margin: 0 auto; }
         .card {
             background: white;
             border-radius: 28px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border: 1px solid #e8a0b4;
         }
-        h1, h2 { color: #c41e3a; text-align: center; margin-bottom: 20px; font-size: 26px; }
-        .form-group { margin-bottom: 18px; }
+        h1 { color: #c41e3a; text-align: center; font-size: 24px; margin-bottom: 16px; }
+        .form-group { margin-bottom: 16px; }
         label { font-weight: 600; display: block; margin-bottom: 6px; color: #333; }
         input, select {
             width: 100%;
-            padding: 14px 16px;
+            padding: 12px 14px;
             border-radius: 40px;
             border: 1px solid #e8a0b4;
-            font-size: 16px;
+            font-size: 15px;
             background: white;
         }
         button {
             background: #c41e3a;
             color: white;
             border: none;
-            padding: 14px 24px;
+            padding: 12px 20px;
             border-radius: 40px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
-            transition: 0.2s;
         }
-        button:active { transform: scale(0.98); }
         button:disabled { background: #e8a0b4; cursor: not-allowed; }
-        .question-text { font-weight: 700; font-size: 18px; margin-bottom: 20px; line-height: 1.4; }
+        .question-text { font-weight: 700; font-size: 17px; margin-bottom: 16px; line-height: 1.4; }
         .option {
             background: #f8f4f0;
             border: 1px solid #e2d6cc;
             border-radius: 20px;
-            padding: 12px 16px;
-            margin-bottom: 10px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
             cursor: pointer;
-            transition: 0.2s;
+            font-size: 14px;
         }
-        .option:hover { background: #ffe0e0; }
         .option.selected { background: #c41e3a; color: white; border-color: #c41e3a; }
-        .progress { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; }
+        .progress { text-align: center; color: #666; margin-bottom: 16px; font-size: 13px; }
         .hidden { display: none; }
-        .result-box { text-align: center; padding: 24px; border-radius: 24px; }
+        .result-box { text-align: center; padding: 20px; border-radius: 24px; }
         .result-box.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
         .result-box.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
-        .restart-btn { background: #c41e3a; margin-top: 20px; }
+        .restart-btn { background: #c41e3a; margin-top: 16px; }
     </style>
 </head>
 <body>
@@ -79,17 +75,12 @@
             <label>Город</label>
             <select id="userCity">
                 <option value="">-- Выберите город --</option>
-                <option value="Сыктывкар">Сыктывкар</option>
-                <option value="Оренбург">Оренбург</option>
-                <option value="Екатеринбург">Екатеринбург</option>
-                <option value="Уфа">Уфа</option>
-                <option value="Ульяновск">Ульяновск</option>
-                <option value="Нижний Новгород">Нижний Новгород</option>
+                <option value="Сыктывкар">Сыктывкар</option><option value="Оренбург">Оренбург</option><option value="Екатеринбург">Екатеринбург</option>
+                <option value="Уфа">Уфа</option><option value="Ульяновск">Ульяновск</option><option value="Нижний Новгород">Нижний Новгород</option>
             </select>
         </div>
         <button id="startTestBtn">Начать тест</button>
     </div>
-
     <div id="quizScreen" class="hidden">
         <div class="card">
             <div class="progress">Вопрос <span id="qNum">1</span> из <span id="qTotal">11</span></div>
@@ -98,255 +89,34 @@
             <button id="nextQuestionBtn" disabled>➡ Далее</button>
         </div>
     </div>
-
     <div id="resultScreen" class="hidden"></div>
 </div>
 
 <script>
-    const supabaseClient = supabase.createClient(
-        'https://qtostraaqrnjbxiydlip.supabase.co',
-        'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
-    );
-
+    const supabaseClient = supabase.createClient('https://qtostraaqrnjbxiydlip.supabase.co','sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7');
     const ORIGINAL_QUESTIONS = [
-        {
-            text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?",
-            options: [
-                "«Добрый день! Чем могу помочь?»",
-                "«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?»",
-                "«Добрый день! Присмотритесь к нашим новинкам»",
-                "«Здравствуйте! Если нужны будут рекомендации — обращайтесь»"
-            ],
-            correct: 1
-        },
-        {
-            text: "Клиент говорит: «Мне нужно кольцо до 25 000 рублей». Вы услышали бюджет. Что делаете ДАЛЬШЕ?",
-            options: [
-                "Сразу показываете 3-4 кольца в пределах 25 000 ₽",
-                "Показываете сначала кольцо за 28 000 ₽ (якорь), затем за 25 000 ₽",
-                "Спрашиваете: «А для какого случая? Это подарок или для себя?»",
-                "Спрашиваете: «А готовы добавить за лучшее качество?»"
-            ],
-            correct: 2
-        },
-        {
-            text: "Клиентка выбрала кольцо. Вы хотите предложить серьги из той же коллекции. Как говорите?",
-            options: [
-                "«У нас есть ещё серьги, посмотрите?»",
-                "«Можно подобрать серьги к этому кольцу?»",
-                "«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»",
-                "«К этому кольцу обычно берут серьги»"
-            ],
-            correct: 2
-        },
-        {
-            text: "Клиентка смотрит на серьги из серебра за 12 000 ₽. Вы хотите мягко переориентировать на золото. Что говорите?",
-            options: [
-                "«Золото лучше — оно дороже и качественнее»",
-                "«У нас акция на золото — скидка 30%»",
-                "«Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»",
-                "«Золото 585 пробы служит дольше»"
-            ],
-            correct: 2
-        },
-        {
-            text: "Клиентка оформляет покупку кольца. Вы:",
-            options: [
-                "«Футляр нужен будет?»",
-                "«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»",
-                "«У нас есть футляры и средства для чистки. Показать?»",
-                "«Можем предложить футляр»"
-            ],
-            correct: 1
-        },
-        {
-            text: "Клиентка выбрала кольцо за 38 000 ₽, но говорит: «Дороговато... Я думала, дешевле будет». Что отвечаете?",
-            options: [
-                "«Так вы же золото покупаете, а не бижутерию»",
-                "«Это кольцо с бриллиантом высокой чистоты»",
-                "«Понимаю, цена важна. А с чем вы сравниваете?»",
-                "«Давайте посмотрю, что есть подешевле»"
-            ],
-            correct: 2
-        },
-        {
-            text: "Клиент выбирает кольцо, но размера нет в наличии. Что говорите?",
-            options: [
-                "«Можем заказать — доставка 3-5 дней»",
-                "«Этот размер закончился, но скоро привезут»",
-                "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»",
-                "«Приходите завтра — возможно, будет в наличии»"
-            ],
-            correct: 2
-        },
-        {
-            text: "Клиентка выбирает подарок маме на юбилей. Как презентуете изделие?",
-            options: [
-                "«Это кольцо из золота 585 пробы, вес 3 грамма»",
-                "«Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нем, глядя на ваш подарок»",
-                "«Красивое кольцо, маме понравится»",
-                "«Это кольцо с бриллиантом, очень популярная модель»"
-            ],
-            correct: 1
-        },
-        {
-            text: "Клиент спрашивает: «Можно посмотреть другие модели?». Как отвечаете?",
-            options: [
-                "«Да, конечно. Какие именно?»",
-                "«Смотрите, у нас много всего»",
-                "«Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»",
-                "«Конечно, вот каталог»"
-            ],
-            correct: 2
-        },
-        {
-            text: "Клиентка выбрала кольцо за 55 000 ₽, но колеблется. Вы знаете, что у магазина есть Яндекс Сплит. Когда и КАК вы упоминаете об этом?",
-            options: [
-                "Только если клиентка скажет «дорого» или «я подумаю»",
-                "Только на кассе при оформлении покупки",
-                "Во время презентации, ДО озвучивания итоговой цены: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»",
-                "Когда клиентка сама спросит про рассрочку"
-            ],
-            correct: 2
-        },
-        {
-            text: "Клиентка зашла в магазин. Вы поздоровались, проговорили акцию. Она кивнула и продолжает медленно идти вдоль витрины, не останавливаясь. Что делаете?",
-            options: [
-                "Сразу подходите и спрашиваете: «Что-то присмотрели?»",
-                "Ждёте 20-30 секунд, даёте клиентке освоиться, затем мягко начинаете диалог: «Какое изделие выбираете? Для себя или в подарок?»",
-                "Подходите через 5 минут",
-                "Наблюдаете, но не подходите, пока клиентка сама не обратится"
-            ],
-            correct: 1
-        }
+        {text:"Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?",options:["«Добрый день! Чем могу помочь?»","«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?»","«Добрый день! Присмотритесь к нашим новинкам»","«Здравствуйте! Если нужны будут рекомендации — обращайтесь»"],correct:1},
+        {text:"Клиент говорит: «Мне нужно кольцо до 25 000 рублей». Вы услышали бюджет. Что делаете ДАЛЬШЕ?",options:["Сразу показываете 3-4 кольца в пределах 25 000 ₽","Показываете сначала кольцо за 28 000 ₽ (якорь), затем за 25 000 ₽","Спрашиваете: «А для какого случая? Это подарок или для себя?»","Спрашиваете: «А готовы добавить за лучшее качество?»"],correct:2},
+        {text:"Клиентка выбрала кольцо. Вы хотите предложить серьги из той же коллекции. Как говорите?",options:["«У нас есть ещё серьги, посмотрите?»","«Можно подобрать серьги к этому кольцу?»","«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»","«К этому кольцу обычно берут серьги»"],correct:2},
+        {text:"Клиентка смотрит на серьги из серебра за 12 000 ₽. Вы хотите мягко переориентировать на золото. Что говорите?",options:["«Золото лучше — оно дороже и качественнее»","«У нас акция на золото — скидка 30%»","«Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»","«Золото 585 пробы служит дольше»"],correct:2},
+        {text:"Клиентка оформляет покупку кольца. Вы:",options:["«Футляр нужен будет?»","«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»","«У нас есть футляры и средства для чистки. Показать?»","«Можем предложить футляр»"],correct:1},
+        {text:"Клиентка выбрала кольцо за 38 000 ₽, но говорит: «Дороговато... Я думала, дешевле будет». Что отвечаете?",options:["«Так вы же золото покупаете, а не бижутерию»","«Это кольцо с бриллиантом высокой чистоты»","«Понимаю, цена важна. А с чем вы сравниваете?»","«Давайте посмотрю, что есть подешевле»"],correct:2},
+        {text:"Клиент выбирает кольцо, но размера нет в наличии. Что говорите?",options:["«Можем заказать — доставка 3-5 дней»","«Этот размер закончился, но скоро привезут»","«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»","«Приходите завтра — возможно, будет в наличии»"],correct:2},
+        {text:"Клиентка выбирает подарок маме на юбилей. Как презентуете изделие?",options:["«Это кольцо из золота 585 пробы, вес 3 грамма»","«Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нем, глядя на ваш подарок»","«Красивое кольцо, маме понравится»","«Это кольцо с бриллиантом, очень популярная модель»"],correct:1},
+        {text:"Клиент спрашивает: «Можно посмотреть другие модели?». Как отвечаете?",options:["«Да, конечно. Какие именно?»","«Смотрите, у нас много всего»","«Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»","«Конечно, вот каталог»"],correct:2},
+        {text:"Клиентка выбрала кольцо за 55 000 ₽, но колеблется. Вы знаете, что у магазина есть Яндекс Сплит. Когда и КАК вы упоминаете об этом?",options:["Только если клиентка скажет «дорого» или «я подумаю»","Только на кассе при оформлении покупки","Во время презентации, ДО озвучивания итоговой цены: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»","Когда клиентка сама спросит про рассрочку"],correct:2},
+        {text:"Клиентка зашла в магазин. Вы поздоровались, проговорили акцию. Она кивнула и продолжает медленно идти вдоль витрины, не останавливаясь. Что делаете?",options:["Сразу подходите и спрашиваете: «Что-то присмотрели?»","Ждёте 20-30 секунд, даёте клиентке освоиться, затем мягко начинаете диалог: «Какое изделие выбираете? Для себя или в подарок?»","Подходите через 5 минут","Наблюдаете, но не подходите, пока клиентка сама не обратится"],correct:1}
     ];
-
-    let shuffledQuestions = [];
-    let currentUser = { name: '', city: '' };
-    let currentIndex = 0;
-    let userSelections = [];
-    let currentSelectedOption = null;
-
-    const regScreen = document.getElementById('regScreen');
-    const quizScreen = document.getElementById('quizScreen');
-    const resultScreen = document.getElementById('resultScreen');
-    const startBtn = document.getElementById('startTestBtn');
-    const nextBtn = document.getElementById('nextQuestionBtn');
-    const qNumSpan = document.getElementById('qNum');
-    const qTotalSpan = document.getElementById('qTotal');
-    const questionTextDiv = document.getElementById('questionText');
-    const optionsContainer = document.getElementById('optionsContainer');
-
-    function shuffleArray(arr) {
-        for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [arr[i], arr[j]] = [arr[j], arr[i]];
-        }
-        return arr;
-    }
-
-    function renderQuestion() {
-        const q = shuffledQuestions[currentIndex];
-        questionTextDiv.innerText = q.text;
-        qNumSpan.innerText = currentIndex + 1;
-        qTotalSpan.innerText = shuffledQuestions.length;
-
-        optionsContainer.innerHTML = '';
-        currentSelectedOption = null;
-        nextBtn.disabled = true;
-
-        q.options.forEach((opt, idx) => {
-            const optionDiv = document.createElement('div');
-            optionDiv.className = 'option';
-            const letter = String.fromCharCode(65 + idx);
-            optionDiv.innerText = `${letter}) ${opt}`;
-            optionDiv.dataset.idx = idx;
-            optionDiv.addEventListener('click', () => {
-                document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
-                optionDiv.classList.add('selected');
-                currentSelectedOption = idx;
-                nextBtn.disabled = false;
-            });
-            optionsContainer.appendChild(optionDiv);
-        });
-    }
-
-    async function saveResult() {
-        let correctCount = 0;
-        const answersDetail = [];
-
-        for (let i = 0; i < shuffledQuestions.length; i++) {
-            const selectedIdx = userSelections[i];
-            const q = shuffledQuestions[i];
-            const isCorrect = (selectedIdx === q.correct);
-            if (isCorrect) correctCount++;
-            answersDetail.push({
-                question: i,
-                selected: selectedIdx,
-                correct: isCorrect,
-                questionText: q.text,
-                selectedText: q.options[selectedIdx],
-                correctText: q.options[q.correct]
-            });
-        }
-        const percent = Math.round((correctCount / shuffledQuestions.length) * 100);
-        const passed = percent >= 85;
-
-        await supabaseClient
-            .from('results_new')
-            .insert([{
-                test_slug: 'prodazhi_2025',
-                user_name: currentUser.name,
-                city: currentUser.city,
-                score: correctCount,
-                total: shuffledQuestions.length,
-                percent: percent,
-                answers: answersDetail
-            }]);
-
-        resultScreen.classList.remove('hidden');
-        resultScreen.innerHTML = `
-            <div class="result-box ${passed ? 'success' : 'fail'}">
-                <h2>${passed ? '🏆 Победа!' : '😞 Тест не пройден'}</h2>
-                <p style="font-size: 18px; margin: 15px 0;">Правильных ответов: ${correctCount} из ${shuffledQuestions.length}</p>
-                <p style="font-size: 24px; font-weight: bold; margin: 10px 0;">Ваш результат: ${percent}%</p>
-                <p style="margin: 15px 0;">${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
-                <button class="restart-btn" id="restartTestBtn" style="margin-top: 20px;">🔄 Пройти заново</button>
-            </div>
-        `;
-        const restartBtnElem = document.getElementById('restartTestBtn');
-        if (restartBtnElem) restartBtnElem.onclick = () => location.reload();
-    }
-
-    function nextQuestionHandler() {
-        if (currentSelectedOption === null) return;
-        userSelections[currentIndex] = currentSelectedOption;
-        currentIndex++;
-        if (currentIndex < shuffledQuestions.length) {
-            renderQuestion();
-        } else {
-            quizScreen.classList.add('hidden');
-            saveResult();
-        }
-    }
-
-    startBtn.onclick = () => {
-        const name = document.getElementById('userName').value.trim();
-        const city = document.getElementById('userCity').value;
-        if (!name) { alert('Введите имя и фамилию'); return; }
-        if (!city) { alert('Выберите город из списка'); return; }
-
-        shuffledQuestions = shuffleArray([...ORIGINAL_QUESTIONS]);
-        currentUser = { name, city };
-        currentIndex = 0;
-        userSelections = [];
-        currentSelectedOption = null;
-
-        regScreen.classList.add('hidden');
-        quizScreen.classList.remove('hidden');
-        renderQuestion();
-    };
-    nextBtn.onclick = nextQuestionHandler;
+    let shuffled=[], currentUser={}, currentIndex=0, selections=[], currentSelected=null;
+    const regScreen=document.getElementById('regScreen'), quizScreen=document.getElementById('quizScreen'), resultScreen=document.getElementById('resultScreen');
+    const startBtn=document.getElementById('startTestBtn'), nextBtn=document.getElementById('nextQuestionBtn');
+    const qNumSpan=document.getElementById('qNum'), qTotalSpan=document.getElementById('qTotal'), questionTextDiv=document.getElementById('questionText'), optionsContainer=document.getElementById('optionsContainer');
+    function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a;}
+    function renderQuestion(){const q=shuffled[currentIndex]; questionTextDiv.innerText=q.text; qNumSpan.innerText=currentIndex+1; qTotalSpan.innerText=shuffled.length; optionsContainer.innerHTML=''; currentSelected=null; nextBtn.disabled=true; q.options.forEach((opt,idx)=>{const div=document.createElement('div'); div.className='option'; div.innerText=opt; div.onclick=()=>{document.querySelectorAll('.option').forEach(el=>el.classList.remove('selected')); div.classList.add('selected'); currentSelected=idx; nextBtn.disabled=false;}; optionsContainer.appendChild(div);});}
+    async function saveResult(){let correct=0, details=[]; for(let i=0;i<shuffled.length;i++){const sel=selections[i]; const isCorrect=(sel===shuffled[i].correct); if(isCorrect) correct++; details.push({question:i,selected:sel,correct:isCorrect,questionText:shuffled[i].text,selectedText:shuffled[i].options[sel],correctText:shuffled[i].options[shuffled[i].correct]});} const percent=Math.round(correct/shuffled.length*100); const passed=percent>=85; await supabaseClient.from('results_new').insert([{test_slug:'prodazhi_2025',user_name:currentUser.name,city:currentUser.city,score:correct,total:shuffled.length,percent:percent,answers:details}]); resultScreen.classList.remove('hidden'); resultScreen.innerHTML=`<div class="result-box ${passed?'success':'fail'}"><h2>${passed?'🏆 Победа!':'😞 Тест не пройден'}</h2><p>Правильных: ${correct}/${shuffled.length}</p><p>Результат: ${percent}%</p><button class="restart-btn" onclick="location.reload()">🔄 Пройти заново</button></div>`;}
+    function nextQuestionHandler(){if(currentSelected===null) return; selections[currentIndex]=currentSelected; currentIndex++; if(currentIndex<shuffled.length) renderQuestion(); else {quizScreen.classList.add('hidden'); saveResult();}}
+    startBtn.onclick=()=>{const name=document.getElementById('userName').value.trim(), city=document.getElementById('userCity').value; if(!name){alert('Введите имя');return;} if(!city){alert('Выберите город');return;} shuffled=shuffle([...ORIGINAL_QUESTIONS]); currentUser={name,city}; currentIndex=0; selections=[]; currentSelected=null; regScreen.classList.add('hidden'); quizScreen.classList.remove('hidden'); renderQuestion();};
+    nextBtn.onclick=nextQuestionHandler;
 </script>
 </body>
 </html>
