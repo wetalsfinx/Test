@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>585GOLD | Дашборд тестов</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-top: 4px solid #c41e3a;
+        }
+        h2, h3 {
+            color: #c41e3a;
+            margin-top: 0;
+        }
+        .flex-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        select, button {
+            padding: 10px 16px;
+            border-radius: 30px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        button {
+            background: #c41e3a;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #8b1a2c;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .kpi-card {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+        }
+        .kpi-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #c41e3a;
+        }
+        .top-employee, .city-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .top-employee:hover, .city-row:hover, .employee-item:hover {
+            background: #fff0f3;
+        }
+        .badge {
+            background: #c41e3a;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+        }
+        .badge.gold { background: #ffc107; color: black; }
+        .badge.silver { background: #adb5bd; }
+        .badge.bronze { background: #cd7f32; }
+        .employee-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .employee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 28px;
+            padding: 24px;
+        }
+        .answer-item {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .answer-correct {
+            border-left: 4px solid #28a745;
+        }
+        .answer-wrong {
+            border-left: 4px solid #c41e3a;
+        }
+        .charts-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .chart-box {
+            flex: 1;
+            min-width: 250px;
+        }
+        canvas {
+            max-height: 250px;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="card">
+        <h2>📊 585GOLD | Дашборд тестов</h2>
+        <div class="flex-row">
+            <select id="testSelect">
+                <option value="">-- Выберите тест --</option>
+            </select>
+            <select id="cityFilter">
+                <option value="all">Все города</option>
+            </select>
+            <button id="loadBtn">Загрузить данные</button>
+            <button id="exportCsvBtn">📎 CSV</button>
+        </div>
+        <div id="status" class="text-muted" style="margin-top: 10px;"></div>
+    </div>
+
+    <div id="statsArea" style="display: none;">
+        <div class="kpi-grid" id="kpi"></div>
+        
+        <div class="charts-row">
+            <div class="card chart-box">
+                <h3>Распределение баллов</h3>
+                <canvas id="scoreHistogram"></canvas>
+            </div>
+            <div class="card chart-box">
+                <h3>Топ городов</h3>
+                <canvas id="cityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="card" style="flex:1">
+                <h3>🏆 Топ сотрудников (≥85%)</h3>
+                <div id="topEmployees"></div>
+            </div>
+            <div class="card" style="flex:1">
+                <h3>🏙️ Рейтинг городов</h3>
+                <div id="cityRating"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📋 Список сотрудников (<span id="empCount">0</span>)</h3>
+            <div class="employee-list" id="employeeList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для деталей -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle"></h3>
+        <button onclick="closeModal()" style="margin-bottom: 15px; background: #6c757d;">Закрыть</button>
+        <div id="modalAnswers"></div>
+    </div>
+</div>
+
+<script>
+    const supabase = supabase.createClient(
+        'https://qtostraaqrnjbxiydlip.supabase.co',
+        'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
+    );
+
+    let allResults = [];
+    let filteredResults = [];
+    let cityChart = null;
+    let scoreChart = null;
+
+    async function loadTests() {
+        const { data } = await supabase.from('tests_new').select('slug, name');
+        const sel = document.getElementById('testSelect');
+        sel.innerHTML = '<option value="">-- Выберите тест --</option>';
+        if (data) {
+            data.forEach(t => {
+                sel.innerHTML += `<option value="${t.slug}">${t.name}</option>`;
+            });
+        }
+    }
+
+    async function loadResults() {
+        const testSlug = document.getElementById('testSelect').value;
+        if (!testSlug) {
+            alert('Выберите тест');
+            return;
+        }
+
+        document.getElementById('status').innerHTML = 'Загрузка...';
+        document.getElementById('statsArea').style.display = 'none';
+
+        const { data, error } = await supabase
+            .from('results_new')
+            .select('*')
+            .eq('test_slug', testSlug)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            document.getElementById('status').innerHTML = 'Ошибка: ' + error.message;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            document.getElementById('status').innerHTML = 'Нет результатов для этого теста';
+            return;
+        }
+
+        allResults = data;
+        applyFilters();
+        document.getElementById('statsArea').style.display = 'block';
+        document.getElementById('status').innerHTML = `✅ Загружено: ${allResults.length} записей`;
+    }
+
+    function applyFilters() {
+        const cityFilter = document.getElementById('cityFilter').value;
+        filteredResults = allResults.filter(r => cityFilter === 'all' || r.city === cityFilter);
+        renderDashboard();
+    }
+
+    function renderDashboard() {
+        const total = filteredResults.length;
+        const avgPercent = total ? Math.round(filteredResults.reduce((s, r) => s + r.percent, 0) / total) : 0;
+        const successCount = filteredResults.filter(r => r.percent >= 85).length;
+        const totalErrors = filteredResults.reduce((s, r) => s + (r.total - r.score), 0);
+
+        document.getElementById('kpi').innerHTML = `
+            <div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div>
+            <div class="kpi-card"><div class="kpi-value">${avgPercent}%</div><div>Средний балл</div></div>
+            <div class="kpi-card"><div class="kpi-value">${successCount}</div><div>Успешно (≥85%)</div></div>
+            <div class="kpi-card"><div class="kpi-value">${totalErrors}</div><div>Всего ошибок</div></div>
+        `;
+
+        // Топ-5 сотрудников (≥85%)
+        const top5 = [...filteredResults]
+            .filter(r => r.percent >= 85)
+            .sort((a,b) => b.percent - a.percent)
+            .slice(0,5);
+        
+        document.getElementById('topEmployees').innerHTML = top5.map((r, i) => {
+            let medal = '';
+            if (i === 0) medal = '🥇';
+            else if (i === 1) medal = '🥈';
+            else if (i === 2) medal = '🥉';
+            return `<div class="top-employee" onclick="showEmployeeDetails(${r.id})">
+                <span><b>${i+1}</b> ${medal} ${r.user_name} (${r.city})</span>
+                <span class="badge">${r.percent}%</span>
+            </div>`;
+        }).join('') || '<div>Нет сотрудников с результатом ≥85%</div>';
+
+        // Рейтинг городов
+        const cityMap = new Map();
+        filteredResults.forEach(r => {
+            if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
+            const c = cityMap.get(r.city);
+            c.sum += r.percent;
+            c.count++;
+        });
+        const cityRating = Array.from(cityMap.entries())
+            .map(([city, data]) => ({ city, avg: Math.round(data.sum / data.count), count: data.count }))
+            .sort((a,b) => b.avg - a.avg);
+        
+        document.getElementById('cityRating').innerHTML = cityRating.map(c => `
+            <div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();">
+                <span><b>${c.city}</b> (${c.count} чел.)</span>
+                <span class="badge">${c.avg}%</span>
+            </div>
+        `).join('');
+
+        // Список сотрудников
+        document.getElementById('empCount').innerText = filteredResults.length;
+        document.getElementById('employeeList').innerHTML = filteredResults.map(r => `
+            <div class="employee-item" onclick="showEmployeeDetails(${r.id})">
+                <span><b>${r.user_name}</b> (${r.city})</span>
+                <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span>
+            </div>
+        `).join('');
+
+        // Обновляем фильтр городов
+        const currentCityFilter = document.getElementById('cityFilter').value;
+        const citySelect = document.getElementById('cityFilter');
+        citySelect.innerHTML = '<option value="all">Все города</option>' + 
+            [...new Set(allResults.map(r => r.city))].map(c => `<option value="${c}" ${currentCityFilter===c ? 'selected' : ''}>${c}</option>`).join('');
+
+        // Гистограмма
+        if (scoreChart) scoreChart.destroy();
+        const bins = [0, 0, 0, 0, 0];
+        filteredResults.forEach(r => {
+            if (r.percent <= 20) bins[0]++;
+            else if (r.percent <= 40) bins[1]++;
+            else if (r.percent <= 60) bins[2]++;
+            else if (r.percent <= 80) bins[3]++;
+            else bins[4]++;
+        });
+        const scoreCtx = document.getElementById('scoreHistogram').getContext('2d');
+        scoreChart = new Chart(scoreCtx, {
+            type: 'bar',
+            data: {
+                labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+                datasets: [{ label: 'Кол-во сотрудников', data: bins, backgroundColor: '#c41e3a' }]
+            }
+        });
+
+        // График городов
+        if (cityChart) cityChart.destroy();
+        const cityCtx = document.getElementById('cityChart').getContext('2d');
+        cityChart = new Chart(cityCtx, {
+            type: 'bar',
+            data: {
+                labels: cityRating.map(c => c.city),
+                datasets: [{ label: 'Средний %', data: cityRating.map(c => c.avg), backgroundColor: '#c41e3a' }]
+            }
+        });
+    }
+
+    async function showEmployeeDetails(employeeId) {
+        const employee = filteredResults.find(r => r.id === employeeId);
+        if (!employee) return;
+        
+        document.getElementById('modalTitle').innerHTML = `Результаты: ${employee.user_name} (${employee.city}) — ${employee.percent}%`;
+        const answers = employee.answers || [];
+        
+        let html = `<p>Правильных ответов: ${employee.score} из ${employee.total}</p>`;
+        answers.forEach((a, i) => {
+            const isCorrect = a.correct;
+            html += `
+                <div class="answer-item ${isCorrect ? 'answer-correct' : 'answer-wrong'}">
+                    <b>Вопрос ${i+1}:</b> ${a.questionText}<br>
+                    <b>Ваш ответ:</b> ${a.selectedText}<br>
+                    ${!isCorrect ? `<b>Правильный ответ:</b> ${a.correctText}<br>` : ''}
+                    ${!isCorrect ? `<b>Рекомендация:</b> Изучите правило подробнее.` : ''}
+                </div>
+            `;
+        });
+        document.getElementById('modalAnswers').innerHTML = html;
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('modal').style.display = 'none';
+    }
+
+    function exportCSV() {
+        if (!filteredResults.length) return alert('Нет данных');
+        let csv = "Имя,Город,Правильных,Всего,Процент,Дата\n";
+        filteredResults.forEach(r => {
+            csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent},"${new Date(r.created_at).toLocaleDateString()}"\n`;
+        });
+        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `test_results_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+    }
+
+    document.getElementById('loadBtn').onclick = loadResults;
+    document.getElementById('exportCsvBtn').onclick = exportCSV;
+    document.getElementById('cityFilter').addEventListener('change', applyFilters);
+
+    loadTests();
+</script>
+</body>
+</html>
