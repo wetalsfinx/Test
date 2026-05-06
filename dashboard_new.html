@@ -16,20 +16,20 @@
         }
         body.dark { background: #1a1a2e; color: #e0e0e0; }
         body.dark .card, body.dark .kpi-card, body.dark .modal-content { background: #16213e; color: #e0e0e0; border-color: #0f3460; }
-        .dashboard { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .sticky-header { position: sticky; top: 0; z-index: 100; background: inherit; padding-bottom: 10px; }
+        .dashboard { max-width: 1400px; margin: 0 auto; padding: 16px; }
+        .sticky-header { position: sticky; top: 0; z-index: 100; background: inherit; padding-bottom: 8px; }
         .card {
             background: white;
             border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border-top: 4px solid #c41e3a;
         }
-        h2, h3 { color: #c41e3a; margin-top: 0; }
-        .flex-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+        h2, h3 { color: #c41e3a; margin-top: 0; font-size: 18px; }
+        .flex-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         select, button, input {
-            padding: 8px 14px;
+            padding: 8px 12px;
             border-radius: 30px;
             border: 1px solid #ddd;
             font-size: 13px;
@@ -40,9 +40,9 @@
         button:hover { background: #8b1a2c; }
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .kpi-card {
             background: #f8f9fa;
@@ -52,10 +52,9 @@
         }
         .kpi-value { font-size: 28px; font-weight: bold; color: #c41e3a; }
         .charts-row { display: flex; gap: 15px; flex-wrap: wrap; }
-        .chart-box { flex: 1; min-width: 250px; }
+        .chart-box { flex: 1; min-width: 260px; }
         canvas { max-height: 200px; width: 100%; }
-        .employee-list { max-height: 400px; overflow-y: auto; }
-        .employee-item {
+        .employee-item, .city-row, .top-employee {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -64,8 +63,9 @@
             cursor: pointer;
             font-size: 14px;
         }
-        .employee-item:hover { background: #fff0f3; }
+        .employee-item:hover, .city-row:hover, .top-employee:hover { background: #fff0f3; }
         .badge { background: #c41e3a; color: white; padding: 2px 10px; border-radius: 30px; font-size: 11px; }
+        .employee-list { max-height: 400px; overflow-y: auto; }
         .modal {
             display: none;
             position: fixed;
@@ -111,24 +111,23 @@
             text-align: center;
             font-size: 14px;
         }
-        .skeleton { background: #e0e0e0; border-radius: 8px; animation: pulse 1s infinite; height: 80px; margin-bottom: 10px; }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        .loading-text { text-align: center; padding: 30px; color: #666; }
         .checkbox-col { width: 30px; text-align: center; }
         .theme-toggle { margin-left: auto; }
-        .loading-text { text-align: center; padding: 20px; color: #666; }
+        body.dark .employee-item, body.dark .city-row, body.dark .top-employee { border-bottom-color: #0f3460; }
     </style>
 </head>
 <body>
 <div class="dashboard">
     <div class="sticky-header">
-        <div class="card" style="margin-bottom: 10px; padding: 15px;">
+        <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <h2 style="margin: 0; font-size: 20px;">📊 585GOLD | Дашборд</h2>
+                <h2 style="margin: 0;">📊 585GOLD | Дашборд</h2>
                 <button id="themeToggleBtn" style="background:#6c757d; padding: 6px 15px;">🌙 Тема</button>
             </div>
             <div class="flex-row" style="margin-top: 12px;">
                 <select id="cityFilter"><option value="all">Все города</option></select>
-                <select id="percentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50"><50%</option></select>
+                <select id="percentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
                 <select id="dateRangeSelect"><option value="all">Всё время</option><option value="today">Сегодня</option><option value="week">7 дней</option><option value="month">30 дней</option></select>
                 <button id="loadBtn">Загрузить</button>
                 <button id="exportCsvBtn">📎 CSV</button>
@@ -142,7 +141,7 @@
         <div class="kpi-grid" id="kpi"></div>
         <div class="charts-row">
             <div class="card chart-box"><h3>Распределение баллов</h3><canvas id="scoreHistogram"></canvas></div>
-            <div class="card chart-box"><h3>Топ городов</h3><canvas id="cityChart"></canvas></div>
+            <div class="card chart-box"><h3>Топ городов (средний балл)</h3><canvas id="cityChart"></canvas></div>
         </div>
         <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
             <div class="card" style="flex:1"><h3>🏆 Топ сотрудников (≥85%)</h3><div id="topEmployees"></div></div>
@@ -198,6 +197,13 @@
         if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; return; }
 
         allResults = data;
+        
+        // Обновляем выпадающий список городов
+        const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
+        const citySelect = document.getElementById('cityFilter');
+        const currentCity = citySelect.value;
+        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}" ${currentCity === c ? 'selected' : ''}>${c}</option>`).join('');
+        
         applyFilters();
         document.getElementById('statsArea').style.display = 'block';
         document.getElementById('status').innerHTML = `✅ ${allResults.length} записей`;
@@ -216,8 +222,8 @@
         const range = document.getElementById('dateRangeSelect').value;
         const now = new Date();
         if (range === 'today') filtered = filtered.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
-        else if (range === 'week') { const weekAgo = new Date(now.setDate(now.getDate()-7)); filtered = filtered.filter(r => new Date(r.created_at) >= weekAgo); }
-        else if (range === 'month') { const monthAgo = new Date(now.setDate(now.getDate()-30)); filtered = filtered.filter(r => new Date(r.created_at) >= monthAgo); }
+        else if (range === 'week') { const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7); filtered = filtered.filter(r => new Date(r.created_at) >= weekAgo); }
+        else if (range === 'month') { const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30); filtered = filtered.filter(r => new Date(r.created_at) >= monthAgo); }
         
         filteredResults = filtered;
         renderDashboard();
@@ -225,7 +231,14 @@
 
     function renderDashboard() {
         const total = filteredResults.length;
-        if (!total) { document.getElementById('kpi').innerHTML = '<div class="kpi-card">Нет данных</div>'; return; }
+        if (!total) { 
+            document.getElementById('kpi').innerHTML = '<div class="kpi-card">Нет данных</div>';
+            document.getElementById('topEmployees').innerHTML = 'Нет данных';
+            document.getElementById('cityRating').innerHTML = 'Нет данных';
+            document.getElementById('employeeList').innerHTML = '';
+            document.getElementById('empCount').innerText = '0';
+            return;
+        }
         
         const avg = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
         const success = filteredResults.filter(r=>r.percent>=85).length;
@@ -237,54 +250,83 @@
             <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>
         `;
 
+        // Топ сотрудников (≥85%)
         const top5 = [...filteredResults].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
-        document.getElementById('topEmployees').innerHTML = top5.map((r,i)=>`<div class="employee-item" onclick="showEmployeeDetails(${r.id})"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет';
+        document.getElementById('topEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id})"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет сотрудников с результатом ≥85%';
 
+        // Рейтинг городов (список)
         const cityMap = new Map();
-        filteredResults.forEach(r=>{cityMap.set(r.city, (cityMap.get(r.city)||0)+1); });
-        const cities = [...cityMap.entries()].map(([c,count])=>({city:c, count})).sort((a,b)=>b.count-a.count).slice(0,6);
-        document.getElementById('cityRating').innerHTML = cities.map(c=>`<div class="employee-item" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();"><span>🏙️ ${c.city}</span><span class="badge">${c.count} чел.</span></div>`).join('');
+        filteredResults.forEach(r => {
+            if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0 });
+            const c = cityMap.get(r.city);
+            c.count++;
+            c.sumPercent += r.percent;
+        });
+        const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, count: data.count, avg: Math.round(data.sumPercent / data.count) })).sort((a,b) => b.avg - a.avg);
+        document.getElementById('cityRating').innerHTML = cityRating.map(c => `
+            <div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();">
+                <span><b>${c.city}</b> (${c.count} чел.)</span>
+                <span class="badge">${c.avg}%</span>
+            </div>
+        `).join('');
 
+        // Лучший сотрудник (плашка)
         const leader = [...filteredResults].sort((a,b)=>b.percent-a.percent)[0];
         const leaderDiv = document.getElementById('leaderCelebration');
-        if(leader) leaderDiv.innerHTML = `🏆 Лучший: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}%`;
+        if(leader) leaderDiv.innerHTML = `🏆 Лучший сотрудник: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}% правильных ответов 🎉`;
         leaderDiv.style.display = 'block';
 
+        // Список сотрудников с чекбоксами
         selectedForDelete.clear();
         document.getElementById('empCount').innerText = filteredResults.length;
         document.getElementById('employeeList').innerHTML = filteredResults.map(r=>`
             <div class="employee-item">
                 <div class="checkbox-col"><input type="checkbox" class="emp-checkbox" data-id="${r.id}"></div>
                 <div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id})"><b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span></div>
-                <div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white;" onclick="deleteEmployee(event, ${r.id})">🗑</button></div>
+                <div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white; cursor:pointer;" onclick="deleteEmployee(event, ${r.id})">🗑</button></div>
             </div>
         `).join('');
-        document.querySelectorAll('.emp-checkbox').forEach(cb=>cb.onchange=e=>{if(e.target.checked) selectedForDelete.add(e.target.dataset.id); else selectedForDelete.delete(e.target.dataset.id);});
+        
+        document.querySelectorAll('.emp-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) selectedForDelete.add(e.target.dataset.id); else selectedForDelete.delete(e.target.dataset.id); });
         document.getElementById('massDeleteBtn').style.display = filteredResults.length ? 'inline-block' : 'none';
 
-        // Графики (лениво, через setTimeout)
-        setTimeout(()=>{
-            const bins=[0,0,0,0,0];
-            filteredResults.forEach(r=>{if(r.percent<=20)bins[0]++;else if(r.percent<=40)bins[1]++;else if(r.percent<=60)bins[2]++;else if(r.percent<=80)bins[3]++;else bins[4]++;});
-            if(scoreChart) scoreChart.destroy();
-            scoreChart = new Chart(document.getElementById('scoreHistogram'), { type: 'bar', data: { labels: ['0-20%','21-40%','41-60%','61-80%','81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
+        // Графики (отложенный рендер)
+        setTimeout(() => {
+            // Гистограмма распределения баллов
+            const bins = [0,0,0,0,0];
+            filteredResults.forEach(r => {
+                if (r.percent <= 20) bins[0]++;
+                else if (r.percent <= 40) bins[1]++;
+                else if (r.percent <= 60) bins[2]++;
+                else if (r.percent <= 80) bins[3]++;
+                else bins[4]++;
+            });
+            if (scoreChart) scoreChart.destroy();
+            scoreChart = new Chart(document.getElementById('scoreHistogram'), { 
+                type: 'bar', 
+                data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, 
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw} чел.` } } }, animation: { duration: 0 } }
+            });
             
-            const cityAvg = [...new Map()];
-            filteredResults.forEach(r=>{if(!cityAvg.has(r.city)) cityAvg.set(r.city,{sum:0,count:0}); const c=cityAvg.get(r.city); c.sum+=r.percent; c.count++; });
-            const cityData = [...cityAvg.entries()].map(([c,{sum,count}])=>({city:c, avg:Math.round(sum/count)})).slice(0,6);
-            if(cityChart) cityChart.destroy();
-            cityChart = new Chart(document.getElementById('cityChart'), { type: 'bar', data: { labels: cityData.map(c=>c.city), datasets: [{ data: cityData.map(c=>c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
-        },50);
+            // График топ городов (средний балл)
+            const topCities = cityRating.slice(0,6);
+            if (cityChart) cityChart.destroy();
+            cityChart = new Chart(document.getElementById('cityChart'), { 
+                type: 'bar', 
+                data: { labels: topCities.map(c => c.city), datasets: [{ data: topCities.map(c => c.avg), backgroundColor: '#c41e3a' }] }, 
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } }, animation: { duration: 0 } }
+            });
+        }, 50);
     }
 
-    async function deleteEmployee(e,id){ e.stopPropagation(); if(confirm('Удалить?')){ await supabaseClient.from('results_new').delete().eq('id',id); await loadResults(); } }
-    async function massDelete(){ if(selectedForDelete.size && confirm(`Удалить ${selectedForDelete.size} записей?`)){ for(let id of selectedForDelete) await supabaseClient.from('results_new').delete().eq('id',id); await loadResults(); } }
-    async function showEmployeeDetails(id){ currentSelectedEmployee = filteredResults.find(r=>r.id==id); if(!currentSelectedEmployee) return; document.getElementById('modalTitle').innerHTML = `${currentSelectedEmployee.user_name} (${currentSelectedEmployee.city}) — ${currentSelectedEmployee.percent}%`; let html = `<p>✅ Правильных: ${currentSelectedEmployee.score}/${currentSelectedEmployee.total}</p>`; currentSelectedEmployee.answers.forEach((a,i)=>{ html+=`<div class="answer-item ${a.correct?'answer-correct':'answer-wrong'}"><b>${i+1}. ${a.questionText}</b><br><b>Ваш ответ:</b> ${a.selectedText}<br>${!a.correct?`<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>`:''}</div>`; }); document.getElementById('modalAnswers').innerHTML = html; document.getElementById('modal').style.display='flex'; }
-    function exportEmployeePDF(){ if(!currentSelectedEmployee) return; const e=currentSelectedEmployee; let html=`<html><head><meta charset="UTF-8"><title>Отчёт ${e.user_name}</title><style>body{font-family:Segoe UI;padding:20px;} .answer{margin-bottom:15px;padding:8px;border-left:4px solid #ddd;} .correct{border-left-color:#28a745;} .wrong{border-left-color:#c41e3a;} .recommendation{background:#e8f0e8;padding:8px;margin-top:8px;border-radius:8px;}</style></head><body><h1>585GOLD | Отчёт по тесту</h1><p><strong>Сотрудник:</strong> ${e.user_name}</p><p><strong>Город:</strong> ${e.city}</p><p><strong>Результат:</strong> ${e.percent}% (${e.score}/${e.total} правильных)</p><hr>`; e.answers.forEach((a,i)=>{ html+=`<div class="answer ${a.correct?'correct':'wrong'}"><b>${i+1}. ${a.questionText}</b><br><b>Ваш ответ:</b> ${a.selectedText}<br>${!a.correct?`<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>`:''}</div>`; }); html+=`</body></html>`; const w=window.open('','_blank'); w.document.write(html); w.document.close(); w.print(); }
-    function exportCSV(){ if(!filteredResults.length) return alert('Нет данных'); let csv="Имя,Город,Правильных,Всего,Процент,Дата\n"; filteredResults.forEach(r=>csv+=`"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent},"${new Date(r.created_at).toLocaleDateString()}"\n`); const blob=new Blob(["\uFEFF"+csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`test_results_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
-    function closeModal(){ document.getElementById('modal').style.display='none'; currentSelectedEmployee=null; }
-    function initTheme(){ if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark'); }
-    function toggleTheme(){ document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark')?'dark':'light'); }
+    async function deleteEmployee(e, id) { e.stopPropagation(); if(confirm('Удалить результаты этого сотрудника?')){ await supabaseClient.from('results_new').delete().eq('id', id); await loadResults(); } }
+    async function massDelete() { if(selectedForDelete.size && confirm(`Удалить ${selectedForDelete.size} записей?`)){ for(let id of selectedForDelete) await supabaseClient.from('results_new').delete().eq('id', id); await loadResults(); } }
+    async function showEmployeeDetails(id) { currentSelectedEmployee = filteredResults.find(r => r.id == id); if(!currentSelectedEmployee) return; document.getElementById('modalTitle').innerHTML = `${currentSelectedEmployee.user_name} (${currentSelectedEmployee.city}) — ${currentSelectedEmployee.percent}%`; let html = `<p>✅ Правильных ответов: ${currentSelectedEmployee.score}/${currentSelectedEmployee.total}</p>`; currentSelectedEmployee.answers.forEach((a,i) => { html += `<div class="answer-item ${a.correct ? 'answer-correct' : 'answer-wrong'}"><b>${i+1}. ${a.questionText}</b><br><b>Ваш ответ:</b> ${a.selectedText}<br>${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}</div>`; }); document.getElementById('modalAnswers').innerHTML = html; document.getElementById('modal').style.display = 'flex'; }
+    function exportEmployeePDF() { if(!currentSelectedEmployee) return; const e = currentSelectedEmployee; let html = `<html><head><meta charset="UTF-8"><title>Отчёт ${e.user_name}</title><style>body{font-family:Segoe UI;padding:20px;} .answer{margin-bottom:15px;padding:8px;border-left:4px solid #ddd;} .correct{border-left-color:#28a745;} .wrong{border-left-color:#c41e3a;} .recommendation{background:#e8f0e8;padding:8px;margin-top:8px;border-radius:8px;}</style></head><body><h1>585GOLD | Отчёт по тесту</h1><p><strong>Сотрудник:</strong> ${e.user_name}</p><p><strong>Город:</strong> ${e.city}</p><p><strong>Дата:</strong> ${new Date(e.created_at).toLocaleString()}</p><p><strong>Результат:</strong> ${e.percent}% (${e.score}/${e.total} правильных)</p><hr>`; e.answers.forEach((a,i) => { html += `<div class="answer ${a.correct ? 'correct' : 'wrong'}"><b>${i+1}. ${a.questionText}</b><br><b>Ваш ответ:</b> ${a.selectedText}<br>${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}</div>`; }); html += `</body></html>`; const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print(); }
+    function exportCSV() { if(!filteredResults.length) return alert('Нет данных'); let csv = "Имя,Город,Правильных,Всего,Процент,Дата\n"; filteredResults.forEach(r => csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent},"${new Date(r.created_at).toLocaleDateString()}"\n`); const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `test_results_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; currentSelectedEmployee = null; }
+    function initTheme() { if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark'); }
+    function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); }
 
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('exportCsvBtn').onclick = exportCSV;
