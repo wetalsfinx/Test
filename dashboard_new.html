@@ -119,10 +119,8 @@
         .question-stats-table th, .question-stats-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
         .question-stats-table th { background: #c41e3a; color: white; }
         .question-stats-table td:first-child { max-width: 500px; word-break: break-word; }
-        .new-badge { background: #28a745; color: white; border-radius: 20px; padding: 2px 8px; font-size: 11px; margin-left: 8px; }
         .reset-btn { background: #6c757d; }
         .search-input { width: 200px; }
-        .mode-checkbox { margin-left: 15px; display: inline-flex; align-items: center; gap: 5px; }
         .print-dashboard-btn { background: #2c6e2c; }
     </style>
 </head>
@@ -142,7 +140,7 @@
                 <select id="percentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
                 <select id="dateRangeSelect"><option value="all">Всё время</option><option value="today">Сегодня</option><option value="week">7 дней</option><option value="month">30 дней</option></select>
                 <input type="text" id="surnameSearch" class="search-input" placeholder="🔍 Поиск по фамилии">
-                <button id="resetFiltersBtn" class="reset-btn">Сбросить все фильтры</button>
+                <button id="resetFiltersBtn" class="reset-btn">Сбросить фильтры</button>
                 <button id="loadBtn">Загрузить</button>
                 <button id="exportCsvBtn">📎 CSV</button>
             </div>
@@ -157,7 +155,7 @@
         
         <div class="card">
             <h3>📊 Статистика по вопросам (ошибки)</h3>
-            <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead><table><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody></table></div>
+            <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>犯<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody>能得到</div>
         </div>
         
         <div class="charts-row">
@@ -234,12 +232,11 @@
 
         const newCount = data.length - previousResultsCount;
         if (previousResultsCount > 0 && newCount > 0) {
-            document.getElementById('newResultsAlert').innerHTML = `🆕 +${newCount} новых результатов с прошлого визита`;
+            document.getElementById('newResultsAlert').innerHTML = `🆕 +${newCount} новых результатов`;
             document.getElementById('newResultsAlert').style.display = 'block';
             setTimeout(() => document.getElementById('newResultsAlert').style.display = 'none', 5000);
         }
         previousResultsCount = data.length;
-
         allResults = data;
         
         const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
@@ -303,11 +300,11 @@
             }
         });
         const tbody = document.querySelector('#questionStatsTable tbody');
+        if (!tbody) return;
         tbody.innerHTML = '';
         questionErrors.forEach((q, i) => {
             const percent = Math.round((q.errors / q.total) * 100);
             const row = tbody.insertRow();
-            // ПОЛНЫЙ ТЕКСТ ВОПРОСА (без обрезания)
             row.insertCell(0).innerHTML = `<b>${i+1}.</b> ${q.text}`;
             row.insertCell(1).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${q.errors}/${q.total}</span>`;
             row.insertCell(2).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${percent}%</span>`;
@@ -322,7 +319,8 @@
             document.getElementById('cityRating').innerHTML = 'Нет данных';
             document.getElementById('employeeList').innerHTML = '';
             document.getElementById('empCount').innerText = '0';
-            document.querySelector('#questionStatsTable tbody').innerHTML = '<tr><td colspan="3">Нет данных</td></tr>';
+            const tbody = document.querySelector('#questionStatsTable tbody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="3">Нет数据</td></tr>';
             return;
         }
         
@@ -358,7 +356,7 @@
 
         const leader = [...filteredResults].sort((a,b)=>b.percent-a.percent)[0];
         const leaderDiv = document.getElementById('leaderCelebration');
-        if(leader) leaderDiv.innerHTML = `🏆 Лучший сотрудник: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}% правильных ответов 🎉`;
+        if(leader) leaderDiv.innerHTML = `🏆 Лучший сотрудник: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}%`;
         leaderDiv.style.display = 'block';
 
         selectedForDelete.clear();
@@ -416,15 +414,17 @@
         document.getElementById('modalTitle').innerHTML = `${currentSelectedEmployee.user_name} (${currentSelectedEmployee.city}) — ${currentSelectedEmployee.percent}%`;
         let html = `<p>✅ Правильных ответов: ${currentSelectedEmployee.score}/${currentSelectedEmployee.total}</p>`;
         let hasDisplayed = false;
-        currentSelectedEmployee.answers.forEach((a,i) => {
-            if(showOnlyErrors && a.correct) return;
-            hasDisplayed = true;
-            html += `<div class="answer-item ${a.correct ? 'answer-correct' : 'answer-wrong'}">
-                        <b>${i+1}. ${a.questionText}</b><br>
-                        <b>Ваш ответ:</b> ${a.selectedText}<br>
-                        ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}
-                     </div>`;
-        });
+        if (currentSelectedEmployee.answers) {
+            currentSelectedEmployee.answers.forEach((a,i) => {
+                if(showOnlyErrors && a.correct) return;
+                hasDisplayed = true;
+                html += `<div class="answer-item ${a.correct ? 'answer-correct' : 'answer-wrong'}">
+                            <b>${i+1}. ${a.questionText}</b><br>
+                            <b>Ваш ответ:</b> ${a.selectedText}<br>
+                            ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}
+                         </div>`;
+            });
+        }
         if(showOnlyErrors && !hasDisplayed) html += '<div style="padding:20px;text-align:center">✅ Нет ошибок! Все ответы верные.</div>';
         document.getElementById('modalAnswers').innerHTML = html;
     }
@@ -442,15 +442,17 @@
                     <p><strong>Результат:</strong> ${e.percent}% (${e.score}/${e.total} правильных)</p>
                     ${onlyErrors ? '<p><strong>📌 Показаны только вопросы с ошибками</strong></p>' : ''}<hr>`;
         let hasDisplayed = false;
-        e.answers.forEach((a,i) => {
-            if(onlyErrors && a.correct) return;
-            hasDisplayed = true;
-            html += `<div class="answer ${a.correct ? 'correct' : 'wrong'}">
-                        <b>${i+1}. ${a.questionText}</b><br>
-                        <b>Ваш ответ:</b> ${a.selectedText}<br>
-                        ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}
-                     </div>`;
-        });
+        if (e.answers) {
+            e.answers.forEach((a,i) => {
+                if(onlyErrors && a.correct) return;
+                hasDisplayed = true;
+                html += `<div class="answer ${a.correct ? 'correct' : 'wrong'}">
+                            <b>${i+1}. ${a.questionText}</b><br>
+                            <b>Ваш ответ:</b> ${a.selectedText}<br>
+                            ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}
+                         </div>`;
+            });
+        }
         if(onlyErrors && !hasDisplayed) html += '<div>✅ Нет ошибок! Все ответы верные.</div>';
         html += `</body></html>`;
         const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print(); 
