@@ -5,6 +5,7 @@
     <title>585GOLD | Дашборд тестов</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -75,6 +76,21 @@
             border-bottom: 1px solid #eee;
             cursor: pointer;
         }
+        .employee-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .delete-employee {
+            background: #8b1a2c;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .delete-employee:hover { background: #5c0f1e; }
         .charts-row { display: flex; gap: 20px; flex-wrap: wrap; }
         .chart-box { flex: 1; min-width: 250px; }
         canvas { max-height: 250px; }
@@ -107,6 +123,16 @@
         }
         .answer-correct { border-left: 4px solid #28a745; }
         .answer-wrong { border-left: 4px solid #c41e3a; }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .modal-actions button {
+            width: auto;
+            padding: 8px 20px;
+        }
     </style>
 </head>
 <body>
@@ -114,9 +140,6 @@
     <div class="card">
         <h2>📊 585GOLD | Дашборд тестов</h2>
         <div class="flex-row">
-            <select id="testSelect">
-                <option value="prodazhi_2025">Продажи. Входной тест</option>
-            </select>
             <select id="cityFilter">
                 <option value="all">Все города</option>
             </select>
@@ -161,8 +184,12 @@
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3 id="modalTitle"></h3>
-        <button onclick="closeModal()" style="margin-bottom: 15px; background: #6c757d; width: auto; padding: 8px 20px;">Закрыть</button>
         <div id="modalAnswers"></div>
+        <div class="modal-actions">
+            <button id="modalDeleteBtn" style="background: #8b1a2c;">🗑 Удалить сотрудника</button>
+            <button id="modalPdfBtn" style="background: #2c6e2c;">📄 PDF отчёт</button>
+            <button onclick="closeModal()" style="background: #6c757d;">Закрыть</button>
+        </div>
     </div>
 </div>
 
@@ -176,9 +203,9 @@
     let filteredResults = [];
     let cityChart = null;
     let scoreChart = null;
+    let currentSelectedEmployee = null;
 
     async function loadResults() {
-        const testSlug = 'prodazhi_2025';
         const statusDiv = document.getElementById('status');
         statusDiv.innerHTML = 'Загрузка...';
         document.getElementById('statsArea').style.display = 'none';
@@ -186,7 +213,7 @@
         const { data, error } = await supabaseClient
             .from('results_new')
             .select('*')
-            .eq('test_slug', testSlug)
+            .eq('test_slug', 'prodazhi_2025')
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -195,7 +222,7 @@
         }
 
         if (!data || data.length === 0) {
-            statusDiv.innerHTML = 'Нет результатов для этого теста';
+            statusDiv.innerHTML = 'Нет результатов';
             return;
         }
 
@@ -224,7 +251,6 @@
             <div class="kpi-card"><div class="kpi-value">${totalErrors}</div><div>Всего ошибок</div></div>
         `;
 
-        // Топ-5
         const top5 = [...filteredResults]
             .filter(r => r.percent >= 85)
             .sort((a,b) => b.percent - a.percent)
@@ -238,7 +264,6 @@
             </div>`;
         }).join('') || '<div>Нет сотрудников с результатом ≥85%</div>';
 
-        // Рейтинг городов
         const cityMap = new Map();
         filteredResults.forEach(r => {
             if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
@@ -257,12 +282,16 @@
             </div>
         `).join('');
 
-        // Список сотрудников
+        // Список сотрудников с кнопкой удаления
         document.getElementById('empCount').innerText = filteredResults.length;
         document.getElementById('employeeList').innerHTML = filteredResults.map(r => `
-            <div class="employee-item" onclick="showEmployeeDetails(${r.id})">
-                <span><b>${r.user_name}</b> (${r.city})</span>
-                <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span>
+            <div class="employee-item">
+                <div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id})">
+                    <b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span>
+                </div>
+                <div class="employee-actions">
+                    <button class="delete-employee" onclick="deleteEmployee(event, ${r.id})">🗑</button>
+                </div>
             </div>
         `).join('');
 
@@ -283,8 +312,7 @@
             else if (r.percent <= 80) bins[3]++;
             else bins[4]++;
         });
-        const ctx = document.getElementById('scoreHistogram').getContext('2d');
-        scoreChart = new Chart(ctx, {
+        scoreChart = new Chart(document.getElementById('scoreHistogram'), {
             type: 'bar',
             data: {
                 labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
@@ -292,10 +320,8 @@
             }
         });
 
-        // График городов
         if (cityChart) cityChart.destroy();
-        const cityCtx = document.getElementById('cityChart').getContext('2d');
-        cityChart = new Chart(cityCtx, {
+        cityChart = new Chart(document.getElementById('cityChart'), {
             type: 'bar',
             data: {
                 labels: cityRating.map(c => c.city),
@@ -307,6 +333,7 @@
     async function showEmployeeDetails(employeeId) {
         const employee = filteredResults.find(r => r.id === employeeId);
         if (!employee) return;
+        currentSelectedEmployee = employee;
         
         document.getElementById('modalTitle').innerHTML = `Результаты: ${employee.user_name} (${employee.city}) — ${employee.percent}%`;
         const answers = employee.answers || [];
@@ -326,8 +353,67 @@
         document.getElementById('modal').style.display = 'flex';
     }
 
-    function closeModal() {
-        document.getElementById('modal').style.display = 'none';
+    async function deleteEmployee(event, employeeId) {
+        event.stopPropagation();
+        if (!confirm('Удалить результаты этого сотрудника?')) return;
+        
+        const { error } = await supabaseClient
+            .from('results_new')
+            .delete()
+            .eq('id', employeeId);
+        
+        if (error) {
+            alert('Ошибка удаления: ' + error.message);
+        } else {
+            await loadResults();
+        }
+    }
+
+    async function deleteCurrentEmployee() {
+        if (!currentSelectedEmployee) return;
+        if (!confirm(`Удалить результаты ${currentSelectedEmployee.user_name}?`)) return;
+        
+        await supabaseClient.from('results_new').delete().eq('id', currentSelectedEmployee.id);
+        await loadResults();
+        closeModal();
+    }
+
+    function exportEmployeePDF() {
+        if (!currentSelectedEmployee) return;
+        
+        const employee = currentSelectedEmployee;
+        const answers = employee.answers || [];
+        let html = `
+            <html><head><meta charset="UTF-8"><title>Отчёт ${employee.user_name}</title>
+            <style>
+                body { font-family: 'Segoe UI', sans-serif; padding: 30px; }
+                h1 { color: #c41e3a; }
+                .answer { margin-bottom: 15px; padding: 10px; border-left: 4px solid #ddd; }
+                .correct { border-left-color: #28a745; }
+                .wrong { border-left-color: #c41e3a; }
+            </style></head>
+            <body>
+            <h1>585GOLD | Отчёт по тесту</h1>
+            <p><strong>Сотрудник:</strong> ${employee.user_name}</p>
+            <p><strong>Город:</strong> ${employee.city}</p>
+            <p><strong>Дата:</strong> ${new Date(employee.created_at).toLocaleString()}</p>
+            <p><strong>Результат:</strong> ${employee.percent}% (${employee.score}/${employee.total} правильных)</p>
+            <hr>
+            <h3>Детальные ответы</h3>
+        `;
+        answers.forEach((a, i) => {
+            html += `
+                <div class="answer ${a.correct ? 'correct' : 'wrong'}">
+                    <b>${i+1}. ${a.questionText}</b><br>
+                    Ответ: ${a.selectedText}<br>
+                    ${!a.correct ? `✅ Правильный ответ: ${a.correctText}<br>` : ''}
+                </div>
+            `;
+        });
+        html += `</body></html>`;
+        
+        const opt = { margin: 0.5, filename: `report_${employee.user_name}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4' } };
+        html2pdf().set(opt).from(html).save();
     }
 
     function exportCSV() {
@@ -343,11 +429,16 @@
         a.click();
     }
 
+    function closeModal() { document.getElementById('modal').style.display = 'none'; currentSelectedEmployee = null; }
+
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('exportCsvBtn').onclick = exportCSV;
     document.getElementById('cityFilter').addEventListener('change', applyFilters);
+    document.getElementById('modalDeleteBtn').onclick = deleteCurrentEmployee;
+    document.getElementById('modalPdfBtn').onclick = exportEmployeePDF;
     window.showEmployeeDetails = showEmployeeDetails;
     window.closeModal = closeModal;
+    window.deleteEmployee = deleteEmployee;
 
     loadResults();
 </script>
