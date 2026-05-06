@@ -80,7 +80,7 @@
         }
         .modal-content {
             background: white;
-            max-width: 550px;
+            max-width: 600px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
@@ -115,6 +115,14 @@
         .checkbox-col { width: 30px; text-align: center; }
         .theme-toggle { margin-left: auto; }
         body.dark .employee-item, body.dark .city-row, body.dark .top-employee { border-bottom-color: #0f3460; }
+        .question-stats-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .question-stats-table th, .question-stats-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+        .question-stats-table th { background: #c41e3a; color: white; }
+        .new-badge { background: #28a745; color: white; border-radius: 20px; padding: 2px 8px; font-size: 11px; margin-left: 8px; }
+        .reset-btn { background: #6c757d; }
+        .search-input { width: 200px; }
+        .mode-checkbox { margin-left: 15px; display: inline-flex; align-items: center; gap: 5px; }
+        .print-dashboard-btn { background: #2c6e2c; }
     </style>
 </head>
 <body>
@@ -123,30 +131,44 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <h2 style="margin: 0;">📊 585GOLD | Дашборд</h2>
-                <button id="themeToggleBtn" style="background:#6c757d; padding: 6px 15px;">🌙 Тема</button>
+                <div style="display: flex; gap: 8px;">
+                    <button id="printDashboardBtn" class="print-dashboard-btn">📄 PDF дашборда</button>
+                    <button id="themeToggleBtn" style="background:#6c757d;">🌙 Тема</button>
+                </div>
             </div>
             <div class="flex-row" style="margin-top: 12px;">
                 <select id="cityFilter"><option value="all">Все города</option></select>
                 <select id="percentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
                 <select id="dateRangeSelect"><option value="all">Всё время</option><option value="today">Сегодня</option><option value="week">7 дней</option><option value="month">30 дней</option></select>
+                <input type="text" id="surnameSearch" class="search-input" placeholder="🔍 Поиск по фамилии">
+                <button id="resetFiltersBtn" class="reset-btn">Сбросить все фильтры</button>
                 <button id="loadBtn">Загрузить</button>
                 <button id="exportCsvBtn">📎 CSV</button>
             </div>
             <div id="status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+            <div id="newResultsAlert" style="display: none; margin-top: 8px; padding: 6px 12px; background: #e8f0e8; border-radius: 20px; font-size: 12px;"></div>
         </div>
     </div>
 
     <div id="statsArea" style="display: none;">
         <div id="leaderCelebration" class="leader-card" style="display: none;"></div>
         <div class="kpi-grid" id="kpi"></div>
+        
+        <div class="card">
+            <h3>📊 Статистика по вопросам (ошибки)</h3>
+            <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead><tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        
         <div class="charts-row">
             <div class="card chart-box"><h3>Распределение баллов</h3><canvas id="scoreHistogram"></canvas></div>
             <div class="card chart-box"><h3>Топ городов (средний балл)</h3><canvas id="cityChart"></canvas></div>
         </div>
+        
         <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
             <div class="card" style="flex:1"><h3>🏆 Топ сотрудников (≥85%)</h3><div id="topEmployees"></div></div>
             <div class="card" style="flex:1"><h3>🏙️ Рейтинг городов</h3><div id="cityRating"></div></div>
         </div>
+        
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <h3>📋 Сотрудники (<span id="empCount">0</span>)</h3>
@@ -158,12 +180,25 @@
     <div id="loadingSkeleton" class="loading-text">⏳ Загрузка данных...</div>
 </div>
 
-<div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><div class="modal-actions" style="display:flex; gap:8px; margin-top:15px;"><button id="modalDeleteBtn" style="background:#8b1a2c;">🗑 Удалить</button><button id="modalPdfBtn" style="background:#2c6e2c;">📄 PDF</button><button onclick="closeModal()" style="background:#6c757d;">Закрыть</button></div></div></div>
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle"></h3>
+        <div style="margin: 10px 0;"><label style="display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="showOnlyErrorsCheckbox"> 🔍 Показать только ошибки</label></div>
+        <div id="modalAnswers"></div>
+        <div style="margin: 10px 0;"><label style="display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="pdfOnlyErrorsCheckbox"> 📄 PDF только с ошибками</label></div>
+        <div class="modal-actions" style="display:flex; gap:8px; margin-top:15px;">
+            <button id="modalDeleteBtn" style="background:#8b1a2c;">🗑 Удалить</button>
+            <button id="modalPdfBtn" style="background:#2c6e2c;">📄 PDF</button>
+            <button onclick="closeModal()" style="background:#6c757d;">Закрыть</button>
+        </div>
+    </div>
+</div>
 
 <script>
     const supabaseClient = supabase.createClient('https://qtostraaqrnjbxiydlip.supabase.co', 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7');
     
     let allResults = [], filteredResults = [], cityChart = null, scoreChart = null, currentSelectedEmployee = null, selectedForDelete = new Set();
+    let previousResultsCount = 0;
 
     function getRecommendation(text) {
         if (text.includes('первым') || text.includes('зрительный')) return '💡 Проявляй инициативу: дайте ценность (скидка+бонусы) и спросите «Для себя или в подарок?»';
@@ -196,9 +231,16 @@
         if (error) { document.getElementById('status').innerHTML = 'Ошибка: ' + error.message; return; }
         if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; return; }
 
+        const newCount = data.length - previousResultsCount;
+        if (previousResultsCount > 0 && newCount > 0) {
+            document.getElementById('newResultsAlert').innerHTML = `🆕 +${newCount} новых результатов с прошлого визита`;
+            document.getElementById('newResultsAlert').style.display = 'block';
+            setTimeout(() => document.getElementById('newResultsAlert').style.display = 'none', 5000);
+        }
+        previousResultsCount = data.length;
+
         allResults = data;
         
-        // Обновляем выпадающий список городов
         const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
         const citySelect = document.getElementById('cityFilter');
         const currentCity = citySelect.value;
@@ -225,8 +267,50 @@
         else if (range === 'week') { const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7); filtered = filtered.filter(r => new Date(r.created_at) >= weekAgo); }
         else if (range === 'month') { const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30); filtered = filtered.filter(r => new Date(r.created_at) >= monthAgo); }
         
+        // Поиск по фамилии (после пробела или в конце)
+        const surname = document.getElementById('surnameSearch').value.toLowerCase().trim();
+        if (surname) {
+            filtered = filtered.filter(r => {
+                const name = r.user_name.toLowerCase();
+                const spaceIdx = name.lastIndexOf(' ');
+                const lastName = spaceIdx !== -1 ? name.substring(spaceIdx + 1) : name;
+                return lastName.includes(surname) || name.includes(surname);
+            });
+        }
+        
         filteredResults = filtered;
         renderDashboard();
+    }
+
+    function resetFilters() {
+        document.getElementById('cityFilter').value = 'all';
+        document.getElementById('percentFilter').value = 'all';
+        document.getElementById('dateRangeSelect').value = 'all';
+        document.getElementById('surnameSearch').value = '';
+        applyFilters();
+    }
+
+    function renderQuestionStats() {
+        if (!filteredResults.length) return;
+        const questionErrors = [];
+        filteredResults.forEach(r => {
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    if (!questionErrors[idx]) questionErrors[idx] = { total: 0, errors: 0, text: a.questionText.substring(0, 80) };
+                    questionErrors[idx].total++;
+                    if (!a.correct) questionErrors[idx].errors++;
+                });
+            }
+        });
+        const tbody = document.querySelector('#questionStatsTable tbody');
+        tbody.innerHTML = '';
+        questionErrors.forEach((q, i) => {
+            const percent = Math.round((q.errors / q.total) * 100);
+            const row = tbody.insertRow();
+            row.insertCell(0).innerHTML = `<b>${i+1}.</b> ${q.text}${q.text.length > 80 ? '…' : ''}`;
+            row.insertCell(1).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${q.errors}/${q.total}</span>`;
+            row.insertCell(2).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${percent}%</span>`;
+        });
     }
 
     function renderDashboard() {
@@ -237,6 +321,7 @@
             document.getElementById('cityRating').innerHTML = 'Нет данных';
             document.getElementById('employeeList').innerHTML = '';
             document.getElementById('empCount').innerText = '0';
+            document.querySelector('#questionStatsTable tbody').innerHTML = '<tr><td colspan="3">Нет данных</td></tr>';
             return;
         }
         
@@ -250,11 +335,11 @@
             <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>
         `;
 
-        // Топ сотрудников (≥85%)
+        renderQuestionStats();
+
         const top5 = [...filteredResults].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
         document.getElementById('topEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id})"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет сотрудников с результатом ≥85%';
 
-        // Рейтинг городов (список)
         const cityMap = new Map();
         filteredResults.forEach(r => {
             if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0 });
@@ -270,13 +355,11 @@
             </div>
         `).join('');
 
-        // Лучший сотрудник (плашка)
         const leader = [...filteredResults].sort((a,b)=>b.percent-a.percent)[0];
         const leaderDiv = document.getElementById('leaderCelebration');
         if(leader) leaderDiv.innerHTML = `🏆 Лучший сотрудник: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}% правильных ответов 🎉`;
         leaderDiv.style.display = 'block';
 
-        // Список сотрудников с чекбоксами
         selectedForDelete.clear();
         document.getElementById('empCount').innerText = filteredResults.length;
         document.getElementById('employeeList').innerHTML = filteredResults.map(r=>`
@@ -290,9 +373,7 @@
         document.querySelectorAll('.emp-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) selectedForDelete.add(e.target.dataset.id); else selectedForDelete.delete(e.target.dataset.id); });
         document.getElementById('massDeleteBtn').style.display = filteredResults.length ? 'inline-block' : 'none';
 
-        // Графики (отложенный рендер)
         setTimeout(() => {
-            // Гистограмма распределения баллов
             const bins = [0,0,0,0,0];
             filteredResults.forEach(r => {
                 if (r.percent <= 20) bins[0]++;
@@ -308,7 +389,6 @@
                 options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw} чел.` } } }, animation: { duration: 0 } }
             });
             
-            // График топ городов (средний балл)
             const topCities = cityRating.slice(0,6);
             if (cityChart) cityChart.destroy();
             cityChart = new Chart(document.getElementById('cityChart'), { 
@@ -321,8 +401,91 @@
 
     async function deleteEmployee(e, id) { e.stopPropagation(); if(confirm('Удалить результаты этого сотрудника?')){ await supabaseClient.from('results_new').delete().eq('id', id); await loadResults(); } }
     async function massDelete() { if(selectedForDelete.size && confirm(`Удалить ${selectedForDelete.size} записей?`)){ for(let id of selectedForDelete) await supabaseClient.from('results_new').delete().eq('id', id); await loadResults(); } }
-    async function showEmployeeDetails(id) { currentSelectedEmployee = filteredResults.find(r => r.id == id); if(!currentSelectedEmployee) return; document.getElementById('modalTitle').innerHTML = `${currentSelectedEmployee.user_name} (${currentSelectedEmployee.city}) — ${currentSelectedEmployee.percent}%`; let html = `<p>✅ Правильных ответов: ${currentSelectedEmployee.score}/${currentSelectedEmployee.total}</p>`; currentSelectedEmployee.answers.forEach((a,i) => { html += `<div class="answer-item ${a.correct ? 'answer-correct' : 'answer-wrong'}"><b>${i+1}. ${a.questionText}</b><br><b>Ваш ответ:</b> ${a.selectedText}<br>${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}</div>`; }); document.getElementById('modalAnswers').innerHTML = html; document.getElementById('modal').style.display = 'flex'; }
-    function exportEmployeePDF() { if(!currentSelectedEmployee) return; const e = currentSelectedEmployee; let html = `<html><head><meta charset="UTF-8"><title>Отчёт ${e.user_name}</title><style>body{font-family:Segoe UI;padding:20px;} .answer{margin-bottom:15px;padding:8px;border-left:4px solid #ddd;} .correct{border-left-color:#28a745;} .wrong{border-left-color:#c41e3a;} .recommendation{background:#e8f0e8;padding:8px;margin-top:8px;border-radius:8px;}</style></head><body><h1>585GOLD | Отчёт по тесту</h1><p><strong>Сотрудник:</strong> ${e.user_name}</p><p><strong>Город:</strong> ${e.city}</p><p><strong>Дата:</strong> ${new Date(e.created_at).toLocaleString()}</p><p><strong>Результат:</strong> ${e.percent}% (${e.score}/${e.total} правильных)</p><hr>`; e.answers.forEach((a,i) => { html += `<div class="answer ${a.correct ? 'correct' : 'wrong'}"><b>${i+1}. ${a.questionText}</b><br><b>Ваш ответ:</b> ${a.selectedText}<br>${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}</div>`; }); html += `</body></html>`; const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print(); }
+    
+    async function showEmployeeDetails(id) { 
+        currentSelectedEmployee = filteredResults.find(r => r.id == id); 
+        if(!currentSelectedEmployee) return; 
+        const showOnlyErrors = document.getElementById('showOnlyErrorsCheckbox').checked;
+        updateModalAnswers(showOnlyErrors);
+        document.getElementById('modal').style.display = 'flex'; 
+    }
+    
+    function updateModalAnswers(showOnlyErrors) {
+        if(!currentSelectedEmployee) return;
+        document.getElementById('modalTitle').innerHTML = `${currentSelectedEmployee.user_name} (${currentSelectedEmployee.city}) — ${currentSelectedEmployee.percent}%`;
+        let html = `<p>✅ Правильных ответов: ${currentSelectedEmployee.score}/${currentSelectedEmployee.total}</p>`;
+        let hasDisplayed = false;
+        currentSelectedEmployee.answers.forEach((a,i) => {
+            if(showOnlyErrors && a.correct) return;
+            hasDisplayed = true;
+            html += `<div class="answer-item ${a.correct ? 'answer-correct' : 'answer-wrong'}">
+                        <b>${i+1}. ${a.questionText}</b><br>
+                        <b>Ваш ответ:</b> ${a.selectedText}<br>
+                        ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}
+                     </div>`;
+        });
+        if(showOnlyErrors && !hasDisplayed) html += '<div style="padding:20px;text-align:center">✅ Нет ошибок! Все ответы верные.</div>';
+        document.getElementById('modalAnswers').innerHTML = html;
+    }
+    
+    function exportEmployeePDF() { 
+        if(!currentSelectedEmployee) return; 
+        const onlyErrors = document.getElementById('pdfOnlyErrorsCheckbox').checked;
+        const e = currentSelectedEmployee; 
+        let html = `<html><head><meta charset="UTF-8"><title>Отчёт ${e.user_name}</title>
+                    <style>body{font-family:Segoe UI;padding:20px;} .answer{margin-bottom:15px;padding:8px;border-left:4px solid #ddd;} .correct{border-left-color:#28a745;} .wrong{border-left-color:#c41e3a;} .recommendation{background:#e8f0e8;padding:8px;margin-top:8px;border-radius:8px;}</style>
+                    </head><body><h1>585GOLD | Отчёт по тесту</h1>
+                    <p><strong>Сотрудник:</strong> ${e.user_name}</p>
+                    <p><strong>Город:</strong> ${e.city}</p>
+                    <p><strong>Дата:</strong> ${new Date(e.created_at).toLocaleString()}</p>
+                    <p><strong>Результат:</strong> ${e.percent}% (${e.score}/${e.total} правильных)</p>
+                    ${onlyErrors ? '<p><strong>📌 Показаны только вопросы с ошибками</strong></p>' : ''}<hr>`;
+        let hasDisplayed = false;
+        e.answers.forEach((a,i) => {
+            if(onlyErrors && a.correct) return;
+            hasDisplayed = true;
+            html += `<div class="answer ${a.correct ? 'correct' : 'wrong'}">
+                        <b>${i+1}. ${a.questionText}</b><br>
+                        <b>Ваш ответ:</b> ${a.selectedText}<br>
+                        ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}
+                     </div>`;
+        });
+        if(onlyErrors && !hasDisplayed) html += '<div>✅ Нет ошибок! Все ответы верные.</div>';
+        html += `</body></html>`;
+        const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print(); 
+    }
+    
+    function exportDashboardPDF() {
+        const printContent = document.getElementById('statsArea').cloneNode(true);
+        const title = document.createElement('h1');
+        title.innerText = '585GOLD | Дашборд тестов';
+        title.style.color = '#c41e3a';
+        title.style.textAlign = 'center';
+        const date = document.createElement('p');
+        date.innerText = `Дата отчёта: ${new Date().toLocaleString()}`;
+        date.style.textAlign = 'center';
+        const container = document.createElement('div');
+        container.appendChild(title);
+        container.appendChild(date);
+        container.appendChild(printContent);
+        const originalTitle = document.title;
+        document.title = '585GOLD_Dashboard';
+        const win = window.open('', '_blank');
+        win.document.write('<html><head><meta charset="UTF-8"><title>585GOLD Дашборд</title><style>' + 
+            'body{font-family:Segoe UI;padding:20px;} .card{border:1px solid #ddd;border-radius:16px;padding:15px;margin-bottom:15px;} ' +
+            '.kpi-grid{display:flex;gap:15px;} .kpi-card{background:#f8f9fa;padding:10px;border-radius:12px;text-align:center;} ' +
+            '.kpi-value{font-size:28px;font-weight:bold;color:#c41e3a;} .badge{background:#c41e3a;color:white;padding:2px 8px;border-radius:20px;}' +
+            '.employee-item,.city-row{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee;} ' +
+            'canvas{max-width:100%;height:auto;} .charts-row{display:flex;gap:15px;} .chart-box{flex:1;}' +
+            '@media print{body{margin:0;padding:0;}}' +
+            '</style></head><body>');
+        win.document.write(container.innerHTML);
+        win.document.write('</body></html>');
+        win.document.close();
+        win.print();
+        document.title = originalTitle;
+    }
+    
     function exportCSV() { if(!filteredResults.length) return alert('Нет данных'); let csv = "Имя,Город,Правильных,Всего,Процент,Дата\n"; filteredResults.forEach(r => csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent},"${new Date(r.created_at).toLocaleDateString()}"\n`); const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `test_results_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
     function closeModal() { document.getElementById('modal').style.display = 'none'; currentSelectedEmployee = null; }
     function initTheme() { if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark'); }
@@ -333,10 +496,15 @@
     document.getElementById('cityFilter').onchange = applyFilters;
     document.getElementById('percentFilter').onchange = applyFilters;
     document.getElementById('dateRangeSelect').onchange = applyFilters;
+    document.getElementById('surnameSearch').oninput = applyFilters;
+    document.getElementById('resetFiltersBtn').onclick = resetFilters;
     document.getElementById('massDeleteBtn').onclick = massDelete;
     document.getElementById('modalDeleteBtn').onclick = async () => { if(currentSelectedEmployee && confirm('Удалить?')){ await supabaseClient.from('results_new').delete().eq('id', currentSelectedEmployee.id); await loadResults(); closeModal(); } };
     document.getElementById('modalPdfBtn').onclick = exportEmployeePDF;
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
+    document.getElementById('printDashboardBtn').onclick = exportDashboardPDF;
+    document.getElementById('showOnlyErrorsCheckbox').onchange = (e) => updateModalAnswers(e.target.checked);
+    
     window.showEmployeeDetails = showEmployeeDetails;
     window.closeModal = closeModal;
     window.deleteEmployee = deleteEmployee;
