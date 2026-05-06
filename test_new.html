@@ -6,21 +6,14 @@
     <title>585GOLD — Тест продаж</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             background: #fff0f0;
             padding: 16px;
             min-height: 100vh;
         }
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-        }
+        .container { max-width: 700px; margin: 0 auto; }
         .card {
             background: white;
             border-radius: 28px;
@@ -29,21 +22,9 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             border: 1px solid #e8a0b4;
         }
-        h1, h2 {
-            color: #c41e3a;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 26px;
-        }
-        .form-group {
-            margin-bottom: 18px;
-        }
-        label {
-            font-weight: 600;
-            display: block;
-            margin-bottom: 6px;
-            color: #333;
-        }
+        h1, h2 { color: #c41e3a; text-align: center; margin-bottom: 20px; font-size: 26px; }
+        .form-group { margin-bottom: 18px; }
+        label { font-weight: 600; display: block; margin-bottom: 6px; color: #333; }
         input, select {
             width: 100%;
             padding: 14px 16px;
@@ -64,19 +45,9 @@
             width: 100%;
             transition: 0.2s;
         }
-        button:active {
-            transform: scale(0.98);
-        }
-        button:disabled {
-            background: #e8a0b4;
-            cursor: not-allowed;
-        }
-        .question-text {
-            font-weight: 700;
-            font-size: 18px;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #e8a0b4; cursor: not-allowed; }
+        .question-text { font-weight: 700; font-size: 18px; margin-bottom: 20px; line-height: 1.4; }
         .option {
             background: #f8f4f0;
             border: 1px solid #e2d6cc;
@@ -86,45 +57,18 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .option:hover {
-            background: #ffe0e0;
-        }
-        .option.selected {
-            background: #c41e3a;
-            color: white;
-            border-color: #c41e3a;
-        }
-        .progress {
-            text-align: center;
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .hidden {
-            display: none;
-        }
-        .result-box {
-            text-align: center;
-            padding: 24px;
-            border-radius: 24px;
-        }
-        .result-box.success {
-            background: #e8f0e8;
-            border-left: 6px solid #2c6e2c;
-        }
-        .result-box.fail {
-            background: #ffe0e0;
-            border-left: 6px solid #c41e3a;
-        }
-        .restart-btn {
-            background: #c41e3a;
-            margin-top: 20px;
-        }
+        .option:hover { background: #ffe0e0; }
+        .option.selected { background: #c41e3a; color: white; border-color: #c41e3a; }
+        .progress { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; }
+        .hidden { display: none; }
+        .result-box { text-align: center; padding: 24px; border-radius: 24px; }
+        .result-box.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
+        .result-box.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
+        .restart-btn { background: #c41e3a; margin-top: 20px; }
     </style>
 </head>
 <body>
 <div class="container" id="app">
-    <!-- Регистрация -->
     <div id="regScreen" class="card">
         <h1>🎯 585GOLD | Тест продаж</h1>
         <div class="form-group">
@@ -146,7 +90,6 @@
         <button id="startTestBtn">Начать тест</button>
     </div>
 
-    <!-- Экран теста -->
     <div id="quizScreen" class="hidden">
         <div class="card">
             <div class="progress">Вопрос <span id="qNum">1</span> из <span id="qTotal">11</span></div>
@@ -156,7 +99,6 @@
         </div>
     </div>
 
-    <!-- Результат -->
     <div id="resultScreen" class="hidden"></div>
 </div>
 
@@ -166,7 +108,7 @@
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
 
-    const QUESTIONS = [
+    const ORIGINAL_QUESTIONS = [
         {
             text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?",
             options: [
@@ -279,6 +221,7 @@
         }
     ];
 
+    let shuffledQuestions = [];
     let currentUser = { name: '', city: '' };
     let currentIndex = 0;
     let userSelections = [];
@@ -294,11 +237,19 @@
     const questionTextDiv = document.getElementById('questionText');
     const optionsContainer = document.getElementById('optionsContainer');
 
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
     function renderQuestion() {
-        const q = QUESTIONS[currentIndex];
+        const q = shuffledQuestions[currentIndex];
         questionTextDiv.innerText = q.text;
         qNumSpan.innerText = currentIndex + 1;
-        qTotalSpan.innerText = QUESTIONS.length;
+        qTotalSpan.innerText = shuffledQuestions.length;
 
         optionsContainer.innerHTML = '';
         currentSelectedOption = null;
@@ -324,42 +275,42 @@
         let correctCount = 0;
         const answersDetail = [];
 
-        for (let i = 0; i < QUESTIONS.length; i++) {
+        for (let i = 0; i < shuffledQuestions.length; i++) {
             const selectedIdx = userSelections[i];
-            const isCorrect = (selectedIdx === QUESTIONS[i].correct);
+            const q = shuffledQuestions[i];
+            const isCorrect = (selectedIdx === q.correct);
             if (isCorrect) correctCount++;
             answersDetail.push({
                 question: i,
                 selected: selectedIdx,
                 correct: isCorrect,
-                questionText: QUESTIONS[i].text,
-                selectedText: QUESTIONS[i].options[selectedIdx],
-                correctText: QUESTIONS[i].options[QUESTIONS[i].correct]
+                questionText: q.text,
+                selectedText: q.options[selectedIdx],
+                correctText: q.options[q.correct]
             });
         }
-        const percent = Math.round((correctCount / QUESTIONS.length) * 100);
+        const percent = Math.round((correctCount / shuffledQuestions.length) * 100);
         const passed = percent >= 85;
 
-        const { error } = await supabaseClient
+        await supabaseClient
             .from('results_new')
             .insert([{
                 test_slug: 'prodazhi_2025',
                 user_name: currentUser.name,
                 city: currentUser.city,
                 score: correctCount,
-                total: QUESTIONS.length,
+                total: shuffledQuestions.length,
                 percent: percent,
                 answers: answersDetail
             }]);
-        if (error) console.error('Ошибка сохранения:', error);
 
         resultScreen.classList.remove('hidden');
         resultScreen.innerHTML = `
             <div class="result-box ${passed ? 'success' : 'fail'}">
                 <h2>${passed ? '🏆 Победа!' : '😞 Тест не пройден'}</h2>
-                <p style="font-size: 18px; margin: 15px 0;">Правильных ответов: ${correctCount} из ${QUESTIONS.length}</p>
+                <p style="font-size: 18px; margin: 15px 0;">Правильных ответов: ${correctCount} из ${shuffledQuestions.length}</p>
                 <p style="font-size: 24px; font-weight: bold; margin: 10px 0;">Ваш результат: ${percent}%</p>
-                <p style="margin: 15px 0;">${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите материалы и попробуйте снова.'}</p>
+                <p style="margin: 15px 0;">${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
                 <button class="restart-btn" id="restartTestBtn" style="margin-top: 20px;">🔄 Пройти заново</button>
             </div>
         `;
@@ -369,11 +320,9 @@
 
     function nextQuestionHandler() {
         if (currentSelectedOption === null) return;
-
         userSelections[currentIndex] = currentSelectedOption;
         currentIndex++;
-
-        if (currentIndex < QUESTIONS.length) {
+        if (currentIndex < shuffledQuestions.length) {
             renderQuestion();
         } else {
             quizScreen.classList.add('hidden');
@@ -384,14 +333,10 @@
     startBtn.onclick = () => {
         const name = document.getElementById('userName').value.trim();
         const city = document.getElementById('userCity').value;
-        if (!name) {
-            alert('Введите имя и фамилию');
-            return;
-        }
-        if (!city) {
-            alert('Выберите город из списка');
-            return;
-        }
+        if (!name) { alert('Введите имя и фамилию'); return; }
+        if (!city) { alert('Выберите город из списка'); return; }
+
+        shuffledQuestions = shuffleArray([...ORIGINAL_QUESTIONS]);
         currentUser = { name, city };
         currentIndex = 0;
         userSelections = [];
@@ -401,7 +346,6 @@
         quizScreen.classList.remove('hidden');
         renderQuestion();
     };
-
     nextBtn.onclick = nextQuestionHandler;
 </script>
 </body>
