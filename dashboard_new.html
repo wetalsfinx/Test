@@ -123,6 +123,14 @@
         }
         .answer-correct { border-left: 4px solid #28a745; }
         .answer-wrong { border-left: 4px solid #c41e3a; }
+        .recommendation {
+            background: #e8f0e8;
+            border-radius: 12px;
+            padding: 10px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #2c6e2c;
+        }
         .modal-actions {
             display: flex;
             gap: 10px;
@@ -198,6 +206,45 @@
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
+
+    // БАНК РЕКОМЕНДАЦИЙ (по ключевым словам в вопросах)
+    function getRecommendation(questionText, correctAnswer) {
+        const q = questionText.toLowerCase();
+        if (q.includes('первым') || q.includes('зрительный контакт')) {
+            return '💡 Правило «Проявляй инициативу»: сразу дайте ценность (скидка + бонусы) и задайте открытый вопрос: «Какое изделие выбираете? Для себя или в подарок?»';
+        }
+        if (q.includes('услышали бюджет')) {
+            return '💡 Правило «Задавай вопросы ДО показа»: сначала спросите «для какого случая?», «кому?», «какие предпочтения?». Только потом показывайте украшения.';
+        }
+        if (q.includes('предложить серьги')) {
+            return '💡 Правило «Презентуй с эмоцией»: предложите собрать образ целиком: «Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»';
+        }
+        if (q.includes('серебра') && q.includes('золото')) {
+            return '💡 Правило «Предлагай примерку через «Давайте»»: сравните оба варианта вживую: «Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»';
+        }
+        if (q.includes('футляр') || q.includes('оформляет покупку')) {
+            return '💡 Правило «Не отпускай без альтернативы»: презентуйте аксессуар как часть образа: «Давайте выберем красивый футляр и чистящее средство, чтобы украшение всегда выглядело безупречно»';
+        }
+        if (q.includes('дороговато')) {
+            return '💡 Правило отработки возражений: не соглашайтесь сразу на скидку, а спросите: «Понимаю, цена важна. А с чем вы сравниваете?» — так вы поймёте истинную причину сомнений.';
+        }
+        if (q.includes('размера нет')) {
+            return '💡 Правило «Не отпускай без альтернативы»: предложите похожие модели и каталог заказов: «Давайте покажу похожие кольца в наличии и каталог на заказ»';
+        }
+        if (q.includes('подарок маме') || q.includes('юбилей')) {
+            return '💡 Правило «Презентуй с эмоцией (ХПВ)»: свяжите украшение с моментом: «Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нём»';
+        }
+        if (q.includes('другие модели')) {
+            return '💡 Правило «Проявляй инициативу»: подхватите интерес и предложите идеи: «Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»';
+        }
+        if (q.includes('яндекс сплит')) {
+            return '💡 Правило работы с ценой: расскажите о Сплите ДО озвучивания итоговой цены, как о дополнительной возможности: «Можно оформить Сплит — 4 платежа без переплат»';
+        }
+        if (q.includes('пауза') || q.includes('идти вдоль витрины')) {
+            return '💡 Правило «Проявляй инициативу»: после паузы 20-30 секунд мягко начинайте диалог: «Какое изделие выбираете? Для себя или в подарок?»';
+        }
+        return '💡 Рекомендация: изучите правильный ответ и повторите материал.';
+    }
 
     let allResults = [];
     let filteredResults = [];
@@ -282,7 +329,6 @@
             </div>
         `).join('');
 
-        // Список сотрудников с кнопкой удаления
         document.getElementById('empCount').innerText = filteredResults.length;
         document.getElementById('employeeList').innerHTML = filteredResults.map(r => `
             <div class="employee-item">
@@ -295,14 +341,12 @@
             </div>
         `).join('');
 
-        // Фильтр городов
         const currentCityFilter = document.getElementById('cityFilter').value;
         const uniqueCities = [...new Set(allResults.map(r => r.city))];
         const citySelect = document.getElementById('cityFilter');
         citySelect.innerHTML = '<option value="all">Все города</option>' + 
             uniqueCities.map(c => `<option value="${c}" ${currentCityFilter===c ? 'selected' : ''}>${c}</option>`).join('');
 
-        // Гистограмма
         if (scoreChart) scoreChart.destroy();
         const bins = [0,0,0,0,0];
         filteredResults.forEach(r => {
@@ -340,12 +384,14 @@
         
         let html = `<p><strong>Правильных ответов:</strong> ${employee.score} из ${employee.total}</p>`;
         answers.forEach((a, i) => {
+            const isCorrect = a.correct;
+            const recommendation = !isCorrect ? getRecommendation(a.questionText, a.correctText) : '';
             html += `
-                <div class="answer-item ${a.correct ? 'answer-correct' : 'answer-wrong'}">
+                <div class="answer-item ${isCorrect ? 'answer-correct' : 'answer-wrong'}">
                     <b>Вопрос ${i+1}:</b> ${a.questionText}<br>
                     <b>Ваш ответ:</b> ${a.selectedText}<br>
-                    ${!a.correct ? `<b>Правильный ответ:</b> ${a.correctText}<br>` : ''}
-                    ${!a.correct ? `<b><span style="color:#c41e3a;">📌 Рекомендация:</span></b> Изучите материал и повторите попытку.` : ''}
+                    ${!isCorrect ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br>` : ''}
+                    ${!isCorrect ? `<div class="recommendation">${recommendation}</div>` : ''}
                 </div>
             `;
         });
@@ -356,23 +402,13 @@
     async function deleteEmployee(event, employeeId) {
         event.stopPropagation();
         if (!confirm('Удалить результаты этого сотрудника?')) return;
-        
-        const { error } = await supabaseClient
-            .from('results_new')
-            .delete()
-            .eq('id', employeeId);
-        
-        if (error) {
-            alert('Ошибка удаления: ' + error.message);
-        } else {
-            await loadResults();
-        }
+        await supabaseClient.from('results_new').delete().eq('id', employeeId);
+        await loadResults();
     }
 
     async function deleteCurrentEmployee() {
         if (!currentSelectedEmployee) return;
         if (!confirm(`Удалить результаты ${currentSelectedEmployee.user_name}?`)) return;
-        
         await supabaseClient.from('results_new').delete().eq('id', currentSelectedEmployee.id);
         await loadResults();
         closeModal();
@@ -380,7 +416,6 @@
 
     function exportEmployeePDF() {
         if (!currentSelectedEmployee) return;
-        
         const employee = currentSelectedEmployee;
         const answers = employee.answers || [];
         let html = `
@@ -391,6 +426,7 @@
                 .answer { margin-bottom: 15px; padding: 10px; border-left: 4px solid #ddd; }
                 .correct { border-left-color: #28a745; }
                 .wrong { border-left-color: #c41e3a; }
+                .recommendation { background: #e8f0e8; padding: 8px; margin-top: 8px; border-radius: 8px; color: #2c6e2c; }
             </style></head>
             <body>
             <h1>585GOLD | Отчёт по тесту</h1>
@@ -402,16 +438,17 @@
             <h3>Детальные ответы</h3>
         `;
         answers.forEach((a, i) => {
+            const rec = !a.correct ? getRecommendation(a.questionText, a.correctText) : '';
             html += `
                 <div class="answer ${a.correct ? 'correct' : 'wrong'}">
                     <b>${i+1}. ${a.questionText}</b><br>
-                    Ответ: ${a.selectedText}<br>
-                    ${!a.correct ? `✅ Правильный ответ: ${a.correctText}<br>` : ''}
+                    <b>Ваш ответ:</b> ${a.selectedText}<br>
+                    ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br>` : ''}
+                    ${!a.correct ? `<div class="recommendation">${rec}</div>` : ''}
                 </div>
             `;
         });
         html += `</body></html>`;
-        
         const opt = { margin: 0.5, filename: `report_${employee.user_name}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4' } };
         html2pdf().set(opt).from(html).save();
     }
