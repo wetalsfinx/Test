@@ -161,9 +161,11 @@
             <h3>📊 Статистика по вопросам (ошибки)</h3>
             <div style="overflow-x: auto;">
                 <table class="question-stats-table" id="questionStatsTable">
-                    <thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></thead>
+                    <thead>
+                        <tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th>
+                    </thead>
                     <tbody></tbody>
-                没人
+                </table>
             </div>
         </div>
         
@@ -299,7 +301,6 @@
     function renderQuestionStats() {
         if (!filteredResults.length) return;
         
-        // Собираем статистику по вопросам
         const questionStats = [];
         filteredResults.forEach(r => {
             if (r.answers) {
@@ -309,7 +310,6 @@
                             total: 0, 
                             errors: 0, 
                             text: a.questionText,
-                            options: a.options || null, // если есть варианты
                             correctAnswer: a.correctText || ''
                         };
                     }
@@ -323,22 +323,12 @@
         if (!tbody) return;
         tbody.innerHTML = '';
         
-        // Маппинг правильных ответов по вопросам (берём из первого попавшегося результата)
-        const correctAnswersMap = {};
-        if (filteredResults.length > 0 && filteredResults[0].answers) {
-            filteredResults[0].answers.forEach((a, idx) => {
-                correctAnswersMap[idx] = a.correctText || '';
-            });
-        }
-        
         questionStats.forEach((q, i) => {
             const percent = Math.round((q.errors / q.total) * 100);
             const row = tbody.insertRow();
             
-            // Формируем текст вопроса с вариантами (если они есть в answers)
             let questionHtml = `<b>${i+1}.</b> ${q.text}`;
             
-            // Пытаемся извлечь варианты из ответов (берём из первой записи)
             if (filteredResults.length > 0 && filteredResults[0].answers && filteredResults[0].answers[i]) {
                 const answerData = filteredResults[0].answers[i];
                 if (answerData.options && answerData.options.length) {
@@ -350,9 +340,8 @@
                 }
             }
             
-            // Добавляем правильный ответ
-            if (correctAnswersMap[i]) {
-                questionHtml += `<div class="correct-answer">✅ <b>Правильный ответ:</b> ${correctAnswersMap[i]}</div>`;
+            if (q.correctAnswer) {
+                questionHtml += `<div class="correct-answer">✅ <b>Правильный ответ:</b> ${q.correctAnswer}</div>`;
             }
             
             row.insertCell(0).innerHTML = questionHtml;
