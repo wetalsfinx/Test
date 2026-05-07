@@ -129,6 +129,7 @@
         .print-dashboard-btn { background: #2c6e2c; }
         .feedback-btn { background: #2c6e2c; margin-left: 5px; }
         .recommendation-text { white-space: pre-line; }
+        .show-all-btn { background: #6c757d; margin-top: 10px; width: auto; padding: 5px 15px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -161,15 +162,22 @@
         <div id="leaderCelebration" class="leader-card" style="display: none;"></div>
         <div class="kpi-grid" id="kpi"></div>
         
-        <div class="card">
-            <h3>📊 Статистика по вопросам (ошибки)</h3>
-            <div style="overflow-x: auto;">
-                <table class="question-stats-table" id="questionStatsTable">
-                    <thead>
-                        <tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+        <div class="card" id="questionStatsCard">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h3 style="margin: 0;">📊 Статистика по вопросам (ошибки)</h3>
+                <button id="toggleAllQuestionsBtn" class="show-all-btn">📋 Показать все вопросы</button>
+            </div>
+            <div id="topQuestionsContainer"></div>
+            <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
+                <div style="overflow-x: auto;">
+                    <table class="question-stats-table" id="questionStatsTable">
+                        <thead>
+                            <tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px; background: #6c757d;">▲ Скрыть все вопросы</button>
             </div>
         </div>
         
@@ -213,6 +221,7 @@
     
     let allResults = [], filteredResults = [], cityChart = null, scoreChart = null, currentSelectedEmployee = null, selectedForDelete = new Set();
     let previousResultsCount = 0;
+    let allQuestionsData = [];
 
     function getRecommendation(text) {
         const q = text.toLowerCase();
@@ -414,6 +423,101 @@
         applyFilters();
     }
 
+    function renderTopQuestions(questionStats) {
+        const container = document.getElementById('topQuestionsContainer');
+        if (!container) return;
+        
+        if (!questionStats || questionStats.length === 0) {
+            container.innerHTML = '<div style="padding: 12px; text-align: center; color: #666;">Нет данных</div>';
+            return;
+        }
+        
+        // Берём топ-3 по проценту ошибок
+        const top3 = [...questionStats].sort((a,b) => b.percent - a.percent).slice(0,3);
+        
+        let html = '<div style="margin-top: 12px;">';
+        top3.forEach((q, idx) => {
+            html += `
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 12px; margin-bottom: 10px; border-left: 4px solid ${q.percent > 50 ? '#c41e3a' : '#2c6e2c'};">
+                    <div style="font-weight: bold; margin-bottom: 6px;">🔥 ${idx+1}. ${q.text.substring(0, 100)}${q.text.length > 100 ? '…' : ''}</div>
+                    <div style="display: flex; gap: 15px; font-size: 12px;">
+                        <span>❌ Ошибок: ${q.errors}/${q.total}</span>
+                        <span>📊 ${q.percent}%</span>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function renderFullTable(questionStats) {
+        const tbody = document.querySelector('#questionStatsTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        questionStats.forEach((q, i) => {
+            const row = tbody.insertRow();
+            
+            let questionHtml = `<b>${i+1}.</b> ${q.text}`;
+            
+            if (filteredResults.length > 0 && filteredResults[0].answers && filteredResults[0].answers[i]) {
+                const answerData = filteredResults[0].answers[i];
+                if (answerData.options && answerData.options.length) {
+                    const optionsText = answerData.options.map((opt, optIdx) => {
+                        const letter = String.fromCharCode(65 + optIdx);
+                        return `${letter}) ${opt}`;
+                    }).join('<br>');
+                    questionHtml += `<div class="question-options">📌 <b>Варианты:</b><br>${optionsText}</div>`;
+                }
+            }
+            
+            if (q.correctAnswer) {
+                questionHtml += `<div class="correct-answer">✅ <b>Правильный ответ:</b> ${q.correctAnswer}</div>`;
+            }
+            
+            row.insertCell(0).innerHTML = questionHtml;
+            row.insertCell(1).innerHTML = `<span style="color:${q.percent>50?'#c41e3a':'#2c6e2c'}">${q.errors}/${q.total}</span>`;
+            row.insertCell(2).innerHTML = `<span style="color:${q.percent>50?'#c41e3a':'#2c6e2c'}">${q.percent}%</span>`;
+        });
+    }
+
+    function renderQuestionStats() {
+        if (!filteredResults.length) return;
+        
+        const questionStats = [];
+        filteredResults.forEach(r => {
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    if (!questionStats[idx]) {
+                        questionStats[idx] = { 
+                            total: 0, 
+                            errors: 0, 
+                            text: a.questionText,
+                            correctAnswer: a.correctText || '',
+                            percent: 0
+                        };
+                    }
+                    questionStats[idx].total++;
+                    if (!a.correct) questionStats[idx].errors++;
+                });
+            }
+        });
+        
+        // Вычисляем проценты
+        questionStats.forEach(q => {
+            q.percent = Math.round((q.errors / q.total) * 100);
+        });
+        
+        allQuestionsData = questionStats;
+        
+        // Показываем топ-3
+        renderTopQuestions(questionStats);
+        
+        // Заполняем полную таблицу (но она скрыта)
+        renderFullTable(questionStats);
+    }
+
     function generateCityFeedback() {
         const city = document.getElementById('cityFilter').value;
         if (city === 'all') {
@@ -477,58 +581,6 @@
         });
     }
 
-    function renderQuestionStats() {
-        if (!filteredResults.length) return;
-        
-        const questionStats = [];
-        filteredResults.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    if (!questionStats[idx]) {
-                        questionStats[idx] = { 
-                            total: 0, 
-                            errors: 0, 
-                            text: a.questionText,
-                            correctAnswer: a.correctText || ''
-                        };
-                    }
-                    questionStats[idx].total++;
-                    if (!a.correct) questionStats[idx].errors++;
-                });
-            }
-        });
-        
-        const tbody = document.querySelector('#questionStatsTable tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        
-        questionStats.forEach((q, i) => {
-            const percent = Math.round((q.errors / q.total) * 100);
-            const row = tbody.insertRow();
-            
-            let questionHtml = `<b>${i+1}.</b> ${q.text}`;
-            
-            if (filteredResults.length > 0 && filteredResults[0].answers && filteredResults[0].answers[i]) {
-                const answerData = filteredResults[0].answers[i];
-                if (answerData.options && answerData.options.length) {
-                    const optionsText = answerData.options.map((opt, optIdx) => {
-                        const letter = String.fromCharCode(65 + optIdx);
-                        return `${letter}) ${opt}`;
-                    }).join('<br>');
-                    questionHtml += `<div class="question-options">📌 <b>Варианты:</b><br>${optionsText}</div>`;
-                }
-            }
-            
-            if (q.correctAnswer) {
-                questionHtml += `<div class="correct-answer">✅ <b>Правильный ответ:</b> ${q.correctAnswer}</div>`;
-            }
-            
-            row.insertCell(0).innerHTML = questionHtml;
-            row.insertCell(1).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${q.errors}/${q.total}</span>`;
-            row.insertCell(2).innerHTML = `<span style="color:${percent>50?'#c41e3a':'#2c6e2c'}">${percent}%</span>`;
-        });
-    }
-
     function renderDashboard() {
         const total = filteredResults.length;
         if (!total) { 
@@ -537,8 +589,6 @@
             document.getElementById('cityRating').innerHTML = 'Нет данных';
             document.getElementById('employeeList').innerHTML = '';
             document.getElementById('empCount').innerText = '0';
-            const tbody = document.querySelector('#questionStatsTable tbody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="3">Нет данных</td></tr>';
             return;
         }
         
@@ -726,6 +776,16 @@
     document.getElementById('printDashboardBtn').onclick = exportDashboardPDF;
     document.getElementById('showOnlyErrorsCheckbox').onchange = (e) => updateModalAnswers(e.target.checked);
     document.getElementById('feedbackBtn').onclick = generateCityFeedback;
+    
+    // Кнопки для статистики по вопросам
+    document.getElementById('toggleAllQuestionsBtn').onclick = () => {
+        document.getElementById('topQuestionsContainer').style.display = 'none';
+        document.getElementById('allQuestionsContainer').style.display = 'block';
+    };
+    document.getElementById('hideAllQuestionsBtn').onclick = () => {
+        document.getElementById('allQuestionsContainer').style.display = 'none';
+        document.getElementById('topQuestionsContainer').style.display = 'block';
+    };
     
     window.showEmployeeDetails = showEmployeeDetails;
     window.closeModal = closeModal;
