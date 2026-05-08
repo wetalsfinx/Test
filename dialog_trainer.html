@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>585GOLD | Тренажёр диалогов</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #fff0f0;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .container { max-width: 650px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e8a0b4;
+        }
+        h1 { color: #c41e3a; text-align: center; font-size: 24px; margin-bottom: 16px; }
+        .form-group { margin-bottom: 16px; }
+        label { font-weight: 600; display: block; margin-bottom: 6px; color: #333; }
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 40px;
+            border: 1px solid #e8a0b4;
+            font-size: 15px;
+            background: white;
+        }
+        button {
+            background: #c41e3a;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:disabled { background: #e8a0b4; cursor: not-allowed; }
+        .progress { text-align: center; color: #666; margin-bottom: 16px; font-size: 13px; }
+        .client-message {
+            background: #e9eef2;
+            padding: 14px 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        .options-area { margin: 20px 0; }
+        .option {
+            background: #f8f4f0;
+            border: 1px solid #e2d6cc;
+            border-radius: 20px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1.3;
+        }
+        .option.selected { background: #c41e3a; color: white; border-color: #c41e3a; }
+        .hidden { display: none; }
+        .result-box { text-align: center; padding: 20px; border-radius: 24px; }
+        .result-box.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
+        .result-box.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
+        .restart-btn { background: #c41e3a; margin-top: 16px; }
+        .instruction { font-size: 12px; color: #999; text-align: center; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <!-- Регистрация -->
+    <div id="regScreen" class="card">
+        <h1>🎭 585GOLD | Тренажёр диалогов</h1>
+        <div class="form-group">
+            <label>Имя и фамилия</label>
+            <input type="text" id="userName" placeholder="Например: Анна Иванова">
+        </div>
+        <div class="form-group">
+            <label>Город</label>
+            <select id="userCity">
+                <option value="">-- Выберите город --</option>
+                <option value="Сыктывкар">Сыктывкар</option>
+                <option value="Оренбург">Оренбург</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Ульяновск">Ульяновск</option>
+                <option value="Нижний Новгород">Нижний Новгород</option>
+            </select>
+        </div>
+        <button id="startBtn">Начать диалог</button>
+    </div>
+
+    <!-- Диалог -->
+    <div id="dialogScreen" class="hidden">
+        <div class="card">
+            <div class="progress">Шаг <span id="stepNum">1</span> из <span id="stepTotal">8</span></div>
+            <div id="clientMessage" class="client-message"></div>
+            <div id="optionsArea" class="options-area"></div>
+            <button id="nextBtn" disabled>➡ Далее</button>
+        </div>
+    </div>
+
+    <!-- Результат -->
+    <div id="resultScreen" class="hidden card"></div>
+</div>
+
+<script>
+    const supabaseClient = supabase.createClient(
+        'https://qtostraaqrnjbxiydlip.supabase.co',
+        'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
+    );
+
+    // Шаги диалога
+    const STEPS = [
+        {
+            client: "«Здравствуйте. Я хочу подобрать подарок для сестры, но совсем не разбираюсь в украшениях. Боюсь ошибиться, вы не могли бы помочь?»",
+            options: [
+                "«Конечно помогу! У нас большой выбор, смотрите, вот здесь подвески, здесь серьги. Выбирайте на любой вкус.»",
+                "«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Не переживайте, я помогу. Расскажите, какого она возраста? Чем увлекается? Классика или современное?»",
+                "«Здравствуйте. Конечно. Какой бюджет вы рассматриваете? Это поможет мне сориентироваться.»"
+            ],
+            correct: 1
+        },
+        {
+            client: "«Ей 42 года. Она врач, но любит стиль, с детства занималась танцами. Наверное, современное, но не вызывающее.»",
+            options: [
+                "«Тогда давайте посмотрим вот эту коллекцию — она как раз современная, но спокойная. И цена хорошая.»",
+                "«Поняла. А с чем она планирует носить подарок? С повседневной одеждой или на выход?»",
+                "«Может, стоит посмотреть серьги с бриллиантами? Они всегда в моде и подойдут к любой одежде.»"
+            ],
+            correct: 1
+        },
+        {
+            client: "«Нужно и на работу, и на праздники. Но бриллиант, наверное, слишком броско для больницы?»",
+            options: [
+                "«Совсем нет, небольшие бриллианты смотрятся очень элегантно. Давайте примерим — и вы сами увидите.»",
+                "«Давайте я покажу украшения с фианитами — они тоже красиво сверкают, но стоят дешевле.»",
+                "«Бриллианты не всем подходят. Может, лучше посмотреть золото без камней?»"
+            ],
+            correct: 0
+        },
+        {
+            client: "«Ну хорошо, давайте посмотрим, что у вас есть с небольшими бриллиантами.»",
+            options: [
+                "«Вам очень идёт! Эта подвеска визуально удлиняет шею. Смотрится изящно. Цена — 45 000 ₽.»",
+                "«К этой подвеске можно подобрать серьги из той же коллекции — вместе они создадут законченный образ. Давайте покажу.»",
+                "«Вам очень идёт! Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты.»"
+            ],
+            correct: 1
+        },
+        {
+            client: "«Да, серьги тоже красивые. Но я думала только про подвеску. Давайте пока посмотрим по цене…»",
+            options: [
+                "«Конечно, подвеска стоит 45 000 ₽. Серьги отдельно — 38 000 ₽. Вместе — 83 000 ₽.»",
+                "«Понимаю. Подвеска стоит 45 000 ₽. Если захотите добавить серьги позже — они всегда есть в наличии.»",
+                "«Понимаю. Подвеска стоит 45 000 ₽. А для такого выбора можно оформить Сплит — 4 платежа без переплат.»"
+            ],
+            correct: 2
+        },
+        {
+            client: "«45 000… дороговато. Я рассчитывала примерно до 35 000.»",
+            options: [
+                "«Понимаю, давайте посмотрим, что есть в вашем бюджете.»",
+                "«Понимаю, цена важна. А с чем вы сравниваете? Может, видели похожее дешевле в другом месте?»",
+                "«Давайте я покажу подвеску с чуть меньшим камнем, она будет дешевле.»"
+            ],
+            correct: 1
+        },
+        {
+            client: "«Да, я видела в интернете похожее за 35 000, но там камень меньше. А мне нравится размер этого…»",
+            options: [
+                "«Если камень меньше — это уже другое украшение. Здесь бриллиант крупнее и чище. Поэтому цена выше. Но я понимаю ваш бюджет.»",
+                "«Тогда давайте посмотрим, что можно сделать. Для такого выбора мы можем оформить Сплит — 4 платежа без переплат, по 11 250 ₽. Это совсем необременительно, и вы получаете именно то, что нравится.»",
+                "«Давайте посмотрим другое украшение. У меня есть подвеска с камнем чуть меньше, она будет около 35 000.»"
+            ],
+            correct: 1
+        },
+        {
+            client: "«Хорошо, давайте оформлять эту подвеску со Сплитом.»",
+            options: [
+                "«Футляр нужен будет?»",
+                "«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно. У нас есть несколько вариантов.»",
+                "«Футляр можно докупить отдельно, если хотите.»"
+            ],
+            correct: 1
+        }
+    ];
+
+    let currentUser = { name: '', city: '' };
+    let currentStep = 0;
+    let userSelections = [];
+    let currentSelected = null;
+    let gameActive = false;
+
+    function renderStep() {
+        const step = STEPS[currentStep];
+        document.getElementById('stepNum').innerText = currentStep + 1;
+        document.getElementById('stepTotal').innerText = STEPS.length;
+        document.getElementById('clientMessage').innerHTML = `<strong>🧑 Клиент:</strong><br>${step.client}`;
+        
+        const optionsDiv = document.getElementById('optionsArea');
+        optionsDiv.innerHTML = '';
+        currentSelected = null;
+        document.getElementById('nextBtn').disabled = true;
+        
+        step.options.forEach((opt, idx) => {
+            const letter = String.fromCharCode(65 + idx);
+            const div = document.createElement('div');
+            div.className = 'option';
+            div.innerHTML = `<strong>${letter})</strong> ${opt}`;
+            div.onclick = () => {
+                document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+                div.classList.add('selected');
+                currentSelected = idx;
+                document.getElementById('nextBtn').disabled = false;
+            };
+            optionsDiv.appendChild(div);
+        });
+    }
+
+    async function saveResult() {
+        let correctCount = 0;
+        const answersDetail = [];
+        for (let i = 0; i < STEPS.length; i++) {
+            const selected = userSelections[i];
+            const isCorrect = (selected === STEPS[i].correct);
+            if (isCorrect) correctCount++;
+            answersDetail.push({
+                step: i,
+                selected: selected,
+                correct: isCorrect,
+                questionText: STEPS[i].client,
+                selectedText: STEPS[i].options[selected],
+                correctText: STEPS[i].options[STEPS[i].correct]
+            });
+        }
+        const percent = Math.round((correctCount / STEPS.length) * 100);
+        const passed = percent >= 85;
+        
+        await supabaseClient.from('dialog_results').insert([{
+            user_name: currentUser.name,
+            city: currentUser.city,
+            score: correctCount,
+            total: STEPS.length,
+            percent: percent,
+            answers: answersDetail
+        }]);
+        
+        const resultDiv = document.getElementById('resultScreen');
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <div class="result-box ${passed ? 'success' : 'fail'}">
+                <h2>${passed ? '🏆 Победа!' : '😞 Тренировка не пройдена'}</h2>
+                <p>Правильных ответов: ${correctCount} из ${STEPS.length}</p>
+                <p>Ваш результат: ${percent}%</p>
+                <p>${passed ? 'Отлично! Вы уверенно ведёте диалог.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
+                <button class="restart-btn" onclick="location.reload()">🔄 Пройти заново</button>
+            </div>
+        `;
+    }
+
+    function nextStepHandler() {
+        if (currentSelected === null) return;
+        userSelections[currentStep] = currentSelected;
+        currentStep++;
+        if (currentStep >= STEPS.length) {
+            document.getElementById('dialogScreen').classList.add('hidden');
+            saveResult();
+        } else {
+            renderStep();
+        }
+    }
+
+    document.getElementById('startBtn').onclick = () => {
+        const name = document.getElementById('userName').value.trim();
+        const city = document.getElementById('userCity').value;
+        if (!name) { alert('Введите имя и фамилию'); return; }
+        if (!city) { alert('Выберите город'); return; }
+        currentUser = { name, city };
+        currentStep = 0;
+        userSelections = [];
+        currentSelected = null;
+        document.getElementById('regScreen').classList.add('hidden');
+        document.getElementById('dialogScreen').classList.remove('hidden');
+        renderStep();
+    };
+    document.getElementById('nextBtn').onclick = nextStepHandler;
+</script>
+</body>
+</html>
