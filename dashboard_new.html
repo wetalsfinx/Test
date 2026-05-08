@@ -99,7 +99,7 @@
             </div>
             <div id="topQuestionsContainer"></div>
             <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
-                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead><tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody></table></div>
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody>能得到</div>
                 <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">▲ Скрыть все вопросы</button>
             </div>
         </div>
@@ -202,7 +202,7 @@
         dialogAllResults = data;
         const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
         const citySelect = document.getElementById('dialogCityFilter');
-        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}" ${c === 'Оренбург' ? 'selected' : ''}>${c}</option>`).join('');
         applyDialogFilters();
         document.getElementById('dialogArea').style.display = 'block';
         document.getElementById('status').innerHTML = `✅ ${dialogAllResults.length} записей диалогов`;
@@ -372,6 +372,9 @@
         const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, count: data.count, avg: Math.round(data.sumPercent / data.count) })).sort((a,b) => b.avg - a.avg);
         document.getElementById('dialogCityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('dialogCityFilter').value='${c.city}'; applyDialogFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
         
+        const leader = [...dialogFilteredResults].sort((a,b)=>b.percent-a.percent)[0];
+        if(leader) document.getElementById('dialogLeaderCelebration').innerHTML = `🏆 Лучший сотрудник: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}%`;
+        
         document.getElementById('dialogEmpCount').innerText = dialogFilteredResults.length;
         document.getElementById('dialogEmployeeList').innerHTML = dialogFilteredResults.map(r=>`<div class="employee-item"><div class="checkbox-col"><input type="checkbox" class="dialog-checkbox" data-id="${r.id}"></div><div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id}, 'dialog')"><b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span></div><div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white; cursor:pointer;" onclick="deleteEmployee(event, ${r.id}, 'dialog')">🗑</button></div></div>`).join('');
         document.querySelectorAll('.dialog-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) dialogSelectedForDelete.add(e.target.dataset.id); else dialogSelectedForDelete.delete(e.target.dataset.id); });
@@ -446,6 +449,14 @@
     document.getElementById('dialogLoadBtn').onclick = loadDialogResults;
     document.getElementById('resetFiltersBtn').onclick = () => { document.getElementById('cityFilter').value = 'all'; document.getElementById('percentFilter').value = 'all'; document.getElementById('dateRangeSelect').value = 'all'; document.getElementById('surnameSearch').value = ''; applyFilters(); };
     document.getElementById('dialogResetFiltersBtn').onclick = () => { document.getElementById('dialogCityFilter').value = 'all'; document.getElementById('dialogPercentFilter').value = 'all'; document.getElementById('dialogDateRangeSelect').value = 'all'; document.getElementById('dialogSurnameSearch').value = ''; applyDialogFilters(); };
+    document.getElementById('cityFilter').onchange = applyFilters;
+    document.getElementById('dialogCityFilter').onchange = applyDialogFilters;
+    document.getElementById('percentFilter').onchange = applyFilters;
+    document.getElementById('dialogPercentFilter').onchange = applyDialogFilters;
+    document.getElementById('dateRangeSelect').onchange = applyFilters;
+    document.getElementById('dialogDateRangeSelect').onchange = applyDialogFilters;
+    document.getElementById('surnameSearch').oninput = applyFilters;
+    document.getElementById('dialogSurnameSearch').oninput = applyDialogFilters;
     document.getElementById('feedbackBtn').onclick = generateCityFeedback;
     document.getElementById('dialogFeedbackBtn').onclick = generateDialogFeedback;
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
