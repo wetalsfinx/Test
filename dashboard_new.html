@@ -2,133 +2,51 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>585GOLD | Дашборд тестов</title>
+    <title>585GOLD | Дашборд</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #f0f2f5;
-            margin: 0;
-            padding: 0;
-            transition: background 0.2s, color 0.2s;
-        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 16px; transition: background 0.2s; }
         body.dark { background: #1a1a2e; color: #e0e0e0; }
         body.dark .card, body.dark .kpi-card, body.dark .modal-content { background: #16213e; color: #e0e0e0; border-color: #0f3460; }
-        .dashboard { max-width: 1400px; margin: 0 auto; padding: 16px; }
+        .dashboard { max-width: 1400px; margin: 0 auto; }
         .sticky-header { position: sticky; top: 0; z-index: 100; background: inherit; padding-bottom: 8px; }
-        .card {
-            background: white;
-            border-radius: 24px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-top: 4px solid #c41e3a;
-        }
+        .card { background: white; border-radius: 24px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 4px solid #c41e3a; }
         h2, h3 { color: #c41e3a; margin-top: 0; font-size: 18px; }
         .flex-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        select, button, input {
-            padding: 8px 12px;
-            border-radius: 30px;
-            border: 1px solid #ddd;
-            font-size: 13px;
-            background: white;
-            cursor: pointer;
-        }
+        select, button, input { padding: 8px 12px; border-radius: 30px; border: 1px solid #ddd; font-size: 13px; background: white; cursor: pointer; }
         button { background: #c41e3a; color: white; border: none; }
         button:hover { background: #8b1a2c; }
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        .kpi-card {
-            background: #f8f9fa;
-            border-radius: 20px;
-            padding: 12px;
-            text-align: center;
-        }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .kpi-card { background: #f8f9fa; border-radius: 20px; padding: 12px; text-align: center; }
         .kpi-value { font-size: 28px; font-weight: bold; color: #c41e3a; }
         .charts-row { display: flex; gap: 15px; flex-wrap: wrap; }
         .chart-box { flex: 1; min-width: 260px; }
         canvas { max-height: 200px; width: 100%; }
-        .employee-item, .city-row, .top-employee {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            font-size: 14px;
-        }
+        .employee-item, .city-row, .top-employee { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; }
         .employee-item:hover, .city-row:hover, .top-employee:hover { background: #fff0f3; }
         .badge { background: #c41e3a; color: white; padding: 2px 10px; border-radius: 30px; font-size: 11px; }
         .employee-list { max-height: 400px; overflow-y: auto; }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 28px;
-            padding: 20px;
-        }
-        .answer-item {
-            background: #f8f9fa;
-            border-radius: 16px;
-            padding: 10px;
-            margin-bottom: 10px;
-            font-size: 13px;
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; border-radius: 28px; padding: 20px; }
+        .answer-item { background: #f8f9fa; border-radius: 16px; padding: 10px; margin-bottom: 10px; font-size: 13px; }
         .answer-correct { border-left: 4px solid #28a745; }
         .answer-wrong { border-left: 4px solid #c41e3a; }
-        .recommendation {
-            background: #e8f0e8;
-            border-radius: 10px;
-            padding: 8px;
-            margin-top: 8px;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        .leader-card {
-            background: linear-gradient(135deg, #fff0f3, #ffe0e0);
-            border-radius: 20px;
-            padding: 12px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-size: 14px;
-        }
+        .leader-card { background: linear-gradient(135deg, #fff0f3, #ffe0e0); border-radius: 20px; padding: 12px; margin-bottom: 15px; text-align: center; font-size: 14px; }
         .loading-text { text-align: center; padding: 30px; color: #666; }
         .checkbox-col { width: 30px; text-align: center; }
         .theme-toggle { margin-left: auto; }
-        body.dark .employee-item, body.dark .city-row, body.dark .top-employee { border-bottom-color: #0f3460; }
+        .tab-btn { background: #e0d6cc; border: none; padding: 8px 20px; border-radius: 40px; cursor: pointer; font-weight: bold; margin-right: 8px; }
+        .tab-btn.active { background: #c41e3a; color: white; }
+        .feedback-btn { background: #2c6e2c; margin-left: 5px; }
         .question-stats-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .question-stats-table th, .question-stats-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
         .question-stats-table th { background: #c41e3a; color: white; }
         .question-stats-table td:first-child { word-break: break-word; }
         .question-options { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.3; }
-        body.dark .question-options { color: #aaa; }
         .correct-answer { font-size: 11px; color: #2c6e2c; margin-top: 4px; font-weight: normal; }
-        body.dark .correct-answer { color: #6fbf6f; }
-        .reset-btn { background: #6c757d; }
-        .search-input { width: 200px; }
-        .print-dashboard-btn { background: #2c6e2c; }
-        .feedback-btn { background: #2c6e2c; margin-left: 5px; }
-        .recommendation-text { white-space: pre-line; }
+        .recommendation { background: #e8f0e8; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 12px; white-space: pre-line; }
         .show-all-btn { background: #6c757d; margin-top: 10px; width: auto; padding: 5px 15px; font-size: 12px; }
     </style>
 </head>
@@ -139,11 +57,14 @@
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <h2 style="margin: 0;">📊 585GOLD | Дашборд</h2>
                 <div style="display: flex; gap: 8px;">
-                    <button id="printDashboardBtn" class="print-dashboard-btn">📄 PDF дашборда</button>
                     <button id="themeToggleBtn" style="background:#6c757d;">🌙 Тема</button>
                 </div>
             </div>
-            <div class="flex-row" style="margin-top: 12px;">
+            <div style="margin-top: 12px;">
+                <button id="tabTestBtn" class="tab-btn active">📊 Тест</button>
+                <button id="tabDialogBtn" class="tab-btn">🎭 Тренажёр диалогов</button>
+            </div>
+            <div id="testFilters" class="flex-row" style="margin-top: 12px;">
                 <select id="cityFilter"><option value="all">Все города</option></select>
                 <select id="percentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
                 <select id="dateRangeSelect"><option value="all">Всё время</option><option value="today">Сегодня</option><option value="week">7 дней</option><option value="month">30 дней</option></select>
@@ -153,15 +74,24 @@
                 <button id="exportCsvBtn">📎 CSV</button>
                 <button id="feedbackBtn" class="feedback-btn">📝 Фидбек для города</button>
             </div>
+            <div id="dialogFilters" class="flex-row" style="margin-top: 12px; display: none;">
+                <select id="dialogCityFilter"><option value="all">Все города</option></select>
+                <select id="dialogPercentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
+                <select id="dialogDateRangeSelect"><option value="all">Всё время</option><option value="today">Сегодня</option><option value="week">7 дней</option><option value="month">30 дней</option></select>
+                <input type="text" id="dialogSurnameSearch" class="search-input" placeholder="🔍 Поиск по фамилии">
+                <button id="dialogResetFiltersBtn" class="reset-btn">Сбросить фильтры</button>
+                <button id="dialogLoadBtn">Загрузить</button>
+                <button id="dialogExportCsvBtn">📎 CSV</button>
+                <button id="dialogFeedbackBtn" class="feedback-btn">📝 Фидбек для города</button>
+            </div>
             <div id="status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
-            <div id="newResultsAlert" style="display: none; margin-top: 8px; padding: 6px 12px; background: #e8f0e8; border-radius: 20px; font-size: 12px;"></div>
         </div>
     </div>
 
-    <div id="statsArea" style="display: none;">
+    <!-- Блок для теста -->
+    <div id="testArea">
         <div id="leaderCelebration" class="leader-card" style="display: none;"></div>
         <div class="kpi-grid" id="kpi"></div>
-        
         <div class="card" id="questionStatsCard">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <h3 style="margin: 0;">📊 Статистика по вопросам (ошибки)</h3>
@@ -169,28 +99,18 @@
             </div>
             <div id="topQuestionsContainer"></div>
             <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
-                <div style="overflow-x: auto;">
-                    <table class="question-stats-table" id="questionStatsTable">
-                        <thead>
-                            <tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px; background: #6c757d;">▲ Скрыть все вопросы</button>
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead><tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody></table></div>
+                <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">▲ Скрыть все вопросы</button>
             </div>
         </div>
-        
         <div class="charts-row">
             <div class="card chart-box"><h3>Распределение баллов</h3><canvas id="scoreHistogram"></canvas></div>
             <div class="card chart-box"><h3>Топ городов (средний балл)</h3><canvas id="cityChart"></canvas></div>
         </div>
-        
         <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
             <div class="card" style="flex:1"><h3>🏆 Топ сотрудников (≥85%)</h3><div id="topEmployees"></div></div>
             <div class="card" style="flex:1"><h3>🏙️ Рейтинг городов</h3><div id="cityRating"></div></div>
         </div>
-        
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <h3>📋 Сотрудники (<span id="empCount">0</span>)</h3>
@@ -199,388 +119,136 @@
             <div class="employee-list" id="employeeList"></div>
         </div>
     </div>
+
+    <!-- Блок для диалогов -->
+    <div id="dialogArea" style="display: none;">
+        <div id="dialogLeaderCelebration" class="leader-card" style="display: none;"></div>
+        <div class="kpi-grid" id="dialogKpi"></div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h3 style="margin: 0;">🎭 Проблемные шаги (ошибки)</h3>
+            </div>
+            <div id="stepsErrorContainer"></div>
+        </div>
+        <div class="charts-row">
+            <div class="card chart-box"><h3>Распределение баллов (диалоги)</h3><canvas id="dialogScoreChart"></canvas></div>
+            <div class="card chart-box"><h3>Топ городов (диалоги)</h3><canvas id="dialogCityChart"></canvas></div>
+        </div>
+        <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <div class="card" style="flex:1"><h3>🏆 Топ сотрудников (диалоги, ≥85%)</h3><div id="dialogTopEmployees"></div></div>
+            <div class="card" style="flex:1"><h3>🏙️ Рейтинг городов (диалоги)</h3><div id="dialogCityRating"></div></div>
+        </div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h3>📋 Сотрудники (диалоги) (<span id="dialogEmpCount">0</span>)</h3>
+                <button id="dialogMassDeleteBtn" style="background:#8b1a2c; display: none;">🗑 Удалить выбранных</button>
+            </div>
+            <div class="employee-list" id="dialogEmployeeList"></div>
+        </div>
+    </div>
     <div id="loadingSkeleton" class="loading-text">⏳ Загрузка данных...</div>
 </div>
 
-<div id="modal" class="modal">
-    <div class="modal-content">
-        <h3 id="modalTitle"></h3>
-        <div style="margin: 10px 0;"><label style="display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="showOnlyErrorsCheckbox"> 🔍 Показать только ошибки</label></div>
-        <div id="modalAnswers"></div>
-        <div style="margin: 10px 0;"><label style="display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="pdfOnlyErrorsCheckbox"> 📄 PDF только с ошибками</label></div>
-        <div class="modal-actions" style="display:flex; gap:8px; margin-top:15px;">
-            <button id="modalDeleteBtn" style="background:#8b1a2c;">🗑 Удалить</button>
-            <button id="modalPdfBtn" style="background:#2c6e2c;">📄 PDF</button>
-            <button onclick="closeModal()" style="background:#6c757d;">Закрыть</button>
-        </div>
-    </div>
-</div>
+<div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><div class="modal-actions" style="display:flex; gap:8px; margin-top:15px;"><button id="modalDeleteBtn" style="background:#8b1a2c;">🗑 Удалить</button><button id="modalPdfBtn" style="background:#2c6e2c;">📄 PDF</button><button onclick="closeModal()" style="background:#6c757d;">Закрыть</button></div></div></div>
 
 <script>
     const supabaseClient = supabase.createClient('https://qtostraaqrnjbxiydlip.supabase.co', 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7');
     
+    // Общие переменные
     let allResults = [], filteredResults = [], cityChart = null, scoreChart = null, currentSelectedEmployee = null, selectedForDelete = new Set();
     let previousResultsCount = 0;
     let allQuestionsData = [];
-
+    
+    // Диалоговые переменные
+    let dialogAllResults = [], dialogFilteredResults = [], dialogCityChart = null, dialogScoreChart = null, dialogCurrentSelectedEmployee = null, dialogSelectedForDelete = new Set();
+    
+    let currentTab = 'test';
+    
     function getRecommendation(text) {
         const q = text.toLowerCase();
-        
-        if (q.includes('первым') || q.includes('зрительный контакт')) {
-            return `✅ Как правильно: «Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?»
-
-❌ Чего избегать: «Чем могу помочь?» или «Если нужна помощь — обращайтесь».
-
-📌 Почему это важно:
-• Вопрос «Чем помочь?» — закрытый. Клиент ответит «Просто смотрю» и диалог не начнётся.
-• Пассивное «обращайтесь» — клиент не позовёт сам, он уйдёт.
-• Правило «Проявляй инициативу»: сразу дайте ценность (скидку) и задайте открытый вопрос о потребности. Клиент чувствует заботу, а не давление.`;
-        }
-        
-        if (q.includes('бюджет') || (q.includes('кольцо') && q.includes('рублей'))) {
-            return `✅ Как правильно: Спросить: «А для какого случая? Это подарок или для себя?»
-
-❌ Чего избегать: Показывать кольцо сразу или применять «якорь» (сначала дороже, потом дешевле).
-
-📌 Почему это важно:
-• Вы не знаете контекст: подарок это или для себя? Какой стиль предпочитает получатель?
-• Если показать сразу — можно не попасть в потребность, клиент скажет «не то» и уйдёт.
-• Правило «Задавай вопросы ДО показа»: сначала поймите ситуацию, только потом показывайте. Это экономит время клиента и повышает доверие к вам.`;
-        }
-        
-        if (q.includes('серьги') || q.includes('предложить серьги')) {
-            return `✅ Как правильно: «Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»
-
-❌ Чего избегать: «У нас есть ещё серьги, посмотрите?» или «Можно подобрать?»
-
-📌 Почему это важно:
-• Клиент покупает не просто украшение, а образ.
-• Вопрос «посмотрите?» легко получить отказ «Нет, спасибо».
-• Правило «Презентуй с эмоцией»: предложите собрать образ целиком, покажите ценность комплекта. Допродажа повышает чек без дополнительных усилий.`;
-        }
-        
-        if (q.includes('серебра') && q.includes('золото')) {
-            return `✅ Как правильно: «Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»
-
-❌ Чего избегать: «Золото лучше — оно дороже» или «У нас акция на золото».
-
-📌 Почему это важно:
-• Сравнение вживую работает лучше любого убеждения.
-• Клиент сам увидит разницу и сделает выбор.
-• Правило «Предлагай примерку»: дайте клиенту возможность сравнить, а не давите ценой. Клиент, который примерил, покупает в 3 раза чаще.`;
-        }
-        
-        if (q.includes('футляр') || q.includes('оформляет покупку')) {
-            return `✅ Как правильно: «Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»
-
-❌ Чего избегать: «Футляр нужен будет?» или «У нас есть футляры, показать?»
-
-📌 Почему это важно:
-• Вопрос «нужен будет?» провоцирует ответ «нет».
-• Презентуйте аксессуар как часть образа и заботу об украшении.
-• Правило «Не отпускай без альтернативы»: предлагайте допродажу уверенно, как естественное продолжение покупки.`;
-        }
-        
-        if (q.includes('дороговато')) {
-            return `✅ Как правильно: «Понимаю, цена важна. А с чем вы сравниваете?»
-
-❌ Чего избегать: «Так вы же золото покупаете, а не бижутерию» или «Давайте посмотрю, что подешевле».
-
-📌 Почему это важно:
-• Вы не знаете, с чем клиент сравнивает — с другим магазином, с интернетом или просто не ожидал такой цены.
-• Сразу предлагать скидку или рассрочку — ошибка. Сначала поймите причину сомнения.
-• Правило работы с возражениями: признайте чувства, задайте уточняющий вопрос, затем предлагайте решение.`;
-        }
-        
-        if (q.includes('размера нет') || q.includes('нет в наличии')) {
-            return `✅ Как правильно: «Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»
-
-❌ Чего избегать: «Можем заказать — доставка 3-5 дней» или «Приходите завтра».
-
-📌 Почему это важно:
-• «Заказать» — клиент уйдёт думать и с высокой вероятностью не вернётся.
-• Правило «Не отпускай без альтернативы»: предложите сейчас посмотреть похожие модели. Удерживайте 40-50% «потерянных» клиентов.`;
-        }
-        
-        if (q.includes('подарок маме') || q.includes('юбилей')) {
-            return `✅ Как правильно: «Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нем, глядя на ваш подарок»
-
-❌ Чего избегать: «Это кольцо из золота 585 пробы, вес 3 грамма» или «Красивое кольцо, маме понравится».
-
-📌 Почему это важно:
-• Клиент покупает эмоцию, а не граммы золота.
-• Сухие характеристики не трогают.
-• Правило «Презентуй с эмоцией (ХПВ)»: свяжите украшение с событием. Клиент запомнит не цену, а момент, который вы помогли создать.`;
-        }
-        
-        if (q.includes('другие модели')) {
-            return `✅ Как правильно: «Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»
-
-❌ Чего избегать: «Да, конечно. Какие именно?» или «Смотрите, у нас много всего».
-
-📌 Почему это важно:
-• Вопрос «Какие именно?» перекладывает работу на клиента — он может растеряться.
-• Правило «Проявляй инициативу»: предложите конкретные варианты, покажите экспертность.`;
-        }
-        
-        if (q.includes('сплит')) {
-            return `✅ Как правильно: Во время презентации, ДО озвучивания итоговой цены: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»
-
-❌ Чего избегать: Говорить о Сплите только после возражения «дорого» или на кассе.
-
-📌 Почему это важно:
-• Если сказать о рассрочке до цены — клиент видит возможность, а не проблему.
-• Правило работы с ценой: предвосхищайте возражение, делая оплату комфортной.`;
-        }
-        
-        if (q.includes('пауза') || q.includes('витрины')) {
-            return `✅ Как правильно: Ждёте 20-30 секунд, даёте клиентке освоиться, затем мягко начинаете диалог: «Какое изделие выбираете? Для себя или в подарок?»
-
-❌ Чего избегать: Сразу подходить с вопросом «Что-то присмотрели?» или ждать 5 минут.
-
-📌 Почему это важно:
-• Сразу подойти — это давление.
-• Ждать слишком долго — клиент может уйти, не дождавшись внимания.
-• Правило «Проявляй инициативу»: дайте клиенту 20-30 секунд освоиться, затем мягко начните диалог.`;
-        }
-        
-        return `❓ Разберите этот вопрос на планёрке.
-
-✅ Что нужно сделать: внимательно изучите правильный ответ.
-📌 Почему это важно: каждая ошибка — зона роста. Понимая правильный алгоритм действий, вы будете увереннее в реальных продажах.`;
+        if (q.includes('здравствуйте') && q.includes('скидка')) return '✅ Правило «Проявляй инициативу»: сразу дайте ценность (скидку) и задайте открытые вопросы.';
+        if (q.includes('с чем она планирует носить')) return '✅ Правило «Задавай вопросы ДО показа»: уточните контекст, прежде чем показывать.';
+        if (q.includes('давайте примерим')) return '✅ Правило «Предлагай примерку»: примерка снимает сомнения.';
+        if (q.includes('подобрать серьги')) return '✅ Правило «Презентуй с эмоцией»: предлагайте дополнительное украшение как часть образа.';
+        if (q.includes('сплит')) return '✅ Правило работы с ценой: говорите о Сплите ДО того, как клиент узнал цену.';
+        if (q.includes('с чем вы сравниваете')) return '✅ Правило отработки возражений: сначала выясните причину, потом предлагайте решение.';
+        if (q.includes('футляр и чистящее средство')) return '✅ Правило «Не отпускай без альтернативы»: презентуйте аксессуары без вопроса «нужно?».';
+        return '✅ Изучите правильный ответ и повторите материал.';
     }
-
-    async function loadResults() {
+    
+    async function loadTestResults() {
         document.getElementById('loadingSkeleton').style.display = 'block';
-        document.getElementById('statsArea').style.display = 'none';
-        document.getElementById('status').innerHTML = 'Загрузка...';
-
-        const { data, error } = await supabaseClient
-            .from('results_new')
-            .select('*')
-            .eq('test_slug', 'prodazhi_2025')
-            .order('created_at', { ascending: false })
-            .limit(2000);
-
+        document.getElementById('testArea').style.display = 'none';
+        document.getElementById('status').innerHTML = 'Загрузка тестов...';
+        const { data, error } = await supabaseClient.from('results_new').select('*').eq('test_slug', 'prodazhi_2025').order('created_at', { ascending: false }).limit(2000);
         document.getElementById('loadingSkeleton').style.display = 'none';
         if (error) { document.getElementById('status').innerHTML = 'Ошибка: ' + error.message; return; }
         if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; return; }
-
-        const newCount = data.length - previousResultsCount;
-        if (previousResultsCount > 0 && newCount > 0) {
-            document.getElementById('newResultsAlert').innerHTML = `🆕 +${newCount} новых результатов`;
-            document.getElementById('newResultsAlert').style.display = 'block';
-            setTimeout(() => document.getElementById('newResultsAlert').style.display = 'none', 5000);
-        }
         previousResultsCount = data.length;
         allResults = data;
-        
         const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
         const citySelect = document.getElementById('cityFilter');
-        const currentCity = citySelect.value;
-        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}" ${currentCity === c ? 'selected' : ''}>${c}</option>`).join('');
-        
+        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
         applyFilters();
-        document.getElementById('statsArea').style.display = 'block';
+        document.getElementById('testArea').style.display = 'block';
         document.getElementById('status').innerHTML = `✅ ${allResults.length} записей`;
     }
-
+    
+    async function loadDialogResults() {
+        document.getElementById('loadingSkeleton').style.display = 'block';
+        document.getElementById('dialogArea').style.display = 'none';
+        document.getElementById('status').innerHTML = 'Загрузка диалогов...';
+        const { data, error } = await supabaseClient.from('dialog_results').select('*').order('created_at', { ascending: false }).limit(2000);
+        document.getElementById('loadingSkeleton').style.display = 'none';
+        if (error) { document.getElementById('status').innerHTML = 'Ошибка: ' + error.message; return; }
+        if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов диалогов'; return; }
+        dialogAllResults = data;
+        const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
+        const citySelect = document.getElementById('dialogCityFilter');
+        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+        applyDialogFilters();
+        document.getElementById('dialogArea').style.display = 'block';
+        document.getElementById('status').innerHTML = `✅ ${dialogAllResults.length} записей диалогов`;
+    }
+    
     function applyFilters() {
         let filtered = [...allResults];
         const city = document.getElementById('cityFilter').value;
         if (city !== 'all') filtered = filtered.filter(r => r.city === city);
-        
         const percent = document.getElementById('percentFilter').value;
         if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
         else if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
         else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
-        
         const range = document.getElementById('dateRangeSelect').value;
         const now = new Date();
         if (range === 'today') filtered = filtered.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
         else if (range === 'week') { const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7); filtered = filtered.filter(r => new Date(r.created_at) >= weekAgo); }
         else if (range === 'month') { const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30); filtered = filtered.filter(r => new Date(r.created_at) >= monthAgo); }
-        
         const surname = document.getElementById('surnameSearch').value.toLowerCase().trim();
-        if (surname) {
-            filtered = filtered.filter(r => {
-                const name = r.user_name.toLowerCase();
-                const spaceIdx = name.lastIndexOf(' ');
-                const lastName = spaceIdx !== -1 ? name.substring(spaceIdx + 1) : name;
-                return lastName.includes(surname) || name.includes(surname);
-            });
-        }
-        
+        if (surname) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(surname));
         filteredResults = filtered;
         renderDashboard();
     }
-
-    function resetFilters() {
-        document.getElementById('cityFilter').value = 'all';
-        document.getElementById('percentFilter').value = 'all';
-        document.getElementById('dateRangeSelect').value = 'all';
-        document.getElementById('surnameSearch').value = '';
-        applyFilters();
+    
+    function applyDialogFilters() {
+        let filtered = [...dialogAllResults];
+        const city = document.getElementById('dialogCityFilter').value;
+        if (city !== 'all') filtered = filtered.filter(r => r.city === city);
+        const percent = document.getElementById('dialogPercentFilter').value;
+        if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
+        else if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
+        else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
+        const range = document.getElementById('dialogDateRangeSelect').value;
+        const now = new Date();
+        if (range === 'today') filtered = filtered.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
+        else if (range === 'week') { const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7); filtered = filtered.filter(r => new Date(r.created_at) >= weekAgo); }
+        else if (range === 'month') { const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30); filtered = filtered.filter(r => new Date(r.created_at) >= monthAgo); }
+        const surname = document.getElementById('dialogSurnameSearch').value.toLowerCase().trim();
+        if (surname) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(surname));
+        dialogFilteredResults = filtered;
+        renderDialogDashboard();
     }
-
-    function renderTopQuestions(questionStats) {
-        const container = document.getElementById('topQuestionsContainer');
-        if (!container) return;
-        
-        if (!questionStats || questionStats.length === 0) {
-            container.innerHTML = '<div style="padding: 12px; text-align: center; color: #666;">Нет данных</div>';
-            return;
-        }
-        
-        // Берём топ-3 по проценту ошибок
-        const top3 = [...questionStats].sort((a,b) => b.percent - a.percent).slice(0,3);
-        
-        let html = '<div style="margin-top: 12px;">';
-        top3.forEach((q, idx) => {
-            html += `
-                <div style="background: #f8f9fa; border-radius: 12px; padding: 12px; margin-bottom: 10px; border-left: 4px solid ${q.percent > 50 ? '#c41e3a' : '#2c6e2c'};">
-                    <div style="font-weight: bold; margin-bottom: 6px;">🔥 ${idx+1}. ${q.text.substring(0, 100)}${q.text.length > 100 ? '…' : ''}</div>
-                    <div style="display: flex; gap: 15px; font-size: 12px;">
-                        <span>❌ Ошибок: ${q.errors}/${q.total}</span>
-                        <span>📊 ${q.percent}%</span>
-                    </div>
-                </div>
-            `;
-        });
-        html += '</div>';
-        container.innerHTML = html;
-    }
-
-    function renderFullTable(questionStats) {
-        const tbody = document.querySelector('#questionStatsTable tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        
-        questionStats.forEach((q, i) => {
-            const row = tbody.insertRow();
-            
-            let questionHtml = `<b>${i+1}.</b> ${q.text}`;
-            
-            if (filteredResults.length > 0 && filteredResults[0].answers && filteredResults[0].answers[i]) {
-                const answerData = filteredResults[0].answers[i];
-                if (answerData.options && answerData.options.length) {
-                    const optionsText = answerData.options.map((opt, optIdx) => {
-                        const letter = String.fromCharCode(65 + optIdx);
-                        return `${letter}) ${opt}`;
-                    }).join('<br>');
-                    questionHtml += `<div class="question-options">📌 <b>Варианты:</b><br>${optionsText}</div>`;
-                }
-            }
-            
-            if (q.correctAnswer) {
-                questionHtml += `<div class="correct-answer">✅ <b>Правильный ответ:</b> ${q.correctAnswer}</div>`;
-            }
-            
-            row.insertCell(0).innerHTML = questionHtml;
-            row.insertCell(1).innerHTML = `<span style="color:${q.percent>50?'#c41e3a':'#2c6e2c'}">${q.errors}/${q.total}</span>`;
-            row.insertCell(2).innerHTML = `<span style="color:${q.percent>50?'#c41e3a':'#2c6e2c'}">${q.percent}%</span>`;
-        });
-    }
-
-    function renderQuestionStats() {
-        if (!filteredResults.length) return;
-        
-        const questionStats = [];
-        filteredResults.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    if (!questionStats[idx]) {
-                        questionStats[idx] = { 
-                            total: 0, 
-                            errors: 0, 
-                            text: a.questionText,
-                            correctAnswer: a.correctText || '',
-                            percent: 0
-                        };
-                    }
-                    questionStats[idx].total++;
-                    if (!a.correct) questionStats[idx].errors++;
-                });
-            }
-        });
-        
-        // Вычисляем проценты
-        questionStats.forEach(q => {
-            q.percent = Math.round((q.errors / q.total) * 100);
-        });
-        
-        allQuestionsData = questionStats;
-        
-        // Показываем топ-3
-        renderTopQuestions(questionStats);
-        
-        // Заполняем полную таблицу (но она скрыта)
-        renderFullTable(questionStats);
-    }
-
-    function generateCityFeedback() {
-        const city = document.getElementById('cityFilter').value;
-        if (city === 'all') {
-            alert('Выберите конкретный город (не "Все города")');
-            return;
-        }
-        
-        const cityResults = filteredResults;
-        if (!cityResults.length) {
-            alert('Нет данных по этому городу');
-            return;
-        }
-        
-        const total = cityResults.length;
-        const avgPercent = Math.round(cityResults.reduce((s,r) => s + r.percent, 0) / total);
-        
-        const questionErrorsMap = new Map();
-        cityResults.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    if (!a.correct) {
-                        if (!questionErrorsMap.has(idx)) {
-                            questionErrorsMap.set(idx, {
-                                text: a.questionText,
-                                correctAnswer: a.correctText,
-                                count: 0
-                            });
-                        }
-                        questionErrorsMap.get(idx).count++;
-                    }
-                });
-            }
-        });
-        
-        if (questionErrorsMap.size === 0) {
-            alert(`В городе ${city} нет ошибок. Все сотрудники ответили правильно!`);
-            return;
-        }
-        
-        const sortedErrors = [...questionErrorsMap.entries()].sort((a,b) => b[1].count - a[1].count);
-        
-        let feedback = `📊 Анализ результатов: город ${city}\n`;
-        feedback += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-        feedback += `👥 Сотрудников: ${total}\n`;
-        feedback += `📈 Средний балл: ${avgPercent}%\n\n`;
-        
-        feedback += `⚠️ Частые ошибки и рекомендации:\n`;
-        feedback += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-        
-        sortedErrors.forEach(([idx, err], order) => {
-            feedback += `${order+1}. Вопрос: ${err.text}\n`;
-            feedback += `   ❌ Ошиблись: ${err.count} из ${total} сотрудников\n`;
-            feedback += `   ✅ Правильный ответ: ${err.correctAnswer}\n`;
-            feedback += `   📌 Рекомендация:\n   ${getRecommendation(err.text).replace(/\n/g, '\n   ')}\n\n`;
-        });
-        
-        navigator.clipboard.writeText(feedback).then(() => {
-            alert(`Фидбек для города ${city} скопирован в буфер обмена. Вставьте в чат или документ.`);
-        }).catch(() => {
-            alert(`Не удалось скопировать. Вот текст:\n\n${feedback}`);
-        });
-    }
-
+    
     function renderDashboard() {
         const total = filteredResults.length;
         if (!total) { 
@@ -591,208 +259,153 @@
             document.getElementById('empCount').innerText = '0';
             return;
         }
-        
         const avg = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
         const success = filteredResults.filter(r=>r.percent>=85).length;
         const errors = filteredResults.reduce((s,r)=>s+(r.total-r.score),0);
-        document.getElementById('kpi').innerHTML = `
-            <div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div>
-            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div>
-            <div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div>
-            <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>
-        `;
-
-        renderQuestionStats();
-
+        document.getElementById('kpi').innerHTML = `<div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div><div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div><div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div><div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>`;
+        
         const top5 = [...filteredResults].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
-        document.getElementById('topEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id})"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет сотрудников с результатом ≥85%';
-
+        document.getElementById('topEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id}, 'test')"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет';
+        
         const cityMap = new Map();
-        filteredResults.forEach(r => {
-            if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0 });
-            const c = cityMap.get(r.city);
-            c.count++;
-            c.sumPercent += r.percent;
-        });
+        filteredResults.forEach(r => { if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0 }); const c = cityMap.get(r.city); c.count++; c.sumPercent += r.percent; });
         const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, count: data.count, avg: Math.round(data.sumPercent / data.count) })).sort((a,b) => b.avg - a.avg);
-        document.getElementById('cityRating').innerHTML = cityRating.map(c => `
-            <div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();">
-                <span><b>${c.city}</b> (${c.count} чел.)</span>
-                <span class="badge">${c.avg}%</span>
-            </div>
-        `).join('');
-
+        document.getElementById('cityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
+        
         const leader = [...filteredResults].sort((a,b)=>b.percent-a.percent)[0];
-        const leaderDiv = document.getElementById('leaderCelebration');
-        if(leader) leaderDiv.innerHTML = `🏆 Лучший сотрудник: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}%`;
-        leaderDiv.style.display = 'block';
-
+        if(leader) document.getElementById('leaderCelebration').innerHTML = `🏆 Лучший сотрудник: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}%`;
+        
         selectedForDelete.clear();
         document.getElementById('empCount').innerText = filteredResults.length;
-        document.getElementById('employeeList').innerHTML = filteredResults.map(r=>`
-            <div class="employee-item">
-                <div class="checkbox-col"><input type="checkbox" class="emp-checkbox" data-id="${r.id}"></div>
-                <div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id})"><b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span></div>
-                <div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white; cursor:pointer;" onclick="deleteEmployee(event, ${r.id})">🗑</button></div>
-            </div>
-        `).join('');
-        
+        document.getElementById('employeeList').innerHTML = filteredResults.map(r=>`<div class="employee-item"><div class="checkbox-col"><input type="checkbox" class="emp-checkbox" data-id="${r.id}"></div><div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id}, 'test')"><b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span></div><div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white; cursor:pointer;" onclick="deleteEmployee(event, ${r.id}, 'test')">🗑</button></div></div>`).join('');
         document.querySelectorAll('.emp-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) selectedForDelete.add(e.target.dataset.id); else selectedForDelete.delete(e.target.dataset.id); });
         document.getElementById('massDeleteBtn').style.display = filteredResults.length ? 'inline-block' : 'none';
-
-        setTimeout(() => {
-            const bins = [0,0,0,0,0];
-            filteredResults.forEach(r => {
-                if (r.percent <= 20) bins[0]++;
-                else if (r.percent <= 40) bins[1]++;
-                else if (r.percent <= 60) bins[2]++;
-                else if (r.percent <= 80) bins[3]++;
-                else bins[4]++;
-            });
-            if (scoreChart) scoreChart.destroy();
-            scoreChart = new Chart(document.getElementById('scoreHistogram'), { 
-                type: 'bar', 
-                data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, 
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw} чел.` } } }, animation: { duration: 0 } }
-            });
-            
-            const topCities = cityRating.slice(0,6);
-            if (cityChart) cityChart.destroy();
-            cityChart = new Chart(document.getElementById('cityChart'), { 
-                type: 'bar', 
-                data: { labels: topCities.map(c => c.city), datasets: [{ data: topCities.map(c => c.avg), backgroundColor: '#c41e3a' }] }, 
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } }, animation: { duration: 0 } }
-            });
-        }, 50);
-    }
-
-    async function deleteEmployee(e, id) { e.stopPropagation(); if(confirm('Удалить результаты этого сотрудника?')){ await supabaseClient.from('results_new').delete().eq('id', id); await loadResults(); } }
-    async function massDelete() { if(selectedForDelete.size && confirm(`Удалить ${selectedForDelete.size} записей?`)){ for(let id of selectedForDelete) await supabaseClient.from('results_new').delete().eq('id', id); await loadResults(); } }
-    
-    async function showEmployeeDetails(id) { 
-        currentSelectedEmployee = filteredResults.find(r => r.id == id); 
-        if(!currentSelectedEmployee) return; 
-        const showOnlyErrors = document.getElementById('showOnlyErrorsCheckbox').checked;
-        updateModalAnswers(showOnlyErrors);
-        document.getElementById('modal').style.display = 'flex'; 
+        
+        if (scoreChart) scoreChart.destroy();
+        const bins = [0,0,0,0,0];
+        filteredResults.forEach(r => { if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++; });
+        scoreChart = new Chart(document.getElementById('scoreHistogram'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw} чел.` } } }, animation: { duration: 0 } } });
+        if (cityChart) cityChart.destroy();
+        cityChart = new Chart(document.getElementById('cityChart'), { type: 'bar', data: { labels: cityRating.map(c => c.city), datasets: [{ data: cityRating.map(c => c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } }, animation: { duration: 0 } } });
     }
     
-    function updateModalAnswers(showOnlyErrors) {
-        if(!currentSelectedEmployee) return;
-        document.getElementById('modalTitle').innerHTML = `${currentSelectedEmployee.user_name} (${currentSelectedEmployee.city}) — ${currentSelectedEmployee.percent}%`;
-        let html = `<p>✅ Правильных ответов: ${currentSelectedEmployee.score}/${currentSelectedEmployee.total}</p>`;
-        let hasDisplayed = false;
-        if (currentSelectedEmployee.answers) {
-            currentSelectedEmployee.answers.forEach((a,i) => {
-                if(showOnlyErrors && a.correct) return;
-                hasDisplayed = true;
-                html += `<div class="answer-item ${a.correct ? 'answer-correct' : 'answer-wrong'}">
-                            <b>${i+1}. ${a.questionText}</b><br>
-                            <b>Ваш ответ:</b> ${a.selectedText}<br>
-                            ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation recommendation-text">${getRecommendation(a.questionText)}</div>` : ''}
+    function renderDialogDashboard() {
+        const total = dialogFilteredResults.length;
+        if (!total) {
+            document.getElementById('dialogKpi').innerHTML = '<div class="kpi-card">Нет данных</div>';
+            document.getElementById('dialogTopEmployees').innerHTML = 'Нет данных';
+            document.getElementById('dialogCityRating').innerHTML = 'Нет данных';
+            document.getElementById('dialogEmployeeList').innerHTML = '';
+            document.getElementById('dialogEmpCount').innerText = '0';
+            document.getElementById('stepsErrorContainer').innerHTML = '';
+            return;
+        }
+        const avg = Math.round(dialogFilteredResults.reduce((s,r)=>s+r.percent,0)/total);
+        const success = dialogFilteredResults.filter(r=>r.percent>=85).length;
+        const errors = dialogFilteredResults.reduce((s,r)=>s+(r.total-r.score),0);
+        document.getElementById('dialogKpi').innerHTML = `<div class="kpi-card"><div class="kpi-value">${total}</div><div>Диалогов</div></div><div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div><div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div><div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>`;
+        
+        // Проблемные шаги
+        const stepErrors = new Array(8).fill().map((_,i) => ({ total: 0, errors: 0, index: i }));
+        dialogFilteredResults.forEach(r => {
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    stepErrors[idx].total++;
+                    if (!a.correct) stepErrors[idx].errors++;
+                });
+            }
+        });
+        const sortedSteps = [...stepErrors].sort((a,b) => (b.errors/b.total||0) - (a.errors/a.total||0)).slice(0,5);
+        document.getElementById('stepsErrorContainer').innerHTML = `<div style="background:#f8f9fa; border-radius:12px; padding:12px;">${sortedSteps.map(s => `<div style="margin-bottom:8px;"><strong>Шаг ${s.index+1}</strong> — ошиблись ${s.errors} из ${s.total} (${Math.round(s.errors/s.total*100)}%)</div>`).join('')}</div>`;
+        
+        const top5 = [...dialogFilteredResults].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
+        document.getElementById('dialogTopEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id}, 'dialog')"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет';
+        
+        const cityMap = new Map();
+        dialogFilteredResults.forEach(r => { if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0 }); const c = cityMap.get(r.city); c.count++; c.sumPercent += r.percent; });
+        const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, count: data.count, avg: Math.round(data.sumPercent / data.count) })).sort((a,b) => b.avg - a.avg);
+        document.getElementById('dialogCityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('dialogCityFilter').value='${c.city}'; applyDialogFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
+        
+        dialogSelectedForDelete.clear();
+        document.getElementById('dialogEmpCount').innerText = dialogFilteredResults.length;
+        document.getElementById('dialogEmployeeList').innerHTML = dialogFilteredResults.map(r=>`<div class="employee-item"><div class="checkbox-col"><input type="checkbox" class="dialog-checkbox" data-id="${r.id}"></div><div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id}, 'dialog')"><b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span></div><div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white; cursor:pointer;" onclick="deleteEmployee(event, ${r.id}, 'dialog')">🗑</button></div></div>`).join('');
+        document.querySelectorAll('.dialog-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) dialogSelectedForDelete.add(e.target.dataset.id); else dialogSelectedForDelete.delete(e.target.dataset.id); });
+        document.getElementById('dialogMassDeleteBtn').style.display = dialogFilteredResults.length ? 'inline-block' : 'none';
+        
+        if (dialogScoreChart) dialogScoreChart.destroy();
+        const bins = [0,0,0,0,0];
+        dialogFilteredResults.forEach(r => { if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++; });
+        dialogScoreChart = new Chart(document.getElementById('dialogScoreChart'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw} чел.` } } }, animation: { duration: 0 } } });
+        if (dialogCityChart) dialogCityChart.destroy();
+        dialogCityChart = new Chart(document.getElementById('dialogCityChart'), { type: 'bar', data: { labels: cityRating.map(c => c.city), datasets: [{ data: cityRating.map(c => c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } }, animation: { duration: 0 } } });
+    }
+    
+    async function showEmployeeDetails(id, type) {
+        let emp;
+        if (type === 'test') emp = filteredResults.find(r => r.id == id);
+        else emp = dialogFilteredResults.find(r => r.id == id);
+        if (!emp) return;
+        document.getElementById('modalTitle').innerHTML = `${emp.user_name} (${emp.city}) — ${emp.percent}%`;
+        let html = `<p>✅ Правильных ответов: ${emp.score}/${emp.total}</p>`;
+        if (emp.answers) {
+            emp.answers.forEach((a,i) => {
+                const isCorrect = a.correct;
+                html += `<div class="answer-item ${isCorrect ? 'answer-correct' : 'answer-wrong'}">
+                            <b>${type === 'test' ? 'Вопрос' : 'Шаг'} ${i+1}:</b> ${a.questionText}<br>
+                            <b>Ответ сотрудника:</b> ${a.selectedText}<br>
+                            ${!isCorrect ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.correctText)}</div>` : ''}
                          </div>`;
             });
         }
-        if(showOnlyErrors && !hasDisplayed) html += '<div style="padding:20px;text-align:center">✅ Нет ошибок! Все ответы верные.</div>';
         document.getElementById('modalAnswers').innerHTML = html;
+        document.getElementById('modal').style.display = 'flex';
     }
     
-    function exportEmployeePDF() { 
-        if(!currentSelectedEmployee) return; 
-        const onlyErrors = document.getElementById('pdfOnlyErrorsCheckbox').checked;
-        const e = currentSelectedEmployee; 
-        let html = `<html><head><meta charset="UTF-8"><title>Отчёт ${e.user_name}</title>
-                    <style>body{font-family:Segoe UI;padding:20px;} .answer{margin-bottom:15px;padding:8px;border-left:4px solid #ddd;} .correct{border-left-color:#28a745;} .wrong{border-left-color:#c41e3a;} .recommendation{background:#e8f0e8;padding:8px;margin-top:8px;border-radius:8px;white-space:pre-line;}</style>
-                    </head><body><h1>585GOLD | Отчёт по тесту</h1>
-                    <p><strong>Сотрудник:</strong> ${e.user_name}</p>
-                    <p><strong>Город:</strong> ${e.city}</p>
-                    <p><strong>Дата:</strong> ${new Date(e.created_at).toLocaleString()}</p>
-                    <p><strong>Результат:</strong> ${e.percent}% (${e.score}/${e.total} правильных)</p>
-                    ${onlyErrors ? '<p><strong>📌 Показаны только вопросы с ошибками</strong></p>' : ''}<hr>`;
-        let hasDisplayed = false;
-        if (e.answers) {
-            e.answers.forEach((a,i) => {
-                if(onlyErrors && a.correct) return;
-                hasDisplayed = true;
-                html += `<div class="answer ${a.correct ? 'correct' : 'wrong'}">
-                            <b>${i+1}. ${a.questionText}</b><br>
-                            <b>Ваш ответ:</b> ${a.selectedText}<br>
-                            ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.questionText)}</div>` : ''}
-                         </div>`;
-            });
-        }
-        if(onlyErrors && !hasDisplayed) html += '<div>✅ Нет ошибок! Все ответы верные.</div>';
-        html += `</body></html>`;
-        const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print(); 
+    async function deleteEmployee(e, id, type) {
+        e.stopPropagation();
+        if (!confirm('Удалить результаты?')) return;
+        if (type === 'test') await supabaseClient.from('results_new').delete().eq('id', id);
+        else await supabaseClient.from('dialog_results').delete().eq('id', id);
+        if (type === 'test') await loadTestResults();
+        else await loadDialogResults();
+        if (currentTab === 'test') { if (type === 'test') applyFilters(); else applyDialogFilters(); }
+        else { if (type === 'dialog') applyDialogFilters(); else applyFilters(); }
     }
     
-    function exportDashboardPDF() {
-        const printContent = document.getElementById('statsArea').cloneNode(true);
-        const title = document.createElement('h1');
-        title.innerText = '585GOLD | Дашборд тестов';
-        title.style.color = '#c41e3a';
-        title.style.textAlign = 'center';
-        const date = document.createElement('p');
-        date.innerText = `Дата отчёта: ${new Date().toLocaleString()}`;
-        date.style.textAlign = 'center';
-        const container = document.createElement('div');
-        container.appendChild(title);
-        container.appendChild(date);
-        container.appendChild(printContent);
-        const originalTitle = document.title;
-        document.title = '585GOLD_Dashboard';
-        const win = window.open('', '_blank');
-        win.document.write('<html><head><meta charset="UTF-8"><title>585GOLD Дашборд</title><style>' + 
-            'body{font-family:Segoe UI;padding:20px;} .card{border:1px solid #ddd;border-radius:16px;padding:15px;margin-bottom:15px;} ' +
-            '.kpi-grid{display:flex;gap:15px;} .kpi-card{background:#f8f9fa;padding:10px;border-radius:12px;text-align:center;} ' +
-            '.kpi-value{font-size:28px;font-weight:bold;color:#c41e3a;} .badge{background:#c41e3a;color:white;padding:2px 8px;border-radius:20px;}' +
-            '.employee-item,.city-row{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee;} ' +
-            'canvas{max-width:100%;height:auto;} .charts-row{display:flex;gap:15px;} .chart-box{flex:1;}' +
-            '@media print{body{margin:0;padding:0;}}' +
-            '</style></head><body>');
-        win.document.write(container.innerHTML);
-        win.document.write('</body></html>');
-        win.document.close();
-        win.print();
-        document.title = originalTitle;
-    }
-    
-    function exportCSV() { if(!filteredResults.length) return alert('Нет данных'); let csv = "Имя,Город,Правильных,Всего,Процент,Дата\n"; filteredResults.forEach(r => csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent},"${new Date(r.created_at).toLocaleDateString()}"\n`); const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `test_results_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
-    function closeModal() { document.getElementById('modal').style.display = 'none'; currentSelectedEmployee = null; }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
     function initTheme() { if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark'); }
     function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); }
-
-    document.getElementById('loadBtn').onclick = loadResults;
-    document.getElementById('exportCsvBtn').onclick = exportCSV;
-    document.getElementById('cityFilter').onchange = applyFilters;
-    document.getElementById('percentFilter').onchange = applyFilters;
-    document.getElementById('dateRangeSelect').onchange = applyFilters;
-    document.getElementById('surnameSearch').oninput = applyFilters;
-    document.getElementById('resetFiltersBtn').onclick = resetFilters;
-    document.getElementById('massDeleteBtn').onclick = massDelete;
-    document.getElementById('modalDeleteBtn').onclick = async () => { if(currentSelectedEmployee && confirm('Удалить?')){ await supabaseClient.from('results_new').delete().eq('id', currentSelectedEmployee.id); await loadResults(); closeModal(); } };
-    document.getElementById('modalPdfBtn').onclick = exportEmployeePDF;
+    
+    function switchTab(tab) {
+        currentTab = tab;
+        if (tab === 'test') {
+            document.getElementById('testArea').style.display = 'block';
+            document.getElementById('dialogArea').style.display = 'none';
+            document.getElementById('testFilters').style.display = 'flex';
+            document.getElementById('dialogFilters').style.display = 'none';
+            document.getElementById('tabTestBtn').classList.add('active');
+            document.getElementById('tabDialogBtn').classList.remove('active');
+        } else {
+            document.getElementById('testArea').style.display = 'none';
+            document.getElementById('dialogArea').style.display = 'block';
+            document.getElementById('testFilters').style.display = 'none';
+            document.getElementById('dialogFilters').style.display = 'flex';
+            document.getElementById('tabTestBtn').classList.remove('active');
+            document.getElementById('tabDialogBtn').classList.add('active');
+        }
+    }
+    
+    document.getElementById('tabTestBtn').onclick = () => switchTab('test');
+    document.getElementById('tabDialogBtn').onclick = () => switchTab('dialog');
+    document.getElementById('loadBtn').onclick = loadTestResults;
+    document.getElementById('dialogLoadBtn').onclick = loadDialogResults;
+    document.getElementById('resetFiltersBtn').onclick = () => { document.getElementById('cityFilter').value = 'all'; document.getElementById('percentFilter').value = 'all'; document.getElementById('dateRangeSelect').value = 'all'; document.getElementById('surnameSearch').value = ''; applyFilters(); };
+    document.getElementById('dialogResetFiltersBtn').onclick = () => { document.getElementById('dialogCityFilter').value = 'all'; document.getElementById('dialogPercentFilter').value = 'all'; document.getElementById('dialogDateRangeSelect').value = 'all'; document.getElementById('dialogSurnameSearch').value = ''; applyDialogFilters(); };
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
-    document.getElementById('printDashboardBtn').onclick = exportDashboardPDF;
-    document.getElementById('showOnlyErrorsCheckbox').onchange = (e) => updateModalAnswers(e.target.checked);
-    document.getElementById('feedbackBtn').onclick = generateCityFeedback;
     
-    // Кнопки для статистики по вопросам
-    document.getElementById('toggleAllQuestionsBtn').onclick = () => {
-        document.getElementById('topQuestionsContainer').style.display = 'none';
-        document.getElementById('allQuestionsContainer').style.display = 'block';
-    };
-    document.getElementById('hideAllQuestionsBtn').onclick = () => {
-        document.getElementById('allQuestionsContainer').style.display = 'none';
-        document.getElementById('topQuestionsContainer').style.display = 'block';
-    };
-    
-    window.showEmployeeDetails = showEmployeeDetails;
-    window.closeModal = closeModal;
-    window.deleteEmployee = deleteEmployee;
-
     initTheme();
-    loadResults();
+    loadTestResults();
+    loadDialogResults();
 </script>
 </body>
 </html>
