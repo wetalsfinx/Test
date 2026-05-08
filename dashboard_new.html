@@ -68,21 +68,21 @@
                 <select id="cityFilter"><option value="all">Все города</option></select>
                 <select id="percentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
                 <select id="dateRangeSelect"><option value="all">Всё время</option><option value="today">Сегодня</option><option value="week">7 дней</option><option value="month">30 дней</option></select>
-                <input type="text" id="surnameSearch" class="search-input" placeholder="🔍 Поиск по фамилии">
+                <input type="text" id="surnameSearch" class="search-input" placeholder="Поиск по фамилии">
                 <button id="resetFiltersBtn" class="reset-btn">Сбросить фильтры</button>
                 <button id="loadBtn">Загрузить</button>
-                <button id="exportCsvBtn">📎 CSV</button>
-                <button id="feedbackBtn" class="feedback-btn">📝 Фидбек для города</button>
+                <button id="exportCsvBtn">CSV</button>
+                <button id="feedbackBtn" class="feedback-btn">Фидбек для города</button>
             </div>
             <div id="dialogFilters" class="flex-row" style="margin-top: 12px; display: none;">
                 <select id="dialogCityFilter"><option value="all">Все города</option></select>
                 <select id="dialogPercentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
                 <select id="dialogDateRangeSelect"><option value="all">Всё время</option><option value="today">Сегодня</option><option value="week">7 дней</option><option value="month">30 дней</option></select>
-                <input type="text" id="dialogSurnameSearch" class="search-input" placeholder="🔍 Поиск по фамилии">
+                <input type="text" id="dialogSurnameSearch" class="search-input" placeholder="Поиск по фамилии">
                 <button id="dialogResetFiltersBtn" class="reset-btn">Сбросить фильтры</button>
                 <button id="dialogLoadBtn">Загрузить</button>
-                <button id="dialogExportCsvBtn">📎 CSV</button>
-                <button id="dialogFeedbackBtn" class="feedback-btn">📝 Фидбек для города</button>
+                <button id="dialogExportCsvBtn">CSV</button>
+                <button id="dialogFeedbackBtn" class="feedback-btn">Фидбек для города</button>
             </div>
             <div id="status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
         </div>
@@ -94,13 +94,13 @@
         <div class="kpi-grid" id="kpi"></div>
         <div class="card" id="questionStatsCard">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                <h3 style="margin: 0;">📊 Статистика по вопросам (ошибки)</h3>
-                <button id="toggleAllQuestionsBtn" class="show-all-btn">📋 Показать все вопросы</button>
+                <h3 style="margin: 0;">Статистика по вопросам (ошибки)</h3>
+                <button id="toggleAllQuestionsBtn" class="show-all-btn">Показать все вопросы</button>
             </div>
             <div id="topQuestionsContainer"></div>
             <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
-                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody>能得到</div>
-                <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">▲ Скрыть все вопросы</button>
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead><tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody></table></div>
+                <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">Скрыть все вопросы</button>
             </div>
         </div>
         <div class="charts-row">
@@ -108,13 +108,13 @@
             <div class="card chart-box"><h3>Топ городов (средний балл)</h3><canvas id="cityChart"></canvas></div>
         </div>
         <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
-            <div class="card" style="flex:1"><h3>🏆 Топ сотрудников (≥85%)</h3><div id="topEmployees"></div></div>
-            <div class="card" style="flex:1"><h3>🏙️ Рейтинг городов</h3><div id="cityRating"></div></div>
+            <div class="card" style="flex:1"><h3>Топ сотрудников (≥85%)</h3><div id="topEmployees"></div></div>
+            <div class="card" style="flex:1"><h3>Рейтинг городов</h3><div id="cityRating"></div></div>
         </div>
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                <h3>📋 Сотрудники (<span id="empCount">0</span>)</h3>
-                <button id="massDeleteBtn" style="background:#8b1a2c; display: none;">🗑 Удалить выбранных</button>
+                <h3>Сотрудники (<span id="empCount">0</span>)</h3>
+                <button id="massDeleteBtn" style="background:#8b1a2c; display: none;">Удалить выбранных</button>
             </div>
             <div class="employee-list" id="employeeList"></div>
         </div>
@@ -126,7 +126,7 @@
         <div class="kpi-grid" id="dialogKpi"></div>
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                <h3 style="margin: 0;">🎭 Проблемные шаги (ошибки)</h3>
+                <h3 style="margin: 0;">Проблемные шаги (ошибки)</h3>
             </div>
             <div id="stepsErrorContainer"></div>
         </div>
@@ -135,43 +135,39 @@
             <div class="card chart-box"><h3>Топ городов (диалоги)</h3><canvas id="dialogCityChart"></canvas></div>
         </div>
         <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
-            <div class="card" style="flex:1"><h3>🏆 Топ сотрудников (диалоги, ≥85%)</h3><div id="dialogTopEmployees"></div></div>
-            <div class="card" style="flex:1"><h3>🏙️ Рейтинг городов (диалоги)</h3><div id="dialogCityRating"></div></div>
+            <div class="card" style="flex:1"><h3>Топ сотрудников (диалоги, ≥85%)</h3><div id="dialogTopEmployees"></div></div>
+            <div class="card" style="flex:1"><h3>Рейтинг городов (диалоги)</h3><div id="dialogCityRating"></div></div>
         </div>
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-                <h3>📋 Сотрудники (диалоги) (<span id="dialogEmpCount">0</span>)</h3>
-                <button id="dialogMassDeleteBtn" style="background:#8b1a2c; display: none;">🗑 Удалить выбранных</button>
+                <h3>Сотрудники (диалоги) (<span id="dialogEmpCount">0</span>)</h3>
+                <button id="dialogMassDeleteBtn" style="background:#8b1a2c; display: none;">Удалить выбранных</button>
             </div>
             <div class="employee-list" id="dialogEmployeeList"></div>
         </div>
     </div>
-    <div id="loadingSkeleton" class="loading-text">⏳ Загрузка данных...</div>
+    <div id="loadingSkeleton" class="loading-text">Загрузка данных...</div>
 </div>
 
-<div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><div class="modal-actions" style="display:flex; gap:8px; margin-top:15px;"><button id="modalDeleteBtn" style="background:#8b1a2c;">🗑 Удалить</button><button id="modalPdfBtn" style="background:#2c6e2c;">📄 PDF</button><button onclick="closeModal()" style="background:#6c757d;">Закрыть</button></div></div></div>
+<div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><div class="modal-actions" style="display:flex; gap:8px; margin-top:15px;"><button id="modalDeleteBtn" style="background:#8b1a2c;">Удалить</button><button id="modalPdfBtn" style="background:#2c6e2c;">PDF</button><button onclick="closeModal()" style="background:#6c757d;">Закрыть</button></div></div></div>
 
 <script>
     const supabaseClient = supabase.createClient('https://qtostraaqrnjbxiydlip.supabase.co', 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7');
     
-    let allResults = [], filteredResults = [], cityChart = null, scoreChart = null, currentSelectedEmployee = null, selectedForDelete = new Set();
-    let previousResultsCount = 0;
-    let allQuestionsData = [];
-    
+    let allResults = [], filteredResults = [], cityChart = null, scoreChart = null, selectedForDelete = new Set();
     let dialogAllResults = [], dialogFilteredResults = [], dialogCityChart = null, dialogScoreChart = null;
-    
     let currentTab = 'test';
     
     function getRecommendation(text) {
         const q = text.toLowerCase();
-        if (q.includes('здравствуйте') && q.includes('скидка')) return '✅ Правило «Проявляй инициативу»: сразу дайте ценность (скидку) и задайте открытые вопросы.';
-        if (q.includes('с чем она планирует носить')) return '✅ Правило «Задавай вопросы ДО показа»: уточните контекст, прежде чем показывать.';
-        if (q.includes('давайте примерим')) return '✅ Правило «Предлагай примерку»: примерка снимает сомнения.';
-        if (q.includes('подобрать серьги')) return '✅ Правило «Презентуй с эмоцией»: предлагайте дополнительное украшение как часть образа.';
-        if (q.includes('сплит')) return '✅ Правило работы с ценой: говорите о Сплите ДО того, как клиент узнал цену.';
-        if (q.includes('с чем вы сравниваете')) return '✅ Правило отработки возражений: сначала выясните причину, потом предлагайте решение.';
-        if (q.includes('футляр и чистящее средство')) return '✅ Правило «Не отпускай без альтернативы»: презентуйте аксессуары без вопроса «нужно?».';
-        return '✅ Изучите правильный ответ и повторите материал.';
+        if (q.includes('здравствуйте') && q.includes('скидка')) return 'Правило "Проявляй инициативу": сразу дайте ценность (скидку) и задайте открытые вопросы.';
+        if (q.includes('с чем она планирует носить')) return 'Правило "Задавай вопросы ДО показа": уточните контекст, прежде чем показывать.';
+        if (q.includes('давайте примерим')) return 'Правило "Предлагай примерку": примерка снимает сомнения.';
+        if (q.includes('подобрать серьги')) return 'Правило "Презентуй с эмоцией": предлагайте дополнительное украшение как часть образа.';
+        if (q.includes('сплит')) return 'Правило работы с ценой: говорите о Сплите ДО того, как клиент узнал цену.';
+        if (q.includes('с чем вы сравниваете')) return 'Правило отработки возражений: сначала выясните причину, потом предлагайте решение.';
+        if (q.includes('футляр и чистящее средство')) return 'Правило "Не отпускай без альтернативы": презентуйте аксессуары без вопроса "нужно?".';
+        return 'Изучите правильный ответ и повторите материал.';
     }
     
     async function loadTestResults() {
@@ -188,7 +184,7 @@
         citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
         applyFilters();
         document.getElementById('testArea').style.display = 'block';
-        document.getElementById('status').innerHTML = `✅ ${allResults.length} записей`;
+        document.getElementById('status').innerHTML = `Загружено: ${allResults.length} записей`;
     }
     
     async function loadDialogResults() {
@@ -202,10 +198,10 @@
         dialogAllResults = data;
         const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
         const citySelect = document.getElementById('dialogCityFilter');
-        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}" ${c === 'Оренбург' ? 'selected' : ''}>${c}</option>`).join('');
+        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
         applyDialogFilters();
         document.getElementById('dialogArea').style.display = 'block';
-        document.getElementById('status').innerHTML = `✅ ${dialogAllResults.length} записей диалогов`;
+        document.getElementById('status').innerHTML = `Загружено: ${dialogAllResults.length} записей диалогов`;
     }
     
     function applyFilters() {
@@ -264,9 +260,9 @@
             }
         });
         if (questionErrorsMap.size === 0) { alert(`В городе ${city} нет ошибок`); return; }
-        let feedback = `📊 Анализ результатов: город ${city}\n👥 Сотрудников: ${total}\n📈 Средний балл: ${avgPercent}%\n\n⚠️ Частые ошибки и рекомендации:\n`;
+        let feedback = `Анализ результатов: город ${city}\nСотрудников: ${total}\nСредний балл: ${avgPercent}%\n\nЧастые ошибки и рекомендации:\n`;
         [...questionErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
-            feedback += `${order+1}. Вопрос: ${err.text}\n   ❌ Ошиблись: ${err.count} из ${total}\n   ✅ Правильный ответ: ${err.correctAnswer}\n   📌 Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
+            feedback += `${order+1}. Вопрос: ${err.text}\n   Ошиблись: ${err.count} из ${total}\n   Правильный ответ: ${err.correctAnswer}\n   Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
         });
         navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} скопирован`));
     }
@@ -282,16 +278,16 @@
             if (r.answers) {
                 r.answers.forEach((a, idx) => {
                     if (!a.correct) {
-                        if (!stepErrorsMap.has(idx)) stepErrorsMap.set(idx, { text: `Шаг ${idx+1}: ${a.questionText.substring(0,100)}`, correctAnswer: a.correctText, count: 0 });
+                        if (!stepErrorsMap.has(idx)) stepErrorsMap.set(idx, { text: `Шаг ${idx+1}: ${a.questionText.substring(0,80)}`, correctAnswer: a.correctText, count: 0 });
                         stepErrorsMap.get(idx).count++;
                     }
                 });
             }
         });
         if (stepErrorsMap.size === 0) { alert(`В городе ${city} нет ошибок в диалогах`); return; }
-        let feedback = `🎭 Анализ диалогов: город ${city}\n👥 Диалогов: ${total}\n📈 Средний балл: ${avgPercent}%\n\n⚠️ Частые ошибки и рекомендации:\n`;
+        let feedback = `Анализ диалогов: город ${city}\nДиалогов: ${total}\nСредний балл: ${avgPercent}%\n\nЧастые ошибки и рекомендации:\n`;
         [...stepErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
-            feedback += `${order+1}. ${err.text}\n   ❌ Ошиблись: ${err.count} из ${total}\n   ✅ Правильный ответ: ${err.correctAnswer}\n   📌 Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
+            feedback += `${order+1}. ${err.text}\n   Ошиблись: ${err.count} из ${total}\n   Правильный ответ: ${err.correctAnswer}\n   Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
         });
         navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} (диалоги) скопирован`));
     }
@@ -320,7 +316,7 @@
         document.getElementById('cityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
         
         const leader = [...filteredResults].sort((a,b)=>b.percent-a.percent)[0];
-        if(leader) document.getElementById('leaderCelebration').innerHTML = `🏆 Лучший сотрудник: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}%`;
+        if(leader) document.getElementById('leaderCelebration').innerHTML = `Лучший сотрудник: ${leader.user_name} (${leader.city}) — ${leader.percent}%`;
         
         selectedForDelete.clear();
         document.getElementById('empCount').innerText = filteredResults.length;
@@ -373,7 +369,7 @@
         document.getElementById('dialogCityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('dialogCityFilter').value='${c.city}'; applyDialogFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
         
         const leader = [...dialogFilteredResults].sort((a,b)=>b.percent-a.percent)[0];
-        if(leader) document.getElementById('dialogLeaderCelebration').innerHTML = `🏆 Лучший сотрудник: <strong>${leader.user_name}</strong> (${leader.city}) — ${leader.percent}%`;
+        if(leader) document.getElementById('dialogLeaderCelebration').innerHTML = `Лучший сотрудник: ${leader.user_name} (${leader.city}) — ${leader.percent}%`;
         
         document.getElementById('dialogEmpCount').innerText = dialogFilteredResults.length;
         document.getElementById('dialogEmployeeList').innerHTML = dialogFilteredResults.map(r=>`<div class="employee-item"><div class="checkbox-col"><input type="checkbox" class="dialog-checkbox" data-id="${r.id}"></div><div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id}, 'dialog')"><b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span></div><div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white; cursor:pointer;" onclick="deleteEmployee(event, ${r.id}, 'dialog')">🗑</button></div></div>`).join('');
@@ -394,14 +390,14 @@
         else emp = dialogFilteredResults.find(r => r.id == id);
         if (!emp) return;
         document.getElementById('modalTitle').innerHTML = `${emp.user_name} (${emp.city}) — ${emp.percent}%`;
-        let html = `<p>✅ Правильных ответов: ${emp.score}/${emp.total}</p>`;
+        let html = `<p>Правильных ответов: ${emp.score}/${emp.total}</p>`;
         if (emp.answers) {
             emp.answers.forEach((a,i) => {
                 const isCorrect = a.correct;
                 html += `<div class="answer-item ${isCorrect ? 'answer-correct' : 'answer-wrong'}">
                             <b>${type === 'test' ? 'Вопрос' : 'Шаг'} ${i+1}:</b> ${a.questionText}<br>
                             <b>Ответ сотрудника:</b> ${a.selectedText}<br>
-                            ${!isCorrect ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.correctText)}</div>` : ''}
+                            ${!isCorrect ? `<b>Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.correctText)}</div>` : ''}
                          </div>`;
             });
         }
@@ -455,8 +451,8 @@
     document.getElementById('dialogPercentFilter').onchange = applyDialogFilters;
     document.getElementById('dateRangeSelect').onchange = applyFilters;
     document.getElementById('dialogDateRangeSelect').onchange = applyDialogFilters;
-    document.getElementById('surnameSearch').oninput = applyFilters;
-    document.getElementById('dialogSurnameSearch').oninput = applyDialogFilters;
+    document.getElementById('surnameSearch').addEventListener('input', applyFilters);
+    document.getElementById('dialogSurnameSearch').addEventListener('input', applyDialogFilters);
     document.getElementById('feedbackBtn').onclick = generateCityFeedback;
     document.getElementById('dialogFeedbackBtn').onclick = generateDialogFeedback;
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
