@@ -50,9 +50,18 @@
             background: #e9eef2;
             padding: 14px 16px;
             border-radius: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             font-size: 15px;
             line-height: 1.4;
+        }
+        .situation-message {
+            background: #fef5e8;
+            border-left: 4px solid #f0a500;
+            padding: 10px 14px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #7a6300;
         }
         .options-area { margin: 20px 0; }
         .option {
@@ -71,7 +80,6 @@
         .result-box.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
         .result-box.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
         .restart-btn { background: #c41e3a; margin-top: 16px; }
-        .instruction { font-size: 12px; color: #999; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -102,6 +110,7 @@
     <div id="dialogScreen" class="hidden">
         <div class="card">
             <div class="progress">Шаг <span id="stepNum">1</span> из <span id="stepTotal">8</span></div>
+            <div id="situationMessage" class="situation-message hidden"></div>
             <div id="clientMessage" class="client-message"></div>
             <div id="optionsArea" class="options-area"></div>
             <button id="nextBtn" disabled>➡ Далее</button>
@@ -122,6 +131,7 @@
     const STEPS = [
         {
             client: "«Здравствуйте. Я хочу подобрать подарок для сестры, но совсем не разбираюсь в украшениях. Боюсь ошибиться, вы не могли бы помочь?»",
+            situation: "",
             options: [
                 "«Конечно помогу! У нас большой выбор, смотрите, вот здесь подвески, здесь серьги. Выбирайте на любой вкус.»",
                 "«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Не переживайте, я помогу. Расскажите, какого она возраста? Чем увлекается? Классика или современное?»",
@@ -131,6 +141,7 @@
         },
         {
             client: "«Ей 42 года. Она врач, но любит стиль, с детства занималась танцами. Наверное, современное, но не вызывающее.»",
+            situation: "",
             options: [
                 "«Тогда давайте посмотрим вот эту коллекцию — она как раз современная, но спокойная. И цена хорошая.»",
                 "«Поняла. А с чем она планирует носить подарок? С повседневной одеждой или на выход?»",
@@ -140,6 +151,7 @@
         },
         {
             client: "«Нужно и на работу, и на праздники. Но бриллиант, наверное, слишком броско для больницы?»",
+            situation: "",
             options: [
                 "«Совсем нет, небольшие бриллианты смотрятся очень элегантно. Давайте примерим — и вы сами увидите.»",
                 "«Давайте я покажу украшения с фианитами — они тоже красиво сверкают, но стоят дешевле.»",
@@ -149,6 +161,7 @@
         },
         {
             client: "«Ну хорошо, давайте посмотрим, что у вас есть с небольшими бриллиантами.»",
+            situation: "Вы показываете 3 подвески. Клиент выбирает одну, примеряет, улыбается в зеркало.",
             options: [
                 "«Вам очень идёт! Эта подвеска визуально удлиняет шею. Смотрится изящно. Цена — 45 000 ₽.»",
                 "«К этой подвеске можно подобрать серьги из той же коллекции — вместе они создадут законченный образ. Давайте покажу.»",
@@ -158,6 +171,7 @@
         },
         {
             client: "«Да, серьги тоже красивые. Но я думала только про подвеску. Давайте пока посмотрим по цене…»",
+            situation: "",
             options: [
                 "«Конечно, подвеска стоит 45 000 ₽. Серьги отдельно — 38 000 ₽. Вместе — 83 000 ₽.»",
                 "«Понимаю. Подвеска стоит 45 000 ₽. Если захотите добавить серьги позже — они всегда есть в наличии.»",
@@ -167,6 +181,7 @@
         },
         {
             client: "«45 000… дороговато. Я рассчитывала примерно до 35 000.»",
+            situation: "",
             options: [
                 "«Понимаю, давайте посмотрим, что есть в вашем бюджете.»",
                 "«Понимаю, цена важна. А с чем вы сравниваете? Может, видели похожее дешевле в другом месте?»",
@@ -176,6 +191,7 @@
         },
         {
             client: "«Да, я видела в интернете похожее за 35 000, но там камень меньше. А мне нравится размер этого…»",
+            situation: "",
             options: [
                 "«Если камень меньше — это уже другое украшение. Здесь бриллиант крупнее и чище. Поэтому цена выше. Но я понимаю ваш бюджет.»",
                 "«Тогда давайте посмотрим, что можно сделать. Для такого выбора мы можем оформить Сплит — 4 платежа без переплат, по 11 250 ₽. Это совсем необременительно, и вы получаете именно то, что нравится.»",
@@ -184,7 +200,8 @@
             correct: 1
         },
         {
-            client: "«Хорошо, давайте оформлять эту подвеску со Сплитом.»",
+            client: "«Хорошо, давайте оформлять эту подвеску.»",
+            situation: "",
             options: [
                 "«Футляр нужен будет?»",
                 "«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно. У нас есть несколько вариантов.»",
@@ -204,6 +221,16 @@
         const step = STEPS[currentStep];
         document.getElementById('stepNum').innerText = currentStep + 1;
         document.getElementById('stepTotal').innerText = STEPS.length;
+        
+        // Показываем ситуацию, если есть
+        const situationDiv = document.getElementById('situationMessage');
+        if (step.situation && step.situation !== '') {
+            situationDiv.innerHTML = `<strong>📌 Ситуация:</strong> ${step.situation}`;
+            situationDiv.classList.remove('hidden');
+        } else {
+            situationDiv.classList.add('hidden');
+        }
+        
         document.getElementById('clientMessage').innerHTML = `<strong>🧑 Клиент:</strong><br>${step.client}`;
         
         const optionsDiv = document.getElementById('optionsArea');
