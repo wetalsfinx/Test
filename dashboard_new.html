@@ -88,7 +88,6 @@
         </div>
     </div>
 
-    <!-- Блок для теста -->
     <div id="testArea">
         <div id="leaderCelebration" class="leader-card" style="display: none;"></div>
         <div class="kpi-grid" id="kpi"></div>
@@ -99,7 +98,7 @@
             </div>
             <div id="topQuestionsContainer"></div>
             <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
-                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead><tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody></table></div>
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></table></thead><tbody></tbody>能得到</div>
                 <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">Скрыть все вопросы</button>
             </div>
         </div>
@@ -120,7 +119,6 @@
         </div>
     </div>
 
-    <!-- Блок для диалогов -->
     <div id="dialogArea" style="display: none;">
         <div id="dialogLeaderCelebration" class="leader-card" style="display: none;"></div>
         <div class="kpi-grid" id="dialogKpi"></div>
@@ -160,13 +158,14 @@
     
     function getRecommendation(text) {
         const q = text.toLowerCase();
-        if (q.includes('здравствуйте') && q.includes('скидка')) return 'Правило "Проявляй инициативу": сразу дайте ценность (скидку) и задайте открытые вопросы.';
-        if (q.includes('с чем она планирует носить')) return 'Правило "Задавай вопросы ДО показа": уточните контекст, прежде чем показывать.';
-        if (q.includes('давайте примерим')) return 'Правило "Предлагай примерку": примерка снимает сомнения.';
-        if (q.includes('подобрать серьги')) return 'Правило "Презентуй с эмоцией": предлагайте дополнительное украшение как часть образа.';
-        if (q.includes('сплит')) return 'Правило работы с ценой: говорите о Сплите ДО того, как клиент узнал цену.';
-        if (q.includes('с чем вы сравниваете')) return 'Правило отработки возражений: сначала выясните причину, потом предлагайте решение.';
-        if (q.includes('футляр и чистящее средство')) return 'Правило "Не отпускай без альтернативы": презентуйте аксессуары без вопроса "нужно?".';
+        if (q.includes('скидка') && q.includes('бонусами')) return 'Сначала дайте ценность (скидку + бонусы), затем задайте открытые вопросы.';
+        if (q.includes('с чем она планирует носить')) return 'Уточните контекст: куда и с чем будет носить — это поможет подобрать точнее.';
+        if (q.includes('давайте примерим')) return 'Не соглашайтесь сразу. Пригласите примерить — клиент сам увидит.';
+        if (q.includes('подобрать серьги')) return 'Сначала предложите дополнительное украшение, покажите образ целиком.';
+        if (q.includes('сплит') && q.includes('45 000')) return 'Назовите цену и сразу предложите Сплит как комфортный вариант оплаты.';
+        if (q.includes('с чем вы сравниваете')) return 'Не спешите снижать цену. Сначала выясните причину сомнения.';
+        if (q.includes('сплит') && q.includes('11 250')) return 'Подтвердите ценность товара, затем предложите Сплит.';
+        if (q.includes('футляр')) return 'Не спрашивайте «нужно?». Презентуйте аксессуар как полезную добавку.';
         return 'Изучите правильный ответ и повторите материал.';
     }
     
@@ -287,7 +286,11 @@
         if (stepErrorsMap.size === 0) { alert(`В городе ${city} нет ошибок в диалогах`); return; }
         let feedback = `Анализ диалогов: город ${city}\nДиалогов: ${total}\nСредний балл: ${avgPercent}%\n\nЧастые ошибки и рекомендации:\n`;
         [...stepErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
-            feedback += `${order+1}. ${err.text}\n   Ошиблись: ${err.count} из ${total}\n   Правильный ответ: ${err.correctAnswer}\n   Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
+            let tip = getRecommendation(err.correctAnswer);
+            if (dialogFilteredResults[0] && dialogFilteredResults[0].answers && dialogFilteredResults[0].answers[idx] && dialogFilteredResults[0].answers[idx].tip) {
+                tip = dialogFilteredResults[0].answers[idx].tip;
+            }
+            feedback += `${order+1}. ${err.text}\n   Ошиблись: ${err.count} из ${total}\n   Правильный ответ: ${err.correctAnswer}\n   Рекомендация: ${tip}\n\n`;
         });
         navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} (диалоги) скопирован`));
     }
@@ -392,12 +395,18 @@
         document.getElementById('modalTitle').innerHTML = `${emp.user_name} (${emp.city}) — ${emp.percent}%`;
         let html = `<p>Правильных ответов: ${emp.score}/${emp.total}</p>`;
         if (emp.answers) {
-            emp.answers.forEach((a,i) => {
+            emp.answers.forEach((a, i) => {
                 const isCorrect = a.correct;
+                let recommendationText = '';
+                if (a.tip) {
+                    recommendationText = a.tip;
+                } else {
+                    recommendationText = getRecommendation(a.correctText);
+                }
                 html += `<div class="answer-item ${isCorrect ? 'answer-correct' : 'answer-wrong'}">
                             <b>${type === 'test' ? 'Вопрос' : 'Шаг'} ${i+1}:</b> ${a.questionText}<br>
                             <b>Ответ сотрудника:</b> ${a.selectedText}<br>
-                            ${!isCorrect ? `<b>Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${getRecommendation(a.correctText)}</div>` : ''}
+                            ${!isCorrect ? `<b>Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${recommendationText}</div>` : ''}
                          </div>`;
             });
         }
