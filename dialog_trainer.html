@@ -171,7 +171,7 @@
         });
     }
 
-    async function saveResult() {
+    function saveResult() {
         let correctCount = 0;
         const answersDetail = [];
         for (let i = 0; i < STEPS.length; i++) {
@@ -182,9 +182,22 @@
         }
         const percent = Math.round((correctCount / STEPS.length) * 100);
         const passed = percent >= 85;
-        try {
-            await supabaseClient.from('dialog_results').insert([{ user_name: currentUser.name, city: currentUser.city, score: correctCount, total: STEPS.length, percent: percent, answers: answersDetail }]);
-        } catch(e) { console.error(e); }
+        
+        // Сохраняем в Supabase (асинхронно, не блокируя показ результата)
+        supabaseClient.from('dialog_results').insert([{
+            user_name: currentUser.name,
+            city: currentUser.city,
+            score: correctCount,
+            total: STEPS.length,
+            percent: percent,
+            answers: answersDetail
+        }]).then(() => {
+            console.log('Сохранено в Supabase');
+        }).catch(e => {
+            console.error('Ошибка сохранения:', e);
+        });
+        
+        // Показываем результат сразу, не дожидаясь сохранения
         const resultDiv = document.getElementById('resultScreen');
         resultDiv.classList.remove('hidden');
         resultDiv.innerHTML = `<div class="result-box ${passed ? 'success' : 'fail'}">
