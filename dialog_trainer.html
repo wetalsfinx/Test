@@ -215,14 +215,12 @@
     let currentStep = 0;
     let userSelections = [];
     let currentSelected = null;
-    let gameActive = false;
 
     function renderStep() {
         const step = STEPS[currentStep];
         document.getElementById('stepNum').innerText = currentStep + 1;
         document.getElementById('stepTotal').innerText = STEPS.length;
         
-        // Показываем ситуацию, если есть
         const situationDiv = document.getElementById('situationMessage');
         if (step.situation && step.situation !== '') {
             situationDiv.innerHTML = `<strong>📌 Ситуация:</strong> ${step.situation}`;
@@ -272,14 +270,20 @@
         const percent = Math.round((correctCount / STEPS.length) * 100);
         const passed = percent >= 85;
         
-        await supabaseClient.from('dialog_results').insert([{
-            user_name: currentUser.name,
-            city: currentUser.city,
-            score: correctCount,
-            total: STEPS.length,
-            percent: percent,
-            answers: answersDetail
-        }]);
+        try {
+            const { error } = await supabaseClient.from('dialog_results').insert([{
+                user_name: currentUser.name,
+                city: currentUser.city,
+                score: correctCount,
+                total: STEPS.length,
+                percent: percent,
+                answers: answersDetail
+            }]);
+            if (error) console.error('Ошибка Supabase:', error);
+            else console.log('Сохранено в Supabase!');
+        } catch(e) {
+            console.error('Ошибка:', e);
+        }
         
         const resultDiv = document.getElementById('resultScreen');
         resultDiv.classList.remove('hidden');
