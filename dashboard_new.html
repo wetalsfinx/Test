@@ -99,7 +99,7 @@
             </div>
             <div id="topQuestionsContainer"></div>
             <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
-                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead><tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody></table></div>
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody>能得到</div>
                 <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">▲ Скрыть все вопросы</button>
             </div>
         </div>
@@ -154,13 +154,11 @@
 <script>
     const supabaseClient = supabase.createClient('https://qtostraaqrnjbxiydlip.supabase.co', 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7');
     
-    // Общие переменные
     let allResults = [], filteredResults = [], cityChart = null, scoreChart = null, currentSelectedEmployee = null, selectedForDelete = new Set();
     let previousResultsCount = 0;
     let allQuestionsData = [];
     
-    // Диалоговые переменные
-    let dialogAllResults = [], dialogFilteredResults = [], dialogCityChart = null, dialogScoreChart = null, dialogCurrentSelectedEmployee = null, dialogSelectedForDelete = new Set();
+    let dialogAllResults = [], dialogFilteredResults = [], dialogCityChart = null, dialogScoreChart = null;
     
     let currentTab = 'test';
     
@@ -184,7 +182,6 @@
         document.getElementById('loadingSkeleton').style.display = 'none';
         if (error) { document.getElementById('status').innerHTML = 'Ошибка: ' + error.message; return; }
         if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; return; }
-        previousResultsCount = data.length;
         allResults = data;
         const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
         const citySelect = document.getElementById('cityFilter');
@@ -249,6 +246,56 @@
         renderDialogDashboard();
     }
     
+    function generateCityFeedback() {
+        const city = document.getElementById('cityFilter').value;
+        if (city === 'all') { alert('Выберите конкретный город'); return; }
+        if (!filteredResults.length) { alert('Нет данных по этому городу'); return; }
+        const total = filteredResults.length;
+        const avgPercent = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
+        const questionErrorsMap = new Map();
+        filteredResults.forEach(r => {
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    if (!a.correct) {
+                        if (!questionErrorsMap.has(idx)) questionErrorsMap.set(idx, { text: a.questionText, correctAnswer: a.correctText, count: 0 });
+                        questionErrorsMap.get(idx).count++;
+                    }
+                });
+            }
+        });
+        if (questionErrorsMap.size === 0) { alert(`В городе ${city} нет ошибок`); return; }
+        let feedback = `📊 Анализ результатов: город ${city}\n👥 Сотрудников: ${total}\n📈 Средний балл: ${avgPercent}%\n\n⚠️ Частые ошибки и рекомендации:\n`;
+        [...questionErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
+            feedback += `${order+1}. Вопрос: ${err.text}\n   ❌ Ошиблись: ${err.count} из ${total}\n   ✅ Правильный ответ: ${err.correctAnswer}\n   📌 Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
+        });
+        navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} скопирован`));
+    }
+    
+    function generateDialogFeedback() {
+        const city = document.getElementById('dialogCityFilter').value;
+        if (city === 'all') { alert('Выберите конкретный город'); return; }
+        if (!dialogFilteredResults.length) { alert('Нет данных по этому городу'); return; }
+        const total = dialogFilteredResults.length;
+        const avgPercent = Math.round(dialogFilteredResults.reduce((s,r)=>s+r.percent,0)/total);
+        const stepErrorsMap = new Map();
+        dialogFilteredResults.forEach(r => {
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    if (!a.correct) {
+                        if (!stepErrorsMap.has(idx)) stepErrorsMap.set(idx, { text: `Шаг ${idx+1}: ${a.questionText.substring(0,100)}`, correctAnswer: a.correctText, count: 0 });
+                        stepErrorsMap.get(idx).count++;
+                    }
+                });
+            }
+        });
+        if (stepErrorsMap.size === 0) { alert(`В городе ${city} нет ошибок в диалогах`); return; }
+        let feedback = `🎭 Анализ диалогов: город ${city}\n👥 Диалогов: ${total}\n📈 Средний балл: ${avgPercent}%\n\n⚠️ Частые ошибки и рекомендации:\n`;
+        [...stepErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
+            feedback += `${order+1}. ${err.text}\n   ❌ Ошиблись: ${err.count} из ${total}\n   ✅ Правильный ответ: ${err.correctAnswer}\n   📌 Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
+        });
+        navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} (диалоги) скопирован`));
+    }
+    
     function renderDashboard() {
         const total = filteredResults.length;
         if (!total) { 
@@ -305,7 +352,6 @@
         const errors = dialogFilteredResults.reduce((s,r)=>s+(r.total-r.score),0);
         document.getElementById('dialogKpi').innerHTML = `<div class="kpi-card"><div class="kpi-value">${total}</div><div>Диалогов</div></div><div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div><div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div><div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>`;
         
-        // Проблемные шаги
         const stepErrors = new Array(8).fill().map((_,i) => ({ total: 0, errors: 0, index: i }));
         dialogFilteredResults.forEach(r => {
             if (r.answers) {
@@ -326,7 +372,6 @@
         const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, count: data.count, avg: Math.round(data.sumPercent / data.count) })).sort((a,b) => b.avg - a.avg);
         document.getElementById('dialogCityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('dialogCityFilter').value='${c.city}'; applyDialogFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
         
-        dialogSelectedForDelete.clear();
         document.getElementById('dialogEmpCount').innerText = dialogFilteredResults.length;
         document.getElementById('dialogEmployeeList').innerHTML = dialogFilteredResults.map(r=>`<div class="employee-item"><div class="checkbox-col"><input type="checkbox" class="dialog-checkbox" data-id="${r.id}"></div><div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id}, 'dialog')"><b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span></div><div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white; cursor:pointer;" onclick="deleteEmployee(event, ${r.id}, 'dialog')">🗑</button></div></div>`).join('');
         document.querySelectorAll('.dialog-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) dialogSelectedForDelete.add(e.target.dataset.id); else dialogSelectedForDelete.delete(e.target.dataset.id); });
@@ -368,8 +413,8 @@
         else await supabaseClient.from('dialog_results').delete().eq('id', id);
         if (type === 'test') await loadTestResults();
         else await loadDialogResults();
-        if (currentTab === 'test') { if (type === 'test') applyFilters(); else applyDialogFilters(); }
-        else { if (type === 'dialog') applyDialogFilters(); else applyFilters(); }
+        if (currentTab === 'test') applyFilters();
+        else applyDialogFilters();
     }
     
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
@@ -401,7 +446,27 @@
     document.getElementById('dialogLoadBtn').onclick = loadDialogResults;
     document.getElementById('resetFiltersBtn').onclick = () => { document.getElementById('cityFilter').value = 'all'; document.getElementById('percentFilter').value = 'all'; document.getElementById('dateRangeSelect').value = 'all'; document.getElementById('surnameSearch').value = ''; applyFilters(); };
     document.getElementById('dialogResetFiltersBtn').onclick = () => { document.getElementById('dialogCityFilter').value = 'all'; document.getElementById('dialogPercentFilter').value = 'all'; document.getElementById('dialogDateRangeSelect').value = 'all'; document.getElementById('dialogSurnameSearch').value = ''; applyDialogFilters(); };
+    document.getElementById('feedbackBtn').onclick = generateCityFeedback;
+    document.getElementById('dialogFeedbackBtn').onclick = generateDialogFeedback;
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
+    
+    let dialogSelectedForDelete = new Set();
+    document.getElementById('dialogMassDeleteBtn').onclick = async () => {
+        if (dialogSelectedForDelete.size && confirm(`Удалить ${dialogSelectedForDelete.size} записей диалогов?`)) {
+            for (let id of dialogSelectedForDelete) await supabaseClient.from('dialog_results').delete().eq('id', id);
+            await loadDialogResults();
+            applyDialogFilters();
+            dialogSelectedForDelete.clear();
+        }
+    };
+    document.getElementById('massDeleteBtn').onclick = async () => {
+        if (selectedForDelete.size && confirm(`Удалить ${selectedForDelete.size} записей тестов?`)) {
+            for (let id of selectedForDelete) await supabaseClient.from('results_new').delete().eq('id', id);
+            await loadTestResults();
+            applyFilters();
+            selectedForDelete.clear();
+        }
+    };
     
     initTheme();
     loadTestResults();
