@@ -114,7 +114,7 @@
             </div>
             <div id="topQuestionsContainer"></div>
             <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
-                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></td></thead><tbody></tbody>能得到</div>
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></table></thead><tbody></tbody>能得到</div>
                 <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">Скрыть все вопросы</button>
             </div>
         </div>
@@ -160,7 +160,7 @@
             <div class="employee-list" id="dialogEmployeeList"></div>
         </div>
     </div>
-    <div id="loadingSkeleton" class="loading-text">Загрузка...</div>
+    <div id="loadingSkeleton" class="loading-text">Загрузка данных...</div>
 </div>
 
 <div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><div class="modal-actions" style="display:flex; gap:8px; margin-top:15px;"><button id="modalDeleteBtn" style="background:#8b1a2c;">Удалить</button><button id="modalPdfBtn" style="background:#2c6e2c;">PDF</button><button onclick="closeModal()" style="background:#6c757d;">Закрыть</button></div></div></div>
@@ -404,6 +404,7 @@
         [...stepErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
             let fullText = err.text;
             if (fullText.length > 250) fullText = fullText.substring(0, 250) + '…';
+            
             let tip = getRecommendation(err.correctAnswer);
             if (dialogFilteredResults[0] && dialogFilteredResults[0].answers && dialogFilteredResults[0].answers[idx] && dialogFilteredResults[0].answers[idx].tip) {
                 tip = dialogFilteredResults[0].answers[idx].tip;
@@ -556,9 +557,6 @@
             document.getElementById('dialogFilters').style.display = 'none';
             document.getElementById('tabTestBtn').classList.add('active');
             document.getElementById('tabDialogBtn').classList.remove('active');
-            // Автоматически загружаем данные теста при переключении
-            if (allResults.length === 0) loadTestResults();
-            else { applyFilters(); document.getElementById('testArea').style.display = 'block'; }
         } else {
             document.getElementById('testArea').style.display = 'none';
             document.getElementById('dialogArea').style.display = 'block';
@@ -566,9 +564,6 @@
             document.getElementById('dialogFilters').style.display = 'flex';
             document.getElementById('tabTestBtn').classList.remove('active');
             document.getElementById('tabDialogBtn').classList.add('active');
-            // Автоматически загружаем данные диалогов при переключении
-            if (dialogAllResults.length === 0) loadDialogResults();
-            else { applyDialogFilters(); document.getElementById('dialogArea').style.display = 'block'; }
         }
     }
     
@@ -629,9 +624,8 @@
     };
     
     initTheme();
-    // При первом открытии загружаем тест
     loadTestResults();
-    // Диалоги подгрузятся при переключении
+    loadDialogResults();
 </script>
 </body>
 </html>
