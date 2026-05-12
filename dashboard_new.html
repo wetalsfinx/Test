@@ -75,10 +75,10 @@
                 <button id="loadBtn">Загрузить</button>
                 <button id="exportCsvBtn">CSV</button>
                 <button id="feedbackBtn" class="feedback-btn">Фидбек для города</button>
-                <button id="importBtn" class="import-btn">📂 Импорт CSV</button>
+                <button id="importBtn" class="import-btn">📂 Импорт CSV (тест)</button>
             </div>
             <div id="importArea" class="import-area">
-                <p>Загрузите CSV-файл из Supabase (экспорт таблицы)</p>
+                <p>Загрузите CSV-файл из Supabase (таблица results_new)</p>
                 <input type="file" id="importFile" accept=".csv">
                 <button id="confirmImportBtn" style="margin-top: 8px;">Загрузить данные</button>
                 <button id="cancelImportBtn" style="margin-top: 8px; background:#6c757d;">Отмена</button>
@@ -92,6 +92,13 @@
                 <button id="dialogLoadBtn">Загрузить</button>
                 <button id="dialogExportCsvBtn">CSV</button>
                 <button id="dialogFeedbackBtn" class="feedback-btn">Фидбек для города</button>
+                <button id="dialogImportBtn" class="import-btn">📂 Импорт CSV (диалоги)</button>
+            </div>
+            <div id="dialogImportArea" class="import-area" style="display: none;">
+                <p>Загрузите CSV-файл из Supabase (таблица dialog_results)</p>
+                <input type="file" id="dialogImportFile" accept=".csv">
+                <button id="dialogConfirmImportBtn" style="margin-top: 8px;">Загрузить данные</button>
+                <button id="dialogCancelImportBtn" style="margin-top: 8px; background:#6c757d;">Отмена</button>
             </div>
             <div id="status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
         </div>
@@ -107,7 +114,7 @@
             </div>
             <div id="topQuestionsContainer"></div>
             <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
-                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody>能得到</div>
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></table></thead><tbody></tbody>能得到</div>
                 <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">Скрыть все вопросы</button>
             </div>
         </div>
@@ -165,20 +172,6 @@
     let dialogAllResults = [], dialogFilteredResults = [], dialogCityChart = null, dialogScoreChart = null;
     let currentTab = 'test';
     
-    // Функция с повторными попытками
-    async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-        for (let i = 0; i < retries; i++) {
-            try {
-                const response = await fetch(url, options);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return response;
-            } catch (error) {
-                if (i === retries - 1) throw error;
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    }
-    
     function getRecommendation(text) {
         const q = text.toLowerCase();
         if (q.includes('скидка') && q.includes('бонусами')) return 'Сначала дайте ценность (скидку + бонусы), затем задайте открытые вопросы.';
@@ -196,11 +189,10 @@
         document.getElementById('loadingSkeleton').style.display = 'block';
         document.getElementById('testArea').style.display = 'none';
         document.getElementById('status').innerHTML = 'Загрузка тестов...';
-        
         try {
             const { data, error } = await supabaseClient.from('results_new').select('*').eq('test_slug', 'prodazhi_2025').order('created_at', { ascending: false }).limit(2000);
             if (error) throw error;
-            if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; document.getElementById('loadingSkeleton').style.display = 'none'; return; }
+            if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; return; }
             allResults = data;
             const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
             const citySelect = document.getElementById('cityFilter');
@@ -209,8 +201,7 @@
             document.getElementById('testArea').style.display = 'block';
             document.getElementById('status').innerHTML = `Загружено: ${allResults.length} записей`;
         } catch (err) {
-            console.error(err);
-            document.getElementById('status').innerHTML = 'Ошибка загрузки. Попробуйте ещё раз или используйте импорт CSV.';
+            document.getElementById('status').innerHTML = 'Ошибка загрузки. Используйте импорт CSV.';
         } finally {
             document.getElementById('loadingSkeleton').style.display = 'none';
         }
@@ -233,8 +224,8 @@
         document.getElementById('status').innerHTML = `Загружено: ${dialogAllResults.length} записей диалогов`;
     }
     
-    // Импорт CSV
-    function importCSV() {
+    // Импорт CSV для теста
+    function importTestCSV() {
         const file = document.getElementById('importFile').files[0];
         if (!file) { alert('Выберите CSV-файл'); return; }
         const reader = new FileReader();
@@ -248,9 +239,9 @@
                 const values = rows[i].split(',');
                 const row = {};
                 headers.forEach((h, idx) => { row[h.trim()] = values[idx] ? values[idx].replace(/^"|"$/g, '') : ''; });
-                if (row.user_name) {
+                if (row.user_name || row.user_id) {
                     data.push({
-                        user_name: row.user_name,
+                        user_name: row.user_name || row.user_id,
                         city: row.city,
                         score: parseInt(row.score) || 0,
                         total: parseInt(row.total) || 11,
@@ -269,6 +260,49 @@
                 document.getElementById('testArea').style.display = 'block';
                 document.getElementById('status').innerHTML = `Импортировано: ${data.length} записей из CSV`;
                 document.getElementById('importArea').style.display = 'none';
+            } else {
+                alert('Файл не содержит данных');
+            }
+        };
+        reader.readAsText(file);
+    }
+    
+    // Импорт CSV для диалогов
+    function importDialogCSV() {
+        const file = document.getElementById('dialogImportFile').files[0];
+        if (!file) { alert('Выберите CSV-файл'); return; }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const rows = text.split('\n');
+            const headers = rows[0].split(',');
+            const data = [];
+            for (let i = 1; i < rows.length; i++) {
+                if (!rows[i].trim()) continue;
+                const values = rows[i].split(',');
+                const row = {};
+                headers.forEach((h, idx) => { row[h.trim()] = values[idx] ? values[idx].replace(/^"|"$/g, '') : ''; });
+                if (row.user_name) {
+                    data.push({
+                        user_name: row.user_name,
+                        city: row.city,
+                        score: parseInt(row.score) || 0,
+                        total: parseInt(row.total) || 8,
+                        percent: parseInt(row.percent) || 0,
+                        created_at: row.created_at,
+                        answers: row.answers ? JSON.parse(row.answers) : []
+                    });
+                }
+            }
+            if (data.length) {
+                dialogAllResults = data;
+                const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
+                const citySelect = document.getElementById('dialogCityFilter');
+                citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+                applyDialogFilters();
+                document.getElementById('dialogArea').style.display = 'block';
+                document.getElementById('status').innerHTML = `Импортировано: ${data.length} записей диалогов из CSV`;
+                document.getElementById('dialogImportArea').style.display = 'none';
             } else {
                 alert('Файл не содержит данных');
             }
@@ -551,7 +585,7 @@
     document.getElementById('dialogFeedbackBtn').onclick = generateDialogFeedback;
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
     
-    // Импорт CSV
+    // Импорт CSV для теста
     document.getElementById('importBtn').onclick = () => {
         const area = document.getElementById('importArea');
         area.style.display = area.style.display === 'none' ? 'block' : 'none';
@@ -560,7 +594,18 @@
         document.getElementById('importArea').style.display = 'none';
         document.getElementById('importFile').value = '';
     };
-    document.getElementById('confirmImportBtn').onclick = importCSV;
+    document.getElementById('confirmImportBtn').onclick = importTestCSV;
+    
+    // Импорт CSV для диалогов
+    document.getElementById('dialogImportBtn').onclick = () => {
+        const area = document.getElementById('dialogImportArea');
+        area.style.display = area.style.display === 'none' ? 'block' : 'none';
+    };
+    document.getElementById('dialogCancelImportBtn').onclick = () => {
+        document.getElementById('dialogImportArea').style.display = 'none';
+        document.getElementById('dialogImportFile').value = '';
+    };
+    document.getElementById('dialogConfirmImportBtn').onclick = importDialogCSV;
     
     let dialogSelectedForDelete = new Set();
     document.getElementById('dialogMassDeleteBtn').onclick = async () => {
