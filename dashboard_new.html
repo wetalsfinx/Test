@@ -224,90 +224,90 @@
         document.getElementById('status').innerHTML = `Загружено: ${dialogAllResults.length} записей диалогов`;
     }
     
-    // Импорт CSV для теста
     function importTestCSV() {
         const file = document.getElementById('importFile').files[0];
         if (!file) { alert('Выберите CSV-файл'); return; }
         const reader = new FileReader();
         reader.onload = function(e) {
             const text = e.target.result;
-            const rows = text.split('\n');
-            const headers = rows[0].split(',');
+            const lines = text.split('\n');
+            const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
             const data = [];
-            for (let i = 1; i < rows.length; i++) {
-                if (!rows[i].trim()) continue;
-                const values = rows[i].split(',');
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const values = lines[i].split(',').map(v => v.replace(/^"|"$/g, '').trim());
                 const row = {};
-                headers.forEach((h, idx) => { row[h.trim()] = values[idx] ? values[idx].replace(/^"|"$/g, '') : ''; });
+                headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
                 if (row.user_name || row.user_id) {
                     data.push({
                         user_name: row.user_name || row.user_id,
-                        city: row.city,
+                        city: row.city || '',
                         score: parseInt(row.score) || 0,
                         total: parseInt(row.total) || 11,
                         percent: parseInt(row.percent) || 0,
-                        created_at: row.created_at,
-                        answers: row.answers ? JSON.parse(row.answers) : []
+                        created_at: row.created_at || new Date().toISOString(),
+                        answers: []
                     });
                 }
             }
-            if (data.length) {
+            if (data.length > 0) {
                 allResults = data;
                 const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
                 const citySelect = document.getElementById('cityFilter');
                 citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
                 applyFilters();
                 document.getElementById('testArea').style.display = 'block';
-                document.getElementById('status').innerHTML = `Импортировано: ${data.length} записей из CSV`;
+                document.getElementById('status').innerHTML = `Импортировано: ${data.length} записей`;
                 document.getElementById('importArea').style.display = 'none';
             } else {
-                alert('Файл не содержит данных');
+                alert('Не удалось распознать данные в файле');
             }
         };
-        reader.readAsText(file);
+        reader.onerror = () => alert('Ошибка чтения файла');
+        reader.readAsText(file, 'UTF-8');
     }
     
-    // Импорт CSV для диалогов
     function importDialogCSV() {
         const file = document.getElementById('dialogImportFile').files[0];
         if (!file) { alert('Выберите CSV-файл'); return; }
         const reader = new FileReader();
         reader.onload = function(e) {
             const text = e.target.result;
-            const rows = text.split('\n');
-            const headers = rows[0].split(',');
+            const lines = text.split('\n');
+            const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
             const data = [];
-            for (let i = 1; i < rows.length; i++) {
-                if (!rows[i].trim()) continue;
-                const values = rows[i].split(',');
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const values = lines[i].split(',').map(v => v.replace(/^"|"$/g, '').trim());
                 const row = {};
-                headers.forEach((h, idx) => { row[h.trim()] = values[idx] ? values[idx].replace(/^"|"$/g, '') : ''; });
+                headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
                 if (row.user_name) {
                     data.push({
                         user_name: row.user_name,
-                        city: row.city,
+                        city: row.city || '',
                         score: parseInt(row.score) || 0,
                         total: parseInt(row.total) || 8,
                         percent: parseInt(row.percent) || 0,
-                        created_at: row.created_at,
-                        answers: row.answers ? JSON.parse(row.answers) : []
+                        created_at: row.created_at || new Date().toISOString(),
+                        answers: []
                     });
                 }
             }
-            if (data.length) {
+            if (data.length > 0) {
                 dialogAllResults = data;
                 const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
                 const citySelect = document.getElementById('dialogCityFilter');
                 citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
                 applyDialogFilters();
                 document.getElementById('dialogArea').style.display = 'block';
-                document.getElementById('status').innerHTML = `Импортировано: ${data.length} записей диалогов из CSV`;
+                document.getElementById('status').innerHTML = `Импортировано диалогов: ${data.length} записей`;
                 document.getElementById('dialogImportArea').style.display = 'none';
             } else {
-                alert('Файл не содержит данных');
+                alert('Не удалось распознать данные в файле');
             }
         };
-        reader.readAsText(file);
+        reader.onerror = () => alert('Ошибка чтения файла');
+        reader.readAsText(file, 'UTF-8');
     }
     
     function applyFilters() {
@@ -585,7 +585,6 @@
     document.getElementById('dialogFeedbackBtn').onclick = generateDialogFeedback;
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
     
-    // Импорт CSV для теста
     document.getElementById('importBtn').onclick = () => {
         const area = document.getElementById('importArea');
         area.style.display = area.style.display === 'none' ? 'block' : 'none';
@@ -596,7 +595,6 @@
     };
     document.getElementById('confirmImportBtn').onclick = importTestCSV;
     
-    // Импорт CSV для диалогов
     document.getElementById('dialogImportBtn').onclick = () => {
         const area = document.getElementById('dialogImportArea');
         area.style.display = area.style.display === 'none' ? 'block' : 'none';
