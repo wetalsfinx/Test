@@ -114,7 +114,7 @@
             </div>
             <div id="topQuestionsContainer"></div>
             <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
-                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></table></thead><tbody></tbody>能得到</div>
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th><tr></thead><tbody></tbody>能得到</div>
                 <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">Скрыть все вопросы</button>
             </div>
         </div>
@@ -160,7 +160,7 @@
             <div class="employee-list" id="dialogEmployeeList"></div>
         </div>
     </div>
-    <div id="loadingSkeleton" class="loading-text">Загрузка данных...</div>
+    <div id="loadingSkeleton" class="loading-text">Загрузка...</div>
 </div>
 
 <div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><div class="modal-actions" style="display:flex; gap:8px; margin-top:15px;"><button id="modalDeleteBtn" style="background:#8b1a2c;">Удалить</button><button id="modalPdfBtn" style="background:#2c6e2c;">PDF</button><button onclick="closeModal()" style="background:#6c757d;">Закрыть</button></div></div></div>
@@ -185,14 +185,32 @@
         return 'Изучите правильный ответ и повторите материал.';
     }
     
+    // Функция с повторными попытками
+    async function fetchWithRetry(fn, retries = 3, delay = 1500) {
+        for (let i = 0; i < retries; i++) {
+            try {
+                return await fn();
+            } catch (err) {
+                console.log(`Попытка ${i+1} не удалась: ${err.message}`);
+                if (i === retries - 1) throw err;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    
     async function loadTestResults() {
         document.getElementById('loadingSkeleton').style.display = 'block';
         document.getElementById('testArea').style.display = 'none';
         document.getElementById('status').innerHTML = 'Загрузка тестов...';
         try {
-            const { data, error } = await supabaseClient.from('results_new').select('*').eq('test_slug', 'prodazhi_2025').order('created_at', { ascending: false }).limit(2000);
+            const { data, error } = await fetchWithRetry(async () => {
+                return await supabaseClient.from('results_new').select('*').eq('test_slug', 'prodazhi_2025').order('created_at', { ascending: false }).limit(500);
+            });
             if (error) throw error;
-            if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; return; }
+            if (!data || !data.length) { 
+                document.getElementById('status').innerHTML = 'Нет результатов. Попробуйте импорт CSV.'; 
+                return; 
+            }
             allResults = data;
             const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
             const citySelect = document.getElementById('cityFilter');
@@ -201,7 +219,8 @@
             document.getElementById('testArea').style.display = 'block';
             document.getElementById('status').innerHTML = `Загружено: ${allResults.length} записей`;
         } catch (err) {
-            document.getElementById('status').innerHTML = 'Ошибка загрузки. Используйте импорт CSV.';
+            console.error(err);
+            document.getElementById('status').innerHTML = 'Ошибка подключения. Используйте импорт CSV.';
         } finally {
             document.getElementById('loadingSkeleton').style.display = 'none';
         }
@@ -211,17 +230,28 @@
         document.getElementById('loadingSkeleton').style.display = 'block';
         document.getElementById('dialogArea').style.display = 'none';
         document.getElementById('status').innerHTML = 'Загрузка диалогов...';
-        const { data, error } = await supabaseClient.from('dialog_results').select('*').order('created_at', { ascending: false }).limit(2000);
-        document.getElementById('loadingSkeleton').style.display = 'none';
-        if (error) { document.getElementById('status').innerHTML = 'Ошибка: ' + error.message; return; }
-        if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов диалогов'; return; }
-        dialogAllResults = data;
-        const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
-        const citySelect = document.getElementById('dialogCityFilter');
-        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
-        applyDialogFilters();
-        document.getElementById('dialogArea').style.display = 'block';
-        document.getElementById('status').innerHTML = `Загружено: ${dialogAllResults.length} записей диалогов`;
+        try {
+            const { data, error } = await fetchWithRetry(async () => {
+                return await supabaseClient.from('dialog_results').select('*').order('created_at', { ascending: false }).limit(500);
+            });
+            if (error) throw error;
+            if (!data || !data.length) { 
+                document.getElementById('status').innerHTML = 'Нет результатов диалогов'; 
+                return; 
+            }
+            dialogAllResults = data;
+            const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
+            const citySelect = document.getElementById('dialogCityFilter');
+            citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+            applyDialogFilters();
+            document.getElementById('dialogArea').style.display = 'block';
+            document.getElementById('status').innerHTML = `Загружено: ${dialogAllResults.length} записей диалогов`;
+        } catch (err) {
+            console.error(err);
+            document.getElementById('status').innerHTML = 'Ошибка загрузки диалогов';
+        } finally {
+            document.getElementById('loadingSkeleton').style.display = 'none';
+        }
     }
     
     function importTestCSV() {
@@ -246,7 +276,7 @@
                         total: parseInt(row.total) || 11,
                         percent: parseInt(row.percent) || 0,
                         created_at: row.created_at || new Date().toISOString(),
-                        answers: []
+                        answers: row.answers ? JSON.parse(row.answers) : []
                     });
                 }
             }
@@ -289,7 +319,7 @@
                         total: parseInt(row.total) || 8,
                         percent: parseInt(row.percent) || 0,
                         created_at: row.created_at || new Date().toISOString(),
-                        answers: []
+                        answers: row.answers ? JSON.parse(row.answers) : []
                     });
                 }
             }
@@ -347,55 +377,43 @@
         dialogFilteredResults = filtered;
         renderDialogDashboard();
     }
-   function generateCityFeedback() {
-    const city = document.getElementById('cityFilter').value;
-    if (city === 'all') { alert('Выберите конкретный город'); return; }
-    if (!filteredResults.length) { alert('Нет данных по этому городу'); return; }
     
-    // Диагностика: смотрим структуру первого ответа
-    const firstRecord = filteredResults[0];
-    console.log('Структура первой записи:', firstRecord);
-    if (firstRecord.answers && firstRecord.answers[0]) {
-        console.log('Структура первого ответа:', firstRecord.answers[0]);
-        console.log('Поле correct:', firstRecord.answers[0].correct);
-    }
-    
-    const total = filteredResults.length;
-    const avgPercent = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
-    const questionErrorsMap = new Map();
-    
-    filteredResults.forEach(r => {
-        if (r.answers && Array.isArray(r.answers)) {
-            r.answers.forEach((a, idx) => {
-                // Проверяем, есть ли поле correct
-                const isCorrect = a.correct === true;
-                if (!isCorrect) {
-                    if (!questionErrorsMap.has(idx)) {
-                        questionErrorsMap.set(idx, { 
-                            text: a.questionText || 'Вопрос без текста', 
-                            correctAnswer: a.correctText || 'Ответ не указан', 
-                            count: 0 
-                        });
+    function generateCityFeedback() {
+        const city = document.getElementById('cityFilter').value;
+        if (city === 'all') { alert('Выберите конкретный город'); return; }
+        if (!filteredResults.length) { alert('Нет данных по этому городу'); return; }
+        const total = filteredResults.length;
+        const avgPercent = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
+        const questionErrorsMap = new Map();
+        filteredResults.forEach(r => {
+            if (r.answers && Array.isArray(r.answers)) {
+                r.answers.forEach((a, idx) => {
+                    const isCorrect = a.correct === true;
+                    if (!isCorrect) {
+                        if (!questionErrorsMap.has(idx)) {
+                            questionErrorsMap.set(idx, { 
+                                text: a.questionText || 'Вопрос без текста', 
+                                correctAnswer: a.correctText || 'Ответ не указан', 
+                                count: 0 
+                            });
+                        }
+                        questionErrorsMap.get(idx).count++;
                     }
-                    questionErrorsMap.get(idx).count++;
-                }
-            });
+                });
+            }
+        });
+        if (questionErrorsMap.size === 0) { 
+            alert(`В городе ${city} нет ошибок по данным в таблице.`); 
+            return; 
         }
-    });
-    
-    if (questionErrorsMap.size === 0) { 
-        alert(`В городе ${city} нет ошибок по данным в таблице. Проверьте структуру answers.`); 
-        return; 
+        let feedback = `Анализ результатов: город ${city}\nСотрудников: ${total}\nСредний балл: ${avgPercent}%\n\nЧастые ошибки и рекомендации:\n`;
+        [...questionErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
+            let fullText = err.text;
+            if (fullText.length > 250) fullText = fullText.substring(0, 250) + '…';
+            feedback += `${order+1}. Вопрос: ${fullText}\n   Ошиблись: ${err.count} из ${total}\n   Правильный ответ: ${err.correctAnswer}\n   Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
+        });
+        navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} скопирован`));
     }
-    
-    let feedback = `Анализ результатов: город ${city}\nСотрудников: ${total}\nСредний балл: ${avgPercent}%\n\nЧастые ошибки и рекомендации:\n`;
-    [...questionErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
-        let fullText = err.text;
-        if (fullText.length > 250) fullText = fullText.substring(0, 250) + '…';
-        feedback += `${order+1}. Вопрос: ${fullText}\n   Ошиблись: ${err.count} из ${total}\n   Правильный ответ: ${err.correctAnswer}\n   Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
-    });
-    navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} скопирован`));
-}
     
     function generateDialogFeedback() {
         const city = document.getElementById('dialogCityFilter').value;
@@ -426,7 +444,6 @@
         [...stepErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
             let fullText = err.text;
             if (fullText.length > 250) fullText = fullText.substring(0, 250) + '…';
-            
             let tip = getRecommendation(err.correctAnswer);
             if (dialogFilteredResults[0] && dialogFilteredResults[0].answers && dialogFilteredResults[0].answers[idx] && dialogFilteredResults[0].answers[idx].tip) {
                 tip = dialogFilteredResults[0].answers[idx].tip;
@@ -537,7 +554,7 @@
         let html = `<p>Правильных ответов: ${emp.score}/${emp.total}</p>`;
         if (emp.answers) {
             emp.answers.forEach((a, i) => {
-                const isCorrect = a.correct;
+                const isCorrect = a.correct === true;
                 let recommendationText = '';
                 if (a.tip) {
                     recommendationText = a.tip;
@@ -579,6 +596,8 @@
             document.getElementById('dialogFilters').style.display = 'none';
             document.getElementById('tabTestBtn').classList.add('active');
             document.getElementById('tabDialogBtn').classList.remove('active');
+            if (allResults.length === 0) loadTestResults();
+            else { applyFilters(); document.getElementById('testArea').style.display = 'block'; }
         } else {
             document.getElementById('testArea').style.display = 'none';
             document.getElementById('dialogArea').style.display = 'block';
@@ -586,6 +605,8 @@
             document.getElementById('dialogFilters').style.display = 'flex';
             document.getElementById('tabTestBtn').classList.remove('active');
             document.getElementById('tabDialogBtn').classList.add('active');
+            if (dialogAllResults.length === 0) loadDialogResults();
+            else { applyDialogFilters(); document.getElementById('dialogArea').style.display = 'block'; }
         }
     }
     
@@ -647,7 +668,6 @@
     
     initTheme();
     loadTestResults();
-    loadDialogResults();
 </script>
 </body>
 </html>
