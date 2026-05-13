@@ -347,33 +347,55 @@
         dialogFilteredResults = filtered;
         renderDialogDashboard();
     }
+   function generateCityFeedback() {
+    const city = document.getElementById('cityFilter').value;
+    if (city === 'all') { alert('Выберите конкретный город'); return; }
+    if (!filteredResults.length) { alert('Нет данных по этому городу'); return; }
     
-    function generateCityFeedback() {
-        const city = document.getElementById('cityFilter').value;
-        if (city === 'all') { alert('Выберите конкретный город'); return; }
-        if (!filteredResults.length) { alert('Нет данных по этому городу'); return; }
-        const total = filteredResults.length;
-        const avgPercent = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
-        const questionErrorsMap = new Map();
-        filteredResults.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    if (!a.correct) {
-                        if (!questionErrorsMap.has(idx)) questionErrorsMap.set(idx, { text: a.questionText, correctAnswer: a.correctText, count: 0 });
-                        questionErrorsMap.get(idx).count++;
-                    }
-                });
-            }
-        });
-        if (questionErrorsMap.size === 0) { alert(`В городе ${city} нет ошибок`); return; }
-        let feedback = `Анализ результатов: город ${city}\nСотрудников: ${total}\nСредний балл: ${avgPercent}%\n\nЧастые ошибки и рекомендации:\n`;
-        [...questionErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
-            let fullText = err.text;
-            if (fullText.length > 250) fullText = fullText.substring(0, 250) + '…';
-            feedback += `${order+1}. Вопрос: ${fullText}\n   Ошиблись: ${err.count} из ${total}\n   Правильный ответ: ${err.correctAnswer}\n   Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
-        });
-        navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} скопирован`));
+    // Диагностика: смотрим структуру первого ответа
+    const firstRecord = filteredResults[0];
+    console.log('Структура первой записи:', firstRecord);
+    if (firstRecord.answers && firstRecord.answers[0]) {
+        console.log('Структура первого ответа:', firstRecord.answers[0]);
+        console.log('Поле correct:', firstRecord.answers[0].correct);
     }
+    
+    const total = filteredResults.length;
+    const avgPercent = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
+    const questionErrorsMap = new Map();
+    
+    filteredResults.forEach(r => {
+        if (r.answers && Array.isArray(r.answers)) {
+            r.answers.forEach((a, idx) => {
+                // Проверяем, есть ли поле correct
+                const isCorrect = a.correct === true;
+                if (!isCorrect) {
+                    if (!questionErrorsMap.has(idx)) {
+                        questionErrorsMap.set(idx, { 
+                            text: a.questionText || 'Вопрос без текста', 
+                            correctAnswer: a.correctText || 'Ответ не указан', 
+                            count: 0 
+                        });
+                    }
+                    questionErrorsMap.get(idx).count++;
+                }
+            });
+        }
+    });
+    
+    if (questionErrorsMap.size === 0) { 
+        alert(`В городе ${city} нет ошибок по данным в таблице. Проверьте структуру answers.`); 
+        return; 
+    }
+    
+    let feedback = `Анализ результатов: город ${city}\nСотрудников: ${total}\nСредний балл: ${avgPercent}%\n\nЧастые ошибки и рекомендации:\n`;
+    [...questionErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
+        let fullText = err.text;
+        if (fullText.length > 250) fullText = fullText.substring(0, 250) + '…';
+        feedback += `${order+1}. Вопрос: ${fullText}\n   Ошиблись: ${err.count} из ${total}\n   Правильный ответ: ${err.correctAnswer}\n   Рекомендация: ${getRecommendation(err.correctAnswer)}\n\n`;
+    });
+    navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} скопирован`));
+}
     
     function generateDialogFeedback() {
         const city = document.getElementById('dialogCityFilter').value;
