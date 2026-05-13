@@ -114,7 +114,7 @@
             </div>
             <div id="topQuestionsContainer"></div>
             <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
-                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th><tr></thead><tbody></tbody>能得到</div>
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead><tbody></tbody>能得到</div>
                 <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">Скрыть все вопросы</button>
             </div>
         </div>
@@ -168,8 +168,7 @@
 <script>
     const supabaseClient = supabase.createClient('https://qtostraaqrnjbxiydlip.supabase.co', 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7');
     
-    let allResults = [], filteredResults = [], cityChart = null, scoreChart = null, selectedForDelete = new Set();
-    let dialogAllResults = [], dialogFilteredResults = [], dialogCityChart = null, dialogScoreChart = null;
+    let allResults = [], filteredResults = [], cityChart = null, scoreChart = null;
     let currentTab = 'test';
     
     function getRecommendation(text) {
@@ -185,70 +184,23 @@
         return 'Изучите правильный ответ и повторите материал.';
     }
     
-    // Функция с повторными попытками
-    async function fetchWithRetry(fn, retries = 3, delay = 1500) {
-        for (let i = 0; i < retries; i++) {
-            try {
-                return await fn();
-            } catch (err) {
-                console.log(`Попытка ${i+1} не удалась: ${err.message}`);
-                if (i === retries - 1) throw err;
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    }
-    
     async function loadTestResults() {
         document.getElementById('loadingSkeleton').style.display = 'block';
         document.getElementById('testArea').style.display = 'none';
         document.getElementById('status').innerHTML = 'Загрузка тестов...';
         try {
-            const { data, error } = await fetchWithRetry(async () => {
-                return await supabaseClient.from('results_new').select('*').eq('test_slug', 'prodazhi_2025').order('created_at', { ascending: false }).limit(500);
-            });
+            const { data, error } = await supabaseClient.from('results_new').select('*').eq('test_slug', 'prodazhi_2025').order('created_at', { ascending: false }).limit(500);
             if (error) throw error;
             if (!data || !data.length) { 
                 document.getElementById('status').innerHTML = 'Нет результатов. Попробуйте импорт CSV.'; 
                 return; 
             }
             allResults = data;
-            const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
-            const citySelect = document.getElementById('cityFilter');
-            citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
             applyFilters();
             document.getElementById('testArea').style.display = 'block';
             document.getElementById('status').innerHTML = `Загружено: ${allResults.length} записей`;
         } catch (err) {
-            console.error(err);
             document.getElementById('status').innerHTML = 'Ошибка подключения. Используйте импорт CSV.';
-        } finally {
-            document.getElementById('loadingSkeleton').style.display = 'none';
-        }
-    }
-    
-    async function loadDialogResults() {
-        document.getElementById('loadingSkeleton').style.display = 'block';
-        document.getElementById('dialogArea').style.display = 'none';
-        document.getElementById('status').innerHTML = 'Загрузка диалогов...';
-        try {
-            const { data, error } = await fetchWithRetry(async () => {
-                return await supabaseClient.from('dialog_results').select('*').order('created_at', { ascending: false }).limit(500);
-            });
-            if (error) throw error;
-            if (!data || !data.length) { 
-                document.getElementById('status').innerHTML = 'Нет результатов диалогов'; 
-                return; 
-            }
-            dialogAllResults = data;
-            const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
-            const citySelect = document.getElementById('dialogCityFilter');
-            citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
-            applyDialogFilters();
-            document.getElementById('dialogArea').style.display = 'block';
-            document.getElementById('status').innerHTML = `Загружено: ${dialogAllResults.length} записей диалогов`;
-        } catch (err) {
-            console.error(err);
-            document.getElementById('status').innerHTML = 'Ошибка загрузки диалогов';
         } finally {
             document.getElementById('loadingSkeleton').style.display = 'none';
         }
@@ -282,56 +234,9 @@
             }
             if (data.length > 0) {
                 allResults = data;
-                const cities = [...new Set(allResults.map(r => r.city).filter(c => c))];
-                const citySelect = document.getElementById('cityFilter');
-                citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
                 applyFilters();
-                document.getElementById('testArea').style.display = 'block';
                 document.getElementById('status').innerHTML = `Импортировано: ${data.length} записей`;
                 document.getElementById('importArea').style.display = 'none';
-            } else {
-                alert('Не удалось распознать данные в файле');
-            }
-        };
-        reader.onerror = () => alert('Ошибка чтения файла');
-        reader.readAsText(file, 'UTF-8');
-    }
-    
-    function importDialogCSV() {
-        const file = document.getElementById('dialogImportFile').files[0];
-        if (!file) { alert('Выберите CSV-файл'); return; }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            const lines = text.split('\n');
-            const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-            const data = [];
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const values = lines[i].split(',').map(v => v.replace(/^"|"$/g, '').trim());
-                const row = {};
-                headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
-                if (row.user_name) {
-                    data.push({
-                        user_name: row.user_name,
-                        city: row.city || '',
-                        score: parseInt(row.score) || 0,
-                        total: parseInt(row.total) || 8,
-                        percent: parseInt(row.percent) || 0,
-                        created_at: row.created_at || new Date().toISOString(),
-                        answers: row.answers ? JSON.parse(row.answers) : []
-                    });
-                }
-            }
-            if (data.length > 0) {
-                dialogAllResults = data;
-                const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
-                const citySelect = document.getElementById('dialogCityFilter');
-                citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
-                applyDialogFilters();
-                document.getElementById('dialogArea').style.display = 'block';
-                document.getElementById('status').innerHTML = `Импортировано диалогов: ${data.length} записей`;
-                document.getElementById('dialogImportArea').style.display = 'none';
             } else {
                 alert('Не удалось распознать данные в файле');
             }
@@ -356,26 +261,91 @@
         const surname = document.getElementById('surnameSearch').value.toLowerCase().trim();
         if (surname) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(surname));
         filteredResults = filtered;
+        
+        // Обновляем селектор городов
+        const uniqueCities = [...new Set(allResults.map(r => r.city).filter(c => c))];
+        const citySelect = document.getElementById('cityFilter');
+        citySelect.innerHTML = '<option value="all">Все города</option>' + uniqueCities.map(c => `<option value="${c}" ${city === c ? 'selected' : ''}>${c}</option>`).join('');
+        
         renderDashboard();
     }
     
-    function applyDialogFilters() {
-        let filtered = [...dialogAllResults];
-        const city = document.getElementById('dialogCityFilter').value;
-        if (city !== 'all') filtered = filtered.filter(r => r.city === city);
-        const percent = document.getElementById('dialogPercentFilter').value;
-        if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
-        else if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
-        else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
-        const range = document.getElementById('dialogDateRangeSelect').value;
-        const now = new Date();
-        if (range === 'today') filtered = filtered.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
-        else if (range === 'week') { const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7); filtered = filtered.filter(r => new Date(r.created_at) >= weekAgo); }
-        else if (range === 'month') { const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30); filtered = filtered.filter(r => new Date(r.created_at) >= monthAgo); }
-        const surname = document.getElementById('dialogSurnameSearch').value.toLowerCase().trim();
-        if (surname) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(surname));
-        dialogFilteredResults = filtered;
-        renderDialogDashboard();
+    function renderDashboard() {
+        const total = filteredResults.length;
+        if (!total) { 
+            document.getElementById('kpi').innerHTML = '<div class="kpi-card">Нет данных</div>';
+            document.getElementById('topEmployees').innerHTML = 'Нет данных';
+            document.getElementById('cityRating').innerHTML = 'Нет данных';
+            document.getElementById('employeeList').innerHTML = '';
+            document.getElementById('empCount').innerText = '0';
+            return;
+        }
+        
+        // KPI
+        const avg = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
+        const success = filteredResults.filter(r=>r.percent>=85).length;
+        const errors = filteredResults.reduce((s,r)=>s+(r.total-r.score),0);
+        document.getElementById('kpi').innerHTML = `
+            <div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div>
+            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div>
+            <div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div>
+            <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>
+        `;
+        
+        // Топ сотрудников (≥85%)
+        const top5 = [...filteredResults].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
+        document.getElementById('topEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id})"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет';
+        
+        // Рейтинг городов
+        const cityMap = new Map();
+        filteredResults.forEach(r => { if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0 }); const c = cityMap.get(r.city); c.count++; c.sumPercent += r.percent; });
+        const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, count: data.count, avg: Math.round(data.sumPercent / data.count) })).sort((a,b) => b.avg - a.avg);
+        document.getElementById('cityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
+        
+        // Лучший сотрудник
+        const leader = [...filteredResults].sort((a,b)=>b.percent-a.percent)[0];
+        if(leader) document.getElementById('leaderCelebration').innerHTML = `🏆 Лучший сотрудник: ${leader.user_name} (${leader.city}) — ${leader.percent}%`;
+        
+        // Список сотрудников
+        document.getElementById('empCount').innerText = filteredResults.length;
+        document.getElementById('employeeList').innerHTML = filteredResults.map(r=>`
+            <div class="employee-item" onclick="showEmployeeDetails(${r.id})">
+                <div style="flex:1"><b>${r.user_name}</b> (${r.city})</div>
+                <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span>
+            </div>
+        `).join('');
+        
+        // Гистограмма
+        if (scoreChart) scoreChart.destroy();
+        const bins = [0,0,0,0,0];
+        filteredResults.forEach(r => { if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++; });
+        scoreChart = new Chart(document.getElementById('scoreHistogram'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw} чел.` } } }, animation: { duration: 0 } } });
+        
+        // График городов
+        if (cityChart) cityChart.destroy();
+        const topCities = cityRating.slice(0,6);
+        cityChart = new Chart(document.getElementById('cityChart'), { type: 'bar', data: { labels: topCities.map(c => c.city), datasets: [{ data: topCities.map(c => c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } }, animation: { duration: 0 } } });
+    }
+    
+    async function showEmployeeDetails(id) {
+        const employee = filteredResults.find(r => r.id == id);
+        if (!employee) return;
+        document.getElementById('modalTitle').innerHTML = `${employee.user_name} (${employee.city}) — ${employee.percent}%`;
+        let html = `<p>Правильных ответов: ${employee.score}/${employee.total}</p>`;
+        if (employee.answers && employee.answers.length) {
+            employee.answers.forEach((a, i) => {
+                const isCorrect = a.correct === true;
+                let recommendationText = getRecommendation(a.correctText);
+                if (a.tip) recommendationText = a.tip;
+                html += `<div class="answer-item ${isCorrect ? 'answer-correct' : 'answer-wrong'}">
+                            <b>Вопрос ${i+1}:</b> ${a.questionText}<br>
+                            <b>Ответ сотрудника:</b> ${a.selectedText}<br>
+                            ${!isCorrect ? `<b>Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${recommendationText}</div>` : ''}
+                         </div>`;
+            });
+        }
+        document.getElementById('modalAnswers').innerHTML = html;
+        document.getElementById('modal').style.display = 'flex';
     }
     
     function generateCityFeedback() {
@@ -415,178 +385,6 @@
         navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} скопирован`));
     }
     
-    function generateDialogFeedback() {
-        const city = document.getElementById('dialogCityFilter').value;
-        if (city === 'all') { alert('Выберите конкретный город'); return; }
-        if (!dialogFilteredResults.length) { alert('Нет данных по этому городу'); return; }
-        const total = dialogFilteredResults.length;
-        const avgPercent = Math.round(dialogFilteredResults.reduce((s,r)=>s+r.percent,0)/total);
-        const stepErrorsMap = new Map();
-        dialogFilteredResults.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    if (!a.correct) {
-                        if (!stepErrorsMap.has(idx)) {
-                            stepErrorsMap.set(idx, {
-                                text: a.questionText,
-                                correctAnswer: a.correctText,
-                                count: 0
-                            });
-                        }
-                        stepErrorsMap.get(idx).count++;
-                    }
-                });
-            }
-        });
-        if (stepErrorsMap.size === 0) { alert(`В городе ${city} нет ошибок в диалогах`); return; }
-        
-        let feedback = `Анализ диалогов: город ${city}\nДиалогов: ${total}\nСредний балл: ${avgPercent}%\n\nЧастые ошибки и рекомендации:\n`;
-        [...stepErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
-            let fullText = err.text;
-            if (fullText.length > 250) fullText = fullText.substring(0, 250) + '…';
-            let tip = getRecommendation(err.correctAnswer);
-            if (dialogFilteredResults[0] && dialogFilteredResults[0].answers && dialogFilteredResults[0].answers[idx] && dialogFilteredResults[0].answers[idx].tip) {
-                tip = dialogFilteredResults[0].answers[idx].tip;
-            }
-            feedback += `${order+1}. Шаг ${idx+1}: ${fullText}\n   Ошиблись: ${err.count} из ${total}\n   Правильный ответ: ${err.correctAnswer}\n   Рекомендация: ${tip}\n\n`;
-        });
-        navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} (диалоги) скопирован`));
-    }
-    
-    function renderDashboard() {
-        const total = filteredResults.length;
-        if (!total) { 
-            document.getElementById('kpi').innerHTML = '<div class="kpi-card">Нет данных</div>';
-            document.getElementById('topEmployees').innerHTML = 'Нет данных';
-            document.getElementById('cityRating').innerHTML = 'Нет данных';
-            document.getElementById('employeeList').innerHTML = '';
-            document.getElementById('empCount').innerText = '0';
-            return;
-        }
-        const avg = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
-        const success = filteredResults.filter(r=>r.percent>=85).length;
-        const errors = filteredResults.reduce((s,r)=>s+(r.total-r.score),0);
-        document.getElementById('kpi').innerHTML = `<div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div><div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div><div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div><div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>`;
-        
-        const top5 = [...filteredResults].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
-        document.getElementById('topEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id}, 'test')"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет';
-        
-        const cityMap = new Map();
-        filteredResults.forEach(r => { if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0 }); const c = cityMap.get(r.city); c.count++; c.sumPercent += r.percent; });
-        const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, count: data.count, avg: Math.round(data.sumPercent / data.count) })).sort((a,b) => b.avg - a.avg);
-        document.getElementById('cityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
-        
-        const leader = [...filteredResults].sort((a,b)=>b.percent-a.percent)[0];
-        if(leader) document.getElementById('leaderCelebration').innerHTML = `Лучший сотрудник: ${leader.user_name} (${leader.city}) — ${leader.percent}%`;
-        
-        selectedForDelete.clear();
-        document.getElementById('empCount').innerText = filteredResults.length;
-        document.getElementById('employeeList').innerHTML = filteredResults.map(r=>`<div class="employee-item"><div class="checkbox-col"><input type="checkbox" class="emp-checkbox" data-id="${r.id}"></div><div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id}, 'test')"><b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span></div><div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white; cursor:pointer;" onclick="deleteEmployee(event, ${r.id}, 'test')">🗑</button></div></div>`).join('');
-        document.querySelectorAll('.emp-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) selectedForDelete.add(e.target.dataset.id); else selectedForDelete.delete(e.target.dataset.id); });
-        document.getElementById('massDeleteBtn').style.display = filteredResults.length ? 'inline-block' : 'none';
-        
-        if (scoreChart) scoreChart.destroy();
-        const bins = [0,0,0,0,0];
-        filteredResults.forEach(r => { if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++; });
-        scoreChart = new Chart(document.getElementById('scoreHistogram'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw} чел.` } } }, animation: { duration: 0 } } });
-        if (cityChart) cityChart.destroy();
-        cityChart = new Chart(document.getElementById('cityChart'), { type: 'bar', data: { labels: cityRating.map(c => c.city), datasets: [{ data: cityRating.map(c => c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } }, animation: { duration: 0 } } });
-    }
-    
-    function renderDialogDashboard() {
-        const total = dialogFilteredResults.length;
-        if (!total) {
-            document.getElementById('dialogKpi').innerHTML = '<div class="kpi-card">Нет данных</div>';
-            document.getElementById('dialogTopEmployees').innerHTML = 'Нет данных';
-            document.getElementById('dialogCityRating').innerHTML = 'Нет данных';
-            document.getElementById('dialogEmployeeList').innerHTML = '';
-            document.getElementById('dialogEmpCount').innerText = '0';
-            document.getElementById('stepsErrorContainer').innerHTML = '';
-            return;
-        }
-        const avg = Math.round(dialogFilteredResults.reduce((s,r)=>s+r.percent,0)/total);
-        const success = dialogFilteredResults.filter(r=>r.percent>=85).length;
-        const errors = dialogFilteredResults.reduce((s,r)=>s+(r.total-r.score),0);
-        document.getElementById('dialogKpi').innerHTML = `<div class="kpi-card"><div class="kpi-value">${total}</div><div>Диалогов</div></div><div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div><div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div><div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>`;
-        
-        const stepErrors = new Array(8).fill().map((_,i) => ({ total: 0, errors: 0, index: i }));
-        dialogFilteredResults.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    stepErrors[idx].total++;
-                    if (!a.correct) stepErrors[idx].errors++;
-                });
-            }
-        });
-        const sortedSteps = [...stepErrors].sort((a,b) => (b.errors/b.total||0) - (a.errors/a.total||0)).slice(0,5);
-        document.getElementById('stepsErrorContainer').innerHTML = `<div style="background:#f8f9fa; border-radius:12px; padding:12px;">${sortedSteps.map(s => `<div style="margin-bottom:8px;"><strong>Шаг ${s.index+1}</strong> — ошиблись ${s.errors} из ${s.total} (${Math.round(s.errors/s.total*100)}%)</div>`).join('')}</div>`;
-        
-        const top5 = [...dialogFilteredResults].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
-        document.getElementById('dialogTopEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id}, 'dialog')"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет';
-        
-        const cityMap = new Map();
-        dialogFilteredResults.forEach(r => { if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0 }); const c = cityMap.get(r.city); c.count++; c.sumPercent += r.percent; });
-        const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, count: data.count, avg: Math.round(data.sumPercent / data.count) })).sort((a,b) => b.avg - a.avg);
-        document.getElementById('dialogCityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('dialogCityFilter').value='${c.city}'; applyDialogFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
-        
-        const leader = [...dialogFilteredResults].sort((a,b)=>b.percent-a.percent)[0];
-        if(leader) document.getElementById('dialogLeaderCelebration').innerHTML = `Лучший сотрудник: ${leader.user_name} (${leader.city}) — ${leader.percent}%`;
-        
-        document.getElementById('dialogEmpCount').innerText = dialogFilteredResults.length;
-        document.getElementById('dialogEmployeeList').innerHTML = dialogFilteredResults.map(r=>`<div class="employee-item"><div class="checkbox-col"><input type="checkbox" class="dialog-checkbox" data-id="${r.id}"></div><div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id}, 'dialog')"><b>${r.user_name}</b> (${r.city}) <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span></div><div><button class="delete-employee" style="background:#8b1a2c; border:none; border-radius:20px; padding:2px 10px; color:white; cursor:pointer;" onclick="deleteEmployee(event, ${r.id}, 'dialog')">🗑</button></div></div>`).join('');
-        document.querySelectorAll('.dialog-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) dialogSelectedForDelete.add(e.target.dataset.id); else dialogSelectedForDelete.delete(e.target.dataset.id); });
-        document.getElementById('dialogMassDeleteBtn').style.display = dialogFilteredResults.length ? 'inline-block' : 'none';
-        
-        if (dialogScoreChart) dialogScoreChart.destroy();
-        const bins = [0,0,0,0,0];
-        dialogFilteredResults.forEach(r => { if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++; });
-        dialogScoreChart = new Chart(document.getElementById('dialogScoreChart'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw} чел.` } } }, animation: { duration: 0 } } });
-        if (dialogCityChart) dialogCityChart.destroy();
-        dialogCityChart = new Chart(document.getElementById('dialogCityChart'), { type: 'bar', data: { labels: cityRating.map(c => c.city), datasets: [{ data: cityRating.map(c => c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } }, animation: { duration: 0 } } });
-    }
-    
-    async function showEmployeeDetails(id, type) {
-        let emp;
-        if (type === 'test') emp = filteredResults.find(r => r.id == id);
-        else emp = dialogFilteredResults.find(r => r.id == id);
-        if (!emp) return;
-        document.getElementById('modalTitle').innerHTML = `${emp.user_name} (${emp.city}) — ${emp.percent}%`;
-        let html = `<p>Правильных ответов: ${emp.score}/${emp.total}</p>`;
-        if (emp.answers) {
-            emp.answers.forEach((a, i) => {
-                const isCorrect = a.correct === true;
-                let recommendationText = '';
-                if (a.tip) {
-                    recommendationText = a.tip;
-                } else {
-                    recommendationText = getRecommendation(a.correctText);
-                }
-                html += `<div class="answer-item ${isCorrect ? 'answer-correct' : 'answer-wrong'}">
-                            <b>${type === 'test' ? 'Вопрос' : 'Шаг'} ${i+1}:</b> ${a.questionText}<br>
-                            <b>Ответ сотрудника:</b> ${a.selectedText}<br>
-                            ${!isCorrect ? `<b>Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${recommendationText}</div>` : ''}
-                         </div>`;
-            });
-        }
-        document.getElementById('modalAnswers').innerHTML = html;
-        document.getElementById('modal').style.display = 'flex';
-    }
-    
-    async function deleteEmployee(e, id, type) {
-        e.stopPropagation();
-        if (!confirm('Удалить результаты?')) return;
-        if (type === 'test') await supabaseClient.from('results_new').delete().eq('id', id);
-        else await supabaseClient.from('dialog_results').delete().eq('id', id);
-        if (type === 'test') await loadTestResults();
-        else await loadDialogResults();
-        if (currentTab === 'test') applyFilters();
-        else applyDialogFilters();
-    }
-    
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
-    function initTheme() { if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark'); }
-    function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); }
-    
     function switchTab(tab) {
         currentTab = tab;
         if (tab === 'test') {
@@ -596,8 +394,6 @@
             document.getElementById('dialogFilters').style.display = 'none';
             document.getElementById('tabTestBtn').classList.add('active');
             document.getElementById('tabDialogBtn').classList.remove('active');
-            if (allResults.length === 0) loadTestResults();
-            else { applyFilters(); document.getElementById('testArea').style.display = 'block'; }
         } else {
             document.getElementById('testArea').style.display = 'none';
             document.getElementById('dialogArea').style.display = 'block';
@@ -605,29 +401,29 @@
             document.getElementById('dialogFilters').style.display = 'flex';
             document.getElementById('tabTestBtn').classList.remove('active');
             document.getElementById('tabDialogBtn').classList.add('active');
-            if (dialogAllResults.length === 0) loadDialogResults();
-            else { applyDialogFilters(); document.getElementById('dialogArea').style.display = 'block'; }
         }
     }
+    
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    function initTheme() { if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark'); }
+    function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); }
     
     document.getElementById('tabTestBtn').onclick = () => switchTab('test');
     document.getElementById('tabDialogBtn').onclick = () => switchTab('dialog');
     document.getElementById('loadBtn').onclick = loadTestResults;
-    document.getElementById('dialogLoadBtn').onclick = loadDialogResults;
-    document.getElementById('resetFiltersBtn').onclick = () => { document.getElementById('cityFilter').value = 'all'; document.getElementById('percentFilter').value = 'all'; document.getElementById('dateRangeSelect').value = 'all'; document.getElementById('surnameSearch').value = ''; applyFilters(); };
-    document.getElementById('dialogResetFiltersBtn').onclick = () => { document.getElementById('dialogCityFilter').value = 'all'; document.getElementById('dialogPercentFilter').value = 'all'; document.getElementById('dialogDateRangeSelect').value = 'all'; document.getElementById('dialogSurnameSearch').value = ''; applyDialogFilters(); };
+    document.getElementById('resetFiltersBtn').onclick = () => { 
+        document.getElementById('cityFilter').value = 'all'; 
+        document.getElementById('percentFilter').value = 'all'; 
+        document.getElementById('dateRangeSelect').value = 'all'; 
+        document.getElementById('surnameSearch').value = ''; 
+        applyFilters(); 
+    };
     document.getElementById('cityFilter').onchange = applyFilters;
-    document.getElementById('dialogCityFilter').onchange = applyDialogFilters;
     document.getElementById('percentFilter').onchange = applyFilters;
-    document.getElementById('dialogPercentFilter').onchange = applyDialogFilters;
     document.getElementById('dateRangeSelect').onchange = applyFilters;
-    document.getElementById('dialogDateRangeSelect').onchange = applyDialogFilters;
     document.getElementById('surnameSearch').addEventListener('input', applyFilters);
-    document.getElementById('dialogSurnameSearch').addEventListener('input', applyDialogFilters);
     document.getElementById('feedbackBtn').onclick = generateCityFeedback;
-    document.getElementById('dialogFeedbackBtn').onclick = generateDialogFeedback;
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
-    
     document.getElementById('importBtn').onclick = () => {
         const area = document.getElementById('importArea');
         area.style.display = area.style.display === 'none' ? 'block' : 'none';
@@ -637,34 +433,6 @@
         document.getElementById('importFile').value = '';
     };
     document.getElementById('confirmImportBtn').onclick = importTestCSV;
-    
-    document.getElementById('dialogImportBtn').onclick = () => {
-        const area = document.getElementById('dialogImportArea');
-        area.style.display = area.style.display === 'none' ? 'block' : 'none';
-    };
-    document.getElementById('dialogCancelImportBtn').onclick = () => {
-        document.getElementById('dialogImportArea').style.display = 'none';
-        document.getElementById('dialogImportFile').value = '';
-    };
-    document.getElementById('dialogConfirmImportBtn').onclick = importDialogCSV;
-    
-    let dialogSelectedForDelete = new Set();
-    document.getElementById('dialogMassDeleteBtn').onclick = async () => {
-        if (dialogSelectedForDelete.size && confirm(`Удалить ${dialogSelectedForDelete.size} записей диалогов?`)) {
-            for (let id of dialogSelectedForDelete) await supabaseClient.from('dialog_results').delete().eq('id', id);
-            await loadDialogResults();
-            applyDialogFilters();
-            dialogSelectedForDelete.clear();
-        }
-    };
-    document.getElementById('massDeleteBtn').onclick = async () => {
-        if (selectedForDelete.size && confirm(`Удалить ${selectedForDelete.size} записей тестов?`)) {
-            for (let id of selectedForDelete) await supabaseClient.from('results_new').delete().eq('id', id);
-            await loadTestResults();
-            applyFilters();
-            selectedForDelete.clear();
-        }
-    };
     
     initTheme();
     loadTestResults();
