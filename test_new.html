@@ -100,77 +100,11 @@
 </div>
 
 <script>
-    // ========== SUPABASE ==========
     const supabaseClient = supabase.createClient(
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
 
-    // ========== GITHUB BACKUP ==========
-    // ВСТАВЬ СВОЙ НОВЫЙ ТОКЕН СЮДА:
-    const GITHUB_TOKEN = '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';
-    const GITHUB_REPO = 'wetalsfinx/Test';
-    const GITHUB_BRANCH = 'main';
-    const GITHUB_FILE = 'results_backup.json';
-
-    async function saveToGitHubBackup(result) {
-        try {
-            // Получаем текущий файл
-            let existingResults = [];
-            let sha = null;
-            
-            const getResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            
-            if (getResponse.ok) {
-                const fileData = await getResponse.json();
-                sha = fileData.sha;
-                const content = atob(fileData.content);
-                existingResults = JSON.parse(content);
-            } else if (getResponse.status !== 404) {
-                console.error('GitHub: ошибка получения файла', getResponse.status);
-                return;
-            }
-            
-            // Добавляем результат
-            existingResults.push(result);
-            
-            // Кодируем в base64 с поддержкой кириллицы
-            const jsonString = JSON.stringify(existingResults, null, 2);
-            const encoded = btoa(unescape(encodeURIComponent(jsonString)));
-            
-            // Сохраняем
-            const putResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/vnd.github.v3+json'
-                },
-                body: JSON.stringify({
-                    message: `Резерв: ${result.user_name} (${result.city})`,
-                    content: encoded,
-                    branch: GITHUB_BRANCH,
-                    sha: sha
-                })
-            });
-            
-            if (putResponse.ok) {
-                console.log('✅ GitHub резерв сохранён');
-            } else {
-                const err = await putResponse.json();
-                console.error('❌ GitHub ошибка:', err);
-            }
-        } catch(e) {
-            console.error('❌ GitHub исключение:', e);
-        }
-    }
-
-    // ========== ВОПРОСЫ ==========
     const ORIGINAL_QUESTIONS = [
         { text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?", options: ["«Добрый день! Чем могу помочь?»", "«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?»", "«Добрый день! Присмотритесь к нашим новинкам»", "«Здравствуйте! Если нужны будут рекомендации — обращайтесь»"], correct: 1 },
         { text: "Клиент говорит: «Мне нужно кольцо до 25 000 рублей». Вы услышали бюджет. Что делаете ДАЛЬШЕ?", options: ["Сразу показываете 3-4 кольца в пределах 25 000 ₽", "Показываете сначала кольцо за 28 000 ₽ (якорь), затем за 25 000 ₽", "Спрашиваете: «А для какого случая? Это подарок или для себя?»", "Спрашиваете: «А готовы добавить за лучшее качество?»"], correct: 2 },
@@ -256,35 +190,15 @@
         const percent = Math.round((correctCount / shuffledQuestions.length) * 100);
         const passed = percent >= 85;
 
-        const resultData = {
-            id: Date.now(),
+        await supabaseClient.from('results_new').insert([{
+            test_slug: 'prodazhi_2025',
             user_name: currentUser.name,
             city: currentUser.city,
             score: correctCount,
             total: shuffledQuestions.length,
             percent: percent,
-            answers: answersDetail,
-            date: new Date().toISOString()
-        };
-
-        // Supabase (основной канал)
-        try {
-            await supabaseClient.from('results_new').insert([{
-                test_slug: 'prodazhi_2025',
-                user_name: currentUser.name,
-                city: currentUser.city,
-                score: correctCount,
-                total: shuffledQuestions.length,
-                percent: percent,
-                answers: answersDetail
-            }]);
-            console.log('✅ Supabase сохранён');
-        } catch(e) {
-            console.error('❌ Supabase ошибка:', e);
-        }
-
-        // GitHub JSON (резерв) — не ждём ответа, чтобы не тормозить
-        saveToGitHubBackup(resultData);
+            answers: answersDetail
+        }]);
 
         resultScreen.classList.remove('hidden');
         resultScreen.innerHTML = `
