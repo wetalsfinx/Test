@@ -107,6 +107,7 @@
     );
 
     // ========== GITHUB BACKUP ==========
+    // ВСТАВЬ СВОЙ НОВЫЙ ТОКЕН СЮДА:
     const GITHUB_TOKEN = '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';
     const GITHUB_REPO = 'wetalsfinx/Test';
     const GITHUB_BRANCH = 'main';
@@ -114,7 +115,7 @@
 
     async function saveToGitHubBackup(result) {
         try {
-            // 1. Получаем текущий файл
+            // Получаем текущий файл
             let existingResults = [];
             let sha = null;
             
@@ -131,18 +132,18 @@
                 const content = atob(fileData.content);
                 existingResults = JSON.parse(content);
             } else if (getResponse.status !== 404) {
-                console.error('Ошибка получения файла:', getResponse.status);
+                console.error('GitHub: ошибка получения файла', getResponse.status);
                 return;
             }
             
-            // 2. Добавляем новый результат
+            // Добавляем результат
             existingResults.push(result);
             
-            // 3. Кодируем в base64 (правильно с кириллицей)
+            // Кодируем в base64 с поддержкой кириллицы
             const jsonString = JSON.stringify(existingResults, null, 2);
             const encoded = btoa(unescape(encodeURIComponent(jsonString)));
             
-            // 4. Сохраняем обратно
+            // Сохраняем
             const putResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
                 method: 'PUT',
                 headers: {
@@ -151,7 +152,7 @@
                     'Accept': 'application/vnd.github.v3+json'
                 },
                 body: JSON.stringify({
-                    message: `Добавлен результат: ${result.user_name} (${result.city})`,
+                    message: `Резерв: ${result.user_name} (${result.city})`,
                     content: encoded,
                     branch: GITHUB_BRANCH,
                     sha: sha
@@ -159,13 +160,13 @@
             });
             
             if (putResponse.ok) {
-                console.log('✅ Сохранено в GitHub JSON');
+                console.log('✅ GitHub резерв сохранён');
             } else {
                 const err = await putResponse.json();
-                console.error('❌ Ошибка сохранения в GitHub:', err);
+                console.error('❌ GitHub ошибка:', err);
             }
         } catch(e) {
-            console.error('❌ Ошибка:', e);
+            console.error('❌ GitHub исключение:', e);
         }
     }
 
@@ -266,7 +267,7 @@
             date: new Date().toISOString()
         };
 
-        // Сохраняем в Supabase (основной канал)
+        // Supabase (основной канал)
         try {
             await supabaseClient.from('results_new').insert([{
                 test_slug: 'prodazhi_2025',
@@ -277,26 +278,24 @@
                 percent: percent,
                 answers: answersDetail
             }]);
-            console.log('✅ Сохранено в Supabase');
+            console.log('✅ Supabase сохранён');
         } catch(e) {
-            console.error('❌ Ошибка Supabase:', e);
+            console.error('❌ Supabase ошибка:', e);
         }
 
-        // Сохраняем в GitHub JSON (резерв)
+        // GitHub JSON (резерв) — не ждём ответа, чтобы не тормозить
         saveToGitHubBackup(resultData);
 
         resultScreen.classList.remove('hidden');
         resultScreen.innerHTML = `
             <div class="result-box ${passed ? 'success' : 'fail'}">
                 <h2>${passed ? '🏆 Победа!' : '😞 Тест не пройден'}</h2>
-                <p style="font-size: 18px; margin: 15px 0;">Правильных ответов: ${correctCount} из ${shuffledQuestions.length}</p>
-                <p style="font-size: 24px; font-weight: bold; margin: 10px 0;">Ваш результат: ${percent}%</p>
-                <p style="margin: 15px 0;">${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
-                <button class="restart-btn" id="restartTestBtn" style="margin-top: 20px;">🔄 Пройти заново</button>
+                <p>Правильных ответов: ${correctCount} из ${shuffledQuestions.length}</p>
+                <p>Ваш результат: ${percent}%</p>
+                <p>${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
+                <button class="restart-btn" onclick="location.reload()">🔄 Пройти заново</button>
             </div>
         `;
-        const restartBtnElem = document.getElementById('restartTestBtn');
-        if (restartBtnElem) restartBtnElem.onclick = () => location.reload();
     }
 
     function nextQuestionHandler() {
