@@ -152,6 +152,16 @@
         return '💡 Изучите правильный ответ и повторите материал.';
     }
     
+    // Обновление списка городов в фильтре
+    function updateCityFilter() {
+        const cities = [...new Set(allResults.map(r => r.city).filter(c => c && c !== 'Не указан'))];
+        const citySelect = document.getElementById('cityFilter');
+        const currentValue = citySelect.value;
+        citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+        if (currentValue !== 'all' && cities.includes(currentValue)) citySelect.value = currentValue;
+        else citySelect.value = 'all';
+    }
+    
     async function loadTestResults() {
         document.getElementById('loadingSkeleton').style.display = 'block';
         document.getElementById('testArea').style.display = 'none';
@@ -161,6 +171,7 @@
             if (error) throw error;
             if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; return; }
             allResults = data.map(r => ({ id: r.id, user_name: r.user_name || r.user_id, city: r.city || 'Не указан', score: r.score || 0, total: r.total || 11, percent: r.percent || 0, answers: r.answers || [], created_at: r.created_at }));
+            updateCityFilter();
             applyFilters();
             document.getElementById('testArea').style.display = 'block';
             document.getElementById('status').innerHTML = `✅ Загружено: ${allResults.length} записей`;
@@ -177,6 +188,9 @@
             if (error) throw error;
             if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов диалогов'; return; }
             dialogAllResults = data.map(r => ({ id: r.id, user_name: r.user_name, city: r.city || 'Не указан', score: r.score || 0, total: r.total || 8, percent: r.percent || 0, answers: r.answers || [] }));
+            const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
+            const citySelect = document.getElementById('dialogCityFilter');
+            citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
             applyDialogFilters();
             document.getElementById('dialogArea').style.display = 'block';
             document.getElementById('status').innerHTML = `✅ Загружено диалогов: ${dialogAllResults.length} записей`;
@@ -242,9 +256,9 @@
         if (scoreChart) scoreChart.destroy();
         const bins = [0,0,0,0,0];
         filteredResults.forEach(r => { if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++; });
-        scoreChart = new Chart(document.getElementById('scoreChart'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
+        scoreChart = new Chart(document.getElementById('scoreChart'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
         if (cityChart) cityChart.destroy();
-        cityChart = new Chart(document.getElementById('cityChart'), { type: 'bar', data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
+        cityChart = new Chart(document.getElementById('cityChart'), { type: 'bar', data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
     }
     
     function renderDialogDashboard() {
@@ -263,9 +277,9 @@
         if (dialogScoreChart) dialogScoreChart.destroy();
         const bins = [0,0,0,0,0];
         dialogFilteredResults.forEach(r => { if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++; });
-        dialogScoreChart = new Chart(document.getElementById('dialogScoreChart'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
+        dialogScoreChart = new Chart(document.getElementById('dialogScoreChart'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
         if (dialogCityChart) dialogCityChart.destroy();
-        dialogCityChart = new Chart(document.getElementById('dialogCityChart'), { type: 'bar', data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
+        dialogCityChart = new Chart(document.getElementById('dialogCityChart'), { type: 'bar', data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
     }
     
     async function showEmployee(id, type) {
@@ -306,8 +320,8 @@
     
     function exportCSV() { if (!filteredResults.length) return alert('Нет данных'); let csv = "Имя,Город,Правильных,Всего,Процент,Дата\n"; filteredResults.forEach(r => csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent},"${new Date(r.created_at).toLocaleDateString()}"\n`); const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `test_results_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
     function exportDialogCSV() { if (!dialogFilteredResults.length) return alert('Нет данных'); let csv = "Имя,Город,Правильных,Всего,Процент,Дата\n"; dialogFilteredResults.forEach(r => csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent},"${new Date(r.created_at).toLocaleDateString()}"\n`); const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `dialog_results_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
-    function importTestCSV() { const file = document.getElementById('importFile').files[0]; if (!file) return alert('Выберите файл'); const reader = new FileReader(); reader.onload = e => { const lines = e.target.result.split('\n'), headers = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim()), data = []; for(let i=1;i<lines.length;i++){ if(!lines[i].trim()) continue; const values = lines[i].split(',').map(v=>v.replace(/^"|"$/g,'').trim()), row={}; headers.forEach((h,idx)=>{row[h]=values[idx]||'';}); if(row.user_name||row.user_id) data.push({ user_name: row.user_name||row.user_id, city: row.city||'', score: parseInt(row.score)||0, total: parseInt(row.total)||11, percent: parseInt(row.percent)||0, created_at: row.created_at||new Date().toISOString(), answers: [] }); } if(data.length){ allResults=data; applyFilters(); alert(`Импортировано ${data.length} записей`); document.getElementById('importArea').style.display='none'; } else alert('Не удалось распознать данные'); }; reader.readAsText(file,'UTF-8'); }
-    function importDialogCSV() { const file = document.getElementById('dialogImportFile').files[0]; if (!file) return alert('Выберите файл'); const reader = new FileReader(); reader.onload = e => { const lines = e.target.result.split('\n'), headers = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim()), data = []; for(let i=1;i<lines.length;i++){ if(!lines[i].trim()) continue; const values = lines[i].split(',').map(v=>v.replace(/^"|"$/g,'').trim()), row={}; headers.forEach((h,idx)=>{row[h]=values[idx]||'';}); if(row.user_name) data.push({ user_name: row.user_name, city: row.city||'', score: parseInt(row.score)||0, total: parseInt(row.total)||8, percent: parseInt(row.percent)||0, created_at: row.created_at||new Date().toISOString(), answers: [] }); } if(data.length){ dialogAllResults=data; applyDialogFilters(); alert(`Импортировано ${data.length} записей диалогов`); document.getElementById('dialogImportArea').style.display='none'; } else alert('Не удалось распознать данные'); }; reader.readAsText(file,'UTF-8'); }
+    function importTestCSV() { const file = document.getElementById('importFile').files[0]; if (!file) return alert('Выберите файл'); const reader = new FileReader(); reader.onload = e => { const lines = e.target.result.split('\n'), headers = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim()), data = []; for(let i=1;i<lines.length;i++){ if(!lines[i].trim()) continue; const values = lines[i].split(',').map(v=>v.replace(/^"|"$/g,'').trim()), row={}; headers.forEach((h,idx)=>{row[h]=values[idx]||'';}); if(row.user_name||row.user_id) data.push({ user_name: row.user_name||row.user_id, city: row.city||'', score: parseInt(row.score)||0, total: parseInt(row.total)||11, percent: parseInt(row.percent)||0, created_at: row.created_at||new Date().toISOString(), answers: [] }); } if(data.length){ allResults=data; updateCityFilter(); applyFilters(); alert(`Импортировано ${data.length} записей`); document.getElementById('importArea').style.display='none'; } else alert('Не удалось распознать данные'); }; reader.readAsText(file,'UTF-8'); }
+    function importDialogCSV() { const file = document.getElementById('dialogImportFile').files[0]; if (!file) return alert('Выберите файл'); const reader = new FileReader(); reader.onload = e => { const lines = e.target.result.split('\n'), headers = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim()), data = []; for(let i=1;i<lines.length;i++){ if(!lines[i].trim()) continue; const values = lines[i].split(',').map(v=>v.replace(/^"|"$/g,'').trim()), row={}; headers.forEach((h,idx)=>{row[h]=values[idx]||'';}); if(row.user_name) data.push({ user_name: row.user_name, city: row.city||'', score: parseInt(row.score)||0, total: parseInt(row.total)||8, percent: parseInt(row.percent)||0, created_at: row.created_at||new Date().toISOString(), answers: [] }); } if(data.length){ dialogAllResults=data; const cities = [...new Set(dialogAllResults.map(r=>r.city).filter(c=>c))]; const citySelect = document.getElementById('dialogCityFilter'); citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c=>`<option value="${c}">${c}</option>`).join(''); applyDialogFilters(); alert(`Импортировано ${data.length} записей диалогов`); document.getElementById('dialogImportArea').style.display='none'; } else alert('Не удалось распознать данные'); }; reader.readAsText(file,'UTF-8'); }
     async function massDelete() { if(selectedForDelete.size && confirm(`Удалить ${selectedForDelete.size} записей?`)){ for(let id of selectedForDelete) await supabaseClient.from('results_new').delete().eq('id', id); await loadTestResults(); } }
     async function dialogMassDelete() { if(dialogSelectedForDelete.size && confirm(`Удалить ${dialogSelectedForDelete.size} записей диалогов?`)){ for(let id of dialogSelectedForDelete) await supabaseClient.from('dialog_results').delete().eq('id', id); await loadDialogResults(); } }
     function resetFilters() { document.getElementById('cityFilter').value='all'; document.getElementById('percentFilter').value='all'; document.getElementById('dateRangeSelect').value='all'; document.getElementById('searchInput').value=''; applyFilters(); }
