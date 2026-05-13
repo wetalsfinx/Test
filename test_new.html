@@ -77,7 +77,7 @@
             <select id="userCity">
                 <option value="">-- Выберите город --</option>
                 <option value="Сыктывкар">Сыктывкар</option>
-                <option value="Оренburg">Оренбург</option>
+                <option value="Оренбург">Оренбург</option>
                 <option value="Екатеринбург">Екатеринбург</option>
                 <option value="Уфа">Уфа</option>
                 <option value="Ульяновск">Ульяновск</option>
@@ -104,12 +104,6 @@
         'https://qtostraaqrnjbxiydlip.supabase.co',
         'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7'
     );
-
-    // GitHub API настройки (замените токен на свой)
-    const GITHUB_TOKEN = 'ghp_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';
-    const GITHUB_REPO = 'wetalsfinx/Test';
-    const GITHUB_BRANCH = 'main';
-    const GITHUB_FILE = 'results_backup.json';
 
     const ORIGINAL_QUESTIONS = [
         {
@@ -248,52 +242,6 @@
         return arr;
     }
 
-    // Сохранение в GitHub JSON (резервная копия)
-    async function saveToGitHub(result) {
-        try {
-            // Сначала получаем текущий файл, чтобы не затереть старые данные
-            let existingData = [];
-            try {
-                const getResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
-                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-                });
-                if (getResponse.ok) {
-                    const fileData = await getResponse.json();
-                    const content = atob(fileData.content);
-                    existingData = JSON.parse(content);
-                }
-            } catch (e) { console.log('Файл не найден, создаём новый'); }
-            
-            existingData.push(result);
-            const updatedContent = btoa(JSON.stringify(existingData, null, 2));
-            
-            // Получаем SHA файла для обновления
-            let sha = null;
-            const getShaResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-            });
-            if (getShaResponse.ok) {
-                const fileData = await getShaResponse.json();
-                sha = fileData.sha;
-            }
-            
-            await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: `Добавлен результат ${result.user_name} (${result.city})`,
-                    content: updatedContent,
-                    branch: GITHUB_BRANCH,
-                    sha: sha
-                })
-            });
-            console.log('Сохранено в GitHub JSON');
-        } catch(e) { console.error('Ошибка сохранения в GitHub:', e); }
-    }
-
     function renderQuestion() {
         const q = shuffledQuestions[currentIndex];
         questionTextDiv.innerText = q.text;
@@ -340,18 +288,7 @@
         }
         const percent = Math.round((correctCount / shuffledQuestions.length) * 100);
         const passed = percent >= 85;
-        
-        const resultData = {
-            user_name: currentUser.name,
-            city: currentUser.city,
-            score: correctCount,
-            total: shuffledQuestions.length,
-            percent: percent,
-            answers: answersDetail,
-            date: new Date().toISOString()
-        };
-        
-        // Сохраняем в Supabase
+
         await supabaseClient.from('results_new').insert([{
             test_slug: 'prodazhi_2025',
             user_name: currentUser.name,
@@ -361,10 +298,7 @@
             percent: percent,
             answers: answersDetail
         }]);
-        
-        // Сохраняем в GitHub JSON (резерв)
-        saveToGitHub(resultData);
-        
+
         resultScreen.classList.remove('hidden');
         resultScreen.innerHTML = `
             <div class="result-box ${passed ? 'success' : 'fail'}">
