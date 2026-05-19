@@ -2,7 +2,6 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>585GOLD | Дашборд</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -189,7 +188,24 @@
 <div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><button onclick="closeModal()" style="margin-top: 16px; background: #6c757d;">Закрыть</button></div></div>
 
 <script>
-    const supabaseClient = supabase.createClient('https://qtostraaqrnjbxiydlip.supabase.co', 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7');
+    // Убираем ошибку favicon.ico
+    const favicon = document.querySelector('link[rel="icon"]');
+    if (!favicon) {
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.href = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ctext y=".9em" font-size="90"%3E💎%3C/text%3E%3C/svg%3E';
+        document.head.appendChild(link);
+    }
+    
+    const supabaseClient = supabase.createClient(
+        'https://qtostraaqrnjbxiydlip.supabase.co',
+        'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7',
+        {
+            auth: { persistSession: false },
+            db: { schema: 'public' },
+            global: { headers: { 'x-my-custom-header': 'my-app' } }
+        }
+    );
     
     let allResults = [], filteredResults = [], selectedForDelete = new Set();
     let dialogAllResults = [], dialogFilteredResults = [], dialogSelectedForDelete = new Set();
@@ -272,16 +288,46 @@
         document.getElementById('testArea').style.display = 'none';
         document.getElementById('status').innerHTML = 'Загрузка тестов...';
         try {
-            const { data, error } = await supabaseClient.from('results_new').select('*').eq('test_slug', 'prodazhi_2025').order('created_at', { ascending: false }).limit(500);
+            // Пробуем загрузить данные с таймаутом
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            
+            const { data, error } = await supabaseClient
+                .from('results_new')
+                .select('*')
+                .eq('test_slug', 'prodazhi_2025')
+                .order('created_at', { ascending: false })
+                .limit(500);
+            
+            clearTimeout(timeoutId);
+            
             if (error) throw error;
-            if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; return; }
-            allResults = data.map(r => ({ id: r.id, user_name: r.user_name || r.user_id, city: r.city || 'Не указан', score: r.score || 0, total: r.total || 11, percent: r.percent || 0, answers: r.answers || [], created_at: r.created_at }));
+            if (!data || !data.length) { 
+                document.getElementById('status').innerHTML = 'Нет результатов. Проверьте таблицу results_new.'; 
+                document.getElementById('loadingSkeleton').style.display = 'none';
+                return; 
+            }
+            
+            allResults = data.map(r => ({ 
+                id: r.id, 
+                user_name: r.user_name || r.user_id || r.name || 'Аноним', 
+                city: r.city || 'Не указан', 
+                score: r.score || 0, 
+                total: r.total || 11, 
+                percent: r.percent || Math.round((r.score || 0) / (r.total || 11) * 100), 
+                answers: r.answers || [], 
+                created_at: r.created_at 
+            }));
+            
             updateCityFilter();
             renderCityStatsTable();
             applyFilters();
             document.getElementById('testArea').style.display = 'block';
             document.getElementById('status').innerHTML = `✅ Загружено: ${allResults.length} записей`;
-        } catch (err) { document.getElementById('status').innerHTML = 'Ошибка загрузки: ' + err.message; }
+        } catch (err) { 
+            console.error('Ошибка загрузки:', err);
+            document.getElementById('status').innerHTML = 'Ошибка загрузки: ' + err.message + '. Проверьте подключение к Supabase.'; 
+        }
         finally { document.getElementById('loadingSkeleton').style.display = 'none'; }
     }
     
@@ -485,7 +531,6 @@
                 <button class="delete-btn" onclick="deleteEmployee(event, ${r.id}, 'test')">🗑</button>
             </div>
         `).join('');
-        document.querySelectorAll('.emp-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) selectedForDelete.add(e.target.dataset.id); else selectedForDelete.delete(e.target.dataset.id); });
         
         if (scoreChart) scoreChart.destroy();
         const bins = [0,0,0,0,0];
@@ -523,7 +568,6 @@
                 <button class="delete-btn" onclick="deleteEmployee(event, ${r.id}, 'dialog')">🗑</button>
             </div>
         `).join('');
-        document.querySelectorAll('.dialog-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) dialogSelectedForDelete.add(e.target.dataset.id); else dialogSelectedForDelete.delete(e.target.dataset.id); });
         
         if (dialogScoreChart) dialogScoreChart.destroy();
         const bins = [0,0,0,0,0];
@@ -583,6 +627,7 @@
             document.getElementById('tabTestBtn').classList.add('active');
             document.getElementById('tabDialogBtn').classList.remove('active');
             document.getElementById('tabCityStatsBtn').classList.remove('active');
+            if (!allResults.length) loadTestResults();
         } else if (tab === 'dialog') {
             document.getElementById('testArea').style.display = 'none';
             document.getElementById('dialogArea').style.display = 'block';
@@ -592,6 +637,7 @@
             document.getElementById('tabTestBtn').classList.remove('active');
             document.getElementById('tabDialogBtn').classList.add('active');
             document.getElementById('tabCityStatsBtn').classList.remove('active');
+            if (!dialogAllResults.length) loadDialogResults();
         } else {
             document.getElementById('testArea').style.display = 'none';
             document.getElementById('dialogArea').style.display = 'none';
