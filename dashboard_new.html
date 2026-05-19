@@ -23,6 +23,8 @@
         .employee-list { max-height: 400px; overflow-y: auto; }
         .employee-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
         .employee-item:hover { background: #fff0f3; }
+        .delete-btn { background: #8b1a2c; color: white; border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; margin-left: 10px; font-size: 12px; }
+        .delete-btn:hover { background: #5c0f1e; }
         .badge { background: #c41e3a; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; }
         .loading { text-align: center; padding: 40px; color: #666; }
     </style>
@@ -102,6 +104,18 @@
         renderDashboard();
     }
     
+    async function deleteEmployee(id, event) {
+        event.stopPropagation();
+        if (!confirm('Удалить результаты этого сотрудника?')) return;
+        
+        const { error } = await supabaseClient.from('results_new').delete().eq('id', id);
+        if (error) {
+            alert('Ошибка удаления: ' + error.message);
+        } else {
+            await loadResults();
+        }
+    }
+    
     function renderDashboard() {
         if (!filteredData.length) { document.getElementById('kpi').innerHTML = '<div class="kpi-card">Нет данных</div>'; return; }
         
@@ -120,8 +134,11 @@
         document.getElementById('empCount').innerText = filteredData.length;
         document.getElementById('employeeList').innerHTML = filteredData.map(r => `
             <div class="employee-item" onclick="showEmployee(${r.id})">
-                <span><b>${r.user_name}</b> (${r.city})</span>
-                <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span>
+                <div style="flex:1">
+                    <b>${r.user_name}</b> (${r.city})
+                    <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span>
+                </div>
+                <button class="delete-btn" onclick="deleteEmployee(${r.id}, event)">🗑</button>
             </div>
         `).join('');
         
@@ -210,6 +227,7 @@
     document.getElementById('exportBtn').onclick = exportCSV;
     window.closeModal = closeModal;
     window.showEmployee = showEmployee;
+    window.deleteEmployee = deleteEmployee;
     
     loadResults();
 </script>
