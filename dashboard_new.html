@@ -7,196 +7,546 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 16px; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 16px; transition: background 0.2s; }
+        body.dark { background: #1a1a2e; color: #e0e0e0; }
+        body.dark .card, body.dark .kpi-card, body.dark .modal-content { background: #16213e; color: #e0e0e0; border-color: #0f3460; }
         .dashboard { max-width: 1400px; margin: 0 auto; }
-        .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-top: 4px solid #c41e3a; }
-        h2, h3 { color: #c41e3a; margin-top: 0; }
-        .flex-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
-        select, button { padding: 8px 16px; border-radius: 40px; border: 1px solid #ddd; background: white; cursor: pointer; }
+        .sticky-header { position: sticky; top: 0; z-index: 100; background: inherit; padding-bottom: 8px; }
+        .card { background: white; border-radius: 24px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 4px solid #c41e3a; }
+        h2, h3 { color: #c41e3a; margin-top: 0; font-size: 18px; }
+        .flex-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        select, button, input { padding: 8px 12px; border-radius: 30px; border: 1px solid #ddd; font-size: 13px; background: white; cursor: pointer; }
         button { background: #c41e3a; color: white; border: none; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .kpi-card { background: #f8f9fa; border-radius: 20px; padding: 16px; text-align: center; }
-        .kpi-value { font-size: 32px; font-weight: bold; color: #c41e3a; }
-        .charts-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
-        .chart-box { flex: 1; min-width: 280px; }
-        canvas { max-height: 220px; width: 100%; }
+        button:hover { background: #8b1a2c; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .kpi-card { background: #f8f9fa; border-radius: 20px; padding: 12px; text-align: center; }
+        .kpi-value { font-size: 28px; font-weight: bold; color: #c41e3a; }
+        .charts-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .chart-box { flex: 1; min-width: 260px; }
+        canvas { max-height: 200px; width: 100%; }
+        .employee-item, .city-row, .top-employee { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; }
+        .employee-item:hover, .city-row:hover, .top-employee:hover { background: #fff0f3; }
+        .badge { background: #c41e3a; color: white; padding: 2px 10px; border-radius: 30px; font-size: 11px; }
         .employee-list { max-height: 400px; overflow-y: auto; }
-        .employee-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .employee-item:hover { background: #fff0f3; }
-        .delete-btn { background: #8b1a2c; color: white; border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; margin-left: 10px; font-size: 12px; }
-        .badge { background: #c41e3a; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; }
-        .loading { text-align: center; padding: 40px; color: #666; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; border-radius: 28px; padding: 20px; }
+        .answer-item { background: #f8f9fa; border-radius: 16px; padding: 10px; margin-bottom: 10px; font-size: 13px; }
+        .answer-correct { border-left: 4px solid #28a745; }
+        .answer-wrong { border-left: 4px solid #c41e3a; }
+        .leader-card { background: linear-gradient(135deg, #fff0f3, #ffe0e0); border-radius: 20px; padding: 12px; margin-bottom: 15px; text-align: center; font-size: 14px; }
+        .loading-text { text-align: center; padding: 30px; color: #666; }
+        .checkbox-col { width: 30px; text-align: center; }
+        .theme-toggle { margin-left: auto; }
+        .tab-btn { background: #e0d6cc; border: none; padding: 8px 20px; border-radius: 40px; cursor: pointer; font-weight: bold; margin-right: 8px; }
+        .tab-btn.active { background: #c41e3a; color: white; }
+        .feedback-btn { background: #2c6e2c; margin-left: 5px; }
+        .question-stats-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .question-stats-table th, .question-stats-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
+        .question-stats-table th { background: #c41e3a; color: white; }
+        .question-stats-table td:first-child { word-break: break-word; }
+        .question-options { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.3; }
+        .correct-answer { font-size: 11px; color: #2c6e2c; margin-top: 4px; font-weight: normal; }
+        .recommendation { background: #e8f0e8; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 12px; white-space: pre-line; }
+        .show-all-btn { background: #6c757d; margin-top: 10px; width: auto; padding: 5px 15px; font-size: 12px; }
+        .import-btn { background: #6c757d; margin-left: 5px; }
+        .import-area { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 16px; display: none; }
+        .delete-btn { background: #8b1a2c; margin-left: 8px; padding: 4px 12px; border-radius: 20px; font-size: 11px; }
     </style>
 </head>
 <body>
 <div class="dashboard">
-    <div class="card">
-        <h2>📊 585GOLD | Дашборд</h2>
-        <div class="flex-row">
-            <select id="cityFilter"><option value="all">Все города</option></select>
-            <button id="loadBtn">Загрузить</button>
-            <button id="exportBtn">📎 CSV</button>
+    <div class="sticky-header">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <h2 style="margin: 0;">📊 585GOLD | Дашборд</h2>
+                <div style="display: flex; gap: 8px;">
+                    <button id="themeToggleBtn" style="background:#6c757d;">🌙 Тема</button>
+                </div>
+            </div>
+            <div style="margin-top: 12px;">
+                <button id="tabTestBtn" class="tab-btn active">📊 Тест</button>
+                <button id="tabDialogBtn" class="tab-btn">🎭 Тренажёр диалогов</button>
+                <button id="tabCityStatsBtn" class="tab-btn">🏙️ Статистика по городам</button>
+            </div>
+            <div id="testFilters" class="flex-row" style="margin-top: 12px;">
+                <select id="cityFilter"><option value="all">Все города</option></select>
+                <select id="percentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
+                <select id="dateRangeSelect"><option value="all">Всё время</option><option value="today">Сегодня</option><option value="week">7 дней</option><option value="month">30 дней</option></select>
+                <input type="text" id="surnameSearch" class="search-input" placeholder="🔍 Поиск по фамилии">
+                <button id="resetFiltersBtn" class="reset-btn">Сбросить фильтры</button>
+                <button id="loadBtn">Загрузить</button>
+                <button id="exportCsvBtn">📎 CSV</button>
+                <button id="feedbackBtn" class="feedback-btn">📝 Фидбек для города</button>
+                <button id="importBtn" class="import-btn">📂 Импорт CSV</button>
+                <button id="massDeleteBtn" style="background:#8b1a2c; display: none;">🗑 Удалить выбранных</button>
+            </div>
+            <div id="importArea" class="import-area">
+                <p>Загрузите CSV-файл из Supabase (таблица results_new)</p>
+                <input type="file" id="importFile" accept=".csv">
+                <button id="confirmImportBtn" style="margin-top: 8px;">Загрузить данные</button>
+                <button id="cancelImportBtn" style="margin-top: 8px; background:#6c757d;">Отмена</button>
+            </div>
+            <div id="dialogFilters" class="flex-row" style="margin-top: 12px; display: none;">
+                <select id="dialogCityFilter"><option value="all">Все города</option></select>
+                <select id="dialogPercentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
+                <select id="dialogDateRangeSelect"><option value="all">Всё время</option><option value="today">Сегодня</option><option value="week">7 дней</option><option value="month">30 дней</option></select>
+                <input type="text" id="dialogSurnameSearch" class="search-input" placeholder="🔍 Поиск по фамилии">
+                <button id="dialogResetFiltersBtn" class="reset-btn">Сбросить фильтры</button>
+                <button id="dialogLoadBtn">Загрузить</button>
+                <button id="dialogExportCsvBtn">📎 CSV</button>
+                <button id="dialogFeedbackBtn" class="feedback-btn">📝 Фидбек для города</button>
+                <button id="dialogImportBtn" class="import-btn">📂 Импорт CSV</button>
+                <button id="dialogMassDeleteBtn" style="background:#8b1a2c; display: none;">🗑 Удалить выбранных</button>
+            </div>
+            <div id="dialogImportArea" class="import-area" style="display: none;">
+                <p>Загрузите CSV-файл из Supabase (таблица dialog_results)</p>
+                <input type="file" id="dialogImportFile" accept=".csv">
+                <button id="dialogConfirmImportBtn" style="margin-top: 8px;">Загрузить данные</button>
+                <button id="dialogCancelImportBtn" style="margin-top: 8px; background:#6c757d;">Отмена</button>
+            </div>
+            <div id="status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
         </div>
-        <div id="status" style="margin-top: 8px; color: #666; font-size: 13px;"></div>
     </div>
 
-    <div id="statsArea" style="display: none;">
+    <!-- Блок теста -->
+    <div id="testArea">
+        <div id="leaderCelebration" class="leader-card" style="display: none;"></div>
         <div class="kpi-grid" id="kpi"></div>
+        <div class="card" id="questionStatsCard">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h3 style="margin: 0;">📊 Статистика по вопросам (ошибки)</h3>
+                <button id="toggleAllQuestionsBtn" class="show-all-btn">📋 Показать все вопросы</button>
+            </div>
+            <div id="topQuestionsContainer"></div>
+            <div id="allQuestionsContainer" style="display: none; margin-top: 12px;">
+                <div style="overflow-x: auto;"><table class="question-stats-table" id="questionStatsTable"><thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></td></thead><tbody></tbody>能得到</div>
+                <button id="hideAllQuestionsBtn" class="show-all-btn" style="margin-top: 10px;">▲ Скрыть все вопросы</button>
+            </div>
+        </div>
         <div class="charts-row">
-            <div class="card chart-box"><h3>Распределение баллов</h3><canvas id="scoreChart"></canvas></div>
-            <div class="card chart-box"><h3>Топ городов</h3><canvas id="cityChart"></canvas></div>
+            <div class="card chart-box"><h3>Распределение баллов</h3><canvas id="scoreHistogram"></canvas></div>
+            <div class="card chart-box"><h3>Топ городов (средний балл)</h3><canvas id="cityChart"></canvas></div>
+        </div>
+        <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <div class="card" style="flex:1"><h3>🏆 Топ сотрудников (≥85%)</h3><div id="topEmployees"></div></div>
+            <div class="card" style="flex:1"><h3>🏙️ Рейтинг городов</h3><div id="cityRating"></div></div>
         </div>
         <div class="card">
-            <h3>📋 Сотрудники (<span id="empCount">0</span>)</h3>
-            <div id="employeeList" class="employee-list"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h3>📋 Сотрудники (<span id="empCount">0</span>)</h3>
+                <button id="massDeleteBtn" style="background:#8b1a2c; display: none;">🗑 Удалить выбранных</button>
+            </div>
+            <div class="employee-list" id="employeeList"></div>
         </div>
     </div>
-    <div id="loading" class="loading">Загрузка...</div>
+
+    <!-- Блок диалогов (скрыт) -->
+    <div id="dialogArea" style="display: none;">
+        <div id="dialogLeaderCelebration" class="leader-card" style="display: none;"></div>
+        <div class="kpi-grid" id="dialogKpi"></div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h3 style="margin: 0;">🎭 Проблемные шаги (ошибки)</h3>
+            </div>
+            <div id="stepsErrorContainer"></div>
+        </div>
+        <div class="charts-row">
+            <div class="card chart-box"><h3>Распределение баллов (диалоги)</h3><canvas id="dialogScoreChart"></canvas></div>
+            <div class="card chart-box"><h3>Топ городов (диалоги)</h3><canvas id="dialogCityChart"></canvas></div>
+        </div>
+        <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <div class="card" style="flex:1"><h3>🏆 Топ сотрудников (диалоги, ≥85%)</h3><div id="dialogTopEmployees"></div></div>
+            <div class="card" style="flex:1"><h3>🏙️ Рейтинг городов (диалоги)</h3><div id="dialogCityRating"></div></div>
+        </div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h3>📋 Сотрудники (диалоги) (<span id="dialogEmpCount">0</span>)</h3>
+                <button id="dialogMassDeleteBtn" style="background:#8b1a2c; display: none;">🗑 Удалить выбранных</button>
+            </div>
+            <div class="employee-list" id="dialogEmployeeList"></div>
+        </div>
+    </div>
+
+    <!-- Блок статистики по городам -->
+    <div id="cityStatsArea" style="display: none;">
+        <div class="card">
+            <h3>🏙️ Статистика по городам</h3>
+            <div style="overflow-x: auto;">
+                <table class="question-stats-table" id="cityStatsTable">
+                    <thead>
+                        <tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно (≥85%)</th><th>Ошибок всего</th>
+                    </thead>
+                    <tbody id="cityStatsBody"></tbody>
+                </table>
+            </div>
+            <button id="exportCityStatsBtn" style="margin-top: 15px;">📎 Экспорт таблицы CSV</button>
+        </div>
+    </div>
+    <div id="loadingSkeleton" class="loading-text">Загрузка...</div>
 </div>
 
-<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
-    <div style="background:white; max-width:550px; width:90%; max-height:80vh; overflow-y:auto; border-radius:24px; padding:20px;">
-        <h3 id="modalTitle"></h3>
-        <div id="modalAnswers"></div>
-        <button onclick="closeModal()" style="margin-top:16px; background:#6c757d; color:white; border:none; padding:8px 20px; border-radius:30px;">Закрыть</button>
-    </div>
-</div>
+<div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><button onclick="closeModal()" style="margin-top: 16px; background:#6c757d;">Закрыть</button></div></div>
 
 <script>
     const supabaseClient = supabase.createClient('https://qtostraaqrnjbxiydlip.supabase.co', 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7');
     
-    let allData = [], filteredData = [], scoreChart = null, cityChart = null;
+    let allResults = [], filteredResults = [], selectedForDelete = new Set();
+    let dialogAllResults = [], dialogFilteredResults = [], dialogSelectedForDelete = new Set();
+    let currentTab = 'test';
+    let scoreChart = null, cityChart = null, dialogScoreChart = null, dialogCityChart = null;
     
-    async function loadResults() {
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('statsArea').style.display = 'none';
-        document.getElementById('status').innerHTML = 'Загрузка...';
-        
-        const { data, error } = await supabaseClient.from('results_new').select('*').eq('test_slug', 'prodazhi_2025').order('created_at', { ascending: false }).limit(500);
-        
-        document.getElementById('loading').style.display = 'none';
-        if (error) { document.getElementById('status').innerHTML = 'Ошибка: ' + error.message; return; }
-        if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет данных'; return; }
-        
-        allData = data.map(r => ({
-            id: r.id,
-            user_name: r.user_name || r.user_id || 'Аноним',
-            city: r.city || 'Не указан',
-            score: r.score || 0,
-            total: r.total || 11,
-            percent: r.percent || 0,
-            answers: r.answers || []
-        }));
-        
-        const cities = [...new Set(allData.map(r => r.city))];
+    function getRecommendation(text) {
+        const q = text.toLowerCase();
+        if (q.includes('скидка') && q.includes('бонусами')) return '💡 Сначала дайте ценность (скидку + бонусы), затем задайте открытые вопросы.';
+        if (q.includes('с чем она планирует носить')) return '💡 Уточните контекст: куда и с чем будет носить — это поможет подобрать точнее.';
+        if (q.includes('давайте примерим')) return '💡 Не соглашайтесь сразу. Пригласите примерить — клиент сам увидит.';
+        if (q.includes('подобрать серьги')) return '💡 Сначала предложите дополнительное украшение, покажите образ целиком.';
+        if (q.includes('сплит') && q.includes('45 000')) return '💡 Назовите цену и сразу предложите Сплит как комфортный вариант оплаты.';
+        if (q.includes('с чем вы сравниваете')) return '💡 Не спешите снижать цену. Сначала выясните причину сомнения.';
+        if (q.includes('сплит') && q.includes('11 250')) return '💡 Подтвердите ценность товара, затем предложите Сплит.';
+        if (q.includes('футляр')) return '💡 Не спрашивайте «нужно?». Презентуйте аксессуар как полезную добавку.';
+        return '💡 Изучите правильный ответ и повторите материал.';
+    }
+    
+    function updateCityFilter() {
+        const cities = [...new Set(allResults.map(r => r.city).filter(c => c && c !== 'Не указан'))];
         const citySelect = document.getElementById('cityFilter');
+        const currentValue = citySelect.value;
         citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+        if (currentValue !== 'all' && cities.includes(currentValue)) citySelect.value = currentValue;
+        else citySelect.value = 'all';
+    }
+    
+    function renderCityStatsTable() {
+        const cityMap = new Map();
+        allResults.forEach(r => {
+            if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0, success: 0, errors: 0 });
+            const c = cityMap.get(r.city);
+            c.count++;
+            c.sumPercent += r.percent;
+            if (r.percent >= 85) c.success++;
+            c.errors += (r.total - r.score);
+        });
+        const cityStats = [...cityMap.entries()].map(([city, data]) => ({
+            city, count: data.count, avgPercent: Math.round(data.sumPercent / data.count), success: data.success, errors: data.errors
+        })).sort((a,b) => b.avgPercent - a.avgPercent);
         
-        applyFilters();
-        document.getElementById('statsArea').style.display = 'block';
-        document.getElementById('status').innerHTML = `✅ ${allData.length} записей`;
+        const tbody = document.getElementById('cityStatsBody');
+        tbody.innerHTML = '';
+        cityStats.forEach(c => {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerHTML = `<b>${c.city}</b>`;
+            row.insertCell(1).innerHTML = c.count;
+            row.insertCell(2).innerHTML = `${c.avgPercent}%`;
+            row.insertCell(3).innerHTML = `<span style="color:${c.success/c.count >= 0.7 ? '#28a745' : '#c41e3a'}">${c.success} / ${c.count}</span>`;
+            row.insertCell(4).innerHTML = c.errors;
+        });
+    }
+    
+    function exportCityStatsCSV() {
+        const cityMap = new Map();
+        allResults.forEach(r => {
+            if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sumPercent: 0, success: 0, errors: 0 });
+            const c = cityMap.get(r.city);
+            c.count++;
+            c.sumPercent += r.percent;
+            if (r.percent >= 85) c.success++;
+            c.errors += (r.total - r.score);
+        });
+        const cityStats = [...cityMap.entries()].map(([city, data]) => ({
+            city, count: data.count, avgPercent: Math.round(data.sumPercent / data.count), success: data.success, errors: data.errors
+        })).sort((a,b) => b.avgPercent - a.avgPercent);
+        
+        let csv = "Город,Сотрудников,Средний балл,Успешно (≥85%),Ошибок всего\n";
+        cityStats.forEach(c => csv += `"${c.city}",${c.count},${c.avgPercent}%,${c.success}/${c.count},${c.errors}\n`);
+        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `city_stats_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+    }
+    
+    async function loadTestResults() {
+        document.getElementById('loadingSkeleton').style.display = 'block';
+        document.getElementById('testArea').style.display = 'none';
+        document.getElementById('status').innerHTML = 'Загрузка тестов...';
+        try {
+            const { data, error } = await supabaseClient.from('results_new').select('*').eq('test_slug', 'prodazhi_2025').order('created_at', { ascending: false }).limit(500);
+            if (error) throw error;
+            if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов'; return; }
+            allResults = data.map(r => ({ id: r.id, user_name: r.user_name || r.user_id, city: r.city || 'Не указан', score: r.score || 0, total: r.total || 11, percent: r.percent || 0, answers: r.answers || [], created_at: r.created_at }));
+            updateCityFilter();
+            renderCityStatsTable();
+            applyFilters();
+            document.getElementById('testArea').style.display = 'block';
+            document.getElementById('status').innerHTML = `✅ Загружено: ${allResults.length} записей`;
+        } catch (err) { document.getElementById('status').innerHTML = 'Ошибка загрузки: ' + err.message; }
+        finally { document.getElementById('loadingSkeleton').style.display = 'none'; }
+    }
+    
+    async function loadDialogResults() {
+        document.getElementById('loadingSkeleton').style.display = 'block';
+        document.getElementById('dialogArea').style.display = 'none';
+        document.getElementById('status').innerHTML = 'Загрузка диалогов...';
+        try {
+            const { data, error } = await supabaseClient.from('dialog_results').select('*').order('created_at', { ascending: false }).limit(500);
+            if (error) throw error;
+            if (!data || !data.length) { document.getElementById('status').innerHTML = 'Нет результатов диалогов'; return; }
+            dialogAllResults = data.map(r => ({ id: r.id, user_name: r.user_name, city: r.city || 'Не указан', score: r.score || 0, total: r.total || 8, percent: r.percent || 0, answers: r.answers || [] }));
+            const cities = [...new Set(dialogAllResults.map(r => r.city).filter(c => c))];
+            const citySelect = document.getElementById('dialogCityFilter');
+            citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+            applyDialogFilters();
+            document.getElementById('dialogArea').style.display = 'block';
+            document.getElementById('status').innerHTML = `✅ Загружено диалогов: ${dialogAllResults.length} записей`;
+        } catch (err) { document.getElementById('status').innerHTML = 'Ошибка загрузки диалогов: ' + err.message; }
+        finally { document.getElementById('loadingSkeleton').style.display = 'none'; }
+    }
+    
+    function importTestCSV() {
+        const file = document.getElementById('importFile').files[0];
+        if (!file) { alert('Выберите CSV-файл'); return; }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const values = lines[i].split(',').map(v => v.replace(/^"|"$/g, '').trim());
+                const row = {};
+                headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
+                if (row.user_name || row.user_id) {
+                    data.push({
+                        user_name: row.user_name || row.user_id,
+                        city: row.city || '',
+                        score: parseInt(row.score) || 0,
+                        total: parseInt(row.total) || 11,
+                        percent: parseInt(row.percent) || 0,
+                        created_at: row.created_at || new Date().toISOString(),
+                        answers: []
+                    });
+                }
+            }
+            if (data.length > 0) {
+                allResults = data;
+                updateCityFilter();
+                renderCityStatsTable();
+                applyFilters();
+                alert(`Импортировано ${data.length} записей`);
+                document.getElementById('importArea').style.display = 'none';
+            } else {
+                alert('Не удалось распознать данные в файле');
+            }
+        };
+        reader.onerror = () => alert('Ошибка чтения файла');
+        reader.readAsText(file, 'UTF-8');
+    }
+    
+    function importDialogCSV() {
+        const file = document.getElementById('dialogImportFile').files[0];
+        if (!file) return alert('Выберите файл');
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.split('\n'), headers = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim()), data = [];
+            for(let i=1;i<lines.length;i++){ if(!lines[i].trim()) continue; const values = lines[i].split(',').map(v=>v.replace(/^"|"$/g,'').trim()), row={}; headers.forEach((h,idx)=>{row[h]=values[idx]||'';}); if(row.user_name) data.push({ user_name: row.user_name, city: row.city||'', score: parseInt(row.score)||0, total: parseInt(row.total)||8, percent: parseInt(row.percent)||0, created_at: row.created_at||new Date().toISOString(), answers: [] }); }
+            if(data.length){ dialogAllResults=data; const cities = [...new Set(dialogAllResults.map(r=>r.city).filter(c=>c))]; const citySelect = document.getElementById('dialogCityFilter'); citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c=>`<option value="${c}">${c}</option>`).join(''); applyDialogFilters(); alert(`Импортировано ${data.length} записей диалогов`); document.getElementById('dialogImportArea').style.display='none'; } else alert('Не удалось распознать данные');
+        };
+        reader.readAsText(file,'UTF-8');
     }
     
     function applyFilters() {
+        let filtered = [...allResults];
         const city = document.getElementById('cityFilter').value;
-        filteredData = city === 'all' ? [...allData] : allData.filter(r => r.city === city);
+        if (city !== 'all') filtered = filtered.filter(r => r.city === city);
+        const percent = document.getElementById('percentFilter').value;
+        if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
+        else if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
+        else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
+        const range = document.getElementById('dateRangeSelect').value;
+        const now = new Date();
+        if (range === 'today') filtered = filtered.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
+        else if (range === 'week') { const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7); filtered = filtered.filter(r => new Date(r.created_at) >= weekAgo); }
+        else if (range === 'month') { const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30); filtered = filtered.filter(r => new Date(r.created_at) >= monthAgo); }
+        const surname = document.getElementById('surnameSearch').value.toLowerCase().trim();
+        if (surname) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(surname));
+        filteredResults = filtered;
         renderDashboard();
+        selectedForDelete.clear();
+        document.getElementById('massDeleteBtn').style.display = filteredResults.length ? 'inline-block' : 'none';
     }
     
-    async function deleteEmployee(id, event) {
-        event.stopPropagation();
-        if (!confirm('Удалить результаты этого сотрудника?')) return;
-        await supabaseClient.from('results_new').delete().eq('id', id);
-        await loadResults();
+    function applyDialogFilters() {
+        let filtered = [...dialogAllResults];
+        const city = document.getElementById('dialogCityFilter').value;
+        if (city !== 'all') filtered = filtered.filter(r => r.city === city);
+        const percent = document.getElementById('dialogPercentFilter').value;
+        if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
+        else if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
+        else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
+        const range = document.getElementById('dialogDateRangeSelect').value;
+        const now = new Date();
+        if (range === 'today') filtered = filtered.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
+        else if (range === 'week') { const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7); filtered = filtered.filter(r => new Date(r.created_at) >= weekAgo); }
+        else if (range === 'month') { const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30); filtered = filtered.filter(r => new Date(r.created_at) >= monthAgo); }
+        const surname = document.getElementById('dialogSurnameSearch').value.toLowerCase().trim();
+        if (surname) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(surname));
+        dialogFilteredResults = filtered;
+        renderDialogDashboard();
+        dialogSelectedForDelete.clear();
+        document.getElementById('dialogMassDeleteBtn').style.display = dialogFilteredResults.length ? 'inline-block' : 'none';
+    }
+    
+    function generateCityFeedback() {
+        const city = document.getElementById('cityFilter').value;
+        if (city === 'all') { alert('Выберите конкретный город'); return; }
+        if (!filteredResults.length) { alert('Нет данных по этому городу'); return; }
+        const total = filteredResults.length, avgPercent = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total);
+        const questionErrorsMap = new Map();
+        filteredResults.forEach(r => {
+            if (r.answers && Array.isArray(r.answers)) {
+                r.answers.forEach((a, idx) => {
+                    const isCorrect = a.correct === true;
+                    if (!isCorrect) {
+                        if (!questionErrorsMap.has(idx)) {
+                            questionErrorsMap.set(idx, { text: a.questionText || 'Вопрос без текста', correctAnswer: a.correctText || 'Ответ не указан', count: 0 });
+                        }
+                        questionErrorsMap.get(idx).count++;
+                    }
+                });
+            }
+        });
+        if (questionErrorsMap.size === 0) { alert(`В городе ${city} нет ошибок по данным в таблице.`); return; }
+        let feedback = `📊 Анализ результатов: город ${city}\n👥 Сотрудников: ${total}\n📈 Средний балл: ${avgPercent}%\n\n⚠️ Частые ошибки и рекомендации:\n`;
+        [...questionErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
+            let fullText = err.text;
+            if (fullText.length > 250) fullText = fullText.substring(0, 250) + '…';
+            feedback += `${order+1}. Вопрос: ${fullText}\n   ❌ Ошиблись: ${err.count} из ${total}\n   ✅ Правильный ответ: ${err.correctAnswer}\n   📌 ${getRecommendation(err.correctAnswer)}\n\n`;
+        });
+        navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} скопирован`));
+    }
+    
+    function generateDialogFeedback() {
+        const city = document.getElementById('dialogCityFilter').value;
+        if (city === 'all') { alert('Выберите город'); return; }
+        if (!dialogFilteredResults.length) { alert('Нет данных по диалогам'); return; }
+        const total = dialogFilteredResults.length, avgPercent = Math.round(dialogFilteredResults.reduce((s,r)=>s+r.percent,0)/total);
+        const stepErrorsMap = new Map();
+        dialogFilteredResults.forEach(r => {
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    if (!a.correct) {
+                        if (!stepErrorsMap.has(idx)) {
+                            stepErrorsMap.set(idx, {
+                                text: a.questionText,
+                                correctAnswer: a.correctText,
+                                count: 0
+                            });
+                        }
+                        stepErrorsMap.get(idx).count++;
+                    }
+                });
+            }
+        });
+        if (stepErrorsMap.size === 0) { alert(`В городе ${city} нет ошибок в диалогах`); return; }
+        let feedback = `🎭 Анализ диалогов: город ${city}\n👥 Диалогов: ${total}\n📈 Средний балл: ${avgPercent}%\n\n⚠️ Частые ошибки:\n`;
+        [...stepErrorsMap.entries()].sort((a,b)=>b[1].count-a[1].count).forEach(([idx, err], order) => {
+            let fullText = err.text;
+            if (fullText.length > 250) fullText = fullText.substring(0, 250) + '…';
+            let tip = getRecommendation(err.correctAnswer);
+            if (dialogFilteredResults[0] && dialogFilteredResults[0].answers && dialogFilteredResults[0].answers[idx] && dialogFilteredResults[0].answers[idx].tip) tip = dialogFilteredResults[0].answers[idx].tip;
+            feedback += `${order+1}. Шаг ${idx+1}: ${fullText}\n   ❌ Ошиблись: ${err.count} из ${total}\n   ✅ Правильный ответ: ${err.correctAnswer}\n   📌 ${tip}\n\n`;
+        });
+        navigator.clipboard.writeText(feedback).then(() => alert(`Фидбек для города ${city} (диалоги) скопирован`));
     }
     
     function renderDashboard() {
-        if (!filteredData.length) { 
-            document.getElementById('kpi').innerHTML = '<div class="kpi-card">Нет данных</div>';
-            document.getElementById('employeeList').innerHTML = '';
-            return;
-        }
+        if (!filteredResults.length) { document.getElementById('kpi').innerHTML = '<div class="kpi-card">Нет данных</div>'; return; }
+        const total = filteredResults.length, avg = Math.round(filteredResults.reduce((s,r)=>s+r.percent,0)/total), success = filteredResults.filter(r=>r.percent>=85).length, errors = filteredResults.reduce((s,r)=>s+(r.total-r.score),0);
+        document.getElementById('kpi').innerHTML = `<div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div><div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div><div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div><div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>`;
         
-        const total = filteredData.length;
-        const avg = Math.round(filteredData.reduce((s,r)=>s+r.percent,0)/total);
-        const success = filteredData.filter(r=>r.percent>=85).length;
-        const errors = filteredData.reduce((s,r)=>s+(r.total-r.score),0);
+        const top5 = [...filteredResults].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
+        document.getElementById('topEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id}, 'test')"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет';
         
-        document.getElementById('kpi').innerHTML = `
-            <div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div>
-            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div>
-            <div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div>
-            <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>
-        `;
+        const cityMap = new Map();
+        filteredResults.forEach(r => { if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 }); const c = cityMap.get(r.city); c.sum += r.percent; c.count++; });
+        const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, avg: Math.round(data.sum / data.count), count: data.count })).sort((a,b)=>b.avg-a.avg);
+        document.getElementById('cityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
         
-        document.getElementById('empCount').innerText = filteredData.length;
-        document.getElementById('employeeList').innerHTML = filteredData.map(r => `
-            <div class="employee-item" onclick="showEmployee(${r.id})">
-                <div style="flex:1">
-                    <b>${escapeHtml(r.user_name)}</b> (${escapeHtml(r.city)})
+        document.getElementById('empCount').innerText = filteredResults.length;
+        document.getElementById('employeeList').innerHTML = filteredResults.map(r => `
+            <div class="employee-item">
+                <div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id}, 'test')">
+                    <b>${r.user_name}</b> (${r.city})
                     <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span>
                 </div>
-                <button class="delete-btn" onclick="deleteEmployee(${r.id}, event)">🗑</button>
+                <button class="delete-btn" onclick="deleteEmployee(event, ${r.id}, 'test')">🗑</button>
             </div>
         `).join('');
-        
-        // Гистограмма
-        const bins = [0,0,0,0,0];
-        filteredData.forEach(r => {
-            if (r.percent <= 20) bins[0]++;
-            else if (r.percent <= 40) bins[1]++;
-            else if (r.percent <= 60) bins[2]++;
-            else if (r.percent <= 80) bins[3]++;
-            else bins[4]++;
-        });
+        document.querySelectorAll('.emp-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) selectedForDelete.add(e.target.dataset.id); else selectedForDelete.delete(e.target.dataset.id); });
         
         if (scoreChart) scoreChart.destroy();
-        scoreChart = new Chart(document.getElementById('scoreChart'), {
-            type: 'bar',
-            data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] },
-            options: { responsive: true, plugins: { legend: { display: false } }, animation: { duration: 0 } }
-        });
-        
-        // График городов
-        const cityMap = new Map();
-        filteredData.forEach(r => {
-            if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
-            const c = cityMap.get(r.city);
-            c.sum += r.percent;
-            c.count++;
-        });
-        const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, avg: Math.round(data.sum / data.count) })).sort((a,b)=>b.avg-a.avg).slice(0,6);
-        
+        const bins = [0,0,0,0,0];
+        filteredResults.forEach(r => { if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++; });
+        scoreChart = new Chart(document.getElementById('scoreHistogram'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
         if (cityChart) cityChart.destroy();
-        cityChart = new Chart(document.getElementById('cityChart'), {
-            type: 'bar',
-            data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a' }] },
-            options: { responsive: true, plugins: { legend: { display: false } }, animation: { duration: 0 } }
-        });
+        cityChart = new Chart(document.getElementById('cityChart'), { type: 'bar', data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
     }
     
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
+    function renderDialogDashboard() {
+        if (!dialogFilteredResults.length) { document.getElementById('dialogKpi').innerHTML = '<div class="kpi-card">Нет данных</div>'; return; }
+        const total = dialogFilteredResults.length, avg = Math.round(dialogFilteredResults.reduce((s,r)=>s+r.percent,0)/total), success = dialogFilteredResults.filter(r=>r.percent>=85).length, errors = dialogFilteredResults.reduce((s,r)=>s+(r.total-r.score),0);
+        document.getElementById('dialogKpi').innerHTML = `<div class="kpi-card"><div class="kpi-value">${total}</div><div>Диалогов</div></div><div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div><div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div><div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>`;
+        
+        const stepErrors = new Array(8).fill().map((_,i) => ({ total: 0, errors: 0, index: i }));
+        dialogFilteredResults.forEach(r => { if (r.answers) { r.answers.forEach((a, idx) => { stepErrors[idx].total++; if (!a.correct) stepErrors[idx].errors++; }); } });
+        const sortedSteps = [...stepErrors].sort((a,b) => (b.errors/b.total||0) - (a.errors/a.total||0)).slice(0,5);
+        document.getElementById('stepsErrorContainer').innerHTML = `<div style="background:#f8f9fa; border-radius:12px; padding:12px;">${sortedSteps.map(s => `<div><strong>Шаг ${s.index+1}</strong> — ошиблись ${s.errors} из ${s.total} (${Math.round(s.errors/s.total*100)}%)</div>`).join('')}</div>`;
+        
+        const top5 = [...dialogFilteredResults].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
+        document.getElementById('dialogTopEmployees').innerHTML = top5.map((r,i)=>`<div class="top-employee" onclick="showEmployeeDetails(${r.id}, 'dialog')"><span><b>${i+1}</b> ${r.user_name} (${r.city})</span><span class="badge">${r.percent}%</span></div>`).join('') || 'Нет';
+        
+        const cityMap = new Map();
+        dialogFilteredResults.forEach(r => { if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 }); const c = cityMap.get(r.city); c.sum += r.percent; c.count++; });
+        const cityRating = [...cityMap.entries()].map(([city, data]) => ({ city, avg: Math.round(data.sum / data.count), count: data.count })).sort((a,b)=>b.avg-a.avg);
+        document.getElementById('dialogCityRating').innerHTML = cityRating.map(c => `<div class="city-row" onclick="document.getElementById('dialogCityFilter').value='${c.city}'; applyDialogFilters();"><span><b>${c.city}</b> (${c.count} чел.)</span><span class="badge">${c.avg}%</span></div>`).join('');
+        
+        document.getElementById('dialogEmpCount').innerText = dialogFilteredResults.length;
+        document.getElementById('dialogEmployeeList').innerHTML = dialogFilteredResults.map(r => `
+            <div class="employee-item">
+                <div style="flex:1; cursor:pointer;" onclick="showEmployeeDetails(${r.id}, 'dialog')">
+                    <b>${r.user_name}</b> (${r.city})
+                    <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span>
+                </div>
+                <button class="delete-btn" onclick="deleteEmployee(event, ${r.id}, 'dialog')">🗑</button>
+            </div>
+        `).join('');
+        document.querySelectorAll('.dialog-checkbox').forEach(cb => cb.onchange = (e) => { if(e.target.checked) dialogSelectedForDelete.add(e.target.dataset.id); else dialogSelectedForDelete.delete(e.target.dataset.id); });
+        
+        if (dialogScoreChart) dialogScoreChart.destroy();
+        const bins = [0,0,0,0,0];
+        dialogFilteredResults.forEach(r => { if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++; });
+        dialogScoreChart = new Chart(document.getElementById('dialogScoreChart'), { type: 'bar', data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
+        if (dialogCityChart) dialogCityChart.destroy();
+        dialogCityChart = new Chart(document.getElementById('dialogCityChart'), { type: 'bar', data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a' }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, animation: { duration: 0 } } });
     }
     
-    async function showEmployee(id) {
-        const emp = filteredData.find(r => r.id == id);
+    async function showEmployeeDetails(id, type) {
+        let emp = type === 'test' ? filteredResults.find(r => r.id == id) : dialogFilteredResults.find(r => r.id == id);
         if (!emp) return;
         document.getElementById('modalTitle').innerHTML = `${emp.user_name} (${emp.city}) — ${emp.percent}%`;
         let html = `<p>✅ Правильных ответов: ${emp.score}/${emp.total}</p>`;
         if (emp.answers && emp.answers.length) {
             emp.answers.forEach((a,i) => {
                 const isCorrect = a.correct === true;
-                html += `<div style="background:#f8f9fa; border-radius:16px; padding:12px; margin-bottom:12px; border-left:4px solid ${isCorrect ? '#28a745' : '#c41e3a'}">
-                            <b>Вопрос ${i+1}:</b> ${escapeHtml(a.questionText)}<br>
-                            <b>Ваш ответ:</b> ${escapeHtml(a.selectedText)}<br>
-                            ${!isCorrect ? `<b>✅ Правильный ответ:</b> ${escapeHtml(a.correctText)}<br><div style="background:#e8f0e8; padding:8px; margin-top:8px; border-radius:8px;">💡 ${getRecommendation(a.correctText)}</div>` : ''}
+                let recommendationText = '';
+                if (a.tip) recommendationText = a.tip;
+                else recommendationText = getRecommendation(a.correctText);
+                html += `<div class="answer-item ${isCorrect ? 'answer-correct' : 'answer-wrong'}">
+                            <b>${type === 'test' ? 'Вопрос' : 'Шаг'} ${i+1}:</b> ${a.questionText}<br>
+                            <b>Ответ сотрудника:</b> ${a.selectedText}<br>
+                            ${!isCorrect ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">${recommendationText}</div>` : ''}
                          </div>`;
             });
         }
@@ -204,40 +554,94 @@
         document.getElementById('modal').style.display = 'flex';
     }
     
-    function getRecommendation(text) {
-        const q = text.toLowerCase();
-        if (q.includes('скидка') && q.includes('бонусами')) return 'Сначала дайте ценность (скидку + бонусы), затем задайте открытые вопросы.';
-        if (q.includes('с чем она планирует носить')) return 'Уточните контекст: куда и с чем будет носить — это поможет подобрать точнее.';
-        if (q.includes('давайте примерим')) return 'Не соглашайтесь сразу. Пригласите примерить — клиент сам увидит.';
-        if (q.includes('подобрать серьги')) return 'Сначала предложите дополнительное украшение, покажите образ целиком.';
-        if (q.includes('сплит') && q.includes('45 000')) return 'Назовите цену и сразу предложите Сплит как комфортный вариант оплаты.';
-        if (q.includes('с чем вы сравниваете')) return 'Не спешите снижать цену. Сначала выясните причину сомнения.';
-        if (q.includes('сплит') && q.includes('11 250')) return 'Подтвердите ценность товара, затем предложите Сплит.';
-        if (q.includes('футляр')) return 'Не спрашивайте «нужно?». Презентуйте аксессуар как полезную добавку.';
-        return 'Изучите правильный ответ и повторите материал.';
+    async function deleteEmployee(e, id, type) {
+        e.stopPropagation();
+        if (!confirm('Удалить результаты этого сотрудника?')) return;
+        if (type === 'test') await supabaseClient.from('results_new').delete().eq('id', id);
+        else await supabaseClient.from('dialog_results').delete().eq('id', id);
+        if (type === 'test') await loadTestResults();
+        else await loadDialogResults();
+        if (currentTab === 'test') applyFilters();
+        else applyDialogFilters();
     }
     
-    function exportCSV() {
-        if (!filteredData.length) return alert('Нет данных');
-        let csv = "Имя,Город,Правильных,Всего,Процент\n";
-        filteredData.forEach(r => csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent}%\n`);
-        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `results_${new Date().toISOString().slice(0,10)}.csv`;
-        a.click();
+    function exportCSV() { if (!filteredResults.length) return alert('Нет данных'); let csv = "Имя,Город,Правильных,Всего,Процент,Дата\n"; filteredResults.forEach(r => csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent},"${new Date(r.created_at).toLocaleDateString()}"\n`); const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `test_results_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
+    function exportDialogCSV() { if (!dialogFilteredResults.length) return alert('Нет данных'); let csv = "Имя,Город,Правильных,Всего,Процент,Дата\n"; dialogFilteredResults.forEach(r => csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent},"${new Date(r.created_at).toLocaleDateString()}"\n`); const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `dialog_results_${new Date().toISOString().slice(0,10)}.csv`; a.click(); }
+    
+    function resetFilters() { document.getElementById('cityFilter').value='all'; document.getElementById('percentFilter').value='all'; document.getElementById('dateRangeSelect').value='all'; document.getElementById('surnameSearch').value=''; applyFilters(); }
+    function resetDialogFilters() { document.getElementById('dialogCityFilter').value='all'; document.getElementById('dialogPercentFilter').value='all'; document.getElementById('dialogDateRangeSelect').value='all'; document.getElementById('dialogSurnameSearch').value=''; applyDialogFilters(); }
+    
+    function switchTab(tab) {
+        currentTab = tab;
+        if (tab === 'test') {
+            document.getElementById('testArea').style.display = 'block';
+            document.getElementById('dialogArea').style.display = 'none';
+            document.getElementById('cityStatsArea').style.display = 'none';
+            document.getElementById('testFilters').style.display = 'flex';
+            document.getElementById('dialogFilters').style.display = 'none';
+            document.getElementById('tabTestBtn').classList.add('active');
+            document.getElementById('tabDialogBtn').classList.remove('active');
+            document.getElementById('tabCityStatsBtn').classList.remove('active');
+        } else if (tab === 'dialog') {
+            document.getElementById('testArea').style.display = 'none';
+            document.getElementById('dialogArea').style.display = 'block';
+            document.getElementById('cityStatsArea').style.display = 'none';
+            document.getElementById('testFilters').style.display = 'none';
+            document.getElementById('dialogFilters').style.display = 'flex';
+            document.getElementById('tabTestBtn').classList.remove('active');
+            document.getElementById('tabDialogBtn').classList.add('active');
+            document.getElementById('tabCityStatsBtn').classList.remove('active');
+        } else {
+            document.getElementById('testArea').style.display = 'none';
+            document.getElementById('dialogArea').style.display = 'none';
+            document.getElementById('cityStatsArea').style.display = 'block';
+            document.getElementById('testFilters').style.display = 'none';
+            document.getElementById('dialogFilters').style.display = 'none';
+            document.getElementById('tabTestBtn').classList.remove('active');
+            document.getElementById('tabDialogBtn').classList.remove('active');
+            document.getElementById('tabCityStatsBtn').classList.add('active');
+        }
     }
     
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    function initTheme() { if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark'); }
+    function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); }
     
-    document.getElementById('loadBtn').onclick = loadResults;
+    async function massDelete() { if(selectedForDelete.size && confirm(`Удалить ${selectedForDelete.size} записей?`)){ for(let id of selectedForDelete) await supabaseClient.from('results_new').delete().eq('id', id); await loadTestResults(); } }
+    async function dialogMassDelete() { if(dialogSelectedForDelete.size && confirm(`Удалить ${dialogSelectedForDelete.size} записей диалогов?`)){ for(let id of dialogSelectedForDelete) await supabaseClient.from('dialog_results').delete().eq('id', id); await loadDialogResults(); } }
+    
+    document.getElementById('tabTestBtn').onclick = () => switchTab('test');
+    document.getElementById('tabDialogBtn').onclick = () => switchTab('dialog');
+    document.getElementById('tabCityStatsBtn').onclick = () => switchTab('city');
+    document.getElementById('loadBtn').onclick = loadTestResults;
+    document.getElementById('dialogLoadBtn').onclick = loadDialogResults;
+    document.getElementById('resetFiltersBtn').onclick = resetFilters;
+    document.getElementById('dialogResetFiltersBtn').onclick = resetDialogFilters;
     document.getElementById('cityFilter').onchange = applyFilters;
-    document.getElementById('exportBtn').onclick = exportCSV;
-    window.closeModal = closeModal;
-    window.showEmployee = showEmployee;
-    window.deleteEmployee = deleteEmployee;
+    document.getElementById('dialogCityFilter').onchange = applyDialogFilters;
+    document.getElementById('percentFilter').onchange = applyFilters;
+    document.getElementById('dialogPercentFilter').onchange = applyDialogFilters;
+    document.getElementById('dateRangeSelect').onchange = applyFilters;
+    document.getElementById('dialogDateRangeSelect').onchange = applyDialogFilters;
+    document.getElementById('surnameSearch').addEventListener('input', applyFilters);
+    document.getElementById('dialogSurnameSearch').addEventListener('input', applyDialogFilters);
+    document.getElementById('feedbackBtn').onclick = generateCityFeedback;
+    document.getElementById('dialogFeedbackBtn').onclick = generateDialogFeedback;
+    document.getElementById('exportCsvBtn').onclick = exportCSV;
+    document.getElementById('dialogExportCsvBtn').onclick = exportDialogCSV;
+    document.getElementById('exportCityStatsBtn').onclick = exportCityStatsCSV;
+    document.getElementById('massDeleteBtn').onclick = massDelete;
+    document.getElementById('dialogMassDeleteBtn').onclick = dialogMassDelete;
+    document.getElementById('themeToggleBtn').onclick = toggleTheme;
+    document.getElementById('importBtn').onclick = () => { const area = document.getElementById('importArea'); area.style.display = area.style.display === 'none' ? 'block' : 'none'; };
+    document.getElementById('cancelImportBtn').onclick = () => { document.getElementById('importArea').style.display = 'none'; document.getElementById('importFile').value = ''; };
+    document.getElementById('confirmImportBtn').onclick = importTestCSV;
+    document.getElementById('dialogImportBtn').onclick = () => { const area = document.getElementById('dialogImportArea'); area.style.display = area.style.display === 'none' ? 'block' : 'none'; };
+    document.getElementById('dialogCancelImportBtn').onclick = () => { document.getElementById('dialogImportArea').style.display = 'none'; document.getElementById('dialogImportFile').value = ''; };
+    document.getElementById('dialogConfirmImportBtn').onclick = importDialogCSV;
     
-    loadResults();
+    initTheme();
+    loadTestResults();
 </script>
 </body>
 </html>
