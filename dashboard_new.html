@@ -81,7 +81,7 @@
             <h3>📊 Статистика по вопросам (ошибки)</h3>
             <div style="overflow-x: auto;">
                 <table class="question-stats-table" id="questionStatsTable">
-                    <thead><tr><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead>
+                    <thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -93,7 +93,7 @@
             <h3>🏙️ Статистика по городам</h3>
             <div style="overflow-x: auto;">
                 <table class="question-stats-table" id="cityStatsTable">
-                    <thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно (≥85%)</th><th>Ошибок всего</th></tr></thead>
+                    <thead>汽<th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно (≥85%)</th><th>Ошибок всего</th></td></thead>
                     <tbody id="cityStatsBody"></tbody>
                 </table>
             </div>
@@ -106,10 +106,11 @@
 <div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><button onclick="closeModal()" style="margin-top: 16px; background: #6c757d;">Закрыть</button></div></div>
 
 <script>
-    // Supabase URL и anon ключ (используем напрямую в fetch)
-    const SUPABASE_URL = 'https://qtostraaqrnjbxiydlip.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_0GzJSuoAi5zc7pHkicHMNg_cQ-rGAX7';
-    
+    const GITHUB_REPO = 'wetalsfinx/Test';
+    const GITHUB_FILE = 'results_backup.json';
+    const GITHUB_BRANCH = 'main';
+    const GITHUB_RAW = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${GITHUB_FILE}`;
+
     let allData = [], filteredData = [], scoreChart = null, cityChart = null;
     
     async function loadResults() {
@@ -117,34 +118,25 @@
         document.getElementById('status').innerHTML = 'Загрузка...';
         
         try {
-            // Используем fetch напрямую, а не supabase.createClient
-            const response = await fetch(
-                `${SUPABASE_URL}/rest/v1/results_new?select=*&test_slug=eq.prodazhi_2025&order=created_at.desc&limit=500`,
-                {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                }
-            );
+            const response = await fetch(GITHUB_RAW);
             
-            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const data = await response.json();
             
             if (!data || !data.length) {
-                document.getElementById('status').innerHTML = 'Нет результатов. Проверьте таблицу results_new.';
+                document.getElementById('status').innerHTML = 'Нет результатов. Пройдите тест.';
                 document.getElementById('loadingSkeleton').style.display = 'none';
                 return;
             }
             
             allData = data.map(r => ({
                 id: r.id,
-                user_name: r.user_name || r.user_id || r.name || 'Аноним',
+                user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
                 score: r.score || 0,
                 total: r.total || 11,
-                percent: r.percent || Math.round((r.score || 0) / (r.total || 11) * 100),
+                percent: r.percent || 0,
                 answers: r.answers || []
             }));
             
@@ -297,7 +289,6 @@
             </div>
         `).join('');
         
-        // Графики
         const bins = [0,0,0,0,0];
         filteredData.forEach(r => {
             if (r.percent <= 20) bins[0]++;
@@ -340,24 +331,12 @@
         });
     }
     
-    async function deleteRow(id) {
-        if (!confirm('Удалить?')) return;
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/results_new?id=eq.${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                }
-            });
-            if (response.ok) {
-                await loadResults();
-            } else {
-                alert('Ошибка удаления');
-            }
-        } catch(e) {
-            alert('Ошибка: ' + e.message);
-        }
+    function deleteRow(id) {
+        if (!confirm('Удалить результаты этого сотрудника?')) return;
+        allData = allData.filter(r => r.id !== id);
+        applyFilters();
+        renderCityStatsTable();
+        alert('Удалено');
     }
     
     function showDetails(id) {
@@ -367,7 +346,7 @@
         let html = `<p>✅ Правильных: ${emp.score}/${emp.total}</p>`;
         if (emp.answers && emp.answers.length) {
             emp.answers.forEach((a,i) => {
-                html += `<div class="answer-item ${a.correct ? 'answer-correct' : 'answer-wrong'}">
+                html += `<div class="answer-item">
                             <b>Вопрос ${i+1}:</b> ${a.questionText}<br>
                             <b>Ваш ответ:</b> ${a.selectedText}<br>
                             ${!a.correct ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br><div class="recommendation">💡 Изучите правило подробнее</div>` : ''}
