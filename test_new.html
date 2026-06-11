@@ -100,73 +100,96 @@
 </div>
 
 <script>
-    // ========== НАСТРОЙКИ GITHUB ==========
-    const GITHUB_TOKEN = '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';
+    // ========== НАСТРОЙКИ ==========
+    // Твой токен (я проверю его работу)
+    const GITHUB_TOKEN = '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';
     const GITHUB_REPO = 'wetalsfinx/Test';
     const GITHUB_BRANCH = 'main';
-    const GITHUB_FILE = 'results.json';  // ← изменил имя файла
+    const GITHUB_FILE = 'results_backup.json';
     
-    // Функция сохранения результата на GitHub (ИСПРАВЛЕНА)
-    async function saveToGitHub(result) {
+    // Функция для проверки токена
+    async function checkToken() {
         try {
-            console.log('Начинаю сохранение...');
-            
-            // Шаг 1: Пытаемся получить текущий файл (если есть)
-            let existingResults = [];
+            const response = await fetch('https://api.github.com/user', {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            if (response.ok) {
+                const user = await response.json();
+                console.log('✅ Токен работает! Вы вошли как:', user.login);
+                return true;
+            } else {
+                console.error('❌ Токен НЕ работает. Статус:', response.status);
+                return false;
+            }
+        } catch(e) {
+            console.error('❌ Ошибка проверки токена:', e);
+            return false;
+        }
+    }
+    
+    // Альтернативное сохранение через чтение/запись файла (более простой метод)
+    async function saveToGitHubAlternative(result) {
+        try {
+            // Сначала проверим, существует ли файл
+            let fileExists = false;
+            let currentContent = [];
             let sha = null;
             
-            const getResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
+            const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}?ref=${GITHUB_BRANCH}`;
+            console.log('Запрос к:', getUrl);
+            
+            const getResponse = await fetch(getUrl, {
                 headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
                     'Accept': 'application/vnd.github.v3+json'
                 }
             });
             
-            if (getResponse.ok) {
-                // Файл существует — читаем его
-                const fileData = await getResponse.json();
-                sha = fileData.sha;
-                const decodedContent = atob(fileData.content);
-                existingResults = JSON.parse(decodedContent);
-                console.log('Существующий файл загружен, записей:', existingResults.length);
+            if (getResponse.status === 200) {
+                fileExists = true;
+                const data = await getResponse.json();
+                sha = data.sha;
+                const decoded = atob(data.content);
+                currentContent = JSON.parse(decoded);
+                console.log('Файл найден, записей:', currentContent.length);
             } else if (getResponse.status === 404) {
-                // Файл не существует — создадим новый
-                console.log('Файл results.json не найден, будет создан новый');
-                existingResults = [];
+                console.log('Файл не найден, создадим новый');
+                fileExists = false;
             } else {
-                console.error('Ошибка при проверке файла:', getResponse.status);
-                throw new Error('Не удалось проверить файл на GitHub');
+                const errorText = await getResponse.text();
+                console.error('Ошибка при проверке файла:', getResponse.status, errorText);
+                throw new Error(`GitHub API error: ${getResponse.status}`);
             }
             
-            // Шаг 2: Добавляем новый результат
-            existingResults.push(result);
+            // Добавляем результат
+            currentContent.push(result);
             
-            // Шаг 3: Кодируем в base64 (правильный способ для UTF-8)
-            const jsonString = JSON.stringify(existingResults, null, 2);
+            // Кодируем в base64
+            const jsonString = JSON.stringify(currentContent, null, 2);
             const encoded = btoa(unescape(encodeURIComponent(jsonString)));
             
-            // Шаг 4: Сохраняем обратно на GitHub
+            // Сохраняем
             const putResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/vnd.github.v3+json'
                 },
                 body: JSON.stringify({
-                    message: `Тест: ${result.user_name} (${result.city}) — ${result.percent}%`,
+                    message: `Результат: ${result.user_name} (${result.city}) — ${result.percent}%`,
                     content: encoded,
                     branch: GITHUB_BRANCH,
-                    sha: sha
+                    sha: sha || undefined
                 })
             });
             
             if (putResponse.ok) {
-                console.log('✅ Результат успешно сохранён на GitHub!');
+                console.log('✅ Результат сохранён!');
                 return true;
             } else {
                 const errorData = await putResponse.json();
-                console.error('❌ Ошибка при сохранении:', errorData);
+                console.error('❌ Ошибка сохранения:', errorData);
                 return false;
             }
         } catch(error) {
@@ -175,7 +198,7 @@
         }
     }
 
-    // ========== ВОПРОСЫ ТЕСТА (без изменений) ==========
+    // ========== ВОПРОСЫ ТЕСТА ==========
     const ORIGINAL_QUESTIONS = [
         { text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?", options: ["«Добрый день! Чем могу помочь?»", "«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?»", "«Добрый день! Присмотритесь к нашим новинкам»", "«Здравствуйте! Если нужны будут рекомендации — обращайтесь»"], correct: 1 },
         { text: "Клиент говорит: «Мне нужно кольцо до 25 000 рублей». Вы услышали бюджет. Что делаете ДАЛЬШЕ?", options: ["Сразу показываете 3-4 кольца в пределах 25 000 ₽", "Показываете сначала кольцо за 28 000 ₽ (якорь), затем за 25 000 ₽", "Спрашиваете: «А для какого случая? Это подарок или для себя?»", "Спрашиваете: «А готовы добавить за лучшее качество?»"], correct: 2 },
@@ -205,6 +228,9 @@
     const qTotalSpan = document.getElementById('qTotal');
     const questionTextDiv = document.getElementById('questionText');
     const optionsContainer = document.getElementById('optionsContainer');
+
+    // Проверяем токен при загрузке страницы
+    checkToken();
 
     function shuffleArray(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
@@ -274,7 +300,6 @@
             timestamp: new Date().toLocaleString('ru-RU')
         };
 
-        // Показываем сообщение о сохранении
         resultScreen.classList.remove('hidden');
         resultScreen.innerHTML = `
             <div class="result-box ${passed ? 'success' : 'fail'}">
@@ -287,15 +312,14 @@
             </div>
         `;
         
-        // Сохраняем на GitHub
-        const saved = await saveToGitHub(resultData);
+        const saved = await saveToGitHubAlternative(resultData);
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
             if (saved) {
-                statusDiv.innerHTML = '✅ Результат сохранён!';
+                statusDiv.innerHTML = '✅ Результат сохранён! Данные в GitHub';
                 statusDiv.style.color = '#2c6e2c';
             } else {
-                statusDiv.innerHTML = '⚠️ Результат не сохранился. Проверьте консоль (F12)';
+                statusDiv.innerHTML = '⚠️ Результат НЕ сохранился. Проверь консоль (F12)';
                 statusDiv.style.color = '#c41e3a';
             }
         }
