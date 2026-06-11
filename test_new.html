@@ -61,6 +61,7 @@
         .result-box.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
         .result-box.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
         .restart-btn { background: #c41e3a; margin-top: 16px; }
+        .save-status { font-size: 12px; color: #666; margin-top: 10px; text-align: center; }
     </style>
 </head>
 <body>
@@ -100,15 +101,17 @@
 
 <script>
     // ========== НАСТРОЙКИ GITHUB ==========
-    // ВСТАВЬ СВОЙ ТОКЕН СЮДА (без пробелов)
     const GITHUB_TOKEN = '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';
     const GITHUB_REPO = 'wetalsfinx/Test';
     const GITHUB_BRANCH = 'main';
-    const GITHUB_FILE = 'results_backup.json';
-
-    async function saveToGitHubBackup(result) {
+    const GITHUB_FILE = 'results.json';  // ← изменил имя файла
+    
+    // Функция сохранения результата на GitHub (ИСПРАВЛЕНА)
+    async function saveToGitHub(result) {
         try {
-            // Получаем текущий файл
+            console.log('Начинаю сохранение...');
+            
+            // Шаг 1: Пытаемся получить текущий файл (если есть)
             let existingResults = [];
             let sha = null;
             
@@ -120,23 +123,29 @@
             });
             
             if (getResponse.ok) {
+                // Файл существует — читаем его
                 const fileData = await getResponse.json();
                 sha = fileData.sha;
-                const content = atob(fileData.content);
-                existingResults = JSON.parse(content);
-            } else if (getResponse.status !== 404) {
-                console.error('Ошибка получения файла:', getResponse.status);
-                return;
+                const decodedContent = atob(fileData.content);
+                existingResults = JSON.parse(decodedContent);
+                console.log('Существующий файл загружен, записей:', existingResults.length);
+            } else if (getResponse.status === 404) {
+                // Файл не существует — создадим новый
+                console.log('Файл results.json не найден, будет создан новый');
+                existingResults = [];
+            } else {
+                console.error('Ошибка при проверке файла:', getResponse.status);
+                throw new Error('Не удалось проверить файл на GitHub');
             }
             
-            // Добавляем результат
+            // Шаг 2: Добавляем новый результат
             existingResults.push(result);
             
-            // Кодируем в base64
+            // Шаг 3: Кодируем в base64 (правильный способ для UTF-8)
             const jsonString = JSON.stringify(existingResults, null, 2);
             const encoded = btoa(unescape(encodeURIComponent(jsonString)));
             
-            // Сохраняем
+            // Шаг 4: Сохраняем обратно на GitHub
             const putResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
                 method: 'PUT',
                 headers: {
@@ -145,7 +154,7 @@
                     'Accept': 'application/vnd.github.v3+json'
                 },
                 body: JSON.stringify({
-                    message: `Результат: ${result.user_name} (${result.city})`,
+                    message: `Тест: ${result.user_name} (${result.city}) — ${result.percent}%`,
                     content: encoded,
                     branch: GITHUB_BRANCH,
                     sha: sha
@@ -153,17 +162,20 @@
             });
             
             if (putResponse.ok) {
-                console.log('✅ Сохранено в GitHub');
+                console.log('✅ Результат успешно сохранён на GitHub!');
+                return true;
             } else {
-                const err = await putResponse.json();
-                console.error('❌ Ошибка сохранения:', err);
+                const errorData = await putResponse.json();
+                console.error('❌ Ошибка при сохранении:', errorData);
+                return false;
             }
-        } catch(e) {
-            console.error('❌ Ошибка:', e);
+        } catch(error) {
+            console.error('❌ Критическая ошибка:', error);
+            return false;
         }
     }
 
-    // ========== ВОПРОСЫ ТЕСТА ==========
+    // ========== ВОПРОСЫ ТЕСТА (без изменений) ==========
     const ORIGINAL_QUESTIONS = [
         { text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?", options: ["«Добрый день! Чем могу помочь?»", "«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?»", "«Добрый день! Присмотритесь к нашим новинкам»", "«Здравствуйте! Если нужны будут рекомендации — обращайтесь»"], correct: 1 },
         { text: "Клиент говорит: «Мне нужно кольцо до 25 000 рублей». Вы услышали бюджет. Что делаете ДАЛЬШЕ?", options: ["Сразу показываете 3-4 кольца в пределах 25 000 ₽", "Показываете сначала кольцо за 28 000 ₽ (якорь), затем за 25 000 ₽", "Спрашиваете: «А для какого случая? Это подарок или для себя?»", "Спрашиваете: «А готовы добавить за лучшее качество?»"], correct: 2 },
@@ -238,7 +250,7 @@
             const isCorrect = (selectedIdx === q.correct);
             if (isCorrect) correctCount++;
             answersDetail.push({
-                question: i,
+                questionNum: i + 1,
                 selected: selectedIdx,
                 correct: isCorrect,
                 questionText: q.text,
@@ -256,13 +268,13 @@
             score: correctCount,
             total: shuffledQuestions.length,
             percent: percent,
+            passed: passed,
             answers: answersDetail,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
         };
 
-        // Сохраняем в GitHub JSON
-        await saveToGitHubBackup(resultData);
-
+        // Показываем сообщение о сохранении
         resultScreen.classList.remove('hidden');
         resultScreen.innerHTML = `
             <div class="result-box ${passed ? 'success' : 'fail'}">
@@ -270,9 +282,23 @@
                 <p>Правильных ответов: ${correctCount} из ${shuffledQuestions.length}</p>
                 <p>Ваш результат: ${percent}%</p>
                 <p>${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
+                <div class="save-status" id="saveStatus">⏳ Сохраняю результат...</div>
                 <button class="restart-btn" onclick="location.reload()">🔄 Пройти заново</button>
             </div>
         `;
+        
+        // Сохраняем на GitHub
+        const saved = await saveToGitHub(resultData);
+        const statusDiv = document.getElementById('saveStatus');
+        if (statusDiv) {
+            if (saved) {
+                statusDiv.innerHTML = '✅ Результат сохранён!';
+                statusDiv.style.color = '#2c6e2c';
+            } else {
+                statusDiv.innerHTML = '⚠️ Результат не сохранился. Проверьте консоль (F12)';
+                statusDiv.style.color = '#c41e3a';
+            }
+        }
     }
 
     function nextQuestionHandler() {
