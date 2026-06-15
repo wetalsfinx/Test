@@ -24,6 +24,9 @@
         .employee-item:hover { background: #fff0f3; }
         .employee-list { max-height: 400px; overflow-y: auto; }
         .badge { background: #c41e3a; color: white; padding: 2px 10px; border-radius: 30px; font-size: 11px; }
+        .badge-green { background: #2c6e2c; }
+        .badge-yellow { background: #e6a017; }
+        .badge-red { background: #c41e3a; }
         .delete-btn { background: #8b1a2c; border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; font-size: 11px; color: white; margin-left: 8px; }
         .tab-btn { background: #e0d6cc; border: none; padding: 8px 20px; border-radius: 40px; cursor: pointer; font-weight: bold; margin-right: 8px; }
         .tab-btn.active { background: #c41e3a; color: white; }
@@ -36,16 +39,21 @@
         .answer-item { background: #f8f9fa; border-radius: 16px; padding: 10px; margin-bottom: 10px; border-left: 4px solid #c41e3a; }
         .recommendation { background: #e8f0e8; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 12px; }
         .zero-score-warning { background: #fff0f0; border: 2px solid #c41e3a; border-radius: 16px; padding: 12px; margin-bottom: 16px; text-align: center; }
-        .zero-score-warning h4 { color: #c41e3a; margin-bottom: 8px; }
         .general-recommendations { background: #fff8e0; border-left: 4px solid #ffc107; padding: 12px; margin-bottom: 16px; border-radius: 12px; }
         .loading-text { text-align: center; padding: 30px; color: #666; }
         .leader-card { background: linear-gradient(135deg, #fff0f3, #ffe0e0); border-radius: 20px; padding: 12px; margin-bottom: 15px; text-align: center; }
+        .insight-box { background: #e8f0fe; border-left: 4px solid #2196F3; padding: 12px; margin-top: 16px; border-radius: 12px; }
+        .city-feedback-card { background: #f8f9fa; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+        .progress-bar { height: 8px; background: #eee; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #c41e3a; border-radius: 4px; }
         .dark { background: #1a1a2e; color: #eee; }
         .dark .card { background: #16213e; }
         .dark .kpi-card { background: #0f3460; }
         .dark .employee-item { border-color: #2c3e50; }
         .dark .zero-score-warning { background: #2a1a1a; }
         .dark .general-recommendations { background: #2a2a1a; }
+        .dark .insight-box { background: #1a2a3a; }
+        .dark .city-feedback-card { background: #0f3460; }
     </style>
 </head>
 <body>
@@ -58,6 +66,7 @@
         <div style="margin-top: 12px;">
             <button id="tabTestBtn" class="tab-btn active">📊 Тест</button>
             <button id="tabCityStatsBtn" class="tab-btn">🏙️ Статистика по городам</button>
+            <button id="tabFeedbackBtn" class="tab-btn">📝 Фидбек по городу</button>
         </div>
         <div id="testFilters" class="flex-row" style="margin-top: 12px;">
             <select id="cityFilter"><option value="all">Все города</option></select>
@@ -66,7 +75,6 @@
             <button id="resetFiltersBtn">Сбросить</button>
             <button id="loadBtn">Загрузить</button>
             <button id="exportBtn">📎 CSV</button>
-            <button id="feedbackBtn" class="feedback-btn">📝 Фидбек для города</button>
         </div>
         <div id="status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
     </div>
@@ -77,6 +85,10 @@
         <div class="charts-row">
             <div class="card chart-box"><h3>Распределение баллов</h3><canvas id="scoreChart"></canvas></div>
             <div class="card chart-box"><h3>Топ городов</h3><canvas id="cityChart"></canvas></div>
+        </div>
+        <div class="card">
+            <h3>📈 Динамика среднего балла по дням</h3>
+            <canvas id="trendChart" style="max-height: 200px;"></canvas>
         </div>
         <div class="row" style="display: flex; gap: 15px; flex-wrap: wrap;">
             <div class="card" style="flex:1"><h3>🏆 Топ сотрудников (≥85%)</h3><div id="topList"></div></div>
@@ -90,7 +102,7 @@
             <h3>📊 Статистика по вопросам (ошибки)</h3>
             <div style="overflow-x: auto;">
                 <table class="question-stats-table" id="questionStatsTable">
-                    <thead>汽<th>Вопрос</th><th>Ошибок</th><th>% ошибок</th></tr></thead>
+                    <thead><th>Вопрос</th><th>Ошибок</th><th>% ошибок</th><th>Сложность</th></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -99,16 +111,32 @@
 
     <div id="cityStatsArea" style="display: none;">
         <div class="card">
-            <h3>🏙️ Статистика по городам</h3>
+            <h3>🏙️ Детальная статистика по городам</h3>
             <div style="overflow-x: auto;">
                 <table class="question-stats-table" id="cityStatsTable">
-                    <thead>汽<th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно (≥85%)</th><th>Ошибок всего</th></tr></thead>
+                    <thead><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно (≥85%)</th><th>Ошибок всего</th><th>Самый частый провал</th></thead>
                     <tbody id="cityStatsBody"></tbody>
                 </table>
             </div>
             <button id="exportCityBtn" style="margin-top: 15px;">📎 Экспорт таблицы CSV</button>
         </div>
+        <div class="card" id="cityComparisonCard" style="display: none;">
+            <h3>📊 Сравнение городов</h3>
+            <canvas id="comparisonChart"></canvas>
+        </div>
     </div>
+
+    <div id="feedbackArea" style="display: none;">
+        <div class="card">
+            <h3>🏙️ Выберите город для фидбека</h3>
+            <select id="feedbackCitySelect" style="width: 100%; max-width: 300px;">
+                <option value="">-- Выберите город --</option>
+            </select>
+            <button id="generateFeedbackBtn" style="margin-top: 12px;">📝 Сгенерировать фидбек</button>
+            <div id="feedbackResult" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+    
     <div id="loadingSkeleton" class="loading-text">Загрузка...</div>
 </div>
 
@@ -119,7 +147,7 @@
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const BIN_ID_KEY = '585_bin_id';
     
-    let allData = [], filteredData = [], scoreChart = null, cityChart = null;
+    let allData = [], filteredData = [], scoreChart = null, cityChart = null, trendChart = null, comparisonChart = null;
     
     async function loadResults() {
         document.getElementById('loadingSkeleton').style.display = 'block';
@@ -155,12 +183,16 @@
                 score: r.score || 0,
                 total: r.total || 11,
                 percent: r.percent || 0,
-                answers: r.answers || []
+                answers: r.answers || [],
+                date: r.date || new Date().toISOString()
             }));
             
             const cities = [...new Set(allData.map(r => r.city))];
             const citySelect = document.getElementById('cityFilter');
             citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            const feedbackSelect = document.getElementById('feedbackCitySelect');
+            feedbackSelect.innerHTML = '<option value="">-- Выберите город --</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
             
             renderCityStatsTable();
             applyFilters();
@@ -177,16 +209,41 @@
     function renderCityStatsTable() {
         const cityMap = new Map();
         allData.forEach(r => {
-            if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sum: 0, success: 0, errors: 0 });
+            if (!cityMap.has(r.city)) cityMap.set(r.city, { 
+                count: 0, sum: 0, success: 0, errors: 0, 
+                questionErrors: new Array(11).fill(0),
+                employees: []
+            });
             const c = cityMap.get(r.city);
             c.count++;
             c.sum += r.percent;
             if (r.percent >= 85) c.success++;
             c.errors += (r.total - r.score);
+            c.employees.push(r.user_name);
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    if (!a.correct) c.questionErrors[idx]++;
+                });
+            }
         });
-        const cityStats = [...cityMap.entries()].map(([city, data]) => ({
-            city, count: data.count, avg: Math.round(data.sum / data.count), success: data.success, errors: data.errors
-        })).sort((a,b) => b.avg - a.avg);
+        
+        const cityStats = [...cityMap.entries()].map(([city, data]) => {
+            const mostFailedIdx = data.questionErrors.reduce((maxIdx, val, idx, arr) => val > arr[maxIdx] ? idx : maxIdx, 0);
+            const questionTexts = [
+                "Приветствие", "Бюджет", "Серьги", "Серебро→Золото", 
+                "Футляр", "Дороговато", "Нет размера", "Подарок маме",
+                "Другие модели", "Яндекс Сплит", "Клиент идёт"
+            ];
+            return {
+                city, 
+                count: data.count, 
+                avg: Math.round(data.sum / data.count), 
+                success: data.success, 
+                errors: data.errors,
+                mostFailed: questionTexts[mostFailedIdx] || "—",
+                employees: data.employees
+            };
+        }).sort((a,b) => b.avg - a.avg);
         
         const tbody = document.getElementById('cityStatsBody');
         tbody.innerHTML = '';
@@ -194,10 +251,65 @@
             const row = tbody.insertRow();
             row.insertCell(0).innerHTML = `<b>${c.city}</b>`;
             row.insertCell(1).innerHTML = c.count;
-            row.insertCell(2).innerHTML = `${c.avg}%`;
+            row.insertCell(2).innerHTML = `<span style="color: ${c.avg >= 85 ? '#2c6e2c' : c.avg >= 70 ? '#e6a017' : '#c41e3a'}; font-weight: bold;">${c.avg}%</span>`;
             row.insertCell(3).innerHTML = `${c.success} / ${c.count}`;
             row.insertCell(4).innerHTML = c.errors;
+            row.insertCell(5).innerHTML = `<span class="badge-red" style="background:#c41e3a; padding:2px 8px; border-radius:20px;">⚠️ ${c.mostFailed}</span>`;
         });
+        
+        // Сравнительный график городов
+        if (comparisonChart) comparisonChart.destroy();
+        const ctx = document.getElementById('comparisonChart')?.getContext('2d');
+        if (ctx && cityStats.length > 1) {
+            document.getElementById('cityComparisonCard').style.display = 'block';
+            comparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: cityStats.map(c => c.city),
+                    datasets: [{
+                        label: 'Средний балл (%)',
+                        data: cityStats.map(c => c.avg),
+                        backgroundColor: cityStats.map(c => c.avg >= 85 ? '#2c6e2c' : c.avg >= 70 ? '#e6a017' : '#c41e3a'),
+                        borderRadius: 8
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
+            });
+        }
+    }
+    
+    function renderTrendChart() {
+        const dateMap = new Map();
+        allData.forEach(r => {
+            const date = new Date(r.date).toLocaleDateString('ru-RU');
+            if (!dateMap.has(date)) dateMap.set(date, { sum: 0, count: 0 });
+            const d = dateMap.get(date);
+            d.sum += r.percent;
+            d.count++;
+        });
+        const sortedDates = [...dateMap.keys()].sort((a,b) => new Date(a) - new Date(b));
+        const avgByDate = sortedDates.map(date => Math.round(dateMap.get(date).sum / dateMap.get(date).count));
+        
+        if (trendChart) trendChart.destroy();
+        const ctx = document.getElementById('trendChart')?.getContext('2d');
+        if (ctx && sortedDates.length > 0) {
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Средний балл (%)',
+                        data: avgByDate,
+                        borderColor: '#c41e3a',
+                        backgroundColor: 'rgba(196,30,58,0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: avgByDate.map(v => v >= 85 ? '#2c6e2c' : v >= 70 ? '#e6a017' : '#c41e3a')
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } } }
+            });
+        }
     }
     
     function exportCityCSV() {
@@ -235,19 +347,115 @@
         if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
         filteredData = filtered;
         renderDashboard();
+        renderTrendChart();
     }
     
-    function generateFeedback() {
-        const city = document.getElementById('cityFilter').value;
-        if (city === 'all') { alert('Выберите город'); return; }
-        if (!filteredData.length) { alert('Нет данных'); return; }
-        const total = filteredData.length;
-        const avg = Math.round(filteredData.reduce((s,r)=>s+r.percent,0)/total);
-        let feedback = `📊 Анализ результатов: город ${city}\n👥 Сотрудников: ${total}\n📈 Средний балл: ${avg}%\n\n`;
-        feedback += `📌 Рекомендации:\n`;
-        feedback += `• Проведите разбор ошибок с сотрудниками\n`;
-        feedback += `• Обратите внимание на правила продаж\n`;
-        navigator.clipboard.writeText(feedback).then(() => alert('Фидбек скопирован'));
+    function generateCityFeedback() {
+        const city = document.getElementById('feedbackCitySelect').value;
+        if (!city) { alert('Выберите город'); return; }
+        
+        const cityData = allData.filter(r => r.city === city);
+        if (!cityData.length) { alert('Нет данных по городу'); return; }
+        
+        const total = cityData.length;
+        const avg = Math.round(cityData.reduce((s,r)=>s+r.percent,0)/total);
+        const success = cityData.filter(r=>r.percent>=85).length;
+        const failed = cityData.filter(r=>r.percent<70).length;
+        
+        // Анализ вопросов
+        const questionErrors = new Array(11).fill(0);
+        cityData.forEach(r => {
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    if (!a.correct) questionErrors[idx]++;
+                });
+            }
+        });
+        
+        const questionTexts = [
+            "Приветствие", "Работа с бюджетом", "Предложение серьг", "Переход на золото",
+            "Продажа футляра", "Возражение о цене", "Отсутствие размера", "Подарок маме",
+            "Просьба показать другие модели", "Предложение Сплита", "Клиент идёт вдоль витрины"
+        ];
+        
+        const weakQuestions = [];
+        for (let i = 0; i < questionErrors.length; i++) {
+            const errorRate = Math.round((questionErrors[i] / total) * 100);
+            if (errorRate > 50) {
+                weakQuestions.push({ num: i+1, text: questionTexts[i], rate: errorRate });
+            }
+        }
+        
+        const recommendationsMap = {
+            1: "Выучить скрипт приветствия с акцией и вопросом 'Для себя или в подарок?'",
+            2: "Перед показом товара узнавать потребность: 'Для какого случая?'",
+            3: "Предлагать серьги через создание законченного образа",
+            4: "Не критиковать выбор — показывать оба варианта и дать клиенту сравнить",
+            5: "Продавать не коробку, а заботу об украшении",
+            6: "На возражение 'дорого' спрашивать 'А с чем сравниваете?'",
+            7: "Не отправлять клиента — дать альтернативы из наличия и каталога",
+            8: "Продавать эмоцию и смысл подарка, а не характеристики",
+            9: "Не просто соглашаться, а предлагать дополнения",
+            10: "Сплит/рассрочку предлагать ДО озвучивания цены",
+            11: "Дать 20-30 секунд освоиться, потом начинать диалог"
+        };
+        
+        let feedback = `
+            <div class="city-feedback-card">
+                <h3 style="color:#c41e3a;">📊 Город: ${city}</h3>
+                <p><strong>👥 Сотрудников:</strong> ${total}</p>
+                <p><strong>📈 Средний балл:</strong> ${avg}% ${avg >= 85 ? '✅' : avg >= 70 ? '⚠️' : '🔴'}</p>
+                <p><strong>🏆 Успешно (≥85%):</strong> ${success} из ${total} (${Math.round(success/total*100)}%)</p>
+                <p><strong>🔴 Требуют доработки (&lt;70%):</strong> ${failed} из ${total}</p>
+            </div>
+        `;
+        
+        if (weakQuestions.length > 0) {
+            feedback += `<div class="city-feedback-card" style="border-left-color:#ffc107;">
+                <h4>⚠️ КРАСНЫЕ ЗОНЫ (ошибок >50%):</h4>
+                <ul>`;
+            weakQuestions.forEach(q => {
+                feedback += `<li><b>Вопрос ${q.num}:</b> ${q.text} — ошибок ${q.rate}%<br>
+                    <span style="font-size:12px;">📌 ${recommendationsMap[q.num]}</span></li>`;
+            });
+            feedback += `</ul></div>`;
+        }
+        
+        feedback += `<div class="city-feedback-card">
+            <h4>📋 ДЛЯ РУКОВОДИТЕЛЯ:</h4>
+            <p><b>Требуют индивидуальной работы:</b> ${cityData.filter(r => r.percent < 70).map(r => r.user_name).join(', ') || '—'}</p>
+            <p><b>Можно поставить в пример:</b> ${cityData.filter(r => r.percent >= 85).map(r => r.user_name).join(', ') || '—'}</p>
+        </div>`;
+        
+        feedback += `<div class="city-feedback-card">
+            <h4>📌 ГОТОВЫЙ ТЕКСТ ДЛЯ РАССЫЛКИ:</h4>
+            <textarea id="feedbackText" rows="6" style="width:100%; border-radius:16px; padding:12px; border:1px solid #ddd; background:#f8f9fa;">📊 Анализ результатов теста по городу ${city}
+
+👥 Всего сотрудников: ${total}
+📈 Средний балл: ${avg}%
+🏆 Успешно сдали (≥85%): ${success} человек
+
+❌ Сложности у команды вызывают вопросы:
+${weakQuestions.map(q => `• ${q.text} — ${q.rate}% ошибок`).join('\n')}
+
+🎯 Рекомендации для повышения:
+${weakQuestions.map(q => `• ${recommendationsMap[q.num]}`).join('\n')}
+
+👤 Требуют особого внимания: ${cityData.filter(r => r.percent < 70).map(r => r.user_name).join(', ')}
+🏆 Лучшие результаты показали: ${cityData.filter(r => r.percent >= 85).map(r => r.user_name).join(', ')}</textarea>
+            <button onclick="copyFeedbackText()" style="margin-top:12px; background:#2c6e2c;">📋 Скопировать текст</button>
+        </div>`;
+        
+        document.getElementById('feedbackResult').innerHTML = feedback;
+    }
+    
+    function copyFeedbackText() {
+        const textarea = document.getElementById('feedbackText');
+        if (textarea) {
+            textarea.select();
+            document.execCommand('copy');
+            alert('Фидбек скопирован в буфер обмена');
+        }
     }
     
     function renderDashboard() {
@@ -263,7 +471,7 @@
         
         document.getElementById('kpi').innerHTML = `
             <div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div>
-            <div class="kpi-card"><div class="kpi-value">${avg}%</div><div>Средний балл</div></div>
+            <div class="kpi-card"><div class="kpi-value" style="color:${avg>=85?'#2c6e2c':avg>=70?'#e6a017':'#c41e3a'}">${avg}%</div><div>Средний балл</div></div>
             <div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div>
             <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>
         `;
@@ -272,7 +480,7 @@
         document.getElementById('topList').innerHTML = top5.map((r,i)=>`
             <div class="employee-item" onclick="showDetails(${r.id})">
                 <span><b>${i+1}</b> ${r.user_name} (${r.city})</span>
-                <span class="badge">${r.percent}%</span>
+                <span class="badge badge-green">${r.percent}%</span>
             </div>
         `).join('') || 'Нет';
         
@@ -286,7 +494,7 @@
         document.getElementById('cityRating').innerHTML = cityRating.map(c => `
             <div class="employee-item" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();">
                 <span><b>${c.city}</b> (${c.count})</span>
-                <span class="badge">${c.avg}%</span>
+                <span class="badge ${c.avg>=85?'badge-green':c.avg>=70?'badge-yellow':'badge-red'}">${c.avg}%</span>
             </div>
         `).join('');
         
@@ -298,7 +506,7 @@
             <div class="employee-item">
                 <div style="flex:1; cursor:pointer;" onclick="showDetails(${r.id})">
                     <b>${r.user_name}</b> (${r.city})
-                    <span class="badge" style="background:${r.percent>=85?'#28a745':'#c41e3a'}">${r.percent}%</span>
+                    <span class="badge ${r.percent>=85?'badge-green':r.percent>=70?'badge-yellow':'badge-red'}">${r.percent}%</span>
                 </div>
                 <button class="delete-btn" onclick="deleteRow(${r.id})">🗑</button>
             </div>
@@ -315,16 +523,16 @@
         if (scoreChart) scoreChart.destroy();
         scoreChart = new Chart(document.getElementById('scoreChart'), {
             type: 'bar',
-            data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a' }] }
+            data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a', borderRadius: 8 }] }
         });
         
         if (cityChart) cityChart.destroy();
         cityChart = new Chart(document.getElementById('cityChart'), {
             type: 'bar',
-            data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a' }] }
+            data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a', borderRadius: 8 }] }
         });
         
-        // Статистика по вопросам
+        // Статистика по вопросам с цветом сложности
         const questionStats = [];
         filteredData.forEach(r => {
             if (r.answers && r.answers.length) {
@@ -339,10 +547,13 @@
         tbody.innerHTML = '';
         questionStats.forEach((q, i) => {
             const percent = Math.round((q.errors / q.total) * 100);
+            const difficultyClass = percent >= 50 ? 'badge-red' : percent >= 30 ? 'badge-yellow' : 'badge-green';
+            const difficultyText = percent >= 50 ? '🔴 Критично' : percent >= 30 ? '🟡 Сложный' : '🟢 Лёгкий';
             const row = tbody.insertRow();
             row.insertCell(0).innerHTML = `<b>${i+1}.</b> ${q.text}`;
             row.insertCell(1).innerHTML = `${q.errors}/${q.total}`;
             row.insertCell(2).innerHTML = `${percent}%`;
+            row.insertCell(3).innerHTML = `<span class="badge ${difficultyClass}" style="background:${percent>=50?'#c41e3a':percent>=30?'#e6a017':'#2c6e2c'}">${difficultyText}</span>`;
         });
     }
     
@@ -354,7 +565,6 @@
         alert('Удалено из текущего просмотра');
     }
     
-    // ========== ФУНКЦИЯ С РЕАЛЬНЫМИ РЕКОМЕНДАЦИЯМИ ==========
     function showDetails(id) {
         const emp = filteredData.find(r => r.id == id);
         if (!emp) return;
@@ -389,41 +599,29 @@
                 
                 if (!isCorrect) {
                     switch(i) {
-                        case 0:
-                            recommendation = '💡 Правило: Не спрашивайте "Чем помочь?" — клиент скажет "Посмотрю". Сразу дайте ценность: акция + спросите "Для себя или в подарок?". Это переводит клиента в диалог.';
+                        case 0: recommendation = '💡 Не спрашивайте "Чем помочь?" — клиент скажет "Посмотрю". Сразу дайте ценность: акция + спросите "Для себя или в подарок?".';
                             break;
-                        case 1:
-                            recommendation = '💡 Правило: Когда клиент назвал бюджет, НЕ показывайте товар сразу. Сначала спросите: "А для какого случая? Это подарок или для себя?". Узнав повод, вы подберёте идеальное изделие.';
+                        case 1: recommendation = '💡 Когда клиент назвал бюджет, НЕ показывайте товар сразу. Сначала спросите: "А для какого случая? Это подарок или для себя?".';
                             break;
-                        case 2:
-                            recommendation = '💡 Правило: Предлагайте доп. товар через создание образа: "Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ". Это продаёт эмоцию, а не просто вещь.';
+                        case 2: recommendation = '💡 Предлагайте доп. товар через создание образа: "Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ".';
                             break;
-                        case 3:
-                            recommendation = '💡 Правило: Не критикуйте выбор клиента. Скажите: "Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету". Клиент сам сделает выбор.';
+                        case 3: recommendation = '💡 Не критикуйте выбор клиента. Скажите: "Давайте примерим оба варианта — и серебро, и золото". Клиент сам сделает выбор.';
                             break;
-                        case 4:
-                            recommendation = '💡 Правило: Не спрашивайте "Футляр нужен?". Говорите: "Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно". Продавайте заботу.';
+                        case 4: recommendation = '💡 Не спрашивайте "Футляр нужен?". Говорите: "Давайте выберем красивый футляр и чистящее средство, чтобы украшение всегда выглядело безупречно".';
                             break;
-                        case 5:
-                            recommendation = '💡 Правило: Не оправдывайте цену характеристиками. Скажите: "Понимаю, цена важна. А с чем вы сравниваете?". Узнайте, что клиент имеет в виду.';
+                        case 5: recommendation = '💡 Не оправдывайте цену характеристиками. Скажите: "Понимаю, цена важна. А с чем вы сравниваете?".';
                             break;
-                        case 6:
-                            recommendation = '💡 Правило: Не отправляйте клиента ждать или приходить завтра. Скажите: "Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ". Дайте альтернативу ЗДЕСЬ И СЕЙЧАС.';
+                        case 6: recommendation = '💡 Не отправляйте клиента ждать. Скажите: "Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ".';
                             break;
-                        case 7:
-                            recommendation = '💡 Правило: Продавайте не кольцо, а эмоцию: "Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нем, глядя на ваш подарок".';
+                        case 7: recommendation = '💡 Продавайте не кольцо, а эмоцию: "Это кольцо станет идеальным напоминанием о её юбилее".';
                             break;
-                        case 8:
-                            recommendation = '💡 Правило: Не говорите просто "Да, конечно". Предложите дополнение: "Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию".';
+                        case 8: recommendation = '💡 Не говорите просто "Да, конечно". Предложите: "Давайте я покажу модели, которые идеально дополнят вашу коллекцию".';
                             break;
-                        case 9:
-                            recommendation = '💡 Правило: Рассрочку/Сплит предлагайте ДО озвучивания цены: "Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты". Клиент не испугается цены.';
+                        case 9: recommendation = '💡 Рассрочку/Сплит предлагайте ДО озвучивания цены: "Для такого выбора можно оформить Сплит — 4 платежа без переплат".';
                             break;
-                        case 10:
-                            recommendation = '💡 Правило: Дайте клиенту 20-30 секунд освоиться, не набрасывайтесь. Затем подойдите и спросите: "Какое изделие выбираете? Для себя или в подарок?". Уважайте личное пространство.';
+                        case 10: recommendation = '💡 Дайте клиенту 20-30 секунд освоиться, затем подойдите и спросите: "Какое изделие выбираете? Для себя или в подарок?".';
                             break;
-                        default:
-                            recommendation = '💡 Изучите правильный ответ и запомните правило.';
+                        default: recommendation = '💡 Изучите правильный ответ и запомните правило.';
                     }
                 }
                 
@@ -463,14 +661,25 @@
         if (tab === 'test') {
             document.getElementById('testArea').style.display = 'block';
             document.getElementById('cityStatsArea').style.display = 'none';
+            document.getElementById('feedbackArea').style.display = 'none';
             document.getElementById('tabTestBtn').classList.add('active');
             document.getElementById('tabCityStatsBtn').classList.remove('active');
-        } else {
+            document.getElementById('tabFeedbackBtn').classList.remove('active');
+        } else if (tab === 'city') {
             document.getElementById('testArea').style.display = 'none';
             document.getElementById('cityStatsArea').style.display = 'block';
+            document.getElementById('feedbackArea').style.display = 'none';
             document.getElementById('tabTestBtn').classList.remove('active');
             document.getElementById('tabCityStatsBtn').classList.add('active');
+            document.getElementById('tabFeedbackBtn').classList.remove('active');
             renderCityStatsTable();
+        } else {
+            document.getElementById('testArea').style.display = 'none';
+            document.getElementById('cityStatsArea').style.display = 'none';
+            document.getElementById('feedbackArea').style.display = 'block';
+            document.getElementById('tabTestBtn').classList.remove('active');
+            document.getElementById('tabCityStatsBtn').classList.remove('active');
+            document.getElementById('tabFeedbackBtn').classList.add('active');
         }
     }
     
@@ -484,9 +693,10 @@
     document.getElementById('percentFilter').onchange = applyFilters;
     document.getElementById('searchInput').addEventListener('input', applyFilters);
     document.getElementById('exportBtn').onclick = exportCSV;
-    document.getElementById('feedbackBtn').onclick = generateFeedback;
+    document.getElementById('generateFeedbackBtn').onclick = generateCityFeedback;
     document.getElementById('tabTestBtn').onclick = () => switchTab('test');
     document.getElementById('tabCityStatsBtn').onclick = () => switchTab('city');
+    document.getElementById('tabFeedbackBtn').onclick = () => switchTab('feedback');
     document.getElementById('exportCityBtn').onclick = exportCityCSV;
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
     
