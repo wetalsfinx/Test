@@ -37,6 +37,10 @@
         .recommendation { background: #e8f0e8; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 12px; }
         .loading-text { text-align: center; padding: 30px; color: #666; }
         .leader-card { background: linear-gradient(135deg, #fff0f3, #ffe0e0); border-radius: 20px; padding: 12px; margin-bottom: 15px; text-align: center; }
+        .dark { background: #1a1a2e; color: #eee; }
+        .dark .card { background: #16213e; }
+        .dark .kpi-card { background: #0f3460; }
+        .dark .employee-item { border-color: #2c3e50; }
     </style>
 </head>
 <body>
@@ -93,7 +97,7 @@
             <h3>🏙️ Статистика по городам</h3>
             <div style="overflow-x: auto;">
                 <table class="question-stats-table" id="cityStatsTable">
-                    <thead>汽<th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно (≥85%)</th><th>Ошибок всего</th></td></thead>
+                    <thead>汽<th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно (≥85%)</th><th>Ошибок всего</th></tr></thead>
                     <tbody id="cityStatsBody"></tbody>
                 </table>
             </div>
@@ -106,11 +110,11 @@
 <div id="modal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalAnswers"></div><button onclick="closeModal()" style="margin-top: 16px; background: #6c757d;">Закрыть</button></div></div>
 
 <script>
-    const GITHUB_REPO = 'wetalsfinx/Test';
-    const GITHUB_FILE = 'results_backup.json';
-    const GITHUB_BRANCH = 'main';
-    const GITHUB_RAW = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${GITHUB_FILE}`;
-
+    // ========== НАСТРОЙКА JSONBIN.IO ==========
+    // ⚠️ СЮДА ВСТАВЬ ТВОЙ MASTER KEY (тот же, что в тесте)
+    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
+    const BIN_ID_KEY = '585_bin_id';
+    
     let allData = [], filteredData = [], scoreChart = null, cityChart = null;
     
     async function loadResults() {
@@ -118,19 +122,33 @@
         document.getElementById('status').innerHTML = 'Загрузка...';
         
         try {
-            const response = await fetch(GITHUB_RAW);
+            // Получаем ID коробки из localStorage
+            const binId = localStorage.getItem(BIN_ID_KEY);
+            if (!binId) {
+                document.getElementById('status').innerHTML = '❌ Нет результатов. Пройдите тест первым.';
+                document.getElementById('loadingSkeleton').style.display = 'none';
+                return;
+            }
             
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            // Загружаем результаты из JSONBin.io
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
             
             const data = await response.json();
+            const results = data.record || [];
             
-            if (!data || !data.length) {
+            if (!results.length) {
                 document.getElementById('status').innerHTML = 'Нет результатов. Пройдите тест.';
                 document.getElementById('loadingSkeleton').style.display = 'none';
                 return;
             }
             
-            allData = data.map(r => ({
+            allData = results.map(r => ({
                 id: r.id,
                 user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
@@ -149,7 +167,7 @@
             renderCityStatsTable();
             
             applyFilters();
-            document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} записей`;
+            document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} записей из облака`;
             
         } catch (err) {
             console.error(err);
@@ -332,11 +350,11 @@
     }
     
     function deleteRow(id) {
-        if (!confirm('Удалить результаты этого сотрудника?')) return;
+        if (!confirm('Удалить результаты этого сотрудника? Удаление только из дашборда (из облака не удалится).')) return;
         allData = allData.filter(r => r.id !== id);
         applyFilters();
         renderCityStatsTable();
-        alert('Удалено');
+        alert('Удалено из текущего просмотра');
     }
     
     function showDetails(id) {
