@@ -39,6 +39,7 @@
         .answer-item { background: #f8f9fa; border-radius: 16px; padding: 10px; margin-bottom: 10px; border-left: 4px solid #c41e3a; }
         .recommendation { background: #e8f0e8; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 12px; }
         .zero-score-warning { background: #fff0f0; border: 2px solid #c41e3a; border-radius: 16px; padding: 12px; margin-bottom: 16px; text-align: center; }
+        .zero-score-warning h4 { color: #c41e3a; margin-bottom: 8px; }
         .general-recommendations { background: #fff8e0; border-left: 4px solid #ffc107; padding: 12px; margin-bottom: 16px; border-radius: 12px; }
         .loading-text { text-align: center; padding: 30px; color: #666; }
         .leader-card { background: linear-gradient(135deg, #fff0f3, #ffe0e0); border-radius: 20px; padding: 12px; margin-bottom: 15px; text-align: center; }
@@ -196,6 +197,7 @@
             
             renderCityStatsTable();
             applyFilters();
+            renderTrendChart();
             document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} записей из облака`;
             
         } catch (err) {
@@ -203,78 +205,6 @@
             document.getElementById('status').innerHTML = 'Ошибка загрузки: ' + err.message;
         } finally {
             document.getElementById('loadingSkeleton').style.display = 'none';
-        }
-    }
-    
-    function renderCityStatsTable() {
-        const cityMap = new Map();
-        allData.forEach(r => {
-            if (!cityMap.has(r.city)) cityMap.set(r.city, { 
-                count: 0, sum: 0, success: 0, errors: 0, 
-                questionErrors: new Array(11).fill(0),
-                employees: []
-            });
-            const c = cityMap.get(r.city);
-            c.count++;
-            c.sum += r.percent;
-            if (r.percent >= 85) c.success++;
-            c.errors += (r.total - r.score);
-            c.employees.push(r.user_name);
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    if (!a.correct) c.questionErrors[idx]++;
-                });
-            }
-        });
-        
-        const cityStats = [...cityMap.entries()].map(([city, data]) => {
-            const mostFailedIdx = data.questionErrors.reduce((maxIdx, val, idx, arr) => val > arr[maxIdx] ? idx : maxIdx, 0);
-            const questionTexts = [
-                "Приветствие", "Бюджет", "Серьги", "Серебро→Золото", 
-                "Футляр", "Дороговато", "Нет размера", "Подарок маме",
-                "Другие модели", "Яндекс Сплит", "Клиент идёт"
-            ];
-            return {
-                city, 
-                count: data.count, 
-                avg: Math.round(data.sum / data.count), 
-                success: data.success, 
-                errors: data.errors,
-                mostFailed: questionTexts[mostFailedIdx] || "—",
-                employees: data.employees
-            };
-        }).sort((a,b) => b.avg - a.avg);
-        
-        const tbody = document.getElementById('cityStatsBody');
-        tbody.innerHTML = '';
-        cityStats.forEach(c => {
-            const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<b>${c.city}</b>`;
-            row.insertCell(1).innerHTML = c.count;
-            row.insertCell(2).innerHTML = `<span style="color: ${c.avg >= 85 ? '#2c6e2c' : c.avg >= 70 ? '#e6a017' : '#c41e3a'}; font-weight: bold;">${c.avg}%</span>`;
-            row.insertCell(3).innerHTML = `${c.success} / ${c.count}`;
-            row.insertCell(4).innerHTML = c.errors;
-            row.insertCell(5).innerHTML = `<span class="badge-red" style="background:#c41e3a; padding:2px 8px; border-radius:20px;">⚠️ ${c.mostFailed}</span>`;
-        });
-        
-        // Сравнительный график городов
-        if (comparisonChart) comparisonChart.destroy();
-        const ctx = document.getElementById('comparisonChart')?.getContext('2d');
-        if (ctx && cityStats.length > 1) {
-            document.getElementById('cityComparisonCard').style.display = 'block';
-            comparisonChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: cityStats.map(c => c.city),
-                    datasets: [{
-                        label: 'Средний балл (%)',
-                        data: cityStats.map(c => c.avg),
-                        backgroundColor: cityStats.map(c => c.avg >= 85 ? '#2c6e2c' : c.avg >= 70 ? '#e6a017' : '#c41e3a'),
-                        borderRadius: 8
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
-            });
         }
     }
     
@@ -308,6 +238,75 @@
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.raw}%` } } } }
+            });
+        }
+    }
+    
+    function renderCityStatsTable() {
+        const cityMap = new Map();
+        allData.forEach(r => {
+            if (!cityMap.has(r.city)) cityMap.set(r.city, { 
+                count: 0, sum: 0, success: 0, errors: 0, 
+                questionErrors: new Array(11).fill(0)
+            });
+            const c = cityMap.get(r.city);
+            c.count++;
+            c.sum += r.percent;
+            if (r.percent >= 85) c.success++;
+            c.errors += (r.total - r.score);
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    if (!a.correct) c.questionErrors[idx]++;
+                });
+            }
+        });
+        
+        const questionTexts = [
+            "Приветствие", "Бюджет", "Серьги", "Серебро→Золото", 
+            "Футляр", "Дороговато", "Нет размера", "Подарок маме",
+            "Другие модели", "Яндекс Сплит", "Клиент идёт"
+        ];
+        
+        const cityStats = [...cityMap.entries()].map(([city, data]) => {
+            const mostFailedIdx = data.questionErrors.reduce((maxIdx, val, idx, arr) => val > arr[maxIdx] ? idx : maxIdx, 0);
+            return {
+                city, 
+                count: data.count, 
+                avg: Math.round(data.sum / data.count), 
+                success: data.success, 
+                errors: data.errors,
+                mostFailed: questionTexts[mostFailedIdx] || "—"
+            };
+        }).sort((a,b) => b.avg - a.avg);
+        
+        const tbody = document.getElementById('cityStatsBody');
+        tbody.innerHTML = '';
+        cityStats.forEach(c => {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerHTML = `<b>${c.city}</b>`;
+            row.insertCell(1).innerHTML = c.count;
+            row.insertCell(2).innerHTML = `<span style="color: ${c.avg >= 85 ? '#2c6e2c' : c.avg >= 70 ? '#e6a017' : '#c41e3a'}; font-weight: bold;">${c.avg}%</span>`;
+            row.insertCell(3).innerHTML = `${c.success} / ${c.count}`;
+            row.insertCell(4).innerHTML = c.errors;
+            row.insertCell(5).innerHTML = `<span style="background:#c41e3a; color:white; padding:2px 8px; border-radius:20px; font-size:11px;">⚠️ ${c.mostFailed}</span>`;
+        });
+        
+        if (comparisonChart) comparisonChart.destroy();
+        const ctx = document.getElementById('comparisonChart')?.getContext('2d');
+        if (ctx && cityStats.length > 1) {
+            document.getElementById('cityComparisonCard').style.display = 'block';
+            comparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: cityStats.map(c => c.city),
+                    datasets: [{
+                        label: 'Средний балл (%)',
+                        data: cityStats.map(c => c.avg),
+                        backgroundColor: cityStats.map(c => c.avg >= 85 ? '#2c6e2c' : c.avg >= 70 ? '#e6a017' : '#c41e3a'),
+                        borderRadius: 8
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
             });
         }
     }
@@ -347,115 +346,6 @@
         if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
         filteredData = filtered;
         renderDashboard();
-        renderTrendChart();
-    }
-    
-    function generateCityFeedback() {
-        const city = document.getElementById('feedbackCitySelect').value;
-        if (!city) { alert('Выберите город'); return; }
-        
-        const cityData = allData.filter(r => r.city === city);
-        if (!cityData.length) { alert('Нет данных по городу'); return; }
-        
-        const total = cityData.length;
-        const avg = Math.round(cityData.reduce((s,r)=>s+r.percent,0)/total);
-        const success = cityData.filter(r=>r.percent>=85).length;
-        const failed = cityData.filter(r=>r.percent<70).length;
-        
-        // Анализ вопросов
-        const questionErrors = new Array(11).fill(0);
-        cityData.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    if (!a.correct) questionErrors[idx]++;
-                });
-            }
-        });
-        
-        const questionTexts = [
-            "Приветствие", "Работа с бюджетом", "Предложение серьг", "Переход на золото",
-            "Продажа футляра", "Возражение о цене", "Отсутствие размера", "Подарок маме",
-            "Просьба показать другие модели", "Предложение Сплита", "Клиент идёт вдоль витрины"
-        ];
-        
-        const weakQuestions = [];
-        for (let i = 0; i < questionErrors.length; i++) {
-            const errorRate = Math.round((questionErrors[i] / total) * 100);
-            if (errorRate > 50) {
-                weakQuestions.push({ num: i+1, text: questionTexts[i], rate: errorRate });
-            }
-        }
-        
-        const recommendationsMap = {
-            1: "Выучить скрипт приветствия с акцией и вопросом 'Для себя или в подарок?'",
-            2: "Перед показом товара узнавать потребность: 'Для какого случая?'",
-            3: "Предлагать серьги через создание законченного образа",
-            4: "Не критиковать выбор — показывать оба варианта и дать клиенту сравнить",
-            5: "Продавать не коробку, а заботу об украшении",
-            6: "На возражение 'дорого' спрашивать 'А с чем сравниваете?'",
-            7: "Не отправлять клиента — дать альтернативы из наличия и каталога",
-            8: "Продавать эмоцию и смысл подарка, а не характеристики",
-            9: "Не просто соглашаться, а предлагать дополнения",
-            10: "Сплит/рассрочку предлагать ДО озвучивания цены",
-            11: "Дать 20-30 секунд освоиться, потом начинать диалог"
-        };
-        
-        let feedback = `
-            <div class="city-feedback-card">
-                <h3 style="color:#c41e3a;">📊 Город: ${city}</h3>
-                <p><strong>👥 Сотрудников:</strong> ${total}</p>
-                <p><strong>📈 Средний балл:</strong> ${avg}% ${avg >= 85 ? '✅' : avg >= 70 ? '⚠️' : '🔴'}</p>
-                <p><strong>🏆 Успешно (≥85%):</strong> ${success} из ${total} (${Math.round(success/total*100)}%)</p>
-                <p><strong>🔴 Требуют доработки (&lt;70%):</strong> ${failed} из ${total}</p>
-            </div>
-        `;
-        
-        if (weakQuestions.length > 0) {
-            feedback += `<div class="city-feedback-card" style="border-left-color:#ffc107;">
-                <h4>⚠️ КРАСНЫЕ ЗОНЫ (ошибок >50%):</h4>
-                <ul>`;
-            weakQuestions.forEach(q => {
-                feedback += `<li><b>Вопрос ${q.num}:</b> ${q.text} — ошибок ${q.rate}%<br>
-                    <span style="font-size:12px;">📌 ${recommendationsMap[q.num]}</span></li>`;
-            });
-            feedback += `</ul></div>`;
-        }
-        
-        feedback += `<div class="city-feedback-card">
-            <h4>📋 ДЛЯ РУКОВОДИТЕЛЯ:</h4>
-            <p><b>Требуют индивидуальной работы:</b> ${cityData.filter(r => r.percent < 70).map(r => r.user_name).join(', ') || '—'}</p>
-            <p><b>Можно поставить в пример:</b> ${cityData.filter(r => r.percent >= 85).map(r => r.user_name).join(', ') || '—'}</p>
-        </div>`;
-        
-        feedback += `<div class="city-feedback-card">
-            <h4>📌 ГОТОВЫЙ ТЕКСТ ДЛЯ РАССЫЛКИ:</h4>
-            <textarea id="feedbackText" rows="6" style="width:100%; border-radius:16px; padding:12px; border:1px solid #ddd; background:#f8f9fa;">📊 Анализ результатов теста по городу ${city}
-
-👥 Всего сотрудников: ${total}
-📈 Средний балл: ${avg}%
-🏆 Успешно сдали (≥85%): ${success} человек
-
-❌ Сложности у команды вызывают вопросы:
-${weakQuestions.map(q => `• ${q.text} — ${q.rate}% ошибок`).join('\n')}
-
-🎯 Рекомендации для повышения:
-${weakQuestions.map(q => `• ${recommendationsMap[q.num]}`).join('\n')}
-
-👤 Требуют особого внимания: ${cityData.filter(r => r.percent < 70).map(r => r.user_name).join(', ')}
-🏆 Лучшие результаты показали: ${cityData.filter(r => r.percent >= 85).map(r => r.user_name).join(', ')}</textarea>
-            <button onclick="copyFeedbackText()" style="margin-top:12px; background:#2c6e2c;">📋 Скопировать текст</button>
-        </div>`;
-        
-        document.getElementById('feedbackResult').innerHTML = feedback;
-    }
-    
-    function copyFeedbackText() {
-        const textarea = document.getElementById('feedbackText');
-        if (textarea) {
-            textarea.select();
-            document.execCommand('copy');
-            alert('Фидбек скопирован в буфер обмена');
-        }
     }
     
     function renderDashboard() {
@@ -532,7 +422,6 @@ ${weakQuestions.map(q => `• ${recommendationsMap[q.num]}`).join('\n')}
             data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a', borderRadius: 8 }] }
         });
         
-        // Статистика по вопросам с цветом сложности
         const questionStats = [];
         filteredData.forEach(r => {
             if (r.answers && r.answers.length) {
@@ -680,6 +569,174 @@ ${weakQuestions.map(q => `• ${recommendationsMap[q.num]}`).join('\n')}
             document.getElementById('tabTestBtn').classList.remove('active');
             document.getElementById('tabCityStatsBtn').classList.remove('active');
             document.getElementById('tabFeedbackBtn').classList.add('active');
+        }
+    }
+    
+    function generateCityFeedback() {
+        const city = document.getElementById('feedbackCitySelect').value;
+        if (!city) { alert('Выберите город'); return; }
+        
+        const cityData = allData.filter(r => r.city === city);
+        if (!cityData.length) { alert('Нет данных по городу'); return; }
+        
+        const total = cityData.length;
+        const avg = Math.round(cityData.reduce((s,r)=>s+r.percent,0)/total);
+        const success = cityData.filter(r=>r.percent>=85).length;
+        const failed = cityData.filter(r=>r.percent<70).length;
+        
+        const questionErrors = new Array(11).fill(0);
+        const questionTotalAttempts = new Array(11).fill(0);
+        
+        cityData.forEach(r => {
+            if (r.answers) {
+                r.answers.forEach((a, idx) => {
+                    questionTotalAttempts[idx]++;
+                    if (!a.correct) questionErrors[idx]++;
+                });
+            }
+        });
+        
+        const questionTexts = [
+            "Приветствие (акция + 'Для себя или в подарок?')",
+            "Реакция на бюджет ('А для какого случая?')",
+            "Предложение серьг ('законченный образ')",
+            "Переход с серебра на золото (примерка обоих)",
+            "Продажа футляра (забота, а не коробка)",
+            "Возражение 'Дороговато' (сравнение)",
+            "Нет размера (альтернативы сейчас)",
+            "Подарок маме (эмоция, не характеристики)",
+            "Просьба показать другие модели (дополнения)",
+            "Яндекс Сплит (предлагать ДО цены)",
+            "Клиент идёт вдоль витрины (30 секунд на освоение)"
+        ];
+        
+        const recommendationMap = {
+            0: "📌 Тренировка скрипта: 'Здравствуйте! У нас скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?'",
+            1: "📌 Перед показом товара спрашивайте: 'А для какого случая? Это подарок или для себя?'",
+            2: "📌 Предлагайте серьги через образ: 'Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ'",
+            3: "📌 Фраза для перехода: 'Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету'",
+            4: "📌 Продажа аксессуаров: 'Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно'",
+            5: "📌 На 'дороговато' отвечайте: 'Понимаю, цена важна. А с чем вы сравниваете?'",
+            6: "📌 При отсутствии размера: 'Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ'",
+            7: "📌 Продажа подарка: 'Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нем'",
+            8: "📌 На просьбу показать другие модели: 'Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию'",
+            9: "📌 Рассрочку/Сплит: 'Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты' (ДО цены!)",
+            10: "📌 Пауза после приветствия: дайте 20-30 секунд освоиться, затем: 'Какое изделие выбираете? Для себя или в подарок?'"
+        };
+        
+        const problemQuestions = [];
+        for (let i = 0; i < questionErrors.length; i++) {
+            const errorRate = Math.round((questionErrors[i] / questionTotalAttempts[i]) * 100);
+            if (errorRate > 30) {
+                problemQuestions.push({
+                    num: i+1,
+                    text: questionTexts[i],
+                    errors: questionErrors[i],
+                    total: questionTotalAttempts[i],
+                    rate: errorRate,
+                    recommendation: recommendationMap[i]
+                });
+            }
+        }
+        
+        problemQuestions.sort((a,b) => b.rate - a.rate);
+        
+        let feedback = `
+            <div class="city-feedback-card">
+                <h3 style="color:#c41e3a;">📊 АНАЛИЗ ГОРОДА: ${city}</h3>
+                <p><strong>👥 Сотрудников:</strong> ${total}</p>
+                <p><strong>📈 Средний балл:</strong> ${avg}% ${avg >= 85 ? '✅' : avg >= 70 ? '⚠️' : '🔴'}</p>
+                <p><strong>🏆 Успешно (≥85%):</strong> ${success} из ${total} (${Math.round(success/total*100)}%)</p>
+                <p><strong>🔴 Требуют доработки (&lt;70%):</strong> ${failed} из ${total}</p>
+            </div>
+        `;
+        
+        if (problemQuestions.length > 0) {
+            feedback += `<div class="city-feedback-card" style="border-left-color:#c41e3a;">
+                <h4>❌ КАКИЕ ПРАВИЛА НАРУШАЮТ (ошибок >30%):</h4>`;
+            
+            problemQuestions.forEach(q => {
+                let barColor = '#c41e3a';
+                if (q.rate >= 70) barColor = '#8b0000';
+                else if (q.rate >= 50) barColor = '#c41e3a';
+                else barColor = '#e6a017';
+                
+                feedback += `
+                    <div style="margin-bottom: 20px; padding: 12px; background: #f8f9fa; border-radius: 16px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span><b>⚠️ Вопрос ${q.num}:</b> ${q.text}</span>
+                            <span style="color:${barColor}; font-weight:bold;">${q.rate}% ошибок (${q.errors}/${q.total})</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${q.rate}%; background: ${barColor};"></div>
+                        </div>
+                        <div style="margin-top: 10px; background: white; padding: 10px; border-radius: 12px;">
+                            ${q.recommendation}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            feedback += `</div>`;
+        } else {
+            feedback += `<div class="city-feedback-card" style="border-left-color:#2c6e2c;">
+                <h4>✅ ОТЛИЧНО!</h4>
+                <p>В этом городе нет вопросов с частотой ошибок выше 30%. Команда хорошо знает стандарты!</p>
+            </div>`;
+        }
+        
+        const strugglingEmployees = cityData.filter(r => r.percent < 70).map(r => r.user_name);
+        const starEmployees = cityData.filter(r => r.percent >= 85).map(r => r.user_name);
+        
+        feedback += `<div class="city-feedback-card">
+            <h4>📋 ДЛЯ РУКОВОДИТЕЛЯ:</h4>`;
+        
+        if (strugglingEmployees.length) {
+            feedback += `<p><b>🔴 Требуют индивидуальной работы (прошли тест &lt;70%):</b><br>
+            ${strugglingEmployees.map(name => `• ${name}`).join('<br>')}</p>`;
+        }
+        
+        if (starEmployees.length) {
+            feedback += `<p><b>🟢 Можно поставить в пример (≥85%):</b><br>
+            ${starEmployees.map(name => `• ${name}`).join('<br>')}</p>`;
+        }
+        
+        feedback += `</div>`;
+        
+        let copyText = `📊 АНАЛИЗ ТЕСТИРОВАНИЯ: ГОРОД ${city.toUpperCase()}
+        
+👥 Всего сотрудников: ${total}
+📈 Средний балл: ${avg}%
+✅ Успешно сдали (≥85%): ${success} человек
+❌ Не прошли (<70%): ${failed} человек
+
+❌ ОШИБКИ ПО ВОПРОСАМ (частота >30%):
+`;
+        problemQuestions.forEach(q => {
+            copyText += `
+${q.num}. ${q.text} — ${q.rate}% ошибок
+   ✅ Как исправить: ${q.recommendation.replace('📌 ', '')}
+`;
+        });
+        
+        copyText += `\n🔴 Требуют индивидуальной работы: ${strugglingEmployees.join(', ') || '—'}`;
+        copyText += `\n🟢 Лучшие результаты: ${starEmployees.join(', ') || '—'}`;
+        
+        feedback += `<div class="city-feedback-card">
+            <h4>📋 ГОТОВЫЙ ТЕКСТ ДЛЯ РАССЫЛКИ:</h4>
+            <textarea id="feedbackText" rows="8" style="width:100%; border-radius:16px; padding:12px; border:1px solid #ddd; background:#f8f9fa; font-family:monospace; font-size:12px;">${copyText}</textarea>
+            <button onclick="copyFeedbackText()" style="margin-top:12px; background:#2c6e2c;">📋 Скопировать текст</button>
+        </div>`;
+        
+        document.getElementById('feedbackResult').innerHTML = feedback;
+    }
+    
+    function copyFeedbackText() {
+        const textarea = document.getElementById('feedbackText');
+        if (textarea) {
+            textarea.select();
+            document.execCommand('copy');
+            alert('Фидбек скопирован в буфер обмена');
         }
     }
     
