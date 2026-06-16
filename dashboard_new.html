@@ -300,16 +300,6 @@
             <div class="card-title">Сотрудники (<span id="empCount">0</span>)</div>
             <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
         </div>
-
-        <div class="card" id="questionStatsCard">
-            <div class="card-title">Ошибки по вопросам (тесты)</div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Вопрос</th><th>Ошибок</th><th>%</th><th>Сложность</th></tr></thead>
-                    <tbody id="questionStatsBody"></tbody>
-                </table>
-            </div>
-        </div>
     </div>
 
     <!-- ГОРОДА -->
@@ -546,7 +536,6 @@
             document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
             document.getElementById('cityRating').innerHTML = '<div class="empty">Нет данных</div>';
             document.getElementById('employeeList').innerHTML = '<div class="empty">Нет данных</div>';
-            document.getElementById('questionStatsCard').style.display = 'none';
             return;
         }
 
@@ -620,40 +609,6 @@
             type: 'bar',
             data: { labels: cityRating.map(c => c.city), datasets: [{ data: cityRating.map(c => c.avg), backgroundColor: '#c41e3a', borderRadius: 4 }] },
             options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
-        });
-
-        // ===== СТАТИСТИКА ПО ВОПРОСАМ (ТОЛЬКО ТЕСТЫ) =====
-        const testData = filteredData.filter(r => r.type === 'test');
-        const card = document.getElementById('questionStatsCard');
-        const tbody = document.getElementById('questionStatsBody');
-
-        if (!testData.length) {
-            card.style.display = 'none';
-            return;
-        }
-        card.style.display = 'block';
-
-        const qStats = [];
-        testData.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, i) => {
-                    if (!qStats[i]) qStats[i] = { total: 0, errors: 0, text: a.questionText };
-                    qStats[i].total++;
-                    if (!a.correct) qStats[i].errors++;
-                });
-            }
-        });
-
-        tbody.innerHTML = '';
-        qStats.forEach((q, i) => {
-            const pct = Math.round((q.errors / q.total) * 100);
-            const label = pct >= 50 ? 'Критично' : pct >= 30 ? 'Сложный' : 'Лёгкий';
-            const cls = pct >= 50 ? 'badge-red' : pct >= 30 ? 'badge-yellow' : 'badge-green';
-            const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<b>${i+1}.</b> ${q.text}`;
-            row.insertCell(1).textContent = `${q.errors}/${q.total}`;
-            row.insertCell(2).textContent = pct + '%';
-            row.insertCell(3).innerHTML = `<span class="badge ${cls}">${label}</span>`;
         });
     }
 
