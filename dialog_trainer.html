@@ -231,7 +231,8 @@
 <script>
     // ========== НАСТРОЙКА JSONBIN.IO ==========
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const BIN_ID_KEY = 'trainer_bin_id';
+    // ИСПРАВЛЕНО: используем ту же коробку, что и для теста
+    const BIN_ID_KEY = '585_bin_id'; 
     
     // ========== ПРАВИЛА ==========
     const ALL_RULES = [
@@ -319,25 +320,8 @@
             let binId = localStorage.getItem(BIN_ID_KEY);
             
             if (!binId) {
-                const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY
-                    },
-                    body: JSON.stringify([resultData])
-                });
-                
-                if (createResponse.ok) {
-                    const data = await createResponse.json();
-                    binId = data.metadata.id;
-                    localStorage.setItem(BIN_ID_KEY, binId);
-                    console.log('Создана новая коробка для тренировок, ID:', binId);
-                    return true;
-                } else {
-                    console.error('Ошибка создания коробки:', await createResponse.text());
-                    return false;
-                }
+                console.error('❌ Нет ID коробки! Сначала пройдите тест.');
+                return false;
             }
             
             const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
@@ -365,7 +349,8 @@
                 console.log('✅ Результат тренировки сохранён в JSONBin.io!');
                 return true;
             } else {
-                console.error('Ошибка обновления:', await updateResponse.text());
+                const errorText = await updateResponse.text();
+                console.error('Ошибка обновления:', errorText);
                 return false;
             }
         } catch(error) {
@@ -398,7 +383,7 @@
                     statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                     statusDiv.style.color = '#2c6e2c';
                 } else {
-                    statusDiv.innerHTML = '⚠️ Результат не сохранился, но баллы засчитаны';
+                    statusDiv.innerHTML = '⚠️ Результат не сохранился, но баллы засчитаны. Проверьте, что тест был пройден.';
                     statusDiv.style.color = '#c41e3a';
                 }
             }
