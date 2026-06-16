@@ -196,18 +196,12 @@
             <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
             <select id="userCity">
                 <option value="">Выберите город</option>
+                <option value="Петрозаводск">Петрозаводск</option>
+                <option value="Казань">Казань</option>
+                <option value="Кандалакша">Кандалакша</option>
+                <option value="Владимир">Владимир</option>
                 <option value="Санкт-Петербург">Санкт-Петербург</option>
-                <option value="Тольятти">Тольятти</option>
-                <option value="Новоуральск">Новоуральск</option>
-                <option value="Прохладный">Прохладный</option>
-                <option value="Пермь">Пермь</option>
-                <option value="Москва">Москва</option>
-                <option value="Сыктывкар">Сыктывкар</option>
-                <option value="Оренбург">Оренбург</option>
-                <option value="Екатеринбург">Екатеринбург</option>
-                <option value="Уфа">Уфа</option>
-                <option value="Ульяновск">Ульяновск</option>
-                <option value="Нижний Новгород">Нижний Новгород</option>
+                <option value="Тюмень">Тюмень</option>
             </select>
             <button id="startGameBtn">Начать диалог</button>
         </div>
@@ -315,7 +309,7 @@
 
     let currentQuestionIndex = 0, currentAnswers = [], appliedRules = [], currentUserName = null, currentUserCity = null;
     let gameActive = false, selectedChoiceIndex = null;
-    let questionResults = []; // для отслеживания правильности каждого вопроса
+    let questionResults = [];
 
     // ========== СОХРАНЕНИЕ В JSONBIN.IO ==========
     async function saveToJsonBin(resultData) {
@@ -324,7 +318,6 @@
             
             let binId = localStorage.getItem(BIN_ID_KEY);
             
-            // Если нет коробки — создаём
             if (!binId) {
                 const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
                     method: 'POST',
@@ -347,7 +340,6 @@
                 }
             }
             
-            // Читаем существующие результаты
             const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
@@ -360,7 +352,6 @@
             
             existingResults.push(resultData);
             
-            // Обновляем коробку
             const updateResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: 'PUT',
                 headers: {
@@ -472,10 +463,8 @@
             `;
         }
         
-        // Сохраняем результат в JSONBin.io
         saveResult(success);
         
-        // Кнопка перезапуска
         const existingBtn = resultDiv.parentNode.querySelector('.restart-btn');
         if (!existingBtn) {
             const btn = document.createElement("button");
@@ -490,10 +479,8 @@
         const q = QUESTIONS[currentQuestionIndex];
         document.getElementById("chatArea").innerHTML = `<div class="client-message">${q.client}</div>`;
         
-        // Обновляем прогресс
         updateProgress();
         
-        // Обновляем правила
         const rulesDiv = document.getElementById("appliedRulesList");
         if (appliedRules.length) {
             document.getElementById("emptyRulesMsg").style.display = "none";
@@ -553,7 +540,6 @@
         document.getElementById("resultCard").style.display = "none";
         document.getElementById("saveStatus").innerHTML = '';
         
-        // Удаляем старую кнопку рестарта
         const oldBtn = document.querySelector('.restart-btn');
         if (oldBtn) oldBtn.remove();
         
@@ -577,7 +563,6 @@
     
     document.getElementById("nextBtn").onclick = nextStep;
 
-    // Нажатие Enter в поле имени
     document.getElementById("userName").addEventListener("keydown", (e) => {
         if (e.key === "Enter") document.getElementById("startGameBtn").click();
     });
