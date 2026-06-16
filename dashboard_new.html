@@ -27,6 +27,8 @@
         .badge-green { background: #2c6e2c; }
         .badge-yellow { background: #e6a017; }
         .badge-red { background: #c41e3a; }
+        .badge-blue { background: #2196F3; }
+        .badge-purple { background: #9C27B0; }
         .delete-btn { background: #8b1a2c; border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; font-size: 11px; color: white; margin-left: 8px; }
         .tab-btn { background: #e0d6cc; border: none; padding: 8px 20px; border-radius: 40px; cursor: pointer; font-weight: bold; margin-right: 8px; }
         .tab-btn.active { background: #c41e3a; color: white; }
@@ -70,6 +72,11 @@
             <button id="tabFeedbackBtn" class="tab-btn">📝 Фидбек по городу</button>
         </div>
         <div id="testFilters" class="flex-row" style="margin-top: 12px;">
+            <select id="typeFilter">
+                <option value="all">Все типы</option>
+                <option value="test">📝 Тест</option>
+                <option value="trainer">🎯 Тренировка</option>
+            </select>
             <select id="cityFilter"><option value="all">Все города</option></select>
             <select id="percentFilter"><option value="all">Все</option><option value="70">≥70%</option><option value="85">≥85%</option><option value="50">&lt;50%</option></select>
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 Поиск">
@@ -147,6 +154,7 @@
     // ========== НАСТРОЙКА JSONBIN.IO ==========
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const BIN_ID_KEY = '585_bin_id';
+    const TRAINER_BIN_ID_KEY = 'trainer_bin_id';
     
     let allData = [], filteredData = [], scoreChart = null, cityChart = null, trendChart = null, comparisonChart = null;
     
@@ -155,39 +163,58 @@
         document.getElementById('status').innerHTML = 'Загрузка...';
         
         try {
-            const binId = localStorage.getItem(BIN_ID_KEY);
-            if (!binId) {
-                document.getElementById('status').innerHTML = '❌ Нет результатов. Пройдите тест первым.';
+            let allResults = [];
+            
+            // Загружаем результаты теста (если есть)
+            const testBinId = localStorage.getItem(BIN_ID_KEY);
+            if (testBinId) {
+                try {
+                    const testResponse = await fetch(`https://api.jsonbin.io/v3/b/${testBinId}/latest`, {
+                        headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                    });
+                    if (testResponse.ok) {
+                        const testData = await testResponse.json();
+                        const testResults = (testData.record || []).map(r => ({ ...r, type: r.type || 'test' }));
+                        allResults = allResults.concat(testResults);
+                    }
+                } catch(e) { console.log('Ошибка загрузки теста:', e); }
+            }
+            
+            // Загружаем результаты тренировок (если есть)
+            const trainerBinId = localStorage.getItem(TRAINER_BIN_ID_KEY);
+            if (trainerBinId) {
+                try {
+                    const trainerResponse = await fetch(`https://api.jsonbin.io/v3/b/${trainerBinId}/latest`, {
+                        headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                    });
+                    if (trainerResponse.ok) {
+                        const trainerData = await trainerResponse.json();
+                        const trainerResults = (trainerData.record || []).map(r => ({ ...r, type: r.type || 'trainer' }));
+                        allResults = allResults.concat(trainerResults);
+                    }
+                } catch(e) { console.log('Ошибка загрузки тренировок:', e); }
+            }
+            
+            if (!allResults.length) {
+                document.getElementById('status').innerHTML = '❌ Нет результатов. Пройдите тест или тренировку.';
                 document.getElementById('loadingSkeleton').style.display = 'none';
                 return;
             }
             
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
-            
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
-            const data = await response.json();
-            const results = data.record || [];
-            
-            if (!results.length) {
-                document.getElementById('status').innerHTML = 'Нет результатов. Пройдите тест.';
-                document.getElementById('loadingSkeleton').style.display = 'none';
-                return;
-            }
-            
-            allData = results.map(r => ({
-                id: r.id,
+            allData = allResults.map(r => ({
+                id: r.id || Date.now(),
+                type: r.type || 'test',
                 user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
                 score: r.score || 0,
-                total: r.total || 11,
-                percent: r.percent || 0,
+                total: r.total || (r.type === 'trainer' ? 6 : 11),
+                percent: r.percent || Math.round((r.score / (r.total || 11)) * 100),
                 answers: r.answers || [],
-                date: r.date || new Date().toISOString()
+                date: r.date || new Date().toISOString(),
+                passed: r.percent >= 85 || (r.type === 'trainer' && r.rules_count === 6)
             }));
             
+            // Обновляем фильтры
             const cities = [...new Set(allData.map(r => r.city))];
             const citySelect = document.getElementById('cityFilter');
             citySelect.innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -198,7 +225,7 @@
             renderCityStatsTable();
             applyFilters();
             renderTrendChart();
-            document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} записей из облака`;
+            document.getElementById('status').innerHTML = `✅ Загружено: ${allData.length} записей (тест: ${allData.filter(r=>r.type==='test').length}, тренировка: ${allData.filter(r=>r.type==='trainer').length})`;
             
         } catch (err) {
             console.error(err);
@@ -311,31 +338,10 @@
         }
     }
     
-    function exportCityCSV() {
-        const cityMap = new Map();
-        allData.forEach(r => {
-            if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sum: 0, success: 0, errors: 0 });
-            const c = cityMap.get(r.city);
-            c.count++;
-            c.sum += r.percent;
-            if (r.percent >= 85) c.success++;
-            c.errors += (r.total - r.score);
-        });
-        const cityStats = [...cityMap.entries()].map(([city, data]) => ({
-            city, count: data.count, avg: Math.round(data.sum / data.count), success: data.success, errors: data.errors
-        })).sort((a,b) => b.avg - a.avg);
-        
-        let csv = "Город,Сотрудников,Средний балл,Успешно (≥85%),Ошибок всего\n";
-        cityStats.forEach(c => csv += `"${c.city}",${c.count},${c.avg}%,${c.success}/${c.count},${c.errors}\n`);
-        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `city_stats.csv`;
-        a.click();
-    }
-    
     function applyFilters() {
         let filtered = [...allData];
+        const type = document.getElementById('typeFilter').value;
+        if (type !== 'all') filtered = filtered.filter(r => r.type === type);
         const city = document.getElementById('cityFilter').value;
         if (city !== 'all') filtered = filtered.filter(r => r.city === city);
         const percent = document.getElementById('percentFilter').value;
@@ -358,19 +364,23 @@
         const avg = Math.round(filteredData.reduce((s,r)=>s+r.percent,0)/total);
         const success = filteredData.filter(r=>r.percent>=85).length;
         const errors = filteredData.reduce((s,r)=>s+(r.total-r.score),0);
+        const trainerCount = filteredData.filter(r=>r.type==='trainer').length;
+        const testCount = filteredData.filter(r=>r.type==='test').length;
         
         document.getElementById('kpi').innerHTML = `
-            <div class="kpi-card"><div class="kpi-value">${total}</div><div>Сотрудников</div></div>
+            <div class="kpi-card"><div class="kpi-value">${total}</div><div>Всего</div></div>
             <div class="kpi-card"><div class="kpi-value" style="color:${avg>=85?'#2c6e2c':avg>=70?'#e6a017':'#c41e3a'}">${avg}%</div><div>Средний балл</div></div>
             <div class="kpi-card"><div class="kpi-value">${success}</div><div>Успешно (≥85%)</div></div>
             <div class="kpi-card"><div class="kpi-value">${errors}</div><div>Ошибок всего</div></div>
+            <div class="kpi-card"><div class="kpi-value">${testCount}</div><div>📝 Тестов</div></div>
+            <div class="kpi-card"><div class="kpi-value">${trainerCount}</div><div>🎯 Тренировок</div></div>
         `;
         
         const top5 = [...filteredData].filter(r=>r.percent>=85).sort((a,b)=>b.percent-a.percent).slice(0,5);
         document.getElementById('topList').innerHTML = top5.map((r,i)=>`
             <div class="employee-item" onclick="showDetails(${r.id})">
                 <span><b>${i+1}</b> ${r.user_name} (${r.city})</span>
-                <span class="badge badge-green">${r.percent}%</span>
+                <span class="badge ${r.type==='trainer'?'badge-purple':'badge-green'}">${r.percent}% ${r.type==='trainer'?'🎯':''}</span>
             </div>
         `).join('') || 'Нет';
         
@@ -389,14 +399,14 @@
         `).join('');
         
         const leader = [...filteredData].sort((a,b)=>b.percent-a.percent)[0];
-        if(leader) document.getElementById('leaderCelebration').innerHTML = `🏆 Лучший: ${leader.user_name} (${leader.city}) — ${leader.percent}%`;
+        if(leader) document.getElementById('leaderCelebration').innerHTML = `🏆 Лучший: ${leader.user_name} (${leader.city}) — ${leader.percent}% ${leader.type==='trainer'?'🎯':''}`;
         
         document.getElementById('empCount').innerText = filteredData.length;
         document.getElementById('employeeList').innerHTML = filteredData.map(r => `
             <div class="employee-item">
                 <div style="flex:1; cursor:pointer;" onclick="showDetails(${r.id})">
                     <b>${r.user_name}</b> (${r.city})
-                    <span class="badge ${r.percent>=85?'badge-green':r.percent>=70?'badge-yellow':'badge-red'}">${r.percent}%</span>
+                    <span class="badge ${r.type==='trainer'?'badge-purple':r.percent>=85?'badge-green':r.percent>=70?'badge-yellow':'badge-red'}">${r.percent}% ${r.type==='trainer'?'🎯':''}</span>
                 </div>
                 <button class="delete-btn" onclick="deleteRow(${r.id})">🗑</button>
             </div>
@@ -422,8 +432,10 @@
             data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a', borderRadius: 8 }] }
         });
         
+        // Статистика по вопросам (только для тестов, у тренировок другая структура)
+        const testData = filteredData.filter(r => r.type === 'test');
         const questionStats = [];
-        filteredData.forEach(r => {
+        testData.forEach(r => {
             if (r.answers && r.answers.length) {
                 r.answers.forEach((a, idx) => {
                     if (!questionStats[idx]) questionStats[idx] = { total: 0, errors: 0, text: a.questionText };
@@ -434,16 +446,20 @@
         });
         const tbody = document.querySelector('#questionStatsTable tbody');
         tbody.innerHTML = '';
-        questionStats.forEach((q, i) => {
-            const percent = Math.round((q.errors / q.total) * 100);
-            const difficultyClass = percent >= 50 ? 'badge-red' : percent >= 30 ? 'badge-yellow' : 'badge-green';
-            const difficultyText = percent >= 50 ? '🔴 Критично' : percent >= 30 ? '🟡 Сложный' : '🟢 Лёгкий';
-            const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<b>${i+1}.</b> ${q.text}`;
-            row.insertCell(1).innerHTML = `${q.errors}/${q.total}`;
-            row.insertCell(2).innerHTML = `${percent}%`;
-            row.insertCell(3).innerHTML = `<span class="badge ${difficultyClass}" style="background:${percent>=50?'#c41e3a':percent>=30?'#e6a017':'#2c6e2c'}">${difficultyText}</span>`;
-        });
+        if (questionStats.length) {
+            questionStats.forEach((q, i) => {
+                const percent = Math.round((q.errors / q.total) * 100);
+                const difficultyClass = percent >= 50 ? 'badge-red' : percent >= 30 ? 'badge-yellow' : 'badge-green';
+                const difficultyText = percent >= 50 ? '🔴 Критично' : percent >= 30 ? '🟡 Сложный' : '🟢 Лёгкий';
+                const row = tbody.insertRow();
+                row.insertCell(0).innerHTML = `<b>${i+1}.</b> ${q.text}`;
+                row.insertCell(1).innerHTML = `${q.errors}/${q.total}`;
+                row.insertCell(2).innerHTML = `${percent}%`;
+                row.insertCell(3).innerHTML = `<span class="badge ${difficultyClass}" style="background:${percent>=50?'#c41e3a':percent>=30?'#e6a017':'#2c6e2c'}">${difficultyText}</span>`;
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Нет данных по тестам</td></tr>';
+        }
     }
     
     function deleteRow(id) {
@@ -458,70 +474,36 @@
         const emp = filteredData.find(r => r.id == id);
         if (!emp) return;
         
-        const isZeroScore = emp.percent === 0;
-        
-        document.getElementById('modalTitle').innerHTML = `${emp.user_name} (${emp.city}) — ${emp.percent}%`;
+        document.getElementById('modalTitle').innerHTML = `${emp.user_name} (${emp.city}) — ${emp.percent}% ${emp.type==='trainer'?'🎯 Тренировка':''}`;
         
         let html = `<p>✅ Правильных: ${emp.score}/${emp.total}</p>`;
         
-        if (isZeroScore) {
-            html += `
-                <div class="zero-score-warning">
-                    <h4>⚠️ ВНИМАНИЕ: НИ ОДНОГО ПРАВИЛЬНОГО ОТВЕТА! ⚠️</h4>
-                    <p>Сотрудник не усвоил правила продаж. Требуется срочное обучение!</p>
-                </div>
-                <div class="general-recommendations">
-                    <strong>📚 ОБЩИЕ РЕКОМЕНДАЦИИ ДЛЯ СОТРУДНИКА:</strong><br><br>
-                    1. 🎓 Пройти полный курс по стандартам обслуживания<br>
-                    2. 👥 Назначить наставника (опытного продавца)<br>
-                    3. 📖 Выучить скрипты приветствия и работы с возражениями<br>
-                    4. 🎭 Отработать навыки на ролевых играх<br>
-                    5. 🔄 Пересдать тест через 3 дня
-                </div>
-            `;
-        }
-        
-        if (emp.answers && emp.answers.length) {
-            emp.answers.forEach((a, i) => {
-                const isCorrect = a.correct;
-                let recommendation = '';
-                
-                if (!isCorrect) {
-                    switch(i) {
-                        case 0: recommendation = '💡 Не спрашивайте "Чем помочь?" — клиент скажет "Посмотрю". Сразу дайте ценность: акция + спросите "Для себя или в подарок?".';
-                            break;
-                        case 1: recommendation = '💡 Когда клиент назвал бюджет, НЕ показывайте товар сразу. Сначала спросите: "А для какого случая? Это подарок или для себя?".';
-                            break;
-                        case 2: recommendation = '💡 Предлагайте доп. товар через создание образа: "Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ".';
-                            break;
-                        case 3: recommendation = '💡 Не критикуйте выбор клиента. Скажите: "Давайте примерим оба варианта — и серебро, и золото". Клиент сам сделает выбор.';
-                            break;
-                        case 4: recommendation = '💡 Не спрашивайте "Футляр нужен?". Говорите: "Давайте выберем красивый футляр и чистящее средство, чтобы украшение всегда выглядело безупречно".';
-                            break;
-                        case 5: recommendation = '💡 Не оправдывайте цену характеристиками. Скажите: "Понимаю, цена важна. А с чем вы сравниваете?".';
-                            break;
-                        case 6: recommendation = '💡 Не отправляйте клиента ждать. Скажите: "Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ".';
-                            break;
-                        case 7: recommendation = '💡 Продавайте не кольцо, а эмоцию: "Это кольцо станет идеальным напоминанием о её юбилее".';
-                            break;
-                        case 8: recommendation = '💡 Не говорите просто "Да, конечно". Предложите: "Давайте я покажу модели, которые идеально дополнят вашу коллекцию".';
-                            break;
-                        case 9: recommendation = '💡 Рассрочку/Сплит предлагайте ДО озвучивания цены: "Для такого выбора можно оформить Сплит — 4 платежа без переплат".';
-                            break;
-                        case 10: recommendation = '💡 Дайте клиенту 20-30 секунд освоиться, затем подойдите и спросите: "Какое изделие выбираете? Для себя или в подарок?".';
-                            break;
-                        default: recommendation = '💡 Изучите правильный ответ и запомните правило.';
-                    }
-                }
-                
-                html += `<div class="answer-item">
-                            <b>Вопрос ${i+1}:</b> ${a.questionText}<br>
-                            <b>Ваш ответ:</b> ${a.selectedText}<br>
-                            ${!isCorrect ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br>` : ''}
-                            ${!isCorrect && recommendation ? `<div class="recommendation">📌 ${recommendation}</div>` : ''}
-                            ${isCorrect ? `<div class="recommendation" style="background:#e0f0e0;">✅ Верно! Так держать!</div>` : ''}
-                        </div>`;
-            });
+        if (emp.type === 'trainer') {
+            html += `<p style="background:#f0e6ff; padding:10px; border-radius:16px;">🎯 Тренировка диалогов — применено правил: ${emp.score}/6</p>`;
+            if (emp.answers) {
+                emp.answers.forEach((a, i) => {
+                    const isCorrect = a.correct;
+                    html += `<div class="answer-item">
+                                <b>Диалог ${i+1}:</b> ${a.questionText}<br>
+                                <b>Ваш ответ:</b> ${a.selectedText}<br>
+                                ${!isCorrect ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br>` : ''}
+                                ${isCorrect ? `<div class="recommendation" style="background:#e0f0e0;">✅ Правило применено!</div>` : `<div class="recommendation">📌 Нужно тренировать это правило</div>`}
+                            </div>`;
+                });
+            }
+        } else {
+            // Обычный тест
+            if (emp.answers && emp.answers.length) {
+                emp.answers.forEach((a, i) => {
+                    const isCorrect = a.correct;
+                    html += `<div class="answer-item">
+                                <b>Вопрос ${i+1}:</b> ${a.questionText}<br>
+                                <b>Ваш ответ:</b> ${a.selectedText}<br>
+                                ${!isCorrect ? `<b>✅ Правильный ответ:</b> ${a.correctText}<br>` : ''}
+                                ${isCorrect ? `<div class="recommendation" style="background:#e0f0e0;">✅ Верно!</div>` : `<div class="recommendation">📌 Изучите правильный ответ</div>`}
+                            </div>`;
+                });
+            }
         }
         
         document.getElementById('modalAnswers').innerHTML = html;
@@ -530,8 +512,8 @@
     
     function exportCSV() {
         if (!filteredData.length) return alert('Нет данных');
-        let csv = "Имя,Город,Правильных,Всего,Процент\n";
-        filteredData.forEach(r => csv += `"${r.user_name}","${r.city}",${r.score},${r.total},${r.percent}%\n`);
+        let csv = "Тип,Имя,Город,Правильных,Всего,Процент\n";
+        filteredData.forEach(r => csv += `"${r.type==='trainer'?'Тренировка':'Тест'}","${r.user_name}","${r.city}",${r.score},${r.total},${r.percent}%\n`);
         const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -540,6 +522,7 @@
     }
     
     function resetFilters() {
+        document.getElementById('typeFilter').value = 'all';
         document.getElementById('cityFilter').value = 'all';
         document.getElementById('percentFilter').value = 'all';
         document.getElementById('searchInput').value = '';
@@ -583,63 +566,8 @@
         const avg = Math.round(cityData.reduce((s,r)=>s+r.percent,0)/total);
         const success = cityData.filter(r=>r.percent>=85).length;
         const failed = cityData.filter(r=>r.percent<70).length;
-        
-        const questionErrors = new Array(11).fill(0);
-        const questionTotalAttempts = new Array(11).fill(0);
-        
-        cityData.forEach(r => {
-            if (r.answers) {
-                r.answers.forEach((a, idx) => {
-                    questionTotalAttempts[idx]++;
-                    if (!a.correct) questionErrors[idx]++;
-                });
-            }
-        });
-        
-        const questionTexts = [
-            "Приветствие (акция + 'Для себя или в подарок?')",
-            "Реакция на бюджет ('А для какого случая?')",
-            "Предложение серьг ('законченный образ')",
-            "Переход с серебра на золото (примерка обоих)",
-            "Продажа футляра (забота, а не коробка)",
-            "Возражение 'Дороговато' (сравнение)",
-            "Нет размера (альтернативы сейчас)",
-            "Подарок маме (эмоция, не характеристики)",
-            "Просьба показать другие модели (дополнения)",
-            "Яндекс Сплит (предлагать ДО цены)",
-            "Клиент идёт вдоль витрины (30 секунд на освоение)"
-        ];
-        
-        const recommendationMap = {
-            0: "📌 Тренировка скрипта: 'Здравствуйте! У нас скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?'",
-            1: "📌 Перед показом товара спрашивайте: 'А для какого случая? Это подарок или для себя?'",
-            2: "📌 Предлагайте серьги через образ: 'Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ'",
-            3: "📌 Фраза для перехода: 'Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету'",
-            4: "📌 Продажа аксессуаров: 'Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно'",
-            5: "📌 На 'дороговато' отвечайте: 'Понимаю, цена важна. А с чем вы сравниваете?'",
-            6: "📌 При отсутствии размера: 'Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ'",
-            7: "📌 Продажа подарка: 'Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нем'",
-            8: "📌 На просьбу показать другие модели: 'Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию'",
-            9: "📌 Рассрочку/Сплит: 'Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты' (ДО цены!)",
-            10: "📌 Пауза после приветствия: дайте 20-30 секунд освоиться, затем: 'Какое изделие выбираете? Для себя или в подарок?'"
-        };
-        
-        const problemQuestions = [];
-        for (let i = 0; i < questionErrors.length; i++) {
-            const errorRate = Math.round((questionErrors[i] / questionTotalAttempts[i]) * 100);
-            if (errorRate > 30) {
-                problemQuestions.push({
-                    num: i+1,
-                    text: questionTexts[i],
-                    errors: questionErrors[i],
-                    total: questionTotalAttempts[i],
-                    rate: errorRate,
-                    recommendation: recommendationMap[i]
-                });
-            }
-        }
-        
-        problemQuestions.sort((a,b) => b.rate - a.rate);
+        const trainerCount = cityData.filter(r=>r.type==='trainer').length;
+        const testCount = cityData.filter(r=>r.type==='test').length;
         
         let feedback = `
             <div class="city-feedback-card">
@@ -648,96 +576,11 @@
                 <p><strong>📈 Средний балл:</strong> ${avg}% ${avg >= 85 ? '✅' : avg >= 70 ? '⚠️' : '🔴'}</p>
                 <p><strong>🏆 Успешно (≥85%):</strong> ${success} из ${total} (${Math.round(success/total*100)}%)</p>
                 <p><strong>🔴 Требуют доработки (&lt;70%):</strong> ${failed} из ${total}</p>
+                <p><strong>📝 Тестов:</strong> ${testCount} | <strong>🎯 Тренировок:</strong> ${trainerCount}</p>
             </div>
         `;
         
-        if (problemQuestions.length > 0) {
-            feedback += `<div class="city-feedback-card" style="border-left-color:#c41e3a;">
-                <h4>❌ КАКИЕ ПРАВИЛА НАРУШАЮТ (ошибок >30%):</h4>`;
-            
-            problemQuestions.forEach(q => {
-                let barColor = '#c41e3a';
-                if (q.rate >= 70) barColor = '#8b0000';
-                else if (q.rate >= 50) barColor = '#c41e3a';
-                else barColor = '#e6a017';
-                
-                feedback += `
-                    <div style="margin-bottom: 20px; padding: 12px; background: #f8f9fa; border-radius: 16px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span><b>⚠️ Вопрос ${q.num}:</b> ${q.text}</span>
-                            <span style="color:${barColor}; font-weight:bold;">${q.rate}% ошибок (${q.errors}/${q.total})</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${q.rate}%; background: ${barColor};"></div>
-                        </div>
-                        <div style="margin-top: 10px; background: white; padding: 10px; border-radius: 12px;">
-                            ${q.recommendation}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            feedback += `</div>`;
-        } else {
-            feedback += `<div class="city-feedback-card" style="border-left-color:#2c6e2c;">
-                <h4>✅ ОТЛИЧНО!</h4>
-                <p>В этом городе нет вопросов с частотой ошибок выше 30%. Команда хорошо знает стандарты!</p>
-            </div>`;
-        }
-        
-        const strugglingEmployees = cityData.filter(r => r.percent < 70).map(r => r.user_name);
-        const starEmployees = cityData.filter(r => r.percent >= 85).map(r => r.user_name);
-        
-        feedback += `<div class="city-feedback-card">
-            <h4>📋 ДЛЯ РУКОВОДИТЕЛЯ:</h4>`;
-        
-        if (strugglingEmployees.length) {
-            feedback += `<p><b>🔴 Требуют индивидуальной работы (прошли тест &lt;70%):</b><br>
-            ${strugglingEmployees.map(name => `• ${name}`).join('<br>')}</p>`;
-        }
-        
-        if (starEmployees.length) {
-            feedback += `<p><b>🟢 Можно поставить в пример (≥85%):</b><br>
-            ${starEmployees.map(name => `• ${name}`).join('<br>')}</p>`;
-        }
-        
-        feedback += `</div>`;
-        
-        let copyText = `📊 АНАЛИЗ ТЕСТИРОВАНИЯ: ГОРОД ${city.toUpperCase()}
-        
-👥 Всего сотрудников: ${total}
-📈 Средний балл: ${avg}%
-✅ Успешно сдали (≥85%): ${success} человек
-❌ Не прошли (<70%): ${failed} человек
-
-❌ ОШИБКИ ПО ВОПРОСАМ (частота >30%):
-`;
-        problemQuestions.forEach(q => {
-            copyText += `
-${q.num}. ${q.text} — ${q.rate}% ошибок
-   ✅ Как исправить: ${q.recommendation.replace('📌 ', '')}
-`;
-        });
-        
-        copyText += `\n🔴 Требуют индивидуальной работы: ${strugglingEmployees.join(', ') || '—'}`;
-        copyText += `\n🟢 Лучшие результаты: ${starEmployees.join(', ') || '—'}`;
-        
-        feedback += `<div class="city-feedback-card">
-            <h4>📋 ГОТОВЫЙ ТЕКСТ ДЛЯ РАССЫЛКИ:</h4>
-            <textarea id="feedbackText" rows="8" style="width:100%; border-radius:16px; padding:12px; border:1px solid #ddd; background:#f8f9fa; font-family:monospace; font-size:12px;">${copyText}</textarea>
-            <button onclick="copyFeedbackText()" style="margin-top:12px; background:#2c6e2c;">📋 Скопировать текст</button>
-        </div>`;
-        
         document.getElementById('feedbackResult').innerHTML = feedback;
-    }
-    
-    function copyFeedbackText() {
-        const textarea = document.getElementById('feedbackText');
-        if (textarea) {
-            textarea.select();
-            document.execCommand('copy');
-            alert('Фидбек скопирован в буфер обмена');
-        }
     }
     
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
@@ -746,6 +589,7 @@ ${q.num}. ${q.text} — ${q.rate}% ошибок
     
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('resetFiltersBtn').onclick = resetFilters;
+    document.getElementById('typeFilter').onchange = applyFilters;
     document.getElementById('cityFilter').onchange = applyFilters;
     document.getElementById('percentFilter').onchange = applyFilters;
     document.getElementById('searchInput').addEventListener('input', applyFilters);
@@ -756,6 +600,30 @@ ${q.num}. ${q.text} — ${q.rate}% ошибок
     document.getElementById('tabFeedbackBtn').onclick = () => switchTab('feedback');
     document.getElementById('exportCityBtn').onclick = exportCityCSV;
     document.getElementById('themeToggleBtn').onclick = toggleTheme;
+    
+    // Дублируем exportCityCSV для кнопки
+    function exportCityCSV() {
+        const cityMap = new Map();
+        allData.forEach(r => {
+            if (!cityMap.has(r.city)) cityMap.set(r.city, { count: 0, sum: 0, success: 0, errors: 0 });
+            const c = cityMap.get(r.city);
+            c.count++;
+            c.sum += r.percent;
+            if (r.percent >= 85) c.success++;
+            c.errors += (r.total - r.score);
+        });
+        const cityStats = [...cityMap.entries()].map(([city, data]) => ({
+            city, count: data.count, avg: Math.round(data.sum / data.count), success: data.success, errors: data.errors
+        })).sort((a,b) => b.avg - a.avg);
+        
+        let csv = "Город,Сотрудников,Средний балл,Успешно (≥85%),Ошибок всего\n";
+        cityStats.forEach(c => csv += `"${c.city}",${c.count},${c.avg}%,${c.success}/${c.count},${c.errors}\n`);
+        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `city_stats.csv`;
+        a.click();
+    }
     
     initTheme();
     loadResults();
