@@ -69,7 +69,7 @@
             <button id="themeToggleBtn" style="background:#6c757d; padding: 6px 15px;">🌙 Тема</button>
         </div>
         <div style="margin-top: 12px;">
-            <button id="tabTestBtn" class="tab-btn active">📊 Тест</button>
+            <button id="tabDashboardBtn" class="tab-btn active">📊 Дашборд</button>
             <button id="tabCityStatsBtn" class="tab-btn">🏙️ Статистика по городам</button>
             <button id="tabFeedbackBtn" class="tab-btn">📝 Фидбек по городу</button>
         </div>
@@ -90,7 +90,7 @@
         <div id="status" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
     </div>
 
-    <div id="testArea">
+    <div id="dashboardArea">
         <div id="leaderCelebration" class="leader-card" style="display: none;"></div>
         <div class="kpi-grid" id="kpi"></div>
         <div class="charts-row">
@@ -109,7 +109,7 @@
             <h3>📋 Сотрудники (<span id="empCount">0</span>)</h3>
             <div class="employee-list" id="employeeList"></div>
         </div>
-        <div class="card">
+        <div class="card" id="questionStatsCard">
             <h3>📊 Статистика по вопросам (ошибки)</h3>
             <div style="overflow-x: auto;">
                 <table class="question-stats-table" id="questionStatsTable">
@@ -454,7 +454,18 @@
             data: { labels: cityRating.map(c=>c.city), datasets: [{ data: cityRating.map(c=>c.avg), backgroundColor: '#c41e3a', borderRadius: 8 }] }
         });
         
+        // Статистика по вопросам — только для тестов
         const testData = filteredData.filter(r => r.type === 'test');
+        const questionStatsCard = document.getElementById('questionStatsCard');
+        const tbody = document.querySelector('#questionStatsTable tbody');
+        
+        if (testData.length === 0) {
+            questionStatsCard.style.display = 'none';
+            return;
+        }
+        
+        questionStatsCard.style.display = 'block';
+        
         const questionStats = [];
         testData.forEach(r => {
             if (r.answers && r.answers.length) {
@@ -465,7 +476,7 @@
                 });
             }
         });
-        const tbody = document.querySelector('#questionStatsTable tbody');
+        
         tbody.innerHTML = '';
         if (questionStats.length) {
             questionStats.forEach((q, i) => {
@@ -478,8 +489,6 @@
                 row.insertCell(2).innerHTML = `${percent}%`;
                 row.insertCell(3).innerHTML = `<span class="badge ${difficultyClass}" style="background:${percent>=50?'#c41e3a':percent>=30?'#e6a017':'#2c6e2c'}">${difficultyText}</span>`;
             });
-        } else {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Нет данных по тестам</td></tr>';
         }
     }
     
@@ -550,26 +559,26 @@
     }
     
     function switchTab(tab) {
-        if (tab === 'test') {
-            document.getElementById('testArea').style.display = 'block';
+        if (tab === 'dashboard') {
+            document.getElementById('dashboardArea').style.display = 'block';
             document.getElementById('cityStatsArea').style.display = 'none';
             document.getElementById('feedbackArea').style.display = 'none';
-            document.getElementById('tabTestBtn').classList.add('active');
+            document.getElementById('tabDashboardBtn').classList.add('active');
             document.getElementById('tabCityStatsBtn').classList.remove('active');
             document.getElementById('tabFeedbackBtn').classList.remove('active');
         } else if (tab === 'city') {
-            document.getElementById('testArea').style.display = 'none';
+            document.getElementById('dashboardArea').style.display = 'none';
             document.getElementById('cityStatsArea').style.display = 'block';
             document.getElementById('feedbackArea').style.display = 'none';
-            document.getElementById('tabTestBtn').classList.remove('active');
+            document.getElementById('tabDashboardBtn').classList.remove('active');
             document.getElementById('tabCityStatsBtn').classList.add('active');
             document.getElementById('tabFeedbackBtn').classList.remove('active');
             renderCityStatsTable();
         } else {
-            document.getElementById('testArea').style.display = 'none';
+            document.getElementById('dashboardArea').style.display = 'none';
             document.getElementById('cityStatsArea').style.display = 'none';
             document.getElementById('feedbackArea').style.display = 'block';
-            document.getElementById('tabTestBtn').classList.remove('active');
+            document.getElementById('tabDashboardBtn').classList.remove('active');
             document.getElementById('tabCityStatsBtn').classList.remove('active');
             document.getElementById('tabFeedbackBtn').classList.add('active');
         }
@@ -615,7 +624,7 @@
     document.getElementById('searchInput').addEventListener('input', applyFilters);
     document.getElementById('exportBtn').onclick = exportCSV;
     document.getElementById('generateFeedbackBtn').onclick = generateCityFeedback;
-    document.getElementById('tabTestBtn').onclick = () => switchTab('test');
+    document.getElementById('tabDashboardBtn').onclick = () => switchTab('dashboard');
     document.getElementById('tabCityStatsBtn').onclick = () => switchTab('city');
     document.getElementById('tabFeedbackBtn').onclick = () => switchTab('feedback');
     document.getElementById('exportCityBtn').onclick = exportCityCSV;
