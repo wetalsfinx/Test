@@ -3,167 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>585GOLD | Статистика</title>
+    <title>585GOLD | Аналитика</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* ========== БАЗОВЫЕ СТИЛИ ========== */
+        /* ========== СТИЛЬ ГОСУСЛУГИ ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f6fa;
-            padding: 24px;
-            color: #2c3e50;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #e9edf2;
+            padding: 20px;
+            color: #1e2a3a;
         }
-        .container { max-width: 1400px; margin: 0 auto; }
+        .container { max-width: 1440px; margin: 0 auto; }
 
-        /* ========== ВЕРХНЯЯ ПАНЕЛЬ ========== */
-        .header {
+        /* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */
+        .top-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 20px;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 24px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border-bottom: 3px solid #c41e3a;
         }
-        .header h1 {
-            font-size: 24px;
+        .top-bar h1 {
+            font-size: 22px;
             font-weight: 600;
-            color: #1a1a2e;
+            color: #1e2a3a;
         }
-        .header h1 span { color: #c41e3a; }
-        .header-actions {
+        .top-bar h1 span { color: #c41e3a; }
+        .top-bar .actions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         .btn {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 8px;
+            padding: 6px 18px;
+            border: 1px solid #d0d7dd;
+            border-radius: 6px;
+            background: white;
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            background: #fff;
-            color: #2c3e50;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            color: #1e2a3a;
             transition: 0.2s;
-            border: 1px solid #e2e8f0;
         }
-        .btn:hover { background: #f1f5f9; }
-        .btn-primary { background: #c41e3a; color: #fff; border-color: #c41e3a; }
+        .btn:hover { background: #f0f3f6; }
+        .btn-primary { background: #c41e3a; color: white; border-color: #c41e3a; }
         .btn-primary:hover { background: #a0162e; }
-        .btn-danger { background: #fff; color: #dc2626; border-color: #fecaca; }
+        .btn-danger { color: #c41e3a; border-color: #f5c6cb; }
         .btn-danger:hover { background: #fef2f2; }
 
-        /* ========== ВКЛАДКИ ========== */
-        .tabs {
-            display: flex;
-            gap: 4px;
-            background: #fff;
-            padding: 4px;
+        /* ===== ФИЛЬТРЫ (как на скрине) ===== */
+        .filter-panel {
+            background: white;
             border-radius: 12px;
+            padding: 16px 20px;
             margin-bottom: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-            border: 1px solid #e2e8f0;
-        }
-        .tab-btn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            background: transparent;
-            color: #64748b;
-            transition: 0.2s;
-        }
-        .tab-btn.active {
-            background: #c41e3a;
-            color: #fff;
-        }
-        .tab-btn:hover:not(.active) { background: #f1f5f9; }
-
-        /* ========== ФИЛЬТРЫ ========== */
-        .filters {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
             align-items: center;
-            background: #fff;
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 24px;
+            gap: 14px 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
             border: 1px solid #e2e8f0;
         }
-        .filters select, .filters input {
-            padding: 6px 14px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            font-size: 13px;
-            background: #fff;
-            color: #2c3e50;
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .filters .status {
+        .filter-group label {
             font-size: 13px;
-            color: #94a3b8;
+            font-weight: 500;
+            color: #4a5a6a;
+            white-space: nowrap;
+        }
+        .filter-group select, .filter-group input {
+            padding: 6px 12px;
+            border: 1px solid #d0d7dd;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            color: #1e2a3a;
+        }
+        .filter-group input { width: 150px; }
+        .status-badge {
             margin-left: auto;
+            font-size: 13px;
+            color: #6a7a8a;
+            background: #f0f3f6;
+            padding: 4px 14px;
+            border-radius: 40px;
         }
 
-        /* ========== KPI (ЦИФРЫ) ========== */
-        .kpi-grid {
+        /* ===== KPI ГЛАВНЫЕ (Всего жалоб / Всего тестов) ===== */
+        .main-kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: 1fr 1fr 1fr 1fr;
             gap: 16px;
             margin-bottom: 24px;
         }
-        .kpi-card {
-            background: #fff;
-            padding: 16px 20px;
+        .main-kpi-card {
+            background: white;
             border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
             border: 1px solid #e2e8f0;
-            text-align: center;
         }
-        .kpi-value {
-            font-size: 32px;
-            font-weight: 600;
-            color: #1a1a2e;
+        .main-kpi-card .label { font-size: 14px; color: #6a7a8a; font-weight: 500; }
+        .main-kpi-card .value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1e2a3a;
             line-height: 1.2;
-        }
-        .kpi-label {
-            font-size: 13px;
-            color: #94a3b8;
             margin-top: 4px;
         }
+        .main-kpi-card .sub { font-size: 13px; color: #6a7a8a; margin-top: 4px; }
 
-        /* ========== КАРТОЧКИ ========== */
-        .card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px 24px;
+        /* ===== СТАТУСЫ (как "В работе") ===== */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
             margin-bottom: 24px;
+        }
+        .status-card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 18px;
+            border-left: 5px solid #c41e3a;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
             border: 1px solid #e2e8f0;
+            border-left-width: 5px;
+        }
+        .status-card .label { font-size: 13px; color: #6a7a8a; }
+        .status-card .value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e2a3a;
+        }
+        .status-card .percent {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6a7a8a;
+            margin-left: 8px;
+        }
+        .status-card.green { border-left-color: #16a34a; }
+        .status-card.orange { border-left-color: #eab308; }
+        .status-card.red { border-left-color: #dc2626; }
+        .status-card.purple { border-left-color: #8b5cf6; }
+        .status-card.blue { border-left-color: #3b82f6; }
+
+        /* ===== ГРАФИКИ В ДВЕ КОЛОНКИ ===== */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
         }
         .card-title {
             font-size: 15px;
             font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 16px;
+            color: #1e2a3a;
+            margin-bottom: 12px;
         }
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        @media (max-width: 700px) { .row { grid-template-columns: 1fr; } }
         .chart-box { height: 180px; }
 
-        /* ========== СПИСКИ ========== */
+        /* ===== СПИСКИ ===== */
         .employee-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid #edf2f7;
             cursor: pointer;
         }
-        .employee-item:hover { background: #f8fafc; padding-left: 8px; border-radius: 8px; }
-        .employee-list { max-height: 300px; overflow-y: auto; }
+        .employee-item:hover { background: #f8fafc; padding-left: 8px; border-radius: 6px; }
         .badge {
             padding: 2px 12px;
             border-radius: 40px;
@@ -174,16 +199,15 @@
         .badge-yellow { background: #fef9c3; color: #854d0e; }
         .badge-red { background: #fee2e2; color: #991b1b; }
         .badge-purple { background: #f3e8ff; color: #6b21a8; }
-        .badge-gray { background: #f1f5f9; color: #475569; }
         .empty { color: #94a3b8; text-align: center; padding: 16px 0; font-size: 14px; }
 
-        /* ========== ТАБЛИЦЫ ========== */
+        /* ===== ТАБЛИЦЫ ===== */
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { text-align: left; padding: 10px 8px; font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+        th { text-align: left; padding: 10px 8px; font-weight: 600; color: #4a5a6a; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 8px; border-bottom: 1px solid #edf2f7; }
 
-        /* ========== МОДАЛКА ========== */
+        /* ===== МОДАЛКА ===== */
         .modal {
             display: none;
             position: fixed;
@@ -194,7 +218,7 @@
             z-index: 1000;
         }
         .modal-content {
-            background: #fff;
+            background: white;
             max-width: 600px;
             width: 90%;
             max-height: 80vh;
@@ -206,8 +230,8 @@
             margin-top: 16px;
             padding: 8px 24px;
             border: none;
-            border-radius: 8px;
-            background: #f1f5f9;
+            border-radius: 6px;
+            background: #f0f3f6;
             cursor: pointer;
             font-weight: 500;
         }
@@ -220,92 +244,107 @@
         }
         .rec { background: #f0fdf4; padding: 6px 12px; border-radius: 6px; font-size: 13px; margin-top: 6px; }
 
-        /* ========== ТЁМНАЯ ТЕМА ========== */
-        .dark { background: #0f172a; color: #e2e8f0; }
-        .dark .card, .dark .filters, .dark .tabs { background: #1e293b; border-color: #334155; }
-        .dark .kpi-card { background: #1e293b; border-color: #334155; }
-        .dark .kpi-value { color: #f8fafc; }
-        .dark .tab-btn { color: #94a3b8; }
-        .dark .tab-btn.active { background: #c41e3a; color: #fff; }
-        .dark .btn { background: #1e293b; color: #e2e8f0; border-color: #334155; }
-        .dark .btn-primary { background: #c41e3a; color: #fff; }
-        .dark .employee-item { border-color: #334155; }
-        .dark .employee-item:hover { background: #334155; }
-        .dark .modal-content { background: #1e293b; }
-        .dark .answer-item { background: #0f172a; }
-        .dark .rec { background: #0f172a; }
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 800px) {
+            .main-kpi-grid { grid-template-columns: 1fr 1fr; }
+            .charts-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 500px) {
+            .main-kpi-grid { grid-template-columns: 1fr; }
+            .filter-panel { flex-direction: column; align-items: stretch; }
+            .status-badge { margin-left: 0; text-align: center; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
 
-    <!-- HEADER -->
-    <div class="header">
-        <h1>📊 585GOLD <span>| Статистика</span></h1>
-        <div class="header-actions">
+    <!-- ===== ВЕРХНЯЯ ПАНЕЛЬ ===== -->
+    <div class="top-bar">
+        <h1>📊 585GOLD <span>| Аналитика</span></h1>
+        <div class="actions">
             <button class="btn btn-primary" id="loadBtn">Загрузить</button>
             <button class="btn" id="exportBtn">CSV</button>
             <button class="btn btn-danger" id="clearAllBtn">Сбросить</button>
-            <button class="btn" id="themeToggleBtn">🌙</button>
         </div>
     </div>
 
-    <!-- ВКЛАДКИ -->
-    <div class="tabs">
-        <button class="tab-btn active" id="tabDashboardBtn">Дашборд</button>
-        <button class="tab-btn" id="tabCityStatsBtn">Города</button>
-        <button class="tab-btn" id="tabFeedbackBtn">Фидбек</button>
+    <!-- ===== ФИЛЬТРЫ ===== -->
+    <div class="filter-panel">
+        <div class="filter-group">
+            <label>Тип</label>
+            <select id="typeFilter">
+                <option value="all">Все</option>
+                <option value="test">Тест</option>
+                <option value="trainer">Тренировка</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Город</label>
+            <select id="cityFilter"><option value="all">Все города</option></select>
+        </div>
+        <div class="filter-group">
+            <label>Балл</label>
+            <select id="percentFilter">
+                <option value="all">Все</option>
+                <option value="85">≥85%</option>
+                <option value="70">≥70%</option>
+                <option value="50">&lt;50%</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <input type="text" id="searchInput" placeholder="Поиск по имени">
+        </div>
+        <button class="btn" id="resetFiltersBtn" style="margin-left:4px;">Сбросить</button>
+        <span class="status-badge" id="status">Нет данных</span>
     </div>
 
-    <!-- ФИЛЬТРЫ -->
-    <div class="filters">
-        <select id="typeFilter">
-            <option value="all">Все типы</option>
-            <option value="test">Тест</option>
-            <option value="trainer">Тренировка</option>
-        </select>
-        <select id="cityFilter"><option value="all">Все города</option></select>
-        <select id="percentFilter">
-            <option value="all">Все баллы</option>
-            <option value="85">≥85%</option>
-            <option value="70">≥70%</option>
-            <option value="50">&lt;50%</option>
-        </select>
-        <input type="text" id="searchInput" placeholder="Поиск" style="width:160px;">
-        <button class="btn" id="resetFiltersBtn">Сбросить</button>
-        <span class="status" id="status">Нет данных</span>
+    <!-- ===== KPI (Главные плитки) ===== -->
+    <div class="main-kpi-grid" id="mainKpi">
+        <div class="main-kpi-card"><div class="label">Всего прохождений</div><div class="value" id="kpiTotal">0</div></div>
+        <div class="main-kpi-card"><div class="label">Средний балл</div><div class="value" id="kpiAvg">0%</div></div>
+        <div class="main-kpi-card"><div class="label">✅ Успешно (≥85%)</div><div class="value" id="kpiSuccess">0</div></div>
+        <div class="main-kpi-card"><div class="label">❌ Ошибок</div><div class="value" id="kpiErrors">0</div></div>
     </div>
 
-    <!-- ДАШБОРД -->
-    <div id="dashboardArea">
-        <div class="kpi-grid" id="kpi"></div>
-
-        <div class="row">
-            <div class="card"><div class="card-title">Распределение баллов</div><div class="chart-box"><canvas id="scoreChart"></canvas></div></div>
-            <div class="card"><div class="card-title">Топ городов</div><div class="chart-box"><canvas id="cityChart"></canvas></div></div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">Динамика среднего балла</div>
-            <div id="trendContainer"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
-            <div id="trendFallback" class="empty" style="display:none;">Недостаточно данных</div>
-        </div>
-
-        <div class="row">
-            <div class="card"><div class="card-title">🏆 Топ сотрудников</div><div id="topList"><div class="empty">Нет данных</div></div></div>
-            <div class="card"><div class="card-title">🏙️ Рейтинг городов</div><div id="cityRating"><div class="empty">Нет данных</div></div></div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">Сотрудники (<span id="empCount">0</span>)</div>
-            <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
-        </div>
+    <!-- ===== СТАТУСЫ (как "В работе", "В пользу...") ===== -->
+    <div class="status-grid" id="statusGrid">
+        <div class="status-card blue"><div class="label">📝 Тестов</div><div class="value" id="statusTest">0</div></div>
+        <div class="status-card purple"><div class="label">🎯 Тренировок</div><div class="value" id="statusTrainer">0</div></div>
+        <div class="status-card green"><div class="label">🏆 Отлично (≥85%)</div><div class="value" id="statusExcellent">0</div></div>
+        <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="statusAvgPercent">0%</div></div>
+        <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="statusLow">0</div></div>
     </div>
 
-    <!-- ГОРОДА -->
+    <!-- ===== ГРАФИКИ ===== -->
+    <div class="charts-row">
+        <div class="card"><div class="card-title">Распределение баллов</div><div class="chart-box"><canvas id="scoreChart"></canvas></div></div>
+        <div class="card"><div class="card-title">Средний балл по городам</div><div class="chart-box"><canvas id="cityChart"></canvas></div></div>
+    </div>
+
+    <!-- ===== ДИНАМИКА ===== -->
+    <div class="card" style="margin-bottom:24px;">
+        <div class="card-title">Динамика среднего балла</div>
+        <div id="trendContainer"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
+        <div id="trendFallback" class="empty" style="display:none;">Недостаточно данных для графика</div>
+    </div>
+
+    <!-- ===== СПИСКИ ===== -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
+        <div class="card"><div class="card-title">🏆 Топ сотрудников</div><div id="topList"><div class="empty">Нет данных</div></div></div>
+        <div class="card"><div class="card-title">🏙️ Рейтинг городов</div><div id="cityRating"><div class="empty">Нет данных</div></div></div>
+    </div>
+
+    <!-- ===== СПИСОК ВСЕХ ===== -->
+    <div class="card" style="margin-bottom:24px;">
+        <div class="card-title">Сотрудники (<span id="empCount">0</span>)</div>
+        <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
+    </div>
+
+    <!-- ===== СТАТИСТИКА ГОРОДОВ (вкладка) ===== -->
     <div id="cityStatsArea" style="display:none;">
         <div class="card">
-            <div class="card-title">Статистика по городам</div>
+            <div class="card-title">Детальная статистика по городам</div>
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно</th><th>Ошибок</th><th>Провал</th></tr></thead>
@@ -317,11 +356,11 @@
         <div class="card"><div class="card-title">Сравнение городов</div><div class="chart-box"><canvas id="comparisonChart"></canvas></div></div>
     </div>
 
-    <!-- ФИДБЕК -->
+    <!-- ===== ФИДБЕК (вкладка) ===== -->
     <div id="feedbackArea" style="display:none;">
         <div class="card">
             <div class="card-title">Фидбек для города</div>
-            <select id="feedbackCitySelect" style="padding:8px 14px;border-radius:8px;border:1px solid #e2e8f0;width:100%;max-width:300px;margin-bottom:16px;">
+            <select id="feedbackCitySelect" style="padding:8px 14px;border-radius:6px;border:1px solid #d0d7dd;width:100%;max-width:300px;margin-bottom:16px;">
                 <option value="">-- Выберите город --</option>
             </select>
             <button class="btn btn-primary" id="generateFeedbackBtn">Сгенерировать</button>
@@ -332,7 +371,7 @@
     <div id="loadingSkeleton" class="empty" style="display:none;">Загрузка...</div>
 </div>
 
-<!-- МОДАЛКА -->
+<!-- ===== МОДАЛКА ===== -->
 <div id="modal" class="modal">
     <div class="modal-content">
         <h3 id="modalTitle" style="margin-bottom:16px;"></h3>
@@ -343,7 +382,7 @@
 
 <script>
     // ================================================================
-    //  ВСЯ ЛОГИКА (JavaScript)
+    //  ЛОГИКА (полностью рабочая)
     // ================================================================
 
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
@@ -351,10 +390,10 @@
     let allData = [], filteredData = [];
     let scoreChart = null, cityChart = null, trendChart = null, comparisonChart = null;
 
-    // ----- СБРОС -----
+    // ----- СБРОС ВСЕХ ДАННЫХ -----
     document.getElementById('clearAllBtn').onclick = async () => {
-        if (!confirm('Удалить все результаты?')) return;
-        if (!confirm('Точно?')) return;
+        if (!confirm('Удалить все результаты из облака?')) return;
+        if (!confirm('Точно? Восстановить будет нельзя!')) return;
         try {
             const binId = localStorage.getItem(BIN_ID_KEY);
             if (!binId) { alert('Нет коробки'); return; }
@@ -365,7 +404,7 @@
                 body: JSON.stringify([])
             });
             if (res.ok) {
-                alert('Очищено');
+                alert('✅ Все результаты удалены');
                 localStorage.removeItem(BIN_ID_KEY);
                 location.reload();
             } else alert('Ошибка: ' + res.status);
@@ -411,7 +450,7 @@
             applyFilters();
             renderTrendChart();
             document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${allData.filter(r=>r.type==='test').length}, тренировка: ${allData.filter(r=>r.type==='trainer').length})`;
-        } catch(e) { console.error(e); document.getElementById('status').textContent = 'Ошибка'; }
+        } catch(e) { console.error(e); document.getElementById('status').textContent = 'Ошибка загрузки'; }
         document.getElementById('loadingSkeleton').style.display = 'none';
     }
 
@@ -532,10 +571,20 @@
 
     function renderDashboard() {
         if (!filteredData.length) {
-            document.getElementById('kpi').innerHTML = '<div class="kpi-card"><div class="kpi-value">0</div><div class="kpi-label">Нет данных</div></div>';
+            // Очищаем всё
+            document.getElementById('kpiTotal').textContent = '0';
+            document.getElementById('kpiAvg').textContent = '0%';
+            document.getElementById('kpiSuccess').textContent = '0';
+            document.getElementById('kpiErrors').textContent = '0';
+            document.getElementById('statusTest').textContent = '0';
+            document.getElementById('statusTrainer').textContent = '0';
+            document.getElementById('statusExcellent').textContent = '0';
+            document.getElementById('statusAvgPercent').textContent = '0%';
+            document.getElementById('statusLow').textContent = '0';
             document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
             document.getElementById('cityRating').innerHTML = '<div class="empty">Нет данных</div>';
             document.getElementById('employeeList').innerHTML = '<div class="empty">Нет данных</div>';
+            document.getElementById('empCount').textContent = '0';
             return;
         }
 
@@ -545,16 +594,23 @@
         const errors = filteredData.reduce((s,r) => s + (r.total - r.score), 0);
         const testCount = filteredData.filter(r => r.type === 'test').length;
         const trainerCount = filteredData.filter(r => r.type === 'trainer').length;
+        const low = filteredData.filter(r => r.percent < 70).length;
 
-        document.getElementById('kpi').innerHTML = `
-            <div class="kpi-card"><div class="kpi-value">${total}</div><div class="kpi-label">Всего</div></div>
-            <div class="kpi-card"><div class="kpi-value" style="color:${avg>=85?'#16a34a':avg>=70?'#eab308':'#dc2626'}">${avg}%</div><div class="kpi-label">Средний балл</div></div>
-            <div class="kpi-card"><div class="kpi-value">${success}</div><div class="kpi-label">Успешно</div></div>
-            <div class="kpi-card"><div class="kpi-value">${errors}</div><div class="kpi-label">Ошибок</div></div>
-            <div class="kpi-card"><div class="kpi-value">${testCount}</div><div class="kpi-label">Тестов</div></div>
-            <div class="kpi-card"><div class="kpi-value">${trainerCount}</div><div class="kpi-label">Тренировок</div></div>
-        `;
+        // Главные KPI
+        document.getElementById('kpiTotal').textContent = total;
+        document.getElementById('kpiAvg').textContent = avg + '%';
+        document.getElementById('kpiAvg').style.color = avg >= 85 ? '#16a34a' : avg >= 70 ? '#eab308' : '#dc2626';
+        document.getElementById('kpiSuccess').textContent = success;
+        document.getElementById('kpiErrors').textContent = errors;
 
+        // Статусы
+        document.getElementById('statusTest').textContent = testCount;
+        document.getElementById('statusTrainer').textContent = trainerCount;
+        document.getElementById('statusExcellent').textContent = success;
+        document.getElementById('statusAvgPercent').textContent = avg + '%';
+        document.getElementById('statusLow').textContent = low;
+
+        // Топ сотрудников
         const top5 = [...filteredData].filter(r => r.percent >= 85).sort((a,b) => b.percent - a.percent).slice(0,5);
         document.getElementById('topList').innerHTML = top5.length ? top5.map((r,i) => `
             <div class="employee-item" onclick="showDetails(${r.id})">
@@ -563,6 +619,7 @@
             </div>
         `).join('') : '<div class="empty">Нет данных</div>';
 
+        // Рейтинг городов
         const cityMap = new Map();
         filteredData.forEach(r => {
             if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
@@ -578,6 +635,7 @@
             </div>
         `).join('');
 
+        // Список всех
         document.getElementById('empCount').textContent = filteredData.length;
         document.getElementById('employeeList').innerHTML = filteredData.map(r => `
             <div class="employee-item">
@@ -585,10 +643,11 @@
                     <b>${r.user_name}</b> (${r.city})
                     <span class="badge ${r.type==='trainer'?'badge-purple':r.percent>=85?'badge-green':r.percent>=70?'badge-yellow':'badge-red'}">${r.percent}%</span>
                 </div>
-                <button class="btn" style="padding:2px 10px;background:transparent;color:#dc2626;border:1px solid #fecaca;" onclick="deleteRow(${r.id})">✕</button>
+                <button class="btn" style="padding:2px 10px;background:transparent;color:#dc2626;border:1px solid #f5c6cb;" onclick="deleteRow(${r.id})">✕</button>
             </div>
         `).join('');
 
+        // Графики
         const bins = [0,0,0,0,0];
         filteredData.forEach(r => {
             if (r.percent <= 20) bins[0]++;
@@ -655,12 +714,12 @@
         const testCount = data.filter(r => r.type === 'test').length;
         const trainerCount = data.filter(r => r.type === 'trainer').length;
         document.getElementById('feedbackResult').innerHTML = `
-            <div style="background:#f8fafc;padding:16px;border-radius:8px;border-left:4px solid #c41e3a;">
+            <div style="background:#f8fafc;padding:16px;border-radius:8px;border-left:4px solid #c41e3a;margin-top:12px;">
                 <h4>${city}</h4>
                 <p>👥 ${total} сотрудников</p>
                 <p>📈 Средний балл: ${avg}%</p>
-                <p>🏆 Успешно: ${success}/${total}</p>
-                <p>🔴 Требуют доработки: ${failed}</p>
+                <p>🏆 Успешно (≥85%): ${success}/${total}</p>
+                <p>🔴 Требуют доработки (&lt;70%): ${failed}</p>
                 <p>📝 Тестов: ${testCount} | 🎯 Тренировок: ${trainerCount}</p>
             </div>
         `;
@@ -704,7 +763,7 @@
         applyFilters();
     }
 
-    // ----- ВКЛАДКИ -----
+    // ----- ВКЛАДКИ (для городов и фидбека) -----
     function switchTab(tab) {
         document.getElementById('dashboardArea').style.display = tab === 'dashboard' ? 'block' : 'none';
         document.getElementById('cityStatsArea').style.display = tab === 'city' ? 'block' : 'none';
@@ -715,16 +774,7 @@
         else document.getElementById('tabFeedbackBtn').classList.add('active');
     }
 
-    // ----- ТЕМА -----
-    function toggleTheme() {
-        document.body.classList.toggle('dark');
-        localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-    }
-    function initTheme() { if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark'); }
-
-    // ================================================================
-    //  НАВЕШИВАНИЕ СОБЫТИЙ
-    // ================================================================
+    // ----- ОБРАБОТЧИКИ -----
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('resetFiltersBtn').onclick = resetFilters;
     document.getElementById('typeFilter').onchange = applyFilters;
@@ -734,12 +784,37 @@
     document.getElementById('exportBtn').onclick = exportCSV;
     document.getElementById('exportCityBtn').onclick = exportCityCSV;
     document.getElementById('generateFeedbackBtn').onclick = generateFeedback;
+
+    // Добавляем кнопки вкладок (простые переключатели)
+    const tabsHtml = `
+        <div style="display:flex; gap:8px; margin-bottom:20px; background:white; padding:6px; border-radius:12px; border:1px solid #e2e8f0;">
+            <button class="btn" id="tabDashboardBtn" style="background:#c41e3a; color:white; border-color:#c41e3a;">📊 Дашборд</button>
+            <button class="btn" id="tabCityStatsBtn">🏙️ Города</button>
+            <button class="btn" id="tabFeedbackBtn">📝 Фидбек</button>
+        </div>
+    `;
+    document.querySelector('.container').insertAdjacentHTML('afterbegin', tabsHtml);
     document.getElementById('tabDashboardBtn').onclick = () => switchTab('dashboard');
     document.getElementById('tabCityStatsBtn').onclick = () => switchTab('city');
     document.getElementById('tabFeedbackBtn').onclick = () => switchTab('feedback');
-    document.getElementById('themeToggleBtn').onclick = toggleTheme;
 
-    initTheme();
+    // Выделяем область дашборда
+    const dashboardArea = document.createElement('div');
+    dashboardArea.id = 'dashboardArea';
+    dashboardArea.innerHTML = document.querySelector('.main-kpi-grid').outerHTML + 
+                             document.querySelector('.status-grid').outerHTML + 
+                             document.querySelector('.charts-row').outerHTML + 
+                             document.querySelector('.card[style*="margin-bottom:24px;"]').outerHTML + 
+                             document.querySelector('div[style*="grid-template-columns:1fr 1fr"]').outerHTML + 
+                             document.querySelector('.card[style*="margin-bottom:24px;"]:last-of-type').outerHTML;
+    
+    // Перемещаем всё в dashboardArea
+    const container = document.querySelector('.container');
+    const oldCards = container.querySelectorAll('.main-kpi-grid, .status-grid, .charts-row, .card[style*="margin-bottom:24px;"], div[style*="grid-template-columns:1fr 1fr"]');
+    oldCards.forEach(el => el.remove());
+    container.querySelector('#cityStatsArea').before(dashboardArea);
+
+    // Запуск
     loadResults();
 </script>
 </body>
