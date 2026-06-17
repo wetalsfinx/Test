@@ -130,8 +130,6 @@
         }
         .result-card.success { background: #e8f0e8; border-left: 8px solid var(--green-success); color: var(--green-success); }
         .result-card.loss { background: #ffe0e0; border-left: 8px solid var(--primary-red); color: var(--primary-red); }
-        .result-card ul { list-style: none; padding: 0; }
-        .result-card li { padding: 4px 0; }
         .applied-rules {
             background: var(--light-rose);
             border-radius: 24px;
@@ -184,7 +182,6 @@
         .dot.done { background: var(--green-success); }
         .dot.failed { background: #c41e3a; }
 
-        /* ===== СТИЛИ ДЛЯ РЕКОМЕНДАЦИЙ ===== */
         .rec-section {
             margin-top: 16px;
             text-align: left;
@@ -257,9 +254,7 @@
                 <div class="next-area" id="nextArea">
                     <button class="next-btn" id="nextBtn" disabled>➡ Далее</button>
                 </div>
-                <div class="result-card" id="resultCard" style="display: none;">
-                    <div id="resultMessage"></div>
-                </div>
+                <div class="result-card" id="resultCard" style="display: none;"></div>
                 <div id="saveStatus" class="save-status"></div>
             </div>
         </div>
@@ -267,11 +262,15 @@
 </div>
 
 <script>
-    // ========== НАСТРОЙКА JSONBIN.IO ==========
+    // ===================================================================
+    // НАСТРОЙКА JSONBIN.IO (ЕДИНАЯ КОРОБКА С ТЕСТОМ)
+    // ===================================================================
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const BIN_ID_KEY = '585_bin_id';
-    
-    // ========== ПРАВИЛА ==========
+    const BIN_ID_KEY = '585_bin_id'; // <-- ОБЯЗАТЕЛЬНО ТА ЖЕ, ЧТО И В ТЕСТЕ
+
+    // ===================================================================
+    // ДАННЫЕ ТРЕНАЖЁРА
+    // ===================================================================
     const ALL_RULES = [
         { id: "initiative", name: "Проявляй инициативу", 
           rec: "Не жди, пока клиент сам позовёт. Через 20-30 секунд подойди и спроси: «Какое изделие выбираете? Для себя или в подарок?»" },
@@ -287,7 +286,6 @@
           rec: "Завершай с теплотой: «Спасибо, что зашли! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»." }
     ];
 
-    // ========== ВОПРОСЫ ==========
     const QUESTIONS = [
         {
             client: "Клиент зашёл, молча смотрит на витрину с кольцами около 25 секунд. Что делаете?",
@@ -351,20 +349,24 @@
         }
     ];
 
+    // ===================================================================
+    // СОСТОЯНИЕ
+    // ===================================================================
     let currentQuestionIndex = 0, currentAnswers = [], appliedRules = [], currentUserName = null, currentUserCity = null;
     let gameActive = false, selectedChoiceIndex = null;
     let questionResults = [];
 
-    // ========== СОХРАНЕНИЕ В JSONBIN.IO (С СОЗДАНИЕМ КОРОБКИ) ==========
+    // ===================================================================
+    // СОХРАНЕНИЕ В JSONBIN.IO (С СОЗДАНИЕМ КОРОБКИ)
+    // ===================================================================
     async function saveToJsonBin(resultData) {
         try {
-            console.log('Сохраняем результат тренировки...');
-            
+            console.log('💾 Сохраняем результат тренировки...');
             let binId = localStorage.getItem(BIN_ID_KEY);
             
             // Если коробки нет — создаём новую
             if (!binId) {
-                console.log('Создаём новую коробку...');
+                console.log('📦 Коробка не найдена, создаём новую...');
                 const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
                     method: 'POST',
                     headers: {
@@ -381,12 +383,13 @@
                     console.log('✅ Создана новая коробка, ID:', binId);
                     return true;
                 } else {
-                    console.error('Ошибка создания коробки:', await createResponse.text());
+                    console.error('❌ Ошибка создания коробки:', await createResponse.text());
                     return false;
                 }
             }
-            
+
             // Если коробка есть — читаем и обновляем
+            console.log('📖 Читаем существующую коробку...');
             const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
@@ -395,18 +398,19 @@
             if (getResponse.ok) {
                 const data = await getResponse.json();
                 existingResults = data.record || [];
+                console.log('📋 Найдено записей:', existingResults.length);
             } else if (getResponse.status === 404) {
-                // Коробка не найдена — создаём новую
-                console.log('Коробка не найдена, создаём новую...');
+                console.log('⚠️ Коробка не найдена на сервере, создаём новую...');
                 localStorage.removeItem(BIN_ID_KEY);
                 return await saveToJsonBin(resultData);
             } else {
-                console.error('Ошибка чтения коробки:', getResponse.status);
+                console.error('❌ Ошибка чтения коробки:', getResponse.status);
                 return false;
             }
             
             existingResults.push(resultData);
             
+            console.log('✍️ Обновляем коробку...');
             const updateResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: 'PUT',
                 headers: {
@@ -417,7 +421,7 @@
             });
             
             if (updateResponse.ok) {
-                console.log('✅ Результат тренировки сохранён в JSONBin.io!');
+                console.log('✅ Результат тренировки сохранён!');
                 return true;
             } else {
                 const errorText = await updateResponse.text();
@@ -425,7 +429,7 @@
                 return false;
             }
         } catch(error) {
-            console.error('❌ Ошибка:', error);
+            console.error('❌ Критическая ошибка:', error);
             return false;
         }
     }
@@ -454,14 +458,16 @@
                     statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                     statusDiv.style.color = '#2c6e2c';
                 } else {
-                    statusDiv.innerHTML = '⚠️ Результат не сохранился, но баллы засчитаны';
+                    statusDiv.innerHTML = '⚠️ Результат НЕ сохранился. Проверьте интернет.';
                     statusDiv.style.color = '#c41e3a';
                 }
             }
         });
     }
 
-    // ========== ЛОГИКА ТРЕНАЖЁРА ==========
+    // ===================================================================
+    // ЛОГИКА ТРЕНАЖЁРА
+    // ===================================================================
     function nextStep() {
         if (!gameActive || selectedChoiceIndex === null) return;
         
@@ -512,8 +518,7 @@
                 <p>Вы применили все 6 правил!</p>
                 <p style="font-size:14px; color:#666;">Результат: ${appliedRules.length}/6</p>
                 <div class="rec-perfect">
-                    🎉 <strong>ИДЕАЛЬНО!</strong> Вы применили все правила в диалоге!<br>
-                    <span style="font-size: 14px;">Продолжайте в том же духе!</span>
+                    🎉 <strong>ИДЕАЛЬНО!</strong> Вы применили все правила в диалоге!
                 </div>
             `;
         } else {
@@ -527,7 +532,7 @@
             if (missingRules.length > 0) {
                 html += `
                     <div class="rec-section">
-                        <h4>📚 КАКИЕ ПРАВИЛА НЕ ПРИМЕНЕНЫ И КАК ИСПРАВИТЬ</h4>
+                        <h4>📚 КАКИЕ ПРАВИЛА НЕ ПРИМЕНЕНЫ</h4>
                 `;
                 
                 missingRules.forEach(rule => {
@@ -644,7 +649,9 @@
         startGame(name, city);
     }
 
-    // ========== ОБРАБОТЧИКИ ==========
+    // ===================================================================
+    // ОБРАБОТЧИКИ
+    // ===================================================================
     document.getElementById("startGameBtn").onclick = () => {
         const name = document.getElementById("userName").value.trim();
         const city = document.getElementById("userCity").value;
