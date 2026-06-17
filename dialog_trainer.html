@@ -266,7 +266,7 @@
     // НАСТРОЙКА JSONBIN.IO (ЕДИНАЯ КОРОБКА С ТЕСТОМ)
     // ===================================================================
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const BIN_ID_KEY = '585_bin_id'; // <-- ОБЯЗАТЕЛЬНО ТА ЖЕ, ЧТО И В ТЕСТЕ
+    const BIN_ID_KEY = '585_bin_id';
 
     // ===================================================================
     // ДАННЫЕ ТРЕНАЖЁРА
@@ -361,12 +361,12 @@
     // ===================================================================
     async function saveToJsonBin(resultData) {
         try {
-            console.log('💾 Сохраняем результат тренировки...');
+            console.log('Сохраняем результат тренировки...');
             let binId = localStorage.getItem(BIN_ID_KEY);
             
             // Если коробки нет — создаём новую
             if (!binId) {
-                console.log('📦 Коробка не найдена, создаём новую...');
+                console.log('Создаём новую коробку для тренировки...');
                 const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
                     method: 'POST',
                     headers: {
@@ -375,7 +375,6 @@
                     },
                     body: JSON.stringify([resultData])
                 });
-                
                 if (createResponse.ok) {
                     const data = await createResponse.json();
                     binId = data.metadata.id;
@@ -389,7 +388,7 @@
             }
 
             // Если коробка есть — читаем и обновляем
-            console.log('📖 Читаем существующую коробку...');
+            console.log('Читаем коробку:', binId);
             const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
@@ -398,19 +397,21 @@
             if (getResponse.ok) {
                 const data = await getResponse.json();
                 existingResults = data.record || [];
-                console.log('📋 Найдено записей:', existingResults.length);
+                console.log('Записей в коробке:', existingResults.length);
             } else if (getResponse.status === 404) {
-                console.log('⚠️ Коробка не найдена на сервере, создаём новую...');
+                console.log('Коробка не найдена на сервере, создаём новую...');
                 localStorage.removeItem(BIN_ID_KEY);
                 return await saveToJsonBin(resultData);
             } else {
-                console.error('❌ Ошибка чтения коробки:', getResponse.status);
+                console.error('Ошибка чтения коробки:', getResponse.status);
                 return false;
             }
             
+            // Добавляем новый результат
             existingResults.push(resultData);
             
-            console.log('✍️ Обновляем коробку...');
+            // Обновляем коробку
+            console.log('Обновляем коробку, записей станет:', existingResults.length);
             const updateResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: 'PUT',
                 headers: {
@@ -458,7 +459,7 @@
                     statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                     statusDiv.style.color = '#2c6e2c';
                 } else {
-                    statusDiv.innerHTML = '⚠️ Результат НЕ сохранился. Проверьте интернет.';
+                    statusDiv.innerHTML = '⚠️ Результат не сохранился. Проверьте интернет.';
                     statusDiv.style.color = '#c41e3a';
                 }
             }
