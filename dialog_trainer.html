@@ -268,6 +268,7 @@
 
 <script>
     // ========== НАСТРОЙКА JSONBIN.IO ==========
+    // ИСПОЛЬЗУЕМ ТУ ЖЕ КОРОБКУ, ЧТО И ТЕСТ
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const BIN_ID_KEY = '585_bin_id';
     
@@ -376,8 +377,27 @@
                 const data = await getResponse.json();
                 existingResults = data.record || [];
             } else {
-                console.log('Коробка не найдена, возможно, нужно создать новую');
-                return false;
+                console.log('Коробка не найдена, создаём новую...');
+                // Пытаемся создать новую коробку
+                const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY
+                    },
+                    body: JSON.stringify([resultData])
+                });
+                
+                if (createResponse.ok) {
+                    const data = await createResponse.json();
+                    binId = data.metadata.id;
+                    localStorage.setItem(BIN_ID_KEY, binId);
+                    console.log('✅ Создана новая коробка, ID:', binId);
+                    return true;
+                } else {
+                    console.error('Ошибка создания коробки:', await createResponse.text());
+                    return false;
+                }
             }
             
             existingResults.push(resultData);
@@ -429,7 +449,7 @@
                     statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                     statusDiv.style.color = '#2c6e2c';
                 } else {
-                    statusDiv.innerHTML = '⚠️ Результат не сохранился, но баллы засчитаны';
+                    statusDiv.innerHTML = '⚠️ Результат не сохранился, но баллы засчитаны. Проверьте интернет.';
                     statusDiv.style.color = '#c41e3a';
                 }
             }
