@@ -118,12 +118,10 @@
             position: relative;
             overflow: hidden;
         }
-        /* Анимация при наведении */
         .main-kpi-card:hover {
             transform: translateY(-6px) scale(1.02);
             box-shadow: 0 12px 30px rgba(0,0,0,0.15);
         }
-        /* Иконка-подсказка */
         .main-kpi-card .tooltip-icon {
             position: absolute;
             top: 10px;
@@ -137,7 +135,6 @@
             opacity: 1;
             transform: scale(1.2);
         }
-        /* Всплывающая подсказка */
         .main-kpi-card .tooltip-text {
             visibility: hidden;
             opacity: 0;
@@ -174,13 +171,12 @@
         .main-kpi-card .label { font-size: 14px; opacity: 0.9; font-weight: 400; }
         .main-kpi-card .value { font-size: 36px; font-weight: 700; line-height: 1.2; margin-top: 4px; }
 
-        /* Цвета KPI */
         .kpi-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
         .kpi-green { background: linear-gradient(135deg, #22c55e, #16a34a); }
         .kpi-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .kpi-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
-        /* ===== СТАТУСЫ (ЦВЕТНЫЕ) ===== */
+        /* ===== СТАТУСЫ ===== */
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -240,43 +236,198 @@
         .status-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .status-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
-        /* ===== КАРТОЧКИ ===== */
-        .card {
-            background: white;
+        /* ===== ГРАФИКИ (ТЕПЕРЬ ЦВЕТНЫЕ!) ===== */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .chart-card {
             border-radius: 12px;
             padding: 16px 20px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 20px;
-            transition: box-shadow 0.2s;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.04); }
-        .card-title { font-size: 15px; font-weight: 600; color: #1e2a3a; margin-bottom: 12px; }
-        .chart-box { height: 180px; }
-        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .employee-item {
+        .chart-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+        }
+        .chart-card .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            opacity: 0.95;
+        }
+        .chart-card .chart-box { height: 180px; }
+        .chart-card canvas { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+
+        /* Цвета для карточек графиков */
+        .chart-blue { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+        .chart-purple { background: linear-gradient(135deg, #5b21b6, #8b5cf6); }
+        .chart-teal { background: linear-gradient(135deg, #0d9488, #14b8a6); }
+        .chart-rose { background: linear-gradient(135deg, #be123c, #f43f5e); }
+        .chart-gray { background: linear-gradient(135deg, #334155, #64748b); }
+
+        /* Адаптация цветов для графиков внутри цветных карточек */
+        .chart-card canvas { 
+            background: rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        /* ===== КАРТОЧКИ СПИСКОВ (тоже цветные) ===== */
+        .list-card {
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-bottom: 20px;
+        }
+        .list-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+        }
+        .list-card .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            opacity: 0.95;
+        }
+        .list-card .employee-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-bottom: 1px solid #edf2f7;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
             cursor: pointer;
-            transition: 0.15s;
             border-radius: 6px;
+            transition: 0.15s;
+            color: white;
         }
-        .employee-item:hover { background: #f1f5f9; padding-left: 8px; transform: translateX(2px); }
-        .badge {
+        .list-card .employee-item:hover {
+            background: rgba(255,255,255,0.15);
+            padding-left: 8px;
+            transform: translateX(2px);
+        }
+        .list-card .empty {
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            padding: 16px 0;
+            font-size: 14px;
+        }
+        .list-card .badge {
             padding: 2px 12px;
             border-radius: 40px;
             font-size: 12px;
             font-weight: 500;
+            background: rgba(255,255,255,0.2);
+            color: white;
         }
-        .badge-green { background: #dcfce7; color: #166534; }
-        .badge-yellow { background: #fef9c3; color: #854d0e; }
-        .badge-red { background: #fee2e2; color: #991b1b; }
-        .badge-purple { background: #f3e8ff; color: #6b21a8; }
-        .empty { color: #94a3b8; text-align: center; padding: 16px 0; font-size: 14px; }
+        .list-card .badge-green { background: rgba(34,197,94,0.4); color: #bbf7d0; }
+        .list-card .badge-yellow { background: rgba(234,179,8,0.4); color: #fef08a; }
+        .list-card .badge-red { background: rgba(239,68,68,0.4); color: #fca5a5; }
+        .list-card .badge-purple { background: rgba(139,92,246,0.4); color: #ddd6fe; }
 
-        /* ===== ТАБЛИЦЫ ===== */
+        .list-blue { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+        .list-purple { background: linear-gradient(135deg, #5b21b6, #8b5cf6); }
+        .list-teal { background: linear-gradient(135deg, #0d9488, #14b8a6); }
+        .list-rose { background: linear-gradient(135deg, #be123c, #f43f5e); }
+
+        /* ===== КАРТОЧКА ДИНАМИКИ ===== */
+        .trend-card {
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: white;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-bottom: 20px;
+        }
+        .trend-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+        }
+        .trend-card .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            opacity: 0.95;
+        }
+        .trend-card .chart-box { height: 180px; }
+        .trend-card canvas {
+            background: rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 4px;
+        }
+        .trend-card .empty {
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            padding: 30px 0;
+            font-size: 14px;
+        }
+
+        /* ===== КАРТОЧКА СОТРУДНИКОВ (цветная) ===== */
+        .employee-card {
+            border-radius: 12px;
+            padding: 16px 20px;
+            color: white;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-bottom: 20px;
+        }
+        .employee-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+        }
+        .employee-card .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            opacity: 0.95;
+        }
+        .employee-card .employee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.15s;
+            color: white;
+        }
+        .employee-card .employee-item:hover {
+            background: rgba(255,255,255,0.1);
+            padding-left: 8px;
+            transform: translateX(2px);
+        }
+        .employee-card .empty {
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            padding: 16px 0;
+            font-size: 14px;
+        }
+        .employee-card .badge {
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .employee-card .badge-green { background: rgba(34,197,94,0.3); color: #bbf7d0; }
+        .employee-card .badge-yellow { background: rgba(234,179,8,0.3); color: #fef08a; }
+        .employee-card .badge-red { background: rgba(239,68,68,0.3); color: #fca5a5; }
+        .employee-card .badge-purple { background: rgba(139,92,246,0.3); color: #ddd6fe; }
+
+        /* ===== СПИСКИ ВНУТРИ ЦВЕТНЫХ КАРТОЧЕК ===== */
+        .list-card .employee-list, .employee-card .employee-list { max-height: 300px; overflow-y: auto; }
+
+        /* ===== ТАБЛИЦЫ (для вкладки "Города") ===== */
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th { text-align: left; padding: 10px 8px; font-weight: 600; color: #4a5a6a; border-bottom: 2px solid #e2e8f0; }
@@ -397,7 +548,7 @@
     </div>
 
     <!-- ВКЛАДКИ -->
-    <div class="tabs" id="tabsContainer">
+    <div class="tabs">
         <button class="tab-btn active" data-tab="dashboard">📊 Дашборд</button>
         <button class="tab-btn" data-tab="cities">🏙️ Города</button>
         <button class="tab-btn" data-tab="feedback">📝 Фидбек</button>
@@ -435,6 +586,7 @@
 
     <!-- ДАШБОРД -->
     <div id="dashboardTab">
+        <!-- KPI -->
         <div class="main-kpi-grid" id="mainKpi">
             <div class="main-kpi-card kpi-blue">
                 <span class="tooltip-icon" title="Подсказка">ⓘ</span>
@@ -462,6 +614,7 @@
             </div>
         </div>
 
+        <!-- СТАТУСЫ -->
         <div class="status-grid">
             <div class="status-card status-blue">
                 <span class="tooltip-text">Количество пройденных тестов</span>
@@ -490,32 +643,48 @@
             </div>
         </div>
 
+        <!-- ГРАФИКИ (ЦВЕТНЫЕ) -->
         <div class="charts-row">
-            <div class="card"><div class="card-title">Распределение баллов</div><div class="chart-box"><canvas id="scoreChart"></canvas></div></div>
-            <div class="card"><div class="card-title">Средний балл по городам</div><div class="chart-box"><canvas id="cityChart"></canvas></div></div>
+            <div class="chart-card chart-blue">
+                <div class="card-title">📊 Распределение баллов</div>
+                <div class="chart-box"><canvas id="scoreChart"></canvas></div>
+            </div>
+            <div class="chart-card chart-purple">
+                <div class="card-title">🏙️ Средний балл по городам</div>
+                <div class="chart-box"><canvas id="cityChart"></canvas></div>
+            </div>
         </div>
 
-        <div class="card">
-            <div class="card-title">Динамика среднего балла</div>
+        <!-- ДИНАМИКА -->
+        <div class="trend-card">
+            <div class="card-title">📈 Динамика среднего балла</div>
             <div id="trendContainer"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
             <div id="trendFallback" class="empty" style="display:none;">Недостаточно данных для графика</div>
         </div>
 
+        <!-- ТОПЫ (ЦВЕТНЫЕ) -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
-            <div class="card"><div class="card-title">🏆 Топ сотрудников</div><div id="topList"><div class="empty">Нет данных</div></div></div>
-            <div class="card"><div class="card-title">🏙️ Рейтинг городов</div><div id="cityRating"><div class="empty">Нет данных</div></div></div>
+            <div class="list-card list-teal">
+                <div class="card-title">🏆 Топ сотрудников</div>
+                <div id="topList"><div class="empty">Нет данных</div></div>
+            </div>
+            <div class="list-card list-rose">
+                <div class="card-title">🏙️ Рейтинг городов</div>
+                <div id="cityRating"><div class="empty">Нет данных</div></div>
+            </div>
         </div>
 
-        <div class="card">
-            <div class="card-title">Сотрудники (<span id="empCount">0</span>)</div>
+        <!-- СОТРУДНИКИ -->
+        <div class="employee-card">
+            <div class="card-title">👥 Сотрудники (<span id="empCount">0</span>)</div>
             <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
         </div>
     </div>
 
     <!-- ГОРОДА -->
     <div id="citiesTab" style="display:none;">
-        <div class="card">
-            <div class="card-title">Детальная статистика по городам</div>
+        <div class="card" style="background:white; padding:16px 20px; border-radius:12px; margin-bottom:20px;">
+            <div class="card-title" style="color:#1e2a3a;">Детальная статистика по городам</div>
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно</th><th>Ошибок</th><th>Провал</th></tr></thead>
@@ -524,13 +693,16 @@
             </div>
             <button class="btn btn-primary" id="exportCityBtn" style="margin-top:16px;">CSV</button>
         </div>
-        <div class="card"><div class="card-title">Сравнение городов</div><div class="chart-box"><canvas id="comparisonChart"></canvas></div></div>
+        <div class="card" style="background:white; padding:16px 20px; border-radius:12px;">
+            <div class="card-title" style="color:#1e2a3a;">Сравнение городов</div>
+            <div class="chart-box"><canvas id="comparisonChart"></canvas></div>
+        </div>
     </div>
 
     <!-- ФИДБЕК -->
     <div id="feedbackTab" style="display:none;">
-        <div class="card">
-            <div class="card-title">Фидбек для города</div>
+        <div class="card" style="background:white; padding:16px 20px; border-radius:12px;">
+            <div class="card-title" style="color:#1e2a3a;">Фидбек для города</div>
             <select id="feedbackCitySelect" style="padding:8px 14px;border-radius:6px;border:1px solid #d0d7dd;width:100%;max-width:300px;margin-bottom:16px;">
                 <option value="">-- Выберите город --</option>
             </select>
@@ -539,7 +711,7 @@
         </div>
     </div>
 
-    <div id="loadingSkeleton" class="empty" style="display:none;">Загрузка...</div>
+    <div id="loadingSkeleton" class="empty" style="display:none; color:#94a3b8; text-align:center; padding:40px;">Загрузка...</div>
 </div>
 
 <!-- МОДАЛКА -->
@@ -553,7 +725,7 @@
 
 <script>
     // ================================================================
-    //  ЛОГИКА
+    //  ЛОГИКА (без изменений)
     // ================================================================
 
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
@@ -675,22 +847,38 @@
                     datasets: [{
                         label: '%',
                         data: values,
-                        borderColor: '#c41e3a',
-                        backgroundColor: 'rgba(196,30,58,0.05)',
+                        borderColor: '#facc15',
+                        backgroundColor: 'rgba(250,204,21,0.15)',
                         fill: true,
                         tension: 0.4,
-                        pointBackgroundColor: values.map(v => v >= 85 ? '#16a34a' : v >= 70 ? '#eab308' : '#dc2626'),
+                        pointBackgroundColor: values.map(v => v >= 85 ? '#4ade80' : v >= 70 ? '#facc15' : '#f87171'),
                         pointRadius: 4,
                         borderWidth: 2
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+'%' } } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { color: 'rgba(255,255,255,0.6)', callback: v => v+'%' } },
+                        x: { ticks: { color: 'rgba(255,255,255,0.6)' } }
+                    }
+                }
             });
         } else {
             trendChart = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: dates, datasets: [{ label: '%', data: values, backgroundColor: '#c41e3a', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+'%' } } } }
+                data: { labels: dates, datasets: [{ label: '%', data: values, backgroundColor: '#facc15', borderRadius: 4 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { color: 'rgba(255,255,255,0.6)', callback: v => v+'%' } },
+                        x: { ticks: { color: 'rgba(255,255,255,0.6)' } }
+                    }
+                }
             });
         }
     }
@@ -719,7 +907,7 @@
             row.insertCell(2).innerHTML = `<span style="color:${c.avg>=85?'#16a34a':c.avg>=70?'#eab308':'#dc2626'}">${c.avg}%</span>`;
             row.insertCell(3).textContent = `${c.success}/${c.count}`;
             row.insertCell(4).textContent = c.errors;
-            row.insertCell(5).innerHTML = `<span class="badge badge-red">${c.fail}</span>`;
+            row.insertCell(5).innerHTML = `<span style="background:#fee2e2; color:#991b1b; padding:2px 10px; border-radius:40px; font-size:12px;">${c.fail}</span>`;
         });
 
         if (comparisonChart) comparisonChart.destroy();
@@ -810,12 +998,12 @@
 
         document.getElementById('empCount').textContent = filteredData.length;
         document.getElementById('employeeList').innerHTML = filteredData.map(r => `
-            <div class="employee-item">
-                <div style="flex:1;cursor:pointer;" onclick="showDetails(${r.id})">
+            <div class="employee-item" onclick="showDetails(${r.id})">
+                <div style="flex:1;cursor:pointer;">
                     <b>${r.user_name}</b> (${r.city})
                     <span class="badge ${r.type==='trainer'?'badge-purple':r.percent>=85?'badge-green':r.percent>=70?'badge-yellow':'badge-red'}">${r.percent}%</span>
                 </div>
-                <button class="btn" style="padding:2px 10px;background:transparent;color:#dc2626;border:1px solid #f5c6cb;" onclick="deleteRow(${r.id})">✕</button>
+                <button class="btn" style="padding:2px 10px;background:rgba(255,255,255,0.1);color:#fca5a5;border:1px solid rgba(255,255,255,0.1);border-radius:6px;cursor:pointer;" onclick="deleteRow(${r.id})">✕</button>
             </div>
         `).join('');
 
@@ -830,15 +1018,31 @@
         if (scoreChart) scoreChart.destroy();
         scoreChart = new Chart(document.getElementById('scoreChart'), {
             type: 'bar',
-            data: { labels: ['0-20%','21-40%','41-60%','61-80%','81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a', borderRadius: 4 }] },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
+            data: { labels: ['0-20%','21-40%','41-60%','61-80%','81-100%'], datasets: [{ data: bins, backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 4 }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.6)' } },
+                    x: { ticks: { color: 'rgba(255,255,255,0.6)' } }
+                }
+            }
         });
 
         if (cityChart) cityChart.destroy();
         cityChart = new Chart(document.getElementById('cityChart'), {
             type: 'bar',
-            data: { labels: cityRating.map(c => c.city), datasets: [{ data: cityRating.map(c => c.avg), backgroundColor: '#c41e3a', borderRadius: 4 }] },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
+            data: { labels: cityRating.map(c => c.city), datasets: [{ data: cityRating.map(c => c.avg), backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 4 }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 100, ticks: { color: 'rgba(255,255,255,0.6)', callback: v => v+'%' } },
+                    x: { ticks: { color: 'rgba(255,255,255,0.6)' } }
+                }
+            }
         });
     }
 
@@ -850,9 +1054,7 @@
         renderCityStats();
     }
 
-    // ================================================================
-    //  МОДАЛКА С РЕКОМЕНДАЦИЯМИ
-    // ================================================================
+    // ----- МОДАЛКА -----
     function showDetails(id) {
         const emp = filteredData.find(r => r.id === id);
         if (!emp) return;
