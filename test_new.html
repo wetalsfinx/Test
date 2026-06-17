@@ -57,11 +57,33 @@
         }
         .option.selected { background: #c41e3a; color: white; border-color: #c41e3a; }
         .hidden { display: none; }
-        .result-box { text-align: center; padding: 20px; border-radius: 24px; }
+        .result-box {
+            text-align: center;
+            padding: 20px;
+            border-radius: 24px;
+        }
         .result-box.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
         .result-box.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
         .restart-btn { background: #c41e3a; margin-top: 16px; }
         .save-status { font-size: 12px; color: #666; margin-top: 10px; text-align: center; }
+        .recommendations-section {
+            margin-top: 20px;
+            text-align: left;
+            border-top: 2px dashed #e8a0b4;
+            padding-top: 16px;
+        }
+        .rec-item {
+            background: #f8f4f0;
+            border-radius: 16px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            border-left: 4px solid #c41e3a;
+        }
+        .rec-item .rec-q { font-weight: 600; font-size: 13px; color: #1a1a2e; }
+        .rec-item .rec-wrong { font-size: 13px; color: #c41e3a; margin: 4px 0; }
+        .rec-item .rec-correct { font-size: 13px; color: #2c6e2c; margin: 4px 0; }
+        .rec-item .rec-tip { background: #fff8e0; padding: 6px 12px; border-radius: 8px; font-size: 13px; margin-top: 6px; color: #854d0e; border-left: 3px solid #f59e0b; }
+        .rec-perfect { text-align: center; padding: 20px; background: #e8f0e8; border-radius: 16px; color: #2c6e2c; }
     </style>
 </head>
 <body>
@@ -78,10 +100,10 @@
                 <option value="">-- Выберите город --</option>
                 <option value="Петрозаводск">Петрозаводск</option>
                 <option value="Казань">Казань</option>
-                <option value="Владимир">Владимир</option>
-                <option value="Тюмень">Тюмень</option>
                 <option value="Кандалакша">Кандалакша</option>
+                <option value="Владимир">Владимир</option>
                 <option value="Санкт-Петербург">Санкт-Петербург</option>
+                <option value="Тюмень">Тюмень</option>
             </select>
         </div>
         <button id="startTestBtn">Начать тест</button>
@@ -100,20 +122,29 @@
 </div>
 
 <script>
-    // ========== НАСТРОЙКА JSONBIN.IO ==========
-    // ⚠️ СЮДА ВСТАВЬ ТВОЙ MASTER KEY (начинается с $2a$10$...)
+    // ========== НАСТРОЙКА JSONBIN.IO (ЕДИНАЯ КОРОБКА) ==========
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const BIN_ID_KEY = '585_bin_id';  // Название для хранения ID коробки
+    const BIN_ID_KEY = '585_bin_id';
     
-    // Функция сохранения в JSONBin.io
+    const RECOMMENDATIONS = [
+        "Не спрашивайте 'Чем помочь?'. Сразу дайте ценность: акция + спросите 'Для себя или в подарок?'",
+        "Когда клиент назвал бюджет, НЕ показывайте товар сразу. Сначала спросите: 'А для какого случая?'",
+        "Предлагайте доп. товар через создание образа: 'Давайте подберём серьги из той же коллекции'",
+        "Не критикуйте выбор клиента. Скажите: 'Давайте примерим оба варианта'",
+        "Не спрашивайте 'Футляр нужен?'. Говорите: 'Давайте выберем красивый футляр'",
+        "Не оправдывайте цену. Скажите: 'Понимаю, цена важна. А с чем вы сравниваете?'",
+        "Не отправляйте клиента ждать. Дайте альтернативу сейчас",
+        "Продавайте эмоцию: 'Это кольцо станет идеальным напоминанием'",
+        "Не говорите просто 'Да'. Предложите дополнения",
+        "Сплит предлагайте ДО озвучивания цены",
+        "Дайте 20-30 секунд освоиться, затем подойдите"
+    ];
+
     async function saveToJsonBin(resultData) {
         try {
-            console.log('Отправка в JSONBin.io...');
-            
-            // Пытаемся получить ID коробки из localStorage
+            console.log('Сохраняем результат...');
             let binId = localStorage.getItem(BIN_ID_KEY);
             
-            // Если коробки нет — создаём новую
             if (!binId) {
                 const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
                     method: 'POST',
@@ -123,7 +154,6 @@
                     },
                     body: JSON.stringify([resultData])
                 });
-                
                 if (createResponse.ok) {
                     const data = await createResponse.json();
                     binId = data.metadata.id;
@@ -131,12 +161,11 @@
                     console.log('✅ Создана новая коробка, ID:', binId);
                     return true;
                 } else {
-                    console.error('Ошибка создания коробки:', await createResponse.text());
+                    console.error('Ошибка создания:', await createResponse.text());
                     return false;
                 }
             }
-            
-            // Если коробка есть — читаем старые результаты
+
             const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
@@ -145,12 +174,15 @@
             if (getResponse.ok) {
                 const data = await getResponse.json();
                 existingResults = data.record || [];
+            } else if (getResponse.status === 404) {
+                localStorage.removeItem(BIN_ID_KEY);
+                return await saveToJsonBin(resultData);
+            } else {
+                return false;
             }
             
-            // Добавляем новый результат
             existingResults.push(resultData);
             
-            // Обновляем коробку
             const updateResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: 'PUT',
                 headers: {
@@ -161,7 +193,7 @@
             });
             
             if (updateResponse.ok) {
-                console.log('✅ Результат сохранён в JSONBin.io!');
+                console.log('✅ Результат сохранён!');
                 return true;
             } else {
                 console.error('Ошибка обновления:', await updateResponse.text());
@@ -261,6 +293,7 @@
 
         const resultData = {
             id: Date.now(),
+            type: 'test',
             user_name: currentUser.name,
             city: currentUser.city,
             score: correctCount,
@@ -273,16 +306,42 @@
         };
 
         resultScreen.classList.remove('hidden');
-        resultScreen.innerHTML = `
+
+        let html = `
             <div class="result-box ${passed ? 'success' : 'fail'}">
                 <h2>${passed ? '🏆 Победа!' : '😞 Тест не пройден'}</h2>
                 <p>Правильных ответов: ${correctCount} из ${shuffledQuestions.length}</p>
                 <p>Ваш результат: ${percent}%</p>
                 <p>${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
+        `;
+
+        if (correctCount === shuffledQuestions.length) {
+            html += `<div class="recommendations-section"><div class="rec-perfect">🎉 <strong>ИДЕАЛЬНО!</strong> Все ответы верны!</div></div>`;
+        } else {
+            html += `<div class="recommendations-section"><h3>📚 РЕКОМЕНДАЦИИ ПО ОШИБКАМ</h3>`;
+            answersDetail.forEach((a, i) => {
+                if (!a.correct) {
+                    const rec = RECOMMENDATIONS[i] || 'Изучите правильный ответ.';
+                    html += `
+                        <div class="rec-item">
+                            <div class="rec-q">Вопрос ${a.questionNum}: ${a.questionText}</div>
+                            <div class="rec-wrong">❌ Ваш ответ: ${a.selectedText}</div>
+                            <div class="rec-correct">✅ Правильный ответ: ${a.correctText}</div>
+                            <div class="rec-tip"><strong>📌 Как надо:</strong> ${rec}</div>
+                        </div>
+                    `;
+                }
+            });
+            html += `</div>`;
+        }
+
+        html += `
                 <div class="save-status" id="saveStatus">⏳ Сохраняю результат...</div>
                 <button class="restart-btn" onclick="location.reload()">🔄 Пройти заново</button>
             </div>
         `;
+
+        resultScreen.innerHTML = html;
         
         const saved = await saveToJsonBin(resultData);
         const statusDiv = document.getElementById('saveStatus');
@@ -291,7 +350,7 @@
                 statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                 statusDiv.style.color = '#2c6e2c';
             } else {
-                statusDiv.innerHTML = '⚠️ Результат не сохранился, но баллы засчитаны';
+                statusDiv.innerHTML = '⚠️ Результат не сохранился. Проверьте интернет.';
                 statusDiv.style.color = '#c41e3a';
             }
         }
