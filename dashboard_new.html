@@ -6,7 +6,6 @@
     <title>585GOLD | Аналитика</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* ===== ПОЛНАЯ КОПИЯ СТИЛЯ С ЭТАЛОНА ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
@@ -16,7 +15,7 @@
         }
         .container { max-width: 1440px; margin: 0 auto; }
 
-        /* ===== ШАПКА КАК НА ЭТАЛОНЕ ===== */
+        /* ===== ШАПКА ===== */
         .header {
             background: white;
             border-radius: 12px;
@@ -29,17 +28,9 @@
             border-bottom: 3px solid #c41e3a;
             box-shadow: 0 2px 6px rgba(0,0,0,0.04);
         }
-        .header h1 {
-            font-size: 22px;
-            font-weight: 600;
-            color: #1e2a3a;
-        }
+        .header h1 { font-size: 22px; font-weight: 600; color: #1e2a3a; }
         .header h1 span { color: #c41e3a; }
-        .header-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn {
             padding: 6px 18px;
             border: 1px solid #d0d7dd;
@@ -57,7 +48,7 @@
         .btn-success { background: #16a34a; color: white; border-color: #16a34a; }
         .btn-success:hover { background: #15803d; }
 
-        /* ===== ФИЛЬТРЫ (КАК НА ЭТАЛОНЕ) ===== */
+        /* ===== ФИЛЬТРЫ ===== */
         .filter-bar {
             background: white;
             border-radius: 12px;
@@ -69,16 +60,8 @@
             gap: 16px 24px;
             border: 1px solid #e2e8f0;
         }
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .filter-group label {
-            font-size: 13px;
-            font-weight: 500;
-            color: #4a5a6a;
-        }
+        .filter-group { display: flex; align-items: center; gap: 6px; }
+        .filter-group label { font-size: 13px; font-weight: 500; color: #4a5a6a; }
         .filter-group select, .filter-group input {
             padding: 5px 12px;
             border: 1px solid #d0d7dd;
@@ -97,7 +80,31 @@
             border-radius: 40px;
         }
 
-        /* ===== ГЛАВНАЯ ЦИФРА (КАК "ВСЕГО ЖАЛОБ") ===== */
+        /* ===== ВКЛАДКИ ===== */
+        .tabs-wrap {
+            display: flex;
+            gap: 4px;
+            background: white;
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .tab-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: transparent;
+            color: #64748b;
+            transition: 0.15s;
+        }
+        .tab-btn.active { background: #c41e3a; color: white; }
+        .tab-btn:hover:not(.active) { background: #f1f5f9; }
+
+        /* ===== ГЛАВНАЯ ЦИФРА ===== */
         .main-number {
             background: white;
             border-radius: 12px;
@@ -109,22 +116,11 @@
             align-items: center;
             flex-wrap: wrap;
         }
-        .main-number .label {
-            font-size: 16px;
-            font-weight: 500;
-            color: #4a5a6a;
-        }
-        .main-number .value {
-            font-size: 48px;
-            font-weight: 700;
-            color: #1e2a3a;
-        }
-        .main-number .sub {
-            font-size: 14px;
-            color: #6a7a8a;
-        }
+        .main-number .label { font-size: 16px; font-weight: 500; color: #4a5a6a; }
+        .main-number .value { font-size: 48px; font-weight: 700; color: #1e2a3a; }
+        .main-number .sub { font-size: 14px; color: #6a7a8a; }
 
-        /* ===== СЕТКА СТАТУСОВ (КАК НА ЭТАЛОНЕ) ===== */
+        /* ===== СТАТУСЫ ===== */
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -140,30 +136,9 @@
             border-left-width: 5px;
             transition: 0.15s;
         }
-        .status-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            transform: translateY(-2px);
-        }
-        .status-card .label {
-            font-size: 13px;
-            color: #6a7a8a;
-            font-weight: 500;
-        }
-        .status-card .value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1e2a3a;
-            line-height: 1.2;
-            margin-top: 4px;
-        }
-        .status-card .percent {
-            font-size: 13px;
-            font-weight: 600;
-            color: #6a7a8a;
-            margin-left: 8px;
-        }
-
-        /* ЦВЕТА ЛИНИЙ КАК НА ЭТАЛОНЕ */
+        .status-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); transform: translateY(-2px); }
+        .status-card .label { font-size: 13px; color: #6a7a8a; font-weight: 500; }
+        .status-card .value { font-size: 28px; font-weight: 700; color: #1e2a3a; line-height: 1.2; margin-top: 4px; }
         .status-card.blue { border-left-color: #3b82f6; }
         .status-card.green { border-left-color: #16a34a; }
         .status-card.orange { border-left-color: #f59e0b; }
@@ -182,7 +157,6 @@
             font-size: 14px;
             color: #991b1b;
         }
-        .alert-box.warning { background: #fffbeb; border-left-color: #f59e0b; color: #92400e; }
         .alert-box.success { background: #f0fdf4; border-left-color: #16a34a; color: #166534; }
 
         /* ===== КАРТОЧКИ ===== */
@@ -193,18 +167,19 @@
             border: 1px solid #e2e8f0;
             margin-bottom: 20px;
         }
-        .card-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #1e2a3a;
-            margin-bottom: 12px;
-        }
-        .chart-box { height: 180px; }
+        .card-title { font-size: 15px; font-weight: 600; color: #1e2a3a; margin-bottom: 12px; }
+        .chart-box { height: 200px; }
 
-        /* ===== ГРАФИКИ В РЯД ===== */
+        /* ===== ГРАФИКИ ===== */
         .charts-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .charts-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -259,20 +234,8 @@
             padding: 24px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
-        .modal-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #c41e3a;
-        }
-        .modal-summary {
-            background: #f8fafc;
-            padding: 10px 14px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            border-left: 3px solid #c41e3a;
-        }
+        .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #c41e3a; }
+        .modal-summary { background: #f8fafc; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid #c41e3a; }
         .answer-item {
             background: #f8fafc;
             padding: 12px 14px;
@@ -315,8 +278,12 @@
         .modal-close:hover { background: #a0162e; }
 
         /* ===== АДАПТИВ ===== */
+        @media (max-width: 1024px) {
+            .charts-row-3 { grid-template-columns: 1fr 1fr; }
+        }
         @media (max-width: 800px) {
             .charts-row { grid-template-columns: 1fr; }
+            .charts-row-3 { grid-template-columns: 1fr; }
             .status-grid { grid-template-columns: 1fr 1fr; }
             .main-number .value { font-size: 36px; }
         }
@@ -339,6 +306,13 @@
             <button class="btn btn-primary" id="loadBtn">Загрузить</button>
             <button class="btn" id="clearAllBtn" style="color:#c41e3a;border-color:#f5c6cb;">Сбросить</button>
         </div>
+    </div>
+
+    <!-- ВКЛАДКИ -->
+    <div class="tabs-wrap">
+        <button class="tab-btn active" data-tab="dashboard">📊 Дашборд</button>
+        <button class="tab-btn" data-tab="cities">🏙️ Города</button>
+        <button class="tab-btn" data-tab="feedback">📝 Фидбек</button>
     </div>
 
     <!-- ФИЛЬТРЫ -->
@@ -374,50 +348,64 @@
     <!-- АЛЕРТЫ -->
     <div id="alertContainer"></div>
 
-    <!-- ГЛАВНАЯ ЦИФРА -->
-    <div class="main-number">
-        <div>
-            <div class="label">Всего прохождений</div>
-            <div class="value" id="mainTotal">0</div>
-        </div>
-        <div>
-            <div class="sub">Средний балл: <strong id="mainAvg">0%</strong></div>
-        </div>
-    </div>
+    <!-- ДАШБОРД -->
+    <div id="dashboardTab">
 
-    <!-- СТАТУСЫ (ЦВЕТНЫЕ ПЛИТКИ С ЛИНИЯМИ) -->
-    <div class="status-grid" id="statusGrid">
-        <div class="status-card blue"><div class="label">📝 Тестов</div><div class="value" id="sTest">0</div></div>
-        <div class="status-card purple"><div class="label">🎯 Тренировок</div><div class="value" id="sTrainer">0</div></div>
-        <div class="status-card green"><div class="label">🏆 Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
-        <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="sAvg">0%</div></div>
-        <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
-        <div class="status-card teal"><div class="label">❌ Ошибок</div><div class="value" id="sErrors">0</div></div>
-    </div>
+        <!-- ГЛАВНАЯ ЦИФРА -->
+        <div class="main-number">
+            <div>
+                <div class="label">Всего прохождений</div>
+                <div class="value" id="mainTotal">0</div>
+            </div>
+            <div>
+                <div class="sub">Средний балл: <strong id="mainAvg">0%</strong></div>
+            </div>
+        </div>
 
-    <!-- ГРАФИКИ: ТОЛЬКО КРУГОВАЯ И ДИНАМИКА -->
-    <div class="charts-row">
+        <!-- СТАТУСЫ -->
+        <div class="status-grid">
+            <div class="status-card blue"><div class="label">📝 Тестов</div><div class="value" id="sTest">0</div></div>
+            <div class="status-card purple"><div class="label">🎯 Тренировок</div><div class="value" id="sTrainer">0</div></div>
+            <div class="status-card green"><div class="label">🏆 Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
+            <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="sAvg">0%</div></div>
+            <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
+            <div class="status-card teal"><div class="label">❌ Ошибок</div><div class="value" id="sErrors">0</div></div>
+        </div>
+
+        <!-- ГРАФИКИ: КРУГОВАЯ + ДИНАМИКА -->
+        <div class="charts-row">
+            <div class="card">
+                <div class="card-title">🎯 Соотношение результатов</div>
+                <div class="chart-box"><canvas id="pieChart"></canvas></div>
+            </div>
+            <div class="card">
+                <div class="card-title">📈 Динамика среднего балла</div>
+                <div id="trendContainer"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
+                <div id="trendFallback" class="empty" style="display:none;">Недостаточно данных</div>
+            </div>
+        </div>
+
+        <!-- ГРАФИКИ: ТОП СОТРУДНИКОВ + РЕЙТИНГ ГОРОДОВ (ГОРИЗОНТАЛЬНЫЙ БАР) -->
+        <div class="charts-row-3">
+            <div class="card">
+                <div class="card-title">🏆 Топ сотрудников</div>
+                <div id="topList"><div class="empty">Нет данных</div></div>
+            </div>
+            <div class="card">
+                <div class="card-title">🏙️ Рейтинг городов</div>
+                <div class="chart-box"><canvas id="cityBarChart"></canvas></div>
+            </div>
+            <div class="card">
+                <div class="card-title">📊 Распределение баллов</div>
+                <div class="chart-box"><canvas id="scoreBarChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- СОТРУДНИКИ -->
         <div class="card">
-            <div class="card-title">🎯 Соотношение результатов</div>
-            <div class="chart-box"><canvas id="pieChart"></canvas></div>
+            <div class="card-title">👥 Сотрудники (<span id="empCount">0</span>)</div>
+            <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
         </div>
-        <div class="card">
-            <div class="card-title">📈 Динамика среднего балла</div>
-            <div id="trendContainer"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
-            <div id="trendFallback" class="empty" style="display:none;">Недостаточно данных</div>
-        </div>
-    </div>
-
-    <!-- ТОПЫ -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
-        <div class="card"><div class="card-title">🏆 Топ сотрудников</div><div id="topList"><div class="empty">Нет данных</div></div></div>
-        <div class="card"><div class="card-title">🏙️ Рейтинг городов</div><div id="cityRating"><div class="empty">Нет данных</div></div></div>
-    </div>
-
-    <!-- СОТРУДНИКИ -->
-    <div class="card">
-        <div class="card-title">👥 Сотрудники (<span id="empCount">0</span>)</div>
-        <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
     </div>
 
     <!-- СТАТИСТИКА ГОРОДОВ (ВКЛАДКА) -->
@@ -460,43 +448,19 @@
 
 <script>
     // ================================================================
-    //  ЛОГИКА (ПОЛНОСТЬЮ РАБОЧАЯ)
+    //  ЛОГИКА
     // ================================================================
 
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const BIN_ID_KEY = '585_bin_id';
     let allData = [], filteredData = [];
-    let pieChart = null, trendChart = null, comparisonChart = null;
+    let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, comparisonChart = null;
 
     // ===== ВКЛАДКИ =====
-    let currentTab = 'dashboard';
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            currentTab = this.dataset.tab;
-            document.getElementById('dashboardTab').style.display = currentTab === 'dashboard' ? 'block' : 'none';
-            document.getElementById('citiesTab').style.display = currentTab === 'cities' ? 'block' : 'none';
-            document.getElementById('feedbackTab').style.display = currentTab === 'feedback' ? 'block' : 'none';
-            if (currentTab === 'cities') renderCityStats();
-        });
-    });
-
-    // ВКЛАДКИ HTML (добавляем после фильтров)
-    const tabsHtml = `
-        <div class="filter-bar" style="background:transparent; border:none; padding:0; margin-bottom:16px; gap:0;">
-            <button class="btn tab-btn active" data-tab="dashboard" style="border-radius:6px 0 0 6px; background:#c41e3a; color:white; border-color:#c41e3a;">📊 Дашборд</button>
-            <button class="btn tab-btn" data-tab="cities" style="border-radius:0; border-left:none;">🏙️ Города</button>
-            <button class="btn tab-btn" data-tab="feedback" style="border-radius:0 6px 6px 0; border-left:none;">📝 Фидбек</button>
-        </div>
-    `;
-    document.querySelector('.container').insertAdjacentHTML('afterbegin', tabsHtml);
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.tab-btn').forEach(b => b.style.background = 'white');
-            document.querySelectorAll('.tab-btn').forEach(b => b.style.color = '#1e2a3a');
-            this.style.background = '#c41e3a';
-            this.style.color = 'white';
             const tab = this.dataset.tab;
             document.getElementById('dashboardTab').style.display = tab === 'dashboard' ? 'block' : 'none';
             document.getElementById('citiesTab').style.display = tab === 'cities' ? 'block' : 'none';
@@ -568,7 +532,7 @@
         document.getElementById('loadingSkeleton').style.display = 'none';
     }
 
-    // ----- ДИНАМИКА -----
+    // ----- ТРЕНД -----
     function renderTrendChart() {
         const map = new Map();
         allData.forEach(r => {
@@ -719,7 +683,6 @@
                 document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
             });
             document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
-            document.getElementById('cityRating').innerHTML = '<div class="empty">Нет данных</div>';
             document.getElementById('employeeList').innerHTML = '<div class="empty">Нет данных</div>';
             document.getElementById('empCount').textContent = '0';
             return;
@@ -744,7 +707,7 @@
         document.getElementById('sLow').textContent = low;
         document.getElementById('sErrors').textContent = errors;
 
-        // КРУГОВАЯ
+        // ----- КРУГОВАЯ -----
         if (pieChart) pieChart.destroy();
         const pieCtx = document.getElementById('pieChart').getContext('2d');
         if (total > 0) {
@@ -779,7 +742,7 @@
             });
         }
 
-        // ТОПЫ
+        // ----- ТОП СОТРУДНИКОВ (СПИСОК) -----
         const top5 = [...filteredData].filter(r => r.percent >= 85).sort((a,b) => b.percent - a.percent).slice(0,5);
         document.getElementById('topList').innerHTML = top5.length ? top5.map((r,i) => `
             <div class="employee-item" onclick="showDetails(${r.id})">
@@ -788,6 +751,7 @@
             </div>
         `).join('') : '<div class="empty">Нет данных</div>';
 
+        // ----- РЕЙТИНГ ГОРОДОВ (ГОРИЗОНТАЛЬНАЯ ДИАГРАММА) -----
         const cityMap = new Map();
         filteredData.forEach(r => {
             if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
@@ -795,14 +759,93 @@
             c.sum += r.percent;
             c.count++;
         });
-        const cityRating = [...cityMap.entries()].map(([city, d]) => ({ city, avg: Math.round(d.sum/d.count), count: d.count })).sort((a,b) => b.avg - a.avg);
-        document.getElementById('cityRating').innerHTML = cityRating.map(c => `
-            <div class="employee-item" onclick="document.getElementById('cityFilter').value='${c.city}'; applyFilters();">
-                <span><b>${c.city}</b> (${c.count})</span>
-                <span class="badge ${c.avg>=85?'badge-green':c.avg>=70?'badge-yellow':'badge-red'}">${c.avg}%</span>
-            </div>
-        `).join('');
+        const cityRating = [...cityMap.entries()].map(([city, d]) => ({ 
+            city, 
+            avg: Math.round(d.sum/d.count), 
+            count: d.count 
+        })).sort((a,b) => b.avg - a.avg);
 
+        if (cityBarChart) cityBarChart.destroy();
+        const cityCtx = document.getElementById('cityBarChart').getContext('2d');
+        if (cityCtx && cityRating.length > 0) {
+            cityBarChart = new Chart(cityCtx, {
+                type: 'bar',
+                data: {
+                    labels: cityRating.map(c => c.city),
+                    datasets: [{
+                        label: 'Средний балл (%)',
+                        data: cityRating.map(c => c.avg),
+                        backgroundColor: cityRating.map(c => c.avg >= 85 ? '#16a34a' : c.avg >= 70 ? '#f59e0b' : '#dc2626'),
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const city = cityRating[ctx.dataIndex];
+                                    return `${city.avg}% (${city.count} сотрудников)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { callback: v => v + '%' }
+                        },
+                        y: { 
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ----- РАСПРЕДЕЛЕНИЕ БАЛЛОВ (СТОЛБЦЫ) -----
+        const bins = [0,0,0,0,0];
+        filteredData.forEach(r => {
+            if (r.percent <= 20) bins[0]++;
+            else if (r.percent <= 40) bins[1]++;
+            else if (r.percent <= 60) bins[2]++;
+            else if (r.percent <= 80) bins[3]++;
+            else bins[4]++;
+        });
+        if (scoreBarChart) scoreBarChart.destroy();
+        const scoreCtx = document.getElementById('scoreBarChart').getContext('2d');
+        if (scoreCtx) {
+            scoreBarChart = new Chart(scoreCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+                    datasets: [{
+                        data: bins,
+                        backgroundColor: '#c41e3a',
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // ----- СОТРУДНИКИ -----
         document.getElementById('empCount').textContent = filteredData.length;
         document.getElementById('employeeList').innerHTML = filteredData.map(r => `
             <div class="employee-item" onclick="showDetails(${r.id})">
