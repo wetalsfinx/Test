@@ -47,6 +47,8 @@
         .btn-primary:hover { background: #a0162e; }
         .btn-success { background: #16a34a; color: white; border-color: #16a34a; }
         .btn-success:hover { background: #15803d; }
+        .btn-danger { color: #c41e3a; border-color: #f5c6cb; }
+        .btn-danger:hover { background: #fef2f2; }
 
         /* ===== ФИЛЬТРЫ ===== */
         .filter-bar {
@@ -304,7 +306,7 @@
             <button class="btn btn-success" id="exportPdfBtn">📄 PDF</button>
             <button class="btn" id="exportBtn">CSV</button>
             <button class="btn btn-primary" id="loadBtn">Загрузить</button>
-            <button class="btn" id="clearAllBtn" style="color:#c41e3a;border-color:#f5c6cb;">Сбросить</button>
+            <button class="btn btn-danger" id="clearAllBtn">🗑️ Сбросить</button>
         </div>
     </div>
 
@@ -456,6 +458,42 @@
     let allData = [], filteredData = [];
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, comparisonChart = null;
 
+    // ===== СБРОС ВСЕХ ДАННЫХ (ИСПРАВЛЕН!) =====
+    document.getElementById('clearAllBtn').onclick = async () => {
+        if (!confirm('⚠️ Удалить ВСЕ результаты (тесты и тренировки) из облака?')) return;
+        if (!confirm('Точно? Восстановить будет нельзя!')) return;
+        
+        try {
+            const binId = localStorage.getItem(BIN_ID_KEY);
+            if (!binId) {
+                alert('❌ Нет коробки для очистки');
+                return;
+            }
+            
+            document.getElementById('status').textContent = '⏳ Очистка...';
+            
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY
+                },
+                body: JSON.stringify([])
+            });
+            
+            if (response.ok) {
+                alert('✅ Все результаты (тесты и тренировки) удалены!');
+                localStorage.removeItem(BIN_ID_KEY);
+                location.reload();
+            } else {
+                const errorText = await response.text();
+                alert('❌ Ошибка удаления: ' + response.status + ' - ' + errorText);
+            }
+        } catch(e) {
+            alert('❌ Ошибка: ' + e.message);
+        }
+    };
+
     // ===== ВКЛАДКИ =====
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -468,27 +506,6 @@
             if (tab === 'cities') renderCityStats();
         });
     });
-
-    // ----- СБРОС -----
-    document.getElementById('clearAllBtn').onclick = async () => {
-        if (!confirm('Удалить все результаты?')) return;
-        if (!confirm('Точно?')) return;
-        try {
-            const binId = localStorage.getItem(BIN_ID_KEY);
-            if (!binId) { alert('Нет коробки'); return; }
-            document.getElementById('status').textContent = 'Очистка...';
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-                body: JSON.stringify([])
-            });
-            if (res.ok) {
-                alert('✅ Очищено');
-                localStorage.removeItem(BIN_ID_KEY);
-                location.reload();
-            } else alert('Ошибка: ' + res.status);
-        } catch(e) { alert('Ошибка: ' + e.message); }
-    };
 
     // ----- ЗАГРУЗКА -----
     async function loadResults() {
