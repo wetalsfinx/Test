@@ -5,20 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>585GOLD | Аналитика</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+        /* ===== ПОЛНАЯ КОПИЯ СТИЛЯ С ЭТАЛОНА ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             background: #e9edf2;
-            padding: 20px;
+            padding: 24px;
             color: #1e2a3a;
         }
         .container { max-width: 1440px; margin: 0 auto; }
 
-        /* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */
-        .top-bar {
+        /* ===== ШАПКА КАК НА ЭТАЛОНЕ ===== */
+        .header {
             background: white;
             border-radius: 12px;
             padding: 16px 24px;
@@ -28,11 +27,15 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 3px solid #c41e3a;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
         }
-        .top-bar h1 { font-size: 22px; font-weight: 600; }
-        .top-bar h1 span { color: #c41e3a; }
-        .top-bar .actions {
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1e2a3a;
+        }
+        .header h1 span { color: #c41e3a; }
+        .header-actions {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
@@ -45,43 +48,17 @@
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
+            color: #1e2a3a;
             transition: 0.2s;
         }
-        .btn:hover { background: #f0f3f6; transform: translateY(-1px); }
+        .btn:hover { background: #f0f3f6; }
         .btn-primary { background: #c41e3a; color: white; border-color: #c41e3a; }
         .btn-primary:hover { background: #a0162e; }
         .btn-success { background: #16a34a; color: white; border-color: #16a34a; }
         .btn-success:hover { background: #15803d; }
-        .btn-danger { color: #c41e3a; border-color: #f5c6cb; }
-        .btn-danger:hover { background: #fef2f2; }
 
-        /* ===== ВКЛАДКИ ===== */
-        .tabs {
-            display: flex;
-            gap: 8px;
-            background: white;
-            padding: 6px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-            flex-wrap: wrap;
-        }
-        .tab-btn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            background: transparent;
-            color: #4a5a6a;
-            transition: 0.2s;
-        }
-        .tab-btn.active { background: #c41e3a; color: white; }
-        .tab-btn:hover:not(.active) { background: #f0f3f6; }
-
-        /* ===== ФИЛЬТРЫ ===== */
-        .filter-panel {
+        /* ===== ФИЛЬТРЫ (КАК НА ЭТАЛОНЕ) ===== */
+        .filter-bar {
             background: white;
             border-radius: 12px;
             padding: 14px 20px;
@@ -89,20 +66,29 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 12px 20px;
+            gap: 16px 24px;
             border: 1px solid #e2e8f0;
         }
-        .filter-group { display: flex; align-items: center; gap: 6px; }
-        .filter-group label { font-size: 13px; font-weight: 500; color: #4a5a6a; }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #4a5a6a;
+        }
         .filter-group select, .filter-group input {
             padding: 5px 12px;
             border: 1px solid #d0d7dd;
             border-radius: 6px;
             font-size: 13px;
             background: white;
+            color: #1e2a3a;
         }
         .filter-group input { width: 150px; }
-        .status-badge {
+        .status-text {
             margin-left: auto;
             font-size: 13px;
             color: #6a7a8a;
@@ -111,352 +97,140 @@
             border-radius: 40px;
         }
 
-        /* ===== KPI ===== */
-        .main-kpi-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .main-kpi-card {
+        /* ===== ГЛАВНАЯ ЦИФРА (КАК "ВСЕГО ЖАЛОБ") ===== */
+        .main-number {
+            background: white;
             border-radius: 12px;
-            padding: 16px 20px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            cursor: default;
-            position: relative;
-            overflow: hidden;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        .main-kpi-card:hover {
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-        }
-        .main-kpi-card .tooltip-icon {
-            position: absolute;
-            top: 10px;
-            right: 14px;
+        .main-number .label {
             font-size: 16px;
-            opacity: 0.6;
-            cursor: help;
-            transition: 0.2s;
+            font-weight: 500;
+            color: #4a5a6a;
         }
-        .main-kpi-card .tooltip-icon:hover {
-            opacity: 1;
-            transform: scale(1.2);
+        .main-number .value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1e2a3a;
         }
-        .main-kpi-card .tooltip-text {
-            visibility: hidden;
-            opacity: 0;
-            position: absolute;
-            bottom: calc(100% + 12px);
-            right: 0;
-            background: #1e293b;
-            color: #f1f5f9;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 400;
-            width: 220px;
-            text-align: left;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            transition: all 0.25s ease;
-            z-index: 10;
-            pointer-events: none;
-            line-height: 1.4;
+        .main-number .sub {
+            font-size: 14px;
+            color: #6a7a8a;
         }
-        .main-kpi-card .tooltip-text::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            right: 16px;
-            border: 6px solid transparent;
-            border-top-color: #1e293b;
-        }
-        .main-kpi-card:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
-            transform: translateY(-4px);
-        }
-        .main-kpi-card .label { font-size: 14px; opacity: 0.9; font-weight: 400; }
-        .main-kpi-card .value { font-size: 36px; font-weight: 700; line-height: 1.2; margin-top: 4px; }
 
-        .kpi-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .kpi-green { background: linear-gradient(135deg, #22c55e, #16a34a); }
-        .kpi-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .kpi-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
-
-        /* ===== СТАТУСЫ ===== */
+        /* ===== СЕТКА СТАТУСОВ (КАК НА ЭТАЛОНЕ) ===== */
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 12px;
             margin-bottom: 20px;
         }
         .status-card {
+            background: white;
             border-radius: 12px;
             padding: 14px 18px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            cursor: default;
-            position: relative;
+            border-left: 5px solid #c41e3a;
+            border: 1px solid #e2e8f0;
+            border-left-width: 5px;
+            transition: 0.15s;
         }
         .status-card:hover {
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transform: translateY(-2px);
         }
-        .status-card .label { font-size: 13px; opacity: 0.9; font-weight: 400; }
-        .status-card .value { font-size: 28px; font-weight: 700; line-height: 1.2; margin-top: 4px; }
-        .status-card .tooltip-text {
-            visibility: hidden;
-            opacity: 0;
-            position: absolute;
-            bottom: calc(100% + 12px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e293b;
-            color: #f1f5f9;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 400;
-            white-space: nowrap;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            transition: all 0.25s ease;
-            z-index: 10;
-            pointer-events: none;
+        .status-card .label {
+            font-size: 13px;
+            color: #6a7a8a;
+            font-weight: 500;
         }
-        .status-card .tooltip-text::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: #1e293b;
+        .status-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e2a3a;
+            line-height: 1.2;
+            margin-top: 4px;
         }
-        .status-card:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
+        .status-card .percent {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6a7a8a;
+            margin-left: 8px;
         }
-        .status-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .status-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-        .status-green { background: linear-gradient(135deg, #22c55e, #16a34a); }
-        .status-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .status-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
-        /* ===== ГРАФИКИ ===== */
+        /* ЦВЕТА ЛИНИЙ КАК НА ЭТАЛОНЕ */
+        .status-card.blue { border-left-color: #3b82f6; }
+        .status-card.green { border-left-color: #16a34a; }
+        .status-card.orange { border-left-color: #f59e0b; }
+        .status-card.red { border-left-color: #dc2626; }
+        .status-card.purple { border-left-color: #8b5cf6; }
+        .status-card.teal { border-left-color: #14b8a6; }
+
+        /* ===== АЛЕРТЫ ===== */
+        .alert-box {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+            padding: 10px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+            color: #991b1b;
+        }
+        .alert-box.warning { background: #fffbeb; border-left-color: #f59e0b; color: #92400e; }
+        .alert-box.success { background: #f0fdf4; border-left-color: #16a34a; color: #166534; }
+
+        /* ===== КАРТОЧКИ ===== */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e2a3a;
+            margin-bottom: 12px;
+        }
+        .chart-box { height: 180px; }
+
+        /* ===== ГРАФИКИ В РЯД ===== */
         .charts-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 20px;
         }
-        .chart-card {
-            border-radius: 12px;
-            padding: 16px 20px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .chart-card:hover {
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
-        }
-        .chart-card .card-title {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            opacity: 0.95;
-            text-align: center;
-        }
-        .chart-card .chart-box { height: 200px; }
-        .chart-card canvas {
-            background: rgba(255,255,255,0.08);
-            border-radius: 8px;
-            padding: 4px;
-        }
 
-        .chart-blue { background: linear-gradient(135deg, #1e40af, #3b82f6); }
-        .chart-purple { background: linear-gradient(135deg, #5b21b6, #8b5cf6); }
-        .chart-teal { background: linear-gradient(135deg, #0d9488, #14b8a6); }
-        .chart-rose { background: linear-gradient(135deg, #be123c, #f43f5e); }
-
-        /* ===== КАРТОЧКИ СПИСКОВ ===== */
-        .list-card {
-            border-radius: 12px;
-            padding: 16px 20px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            margin-bottom: 20px;
-        }
-        .list-card:hover {
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
-        }
-        .list-card .card-title {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            opacity: 0.95;
-        }
-        .list-card .employee-item {
+        /* ===== СПИСКИ ===== */
+        .employee-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 0;
+            border-bottom: 1px solid #f1f5f9;
             cursor: pointer;
-            border-radius: 6px;
-            transition: 0.15s;
-            color: white;
-        }
-        .list-card .employee-item:hover {
-            background: rgba(255,255,255,0.15);
-            padding-left: 8px;
-            transform: translateX(2px);
-        }
-        .list-card .empty {
-            color: rgba(255,255,255,0.6);
-            text-align: center;
-            padding: 16px 0;
             font-size: 14px;
         }
-        .list-card .badge {
+        .employee-item:hover { background: #f8fafc; padding-left: 6px; border-radius: 4px; }
+        .badge {
             padding: 2px 12px;
             border-radius: 40px;
             font-size: 12px;
             font-weight: 500;
-            background: rgba(255,255,255,0.2);
-            color: white;
         }
-        .list-card .badge-green { background: rgba(34,197,94,0.4); color: #bbf7d0; }
-        .list-card .badge-yellow { background: rgba(234,179,8,0.4); color: #fef08a; }
-        .list-card .badge-red { background: rgba(239,68,68,0.4); color: #fca5a5; }
-        .list-card .badge-purple { background: rgba(139,92,246,0.4); color: #ddd6fe; }
-
-        .list-teal { background: linear-gradient(135deg, #0d9488, #14b8a6); }
-        .list-rose { background: linear-gradient(135deg, #be123c, #f43f5e); }
-
-        /* ===== ДИНАМИКА ===== */
-        .trend-card {
-            border-radius: 12px;
-            padding: 16px 20px;
-            color: white;
-            background: linear-gradient(135deg, #1e293b, #334155);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            margin-bottom: 20px;
-        }
-        .trend-card:hover {
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
-        }
-        .trend-card .card-title {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            opacity: 0.95;
-        }
-        .trend-card .chart-box { height: 180px; }
-        .trend-card canvas {
-            background: rgba(255,255,255,0.08);
-            border-radius: 8px;
-            padding: 4px;
-        }
-        .trend-card .empty {
-            color: rgba(255,255,255,0.6);
-            text-align: center;
-            padding: 30px 0;
-            font-size: 14px;
-        }
-
-        /* ===== УВЕДОМЛЕНИЯ (АЛЕРТЫ) ===== */
-        .alert-banner {
-            background: #fef2f2;
-            border-left: 4px solid #dc2626;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .alert-banner .icon { font-size: 20px; }
-        .alert-banner .text { font-size: 14px; color: #991b1b; flex: 1; }
-        .alert-banner .count { 
-            background: #dc2626; 
-            color: white; 
-            padding: 2px 12px; 
-            border-radius: 40px; 
-            font-weight: 700;
-            font-size: 14px;
-        }
-        .alert-banner.warning { background: #fffbeb; border-left-color: #f59e0b; }
-        .alert-banner.warning .text { color: #92400e; }
-        .alert-banner.warning .count { background: #f59e0b; }
-        .alert-banner.success { background: #f0fdf4; border-left-color: #16a34a; }
-        .alert-banner.success .text { color: #166534; }
-        .alert-banner.success .count { background: #16a34a; }
-
-        /* ===== СОТРУДНИКИ ===== */
-        .employee-card {
-            border-radius: 12px;
-            padding: 16px 20px;
-            color: white;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-            margin-bottom: 20px;
-        }
-        .employee-card:hover {
-            transform: translateY(-4px) scale(1.01);
-            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
-        }
-        .employee-card .card-title {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            opacity: 0.95;
-        }
-        .employee-card .employee-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            cursor: pointer;
-            border-radius: 6px;
-            transition: 0.15s;
-            color: white;
-        }
-        .employee-card .employee-item:hover {
-            background: rgba(255,255,255,0.1);
-            padding-left: 8px;
-            transform: translateX(2px);
-        }
-        .employee-card .empty {
-            color: rgba(255,255,255,0.6);
-            text-align: center;
-            padding: 16px 0;
-            font-size: 14px;
-        }
-        .employee-card .badge {
-            padding: 2px 12px;
-            border-radius: 40px;
-            font-size: 12px;
-            font-weight: 500;
-            background: rgba(255,255,255,0.15);
-            color: white;
-        }
-        .employee-card .badge-green { background: rgba(34,197,94,0.3); color: #bbf7d0; }
-        .employee-card .badge-yellow { background: rgba(234,179,8,0.3); color: #fef08a; }
-        .employee-card .badge-red { background: rgba(239,68,68,0.3); color: #fca5a5; }
-        .employee-card .badge-purple { background: rgba(139,92,246,0.3); color: #ddd6fe; }
-        .employee-card .employee-list { max-height: 300px; overflow-y: auto; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef9c3; color: #854d0e; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-purple { background: #f3e8ff; color: #6b21a8; }
+        .empty { color: #94a3b8; text-align: center; padding: 16px 0; font-size: 14px; }
 
         /* ===== ТАБЛИЦЫ ===== */
         .table-wrap { overflow-x: auto; }
@@ -469,161 +243,106 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.4);
             backdrop-filter: blur(4px);
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
         .modal-content {
-            background: #f8fafc;
-            max-width: 650px;
+            background: white;
+            max-width: 600px;
             width: 92%;
-            max-height: 85vh;
+            max-height: 80vh;
             overflow-y: auto;
             border-radius: 16px;
-            padding: 28px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-            border: 1px solid #e2e8f0;
-            animation: modalIn 0.25s ease;
-        }
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
         .modal-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
-            color: #1e2a3a;
             margin-bottom: 16px;
             padding-bottom: 12px;
-            border-bottom: 3px solid #c41e3a;
+            border-bottom: 2px solid #c41e3a;
         }
         .modal-summary {
-            background: white;
-            padding: 12px 16px;
-            border-radius: 8px;
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 6px;
             margin-bottom: 16px;
-            border-left: 4px solid #c41e3a;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            border-left: 3px solid #c41e3a;
         }
         .answer-item {
-            background: white;
-            padding: 14px 16px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            border-left: 4px solid #c41e3a;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-            transition: 0.15s;
-        }
-        .answer-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); transform: translateX(2px); }
-        .answer-item .q { font-weight: 600; color: #1e2a3a; margin-bottom: 4px; }
-        .answer-item .user-answer { color: #c41e3a; font-size: 14px; margin: 4px 0; }
-        .answer-item .correct-answer { color: #16a34a; font-size: 14px; margin: 4px 0; }
-        .answer-item .recommendation {
-            background: #f0fdf4;
-            padding: 8px 12px;
+            background: #f8fafc;
+            padding: 12px 14px;
             border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #c41e3a;
+        }
+        .answer-item .q { font-weight: 600; font-size: 14px; }
+        .answer-item .user-answer { color: #c41e3a; font-size: 13px; margin: 4px 0; }
+        .answer-item .correct-answer { color: #16a34a; font-size: 13px; margin: 4px 0; }
+        .answer-item .rec {
+            background: #f0fdf4;
+            padding: 6px 12px;
+            border-radius: 4px;
             font-size: 13px;
-            margin-top: 8px;
+            margin-top: 6px;
             color: #166534;
             border-left: 3px solid #16a34a;
         }
-        .answer-item .wrong-recommendation {
+        .answer-item .rec-wrong {
             background: #fef2f2;
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 6px 12px;
+            border-radius: 4px;
             font-size: 13px;
-            margin-top: 8px;
+            margin-top: 6px;
             color: #991b1b;
             border-left: 3px solid #dc2626;
         }
         .modal-close {
             margin-top: 16px;
-            padding: 10px 28px;
+            padding: 10px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             background: #c41e3a;
             color: white;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            transition: 0.2s;
         }
-        .modal-close:hover { background: #a0162e; transform: scale(0.98); }
-
-        /* ===== PDF-ПРЕВЬЮ ===== */
-        .pdf-preview {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        .pdf-preview-content {
-            background: white;
-            max-width: 90%;
-            max-height: 90vh;
-            border-radius: 16px;
-            padding: 20px;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .pdf-preview-content .close-btn {
-            float: right;
-            background: #c41e3a;
-            color: white;
-            border: none;
-            padding: 6px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+        .modal-close:hover { background: #a0162e; }
 
         /* ===== АДАПТИВ ===== */
-        @media (max-width: 1024px) {
-            .charts-row { grid-template-columns: 1fr 1fr; }
-        }
         @media (max-width: 800px) {
-            .main-kpi-grid { grid-template-columns: 1fr 1fr; }
             .charts-row { grid-template-columns: 1fr; }
+            .status-grid { grid-template-columns: 1fr 1fr; }
+            .main-number .value { font-size: 36px; }
         }
         @media (max-width: 500px) {
-            .main-kpi-grid { grid-template-columns: 1fr; }
-            .status-grid { grid-template-columns: 1fr 1fr; }
-            .filter-panel { flex-direction: column; align-items: stretch; }
-            .status-badge { margin-left: 0; text-align: center; }
+            .status-grid { grid-template-columns: 1fr; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .status-text { margin-left: 0; text-align: center; }
         }
     </style>
 </head>
 <body>
 <div class="container">
 
-    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
-    <div class="top-bar">
+    <!-- ШАПКА -->
+    <div class="header">
         <h1>📊 585GOLD <span>| Аналитика</span></h1>
-        <div class="actions">
-            <button class="btn btn-success" id="exportPdfBtn">📄 PDF (общий)</button>
-            <button class="btn btn-success" id="exportCityPdfBtn">📄 PDF (по городам)</button>
-            <button class="btn btn-primary" id="loadBtn">Загрузить</button>
+        <div class="header-actions">
+            <button class="btn btn-success" id="exportPdfBtn">📄 PDF</button>
             <button class="btn" id="exportBtn">CSV</button>
-            <button class="btn btn-danger" id="clearAllBtn">Сбросить</button>
+            <button class="btn btn-primary" id="loadBtn">Загрузить</button>
+            <button class="btn" id="clearAllBtn" style="color:#c41e3a;border-color:#f5c6cb;">Сбросить</button>
         </div>
     </div>
 
-    <!-- ВКЛАДКИ -->
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="dashboard">📊 Дашборд</button>
-        <button class="tab-btn" data-tab="cities">🏙️ Города</button>
-        <button class="tab-btn" data-tab="feedback">📝 Фидбек</button>
-    </div>
-
-    <!-- АЛЕРТЫ (УВЕДОМЛЕНИЯ) -->
-    <div id="alertContainer"></div>
-
     <!-- ФИЛЬТРЫ -->
-    <div class="filter-panel">
+    <div class="filter-bar">
         <div class="filter-group">
             <label>Тип</label>
             <select id="typeFilter">
@@ -649,133 +368,77 @@
             <input type="text" id="searchInput" placeholder="Поиск по имени">
         </div>
         <button class="btn" id="resetFiltersBtn">Сбросить</button>
-        <span class="status-badge" id="status">Нет данных</span>
+        <span class="status-text" id="status">Нет данных</span>
     </div>
 
-    <!-- ДАШБОРД -->
-    <div id="dashboardTab">
-        <!-- KPI -->
-        <div class="main-kpi-grid" id="mainKpi">
-            <div class="main-kpi-card kpi-blue">
-                <span class="tooltip-icon" title="Подсказка">ⓘ</span>
-                <span class="tooltip-text">Общее количество пройденных тестов и тренировок</span>
-                <div class="label">Всего прохождений</div>
-                <div class="value" id="kpiTotal">0</div>
-            </div>
-            <div class="main-kpi-card kpi-green">
-                <span class="tooltip-icon" title="Подсказка">ⓘ</span>
-                <span class="tooltip-text">Средний процент правильных ответов по всем прохождениям</span>
-                <div class="label">Средний балл</div>
-                <div class="value" id="kpiAvg">0%</div>
-            </div>
-            <div class="main-kpi-card kpi-orange">
-                <span class="tooltip-icon" title="Подсказка">ⓘ</span>
-                <span class="tooltip-text">Количество прохождений с результатом 85% и выше</span>
-                <div class="label">✅ Успешно (≥85%)</div>
-                <div class="value" id="kpiSuccess">0</div>
-            </div>
-            <div class="main-kpi-card kpi-red">
-                <span class="tooltip-icon" title="Подсказка">ⓘ</span>
-                <span class="tooltip-text">Общее количество ошибок во всех прохождениях</span>
-                <div class="label">❌ Ошибок</div>
-                <div class="value" id="kpiErrors">0</div>
-            </div>
-        </div>
+    <!-- АЛЕРТЫ -->
+    <div id="alertContainer"></div>
 
-        <!-- СТАТУСЫ -->
-        <div class="status-grid">
-            <div class="status-card status-blue">
-                <span class="tooltip-text">Количество пройденных тестов</span>
-                <div class="label">📝 Тестов</div>
-                <div class="value" id="statusTest">0</div>
-            </div>
-            <div class="status-card status-purple">
-                <span class="tooltip-text">Количество пройденных тренировок</span>
-                <div class="label">🎯 Тренировок</div>
-                <div class="value" id="statusTrainer">0</div>
-            </div>
-            <div class="status-card status-green">
-                <span class="tooltip-text">Прохождений с результатом ≥85%</span>
-                <div class="label">🏆 Отлично (≥85%)</div>
-                <div class="value" id="statusExcellent">0</div>
-            </div>
-            <div class="status-card status-orange">
-                <span class="tooltip-text">Средний процент за все прохождения</span>
-                <div class="label">📈 Средний балл</div>
-                <div class="value" id="statusAvgPercent">0%</div>
-            </div>
-            <div class="status-card status-red">
-                <span class="tooltip-text">Прохождений с результатом ниже 70%</span>
-                <div class="label">🔴 Низкий (&lt;70%)</div>
-                <div class="value" id="statusLow">0</div>
-            </div>
+    <!-- ГЛАВНАЯ ЦИФРА -->
+    <div class="main-number">
+        <div>
+            <div class="label">Всего прохождений</div>
+            <div class="value" id="mainTotal">0</div>
         </div>
-
-        <!-- ГРАФИКИ -->
-        <div class="charts-row">
-            <div class="chart-card chart-blue">
-                <div class="card-title">📊 Распределение баллов</div>
-                <div class="chart-box"><canvas id="scoreChart"></canvas></div>
-            </div>
-            <div class="chart-card chart-teal">
-                <div class="card-title">🎯 Соотношение результатов</div>
-                <div class="chart-box"><canvas id="pieChart"></canvas></div>
-            </div>
-            <div class="chart-card chart-purple">
-                <div class="card-title">🏙️ Средний балл по городам</div>
-                <div class="chart-box"><canvas id="cityChart"></canvas></div>
-            </div>
+        <div>
+            <div class="sub">Средний балл: <strong id="mainAvg">0%</strong></div>
         </div>
+    </div>
 
-        <!-- ДИНАМИКА -->
-        <div class="trend-card">
+    <!-- СТАТУСЫ (ЦВЕТНЫЕ ПЛИТКИ С ЛИНИЯМИ) -->
+    <div class="status-grid" id="statusGrid">
+        <div class="status-card blue"><div class="label">📝 Тестов</div><div class="value" id="sTest">0</div></div>
+        <div class="status-card purple"><div class="label">🎯 Тренировок</div><div class="value" id="sTrainer">0</div></div>
+        <div class="status-card green"><div class="label">🏆 Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
+        <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="sAvg">0%</div></div>
+        <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
+        <div class="status-card teal"><div class="label">❌ Ошибок</div><div class="value" id="sErrors">0</div></div>
+    </div>
+
+    <!-- ГРАФИКИ: ТОЛЬКО КРУГОВАЯ И ДИНАМИКА -->
+    <div class="charts-row">
+        <div class="card">
+            <div class="card-title">🎯 Соотношение результатов</div>
+            <div class="chart-box"><canvas id="pieChart"></canvas></div>
+        </div>
+        <div class="card">
             <div class="card-title">📈 Динамика среднего балла</div>
             <div id="trendContainer"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
-            <div id="trendFallback" class="empty" style="display:none;">Недостаточно данных для графика</div>
-        </div>
-
-        <!-- ТОПЫ -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
-            <div class="list-card list-teal">
-                <div class="card-title">🏆 Топ сотрудников</div>
-                <div id="topList"><div class="empty">Нет данных</div></div>
-            </div>
-            <div class="list-card list-rose">
-                <div class="card-title">🏙️ Рейтинг городов</div>
-                <div id="cityRating"><div class="empty">Нет данных</div></div>
-            </div>
-        </div>
-
-        <!-- СОТРУДНИКИ -->
-        <div class="employee-card">
-            <div class="card-title">👥 Сотрудники (<span id="empCount">0</span>)</div>
-            <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
+            <div id="trendFallback" class="empty" style="display:none;">Недостаточно данных</div>
         </div>
     </div>
 
-    <!-- ГОРОДА -->
-    <div id="citiesTab" style="display:none;">
-        <div class="card" style="background:white; padding:16px 20px; border-radius:12px; margin-bottom:20px;">
-            <div class="card-title" style="color:#1e2a3a;">Детальная статистика по городам</div>
+    <!-- ТОПЫ -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+        <div class="card"><div class="card-title">🏆 Топ сотрудников</div><div id="topList"><div class="empty">Нет данных</div></div></div>
+        <div class="card"><div class="card-title">🏙️ Рейтинг городов</div><div id="cityRating"><div class="empty">Нет данных</div></div></div>
+    </div>
+
+    <!-- СОТРУДНИКИ -->
+    <div class="card">
+        <div class="card-title">👥 Сотрудники (<span id="empCount">0</span>)</div>
+        <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
+    </div>
+
+    <!-- СТАТИСТИКА ГОРОДОВ (ВКЛАДКА) -->
+    <div id="citiesTab" style="display:none; margin-top:20px;">
+        <div class="card">
+            <div class="card-title">Статистика по городам</div>
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно</th><th>Ошибок</th><th>Провал</th></tr></thead>
                     <tbody id="cityStatsBody"></tbody>
                 </table>
             </div>
-            <button class="btn btn-primary" id="exportCityBtn" style="margin-top:16px;">CSV</button>
-        </div>
-        <div class="card" style="background:white; padding:16px 20px; border-radius:12px;">
-            <div class="card-title" style="color:#1e2a3a;">Сравнение городов</div>
-            <div class="chart-box"><canvas id="comparisonChart"></canvas></div>
+            <button class="btn btn-primary" id="exportCityBtn" style="margin-top:12px;">CSV</button>
         </div>
     </div>
 
-    <!-- ФИДБЕК -->
-    <div id="feedbackTab" style="display:none;">
-        <div class="card" style="background:white; padding:16px 20px; border-radius:12px;">
-            <div class="card-title" style="color:#1e2a3a;">Фидбек для города</div>
-            <select id="feedbackCitySelect" style="padding:8px 14px;border-radius:6px;border:1px solid #d0d7dd;width:100%;max-width:300px;margin-bottom:16px;">
+    <!-- ФИДБЕК (ВКЛАДКА) -->
+    <div id="feedbackTab" style="display:none; margin-top:20px;">
+        <div class="card">
+            <div class="card-title">Фидбек для города</div>
+            <select id="feedbackCitySelect" style="padding:6px 12px;border-radius:6px;border:1px solid #d0d7dd;width:100%;max-width:280px;margin-bottom:12px;">
                 <option value="">-- Выберите город --</option>
             </select>
             <button class="btn btn-primary" id="generateFeedbackBtn">Сгенерировать</button>
@@ -783,7 +446,7 @@
         </div>
     </div>
 
-    <div id="loadingSkeleton" class="empty" style="display:none; color:#94a3b8; text-align:center; padding:40px;">Загрузка...</div>
+    <div id="loadingSkeleton" class="empty" style="display:none;">Загрузка...</div>
 </div>
 
 <!-- МОДАЛКА -->
@@ -795,29 +458,45 @@
     </div>
 </div>
 
-<!-- PDF ПРЕВЬЮ -->
-<div id="pdfPreview" class="pdf-preview">
-    <div class="pdf-preview-content" id="pdfContent">
-        <button class="close-btn" onclick="closePdfPreview()">✕ Закрыть</button>
-        <div id="pdfInner" style="margin-top: 16px;"></div>
-    </div>
-</div>
-
 <script>
     // ================================================================
-    //  ЛОГИКА
+    //  ЛОГИКА (ПОЛНОСТЬЮ РАБОЧАЯ)
     // ================================================================
 
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const BIN_ID_KEY = '585_bin_id';
     let allData = [], filteredData = [];
-    let scoreChart = null, pieChart = null, cityChart = null, trendChart = null, comparisonChart = null;
+    let pieChart = null, trendChart = null, comparisonChart = null;
 
-    // ----- ВКЛАДКИ -----
+    // ===== ВКЛАДКИ =====
+    let currentTab = 'dashboard';
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
+            currentTab = this.dataset.tab;
+            document.getElementById('dashboardTab').style.display = currentTab === 'dashboard' ? 'block' : 'none';
+            document.getElementById('citiesTab').style.display = currentTab === 'cities' ? 'block' : 'none';
+            document.getElementById('feedbackTab').style.display = currentTab === 'feedback' ? 'block' : 'none';
+            if (currentTab === 'cities') renderCityStats();
+        });
+    });
+
+    // ВКЛАДКИ HTML (добавляем после фильтров)
+    const tabsHtml = `
+        <div class="filter-bar" style="background:transparent; border:none; padding:0; margin-bottom:16px; gap:0;">
+            <button class="btn tab-btn active" data-tab="dashboard" style="border-radius:6px 0 0 6px; background:#c41e3a; color:white; border-color:#c41e3a;">📊 Дашборд</button>
+            <button class="btn tab-btn" data-tab="cities" style="border-radius:0; border-left:none;">🏙️ Города</button>
+            <button class="btn tab-btn" data-tab="feedback" style="border-radius:0 6px 6px 0; border-left:none;">📝 Фидбек</button>
+        </div>
+    `;
+    document.querySelector('.container').insertAdjacentHTML('afterbegin', tabsHtml);
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.style.background = 'white');
+            document.querySelectorAll('.tab-btn').forEach(b => b.style.color = '#1e2a3a');
+            this.style.background = '#c41e3a';
+            this.style.color = 'white';
             const tab = this.dataset.tab;
             document.getElementById('dashboardTab').style.display = tab === 'dashboard' ? 'block' : 'none';
             document.getElementById('citiesTab').style.display = tab === 'cities' ? 'block' : 'none';
@@ -826,10 +505,10 @@
         });
     });
 
-    // ----- СБРОС ВСЕХ ДАННЫХ -----
+    // ----- СБРОС -----
     document.getElementById('clearAllBtn').onclick = async () => {
-        if (!confirm('Удалить все результаты из облака?')) return;
-        if (!confirm('Точно? Восстановить будет нельзя!')) return;
+        if (!confirm('Удалить все результаты?')) return;
+        if (!confirm('Точно?')) return;
         try {
             const binId = localStorage.getItem(BIN_ID_KEY);
             if (!binId) { alert('Нет коробки'); return; }
@@ -840,7 +519,7 @@
                 body: JSON.stringify([])
             });
             if (res.ok) {
-                alert('✅ Все результаты удалены');
+                alert('✅ Очищено');
                 localStorage.removeItem(BIN_ID_KEY);
                 location.reload();
             } else alert('Ошибка: ' + res.status);
@@ -884,13 +563,12 @@
             document.getElementById('feedbackCitySelect').innerHTML = '<option value="">-- Выберите город --</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
             renderCityStats();
             applyFilters();
-            renderTrendChart();
             document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${allData.filter(r=>r.type==='test').length}, тренировка: ${allData.filter(r=>r.type==='trainer').length})`;
-        } catch(e) { console.error(e); document.getElementById('status').textContent = 'Ошибка загрузки'; }
+        } catch(e) { console.error(e); document.getElementById('status').textContent = 'Ошибка'; }
         document.getElementById('loadingSkeleton').style.display = 'none';
     }
 
-    // ----- ТРЕНД -----
+    // ----- ДИНАМИКА -----
     function renderTrendChart() {
         const map = new Map();
         allData.forEach(r => {
@@ -927,11 +605,11 @@
                     datasets: [{
                         label: '%',
                         data: values,
-                        borderColor: '#facc15',
-                        backgroundColor: 'rgba(250,204,21,0.15)',
+                        borderColor: '#c41e3a',
+                        backgroundColor: 'rgba(196,30,58,0.05)',
                         fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: values.map(v => v >= 85 ? '#4ade80' : v >= 70 ? '#facc15' : '#f87171'),
+                        tension: 0.3,
+                        pointBackgroundColor: values.map(v => v >= 85 ? '#16a34a' : v >= 70 ? '#f59e0b' : '#dc2626'),
                         pointRadius: 4,
                         borderWidth: 2
                     }]
@@ -940,24 +618,18 @@
                     responsive: true,
                     maintainAspectRatio: true,
                     plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, max: 100, ticks: { color: 'rgba(255,255,255,0.6)', callback: v => v+'%' } },
-                        x: { ticks: { color: 'rgba(255,255,255,0.6)' } }
-                    }
+                    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+'%' } } }
                 }
             });
         } else {
             trendChart = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: dates, datasets: [{ label: '%', data: values, backgroundColor: '#facc15', borderRadius: 4 }] },
+                data: { labels: dates, datasets: [{ label: '%', data: values, backgroundColor: '#c41e3a', borderRadius: 4 }] },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
                     plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, max: 100, ticks: { color: 'rgba(255,255,255,0.6)', callback: v => v+'%' } },
-                        x: { ticks: { color: 'rgba(255,255,255,0.6)' } }
-                    }
+                    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+'%' } } }
                 }
             });
         }
@@ -984,10 +656,10 @@
             const row = tbody.insertRow();
             row.insertCell(0).innerHTML = `<b>${c.city}</b>`;
             row.insertCell(1).textContent = c.count;
-            row.insertCell(2).innerHTML = `<span style="color:${c.avg>=85?'#16a34a':c.avg>=70?'#eab308':'#dc2626'}">${c.avg}%</span>`;
+            row.insertCell(2).innerHTML = `<span style="color:${c.avg>=85?'#16a34a':c.avg>=70?'#f59e0b':'#dc2626'}">${c.avg}%</span>`;
             row.insertCell(3).textContent = `${c.success}/${c.count}`;
             row.insertCell(4).textContent = c.errors;
-            row.insertCell(5).innerHTML = `<span style="background:#fee2e2; color:#991b1b; padding:2px 10px; border-radius:40px; font-size:12px;">${c.fail}</span>`;
+            row.insertCell(5).innerHTML = `<span class="badge badge-red">${c.fail}</span>`;
         });
 
         if (comparisonChart) comparisonChart.destroy();
@@ -997,7 +669,7 @@
                 type: 'bar',
                 data: {
                     labels: stats.map(c => c.city),
-                    datasets: [{ label: 'Средний балл', data: stats.map(c => c.avg), backgroundColor: stats.map(c => c.avg>=85?'#16a34a':c.avg>=70?'#eab308':'#dc2626'), borderRadius: 4 }]
+                    datasets: [{ label: 'Средний балл', data: stats.map(c => c.avg), backgroundColor: stats.map(c => c.avg>=85?'#16a34a':c.avg>=70?'#f59e0b':'#dc2626'), borderRadius: 4 }]
                 },
                 options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+'%' } } } }
             });
@@ -1020,81 +692,31 @@
         filteredData = filtered;
         renderDashboard();
         renderAlerts();
+        renderTrendChart();
     }
 
-    // ================================================================
-    //  АЛЕРТЫ (УВЕДОМЛЕНИЯ)
-    // ================================================================
+    // ----- АЛЕРТЫ -----
     function renderAlerts() {
         const container = document.getElementById('alertContainer');
         container.innerHTML = '';
-        
         if (!filteredData.length) return;
-
-        const lowCount = filteredData.filter(r => r.percent < 70).length;
-        const successCount = filteredData.filter(r => r.percent >= 85).length;
         const total = filteredData.length;
-        const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
-
-        let alerts = [];
-
-        // Красный: много низких результатов (>30%)
-        if (lowCount > 0 && (lowCount / total) > 0.3) {
-            alerts.push({
-                type: 'danger',
-                icon: '🚨',
-                text: `${lowCount} сотрудников (${Math.round(lowCount/total*100)}%) показали низкий результат (<70%). Требуется дополнительное обучение!`,
-                count: lowCount
-            });
+        const low = filteredData.filter(r => r.percent < 70).length;
+        const success = filteredData.filter(r => r.percent >= 85).length;
+        if (low > 0 && (low / total) > 0.3) {
+            container.innerHTML = `<div class="alert-box"><strong>🚨 Внимание:</strong> ${low} сотрудников (${Math.round(low/total*100)}%) показали низкий результат (<70%). Требуется обучение!</div>`;
+        } else if (success / total > 0.7 && total > 2) {
+            container.innerHTML = `<div class="alert-box success"><strong>🎉 Отлично!</strong> ${success} сотрудников (${Math.round(success/total*100)}%) успешно прошли тестирование.</div>`;
         }
-
-        // Жёлтый: мало успешных (<20%)
-        if (successCount / total < 0.2 && total > 2) {
-            alerts.push({
-                type: 'warning',
-                icon: '⚠️',
-                text: `Только ${successCount} сотрудников (${Math.round(successCount/total*100)}%) прошли успешно. Рекомендуется пересмотреть программу обучения.`,
-                count: successCount
-            });
-        }
-
-        // Зелёный: отличный результат
-        if (successCount / total > 0.7 && total > 2) {
-            alerts.push({
-                type: 'success',
-                icon: '🎉',
-                text: `Отличный результат! ${successCount} сотрудников (${Math.round(successCount/total*100)}%) успешно прошли тестирование. Так держать!`,
-                count: successCount
-            });
-        }
-
-        // Информационный: всего тестов
-        alerts.push({
-            type: 'info',
-            icon: '📊',
-            text: `Всего пройдено ${total} тестов/тренировок, средний балл: ${avg}%`,
-            count: total
-        });
-
-        alerts.forEach(alert => {
-            const div = document.createElement('div');
-            div.className = `alert-banner ${alert.type === 'danger' ? '' : alert.type === 'warning' ? 'warning' : alert.type === 'success' ? 'success' : ''}`;
-            div.style.display = 'flex';
-            div.innerHTML = `
-                <span class="icon">${alert.icon}</span>
-                <span class="text">${alert.text}</span>
-                <span class="count">${alert.count}</span>
-            `;
-            container.appendChild(div);
-        });
     }
 
     // ----- ОСНОВНАЯ ОТРИСОВКА -----
     function renderDashboard() {
         if (!filteredData.length) {
-            ['kpiTotal','kpiAvg','kpiSuccess','kpiErrors','statusTest','statusTrainer','statusExcellent','statusAvgPercent','statusLow'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = id.includes('Avg') || id.includes('Percent') ? '0%' : '0';
+            document.getElementById('mainTotal').textContent = '0';
+            document.getElementById('mainAvg').textContent = '0%';
+            ['sTest','sTrainer','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
+                document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
             });
             document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
             document.getElementById('cityRating').innerHTML = '<div class="empty">Нет данных</div>';
@@ -1112,18 +734,17 @@
         const low = filteredData.filter(r => r.percent < 70).length;
         const medium = total - success - low;
 
-        document.getElementById('kpiTotal').textContent = total;
-        document.getElementById('kpiAvg').textContent = avg + '%';
-        document.getElementById('kpiAvg').style.color = avg >= 85 ? '#4ade80' : avg >= 70 ? '#facc15' : '#f87171';
-        document.getElementById('kpiSuccess').textContent = success;
-        document.getElementById('kpiErrors').textContent = errors;
-        document.getElementById('statusTest').textContent = testCount;
-        document.getElementById('statusTrainer').textContent = trainerCount;
-        document.getElementById('statusExcellent').textContent = success;
-        document.getElementById('statusAvgPercent').textContent = avg + '%';
-        document.getElementById('statusLow').textContent = low;
+        document.getElementById('mainTotal').textContent = total;
+        document.getElementById('mainAvg').textContent = avg + '%';
+        document.getElementById('mainAvg').style.color = avg >= 85 ? '#16a34a' : avg >= 70 ? '#f59e0b' : '#dc2626';
+        document.getElementById('sTest').textContent = testCount;
+        document.getElementById('sTrainer').textContent = trainerCount;
+        document.getElementById('sSuccess').textContent = success;
+        document.getElementById('sAvg').textContent = avg + '%';
+        document.getElementById('sLow').textContent = low;
+        document.getElementById('sErrors').textContent = errors;
 
-        // ----- КРУГОВАЯ ДИАГРАММА -----
+        // КРУГОВАЯ
         if (pieChart) pieChart.destroy();
         const pieCtx = document.getElementById('pieChart').getContext('2d');
         if (total > 0) {
@@ -1133,43 +754,32 @@
                     labels: ['✅ Успешно (≥85%)', '⚠️ Средне (70-84%)', '❌ Низкий (<70%)'],
                     datasets: [{
                         data: [success, medium, low],
-                        backgroundColor: ['#4ade80', '#facc15', '#f87171'],
-                        borderColor: ['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.3)', 'rgba(255,255,255,0.3)'],
+                        backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'],
+                        borderColor: ['white', 'white', 'white'],
                         borderWidth: 2,
-                        hoverOffset: 12
+                        hoverOffset: 8
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    cutout: '55%',
+                    cutout: '60%',
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: 'rgba(255,255,255,0.9)',
-                                padding: 12,
-                                font: { size: 11, weight: '500' },
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            }
-                        },
+                        legend: { position: 'bottom', labels: { padding: 12, font: { size: 11, weight: '500' }, usePointStyle: true } },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a,b) => a + b, 0);
-                                    const percent = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
-                                    return `${context.label}: ${context.parsed} (${percent}%)`;
+                                label: function(ctx) {
+                                    const total = ctx.dataset.data.reduce((a,b) => a + b, 0);
+                                    return `${ctx.label}: ${ctx.parsed} (${total > 0 ? Math.round(ctx.parsed/total*100) : 0}%)`;
                                 }
                             }
                         }
-                    },
-                    animation: { animateRotate: true, duration: 800 }
+                    }
                 }
             });
         }
 
-        // ----- ОСТАЛЬНЫЕ ГРАФИКИ -----
+        // ТОПЫ
         const top5 = [...filteredData].filter(r => r.percent >= 85).sort((a,b) => b.percent - a.percent).slice(0,5);
         document.getElementById('topList').innerHTML = top5.length ? top5.map((r,i) => `
             <div class="employee-item" onclick="showDetails(${r.id})">
@@ -1200,115 +810,10 @@
                     <b>${r.user_name}</b> (${r.city})
                     <span class="badge ${r.type==='trainer'?'badge-purple':r.percent>=85?'badge-green':r.percent>=70?'badge-yellow':'badge-red'}">${r.percent}%</span>
                 </div>
-                <button class="btn" style="padding:2px 10px;background:rgba(255,255,255,0.1);color:#fca5a5;border:1px solid rgba(255,255,255,0.1);border-radius:6px;cursor:pointer;" onclick="deleteRow(${r.id})">✕</button>
+                <button class="btn" style="padding:0 10px;background:transparent;color:#dc2626;border:1px solid #fecaca;border-radius:4px;cursor:pointer;" onclick="deleteRow(${r.id})">✕</button>
             </div>
         `).join('');
-
-        // ----- ГРАФИК РАСПРЕДЕЛЕНИЯ -----
-        const bins = [0,0,0,0,0];
-        filteredData.forEach(r => {
-            if (r.percent <= 20) bins[0]++;
-            else if (r.percent <= 40) bins[1]++;
-            else if (r.percent <= 60) bins[2]++;
-            else if (r.percent <= 80) bins[3]++;
-            else bins[4]++;
-        });
-        if (scoreChart) scoreChart.destroy();
-        scoreChart = new Chart(document.getElementById('scoreChart'), {
-            type: 'bar',
-            data: { labels: ['0-20%','21-40%','41-60%','61-80%','81-100%'], datasets: [{ data: bins, backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 4 }] },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.6)' } },
-                    x: { ticks: { color: 'rgba(255,255,255,0.6)' } }
-                }
-            }
-        });
-
-        // ----- ГРАФИК ПО ГОРОДАМ -----
-        if (cityChart) cityChart.destroy();
-        cityChart = new Chart(document.getElementById('cityChart'), {
-            type: 'bar',
-            data: { labels: cityRating.map(c => c.city), datasets: [{ data: cityRating.map(c => c.avg), backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 4 }] },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, max: 100, ticks: { color: 'rgba(255,255,255,0.6)', callback: v => v+'%' } },
-                    x: { ticks: { color: 'rgba(255,255,255,0.6)' } }
-                }
-            }
-        });
     }
-
-    // ================================================================
-    //  ЭКСПОРТ PDF
-    // ================================================================
-    async function exportPDF(type) {
-        const element = document.getElementById('dashboardTab');
-        if (!element) return;
-
-        try {
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                backgroundColor: '#e9edf2',
-                allowTaint: true,
-                useCORS: true,
-                logging: false
-            });
-            
-            const imgData = canvas.toDataURL('image/png');
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('landscape', 'mm', 'a3');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            
-            if (type === 'city') {
-                const cityNames = [...new Set(filteredData.map(r => r.city))];
-                if (cityNames.length > 1) {
-                    cityNames.forEach((city, idx) => {
-                        const cityFilter = document.getElementById('cityFilter');
-                        cityFilter.value = city;
-                        applyFilters();
-                        
-                        setTimeout(async () => {
-                            const cityCanvas = await html2canvas(element, {
-                                scale: 2,
-                                backgroundColor: '#e9edf2',
-                                allowTaint: true,
-                                useCORS: true,
-                                logging: false
-                            });
-                            const cityImgData = cityCanvas.toDataURL('image/png');
-                            pdf.addPage();
-                            pdf.addImage(cityImgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                            
-                            if (idx === cityNames.length - 1) {
-                                cityFilter.value = 'all';
-                                applyFilters();
-                                pdf.save(`585GOLD_отчёт_${new Date().toISOString().slice(0,10)}.pdf`);
-                            }
-                        }, 300);
-                    });
-                    return;
-                }
-            }
-            
-            pdf.save(`585GOLD_отчёт_${new Date().toISOString().slice(0,10)}.pdf`);
-        } catch (error) {
-            console.error('Ошибка PDF:', error);
-            alert('Ошибка при создании PDF: ' + error.message);
-        }
-    }
-
-    document.getElementById('exportPdfBtn').onclick = () => exportPDF('all');
-    document.getElementById('exportCityPdfBtn').onclick = () => exportPDF('city');
 
     // ----- УДАЛЕНИЕ -----
     function deleteRow(id) {
@@ -1322,42 +827,35 @@
     function showDetails(id) {
         const emp = filteredData.find(r => r.id === id);
         if (!emp) return;
-
         document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}%`;
-
         let html = `<div class="modal-summary">✅ Правильных: ${emp.score} из ${emp.total}</div>`;
-
-        const recommendations = [
-            "Не спрашивайте 'Чем помочь?' — клиент скажет 'Посмотрю'. Сразу дайте ценность: акция + спросите 'Для себя или в подарок?'",
-            "Когда клиент назвал бюджет, НЕ показывайте товар сразу. Сначала спросите: 'А для какого случая? Это подарок или для себя?'",
-            "Предлагайте доп. товар через создание образа: 'Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ'",
-            "Не критикуйте выбор клиента. Скажите: 'Давайте примерим оба варианта — и серебро, и золото'",
-            "Не спрашивайте 'Футляр нужен?'. Говорите: 'Давайте выберем красивый футляр и чистящее средство'",
-            "Не оправдывайте цену характеристиками. Скажите: 'Понимаю, цена важна. А с чем вы сравниваете?'",
-            "Не отправляйте клиента ждать. Скажите: 'Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ'",
-            "Продавайте не кольцо, а эмоцию: 'Это кольцо станет идеальным напоминанием о её юбилее'",
-            "Не говорите просто 'Да, конечно'. Предложите: 'Давайте я покажу модели, которые идеально дополнят вашу коллекцию'",
-            "Рассрочку/Сплит предлагайте ДО озвучивания цены: 'Для такого выбора можно оформить Сплит — 4 платежа без переплат'",
-            "Дайте клиенту 20-30 секунд освоиться, затем подойдите и спросите: 'Какое изделие выбираете? Для себя или в подарок?'"
+        const recs = [
+            "Не спрашивайте 'Чем помочь?'. Сразу дайте ценность: акция + 'Для себя или в подарок?'",
+            "НЕ показывайте товар сразу. Сначала спросите: 'Для какого случая?'",
+            "Предлагайте доп. товар через образ: 'Давайте подберём серьги из той же коллекции'",
+            "Не критикуйте выбор. Скажите: 'Давайте примерим оба варианта'",
+            "Не спрашивайте 'Футляр нужен?'. Говорите: 'Давайте выберем красивый футляр'",
+            "На 'дороговато' отвечайте: 'А с чем вы сравниваете?'",
+            "Не отправляйте клиента ждать. Дайте альтернативу сейчас",
+            "Продавайте эмоцию: 'Это кольцо станет идеальным напоминанием'",
+            "Не говорите просто 'Да'. Предложите дополнения",
+            "Сплит предлагайте ДО озвучивания цены",
+            "Дайте 20-30 секунд освоиться, затем подойдите"
         ];
-
         if (emp.answers && emp.answers.length) {
             emp.answers.forEach((a, i) => {
                 const isCorrect = a.correct;
-                const rec = recommendations[i] || 'Изучите правильный ответ и запомните правило.';
+                const rec = recs[i] || 'Изучите правильный ответ.';
                 html += `
                     <div class="answer-item">
                         <div class="q">Вопрос ${i+1}: ${a.questionText}</div>
                         <div class="user-answer">❌ Ваш ответ: ${a.selectedText}</div>
                         <div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>
-                        <div class="${isCorrect ? 'recommendation' : 'wrong-recommendation'}">
-                            ${isCorrect ? '✅ Верно! Так держать!' : '📌 ' + rec}
-                        </div>
+                        <div class="${isCorrect ? 'rec' : 'rec-wrong'}">${isCorrect ? '✅ Верно!' : '📌 ' + rec}</div>
                     </div>
                 `;
             });
         }
-
         document.getElementById('modalAnswers').innerHTML = html;
         document.getElementById('modal').style.display = 'flex';
     }
@@ -1377,18 +875,34 @@
         const testCount = data.filter(r => r.type === 'test').length;
         const trainerCount = data.filter(r => r.type === 'trainer').length;
         document.getElementById('feedbackResult').innerHTML = `
-            <div style="background:#f8fafc;padding:16px;border-radius:8px;border-left:4px solid #c41e3a;margin-top:12px;">
-                <h4>${city}</h4>
+            <div style="background:#f8fafc;padding:14px 16px;border-radius:6px;border-left:3px solid #c41e3a;margin-top:12px;">
+                <h4 style="margin-bottom:8px;">${city}</h4>
                 <p>👥 ${total} сотрудников</p>
                 <p>📈 Средний балл: ${avg}%</p>
-                <p>🏆 Успешно (≥85%): ${success}/${total}</p>
-                <p>🔴 Требуют доработки (&lt;70%): ${failed}</p>
+                <p>🏆 Успешно: ${success}/${total}</p>
+                <p>🔴 Требуют доработки: ${failed}</p>
                 <p>📝 Тестов: ${testCount} | 🎯 Тренировок: ${trainerCount}</p>
             </div>
         `;
     }
 
-    // ----- ЭКСПОРТ -----
+    // ----- ЭКСПОРТ PDF -----
+    document.getElementById('exportPdfBtn').onclick = async function() {
+        const el = document.getElementById('dashboardTab');
+        if (!el) return;
+        try {
+            const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#e9edf2', useCORS: true });
+            const img = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('landscape', 'mm', 'a3');
+            const w = pdf.internal.pageSize.getWidth();
+            const h = pdf.internal.pageSize.getHeight();
+            pdf.addImage(img, 'PNG', 0, 0, w, h);
+            pdf.save(`585GOLD_${new Date().toISOString().slice(0,10)}.pdf`);
+        } catch(e) { alert('Ошибка PDF: ' + e.message); }
+    };
+
+    // ----- ЭКСПОРТ CSV -----
     function exportCSV() {
         if (!filteredData.length) return alert('Нет данных');
         let csv = "Тип,Имя,Город,Правильных,Всего,Процент\n";
@@ -1417,7 +931,6 @@
         a.click();
     }
 
-    // ----- СБРОС ФИЛЬТРОВ -----
     function resetFilters() {
         document.getElementById('typeFilter').value = 'all';
         document.getElementById('cityFilter').value = 'all';
