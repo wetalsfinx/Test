@@ -184,7 +184,7 @@
         .dot.done { background: var(--green-success); }
         .dot.failed { background: #c41e3a; }
 
-        /* ===== СТИЛИ ДЛЯ РЕКОМЕНДАЦИЙ В РЕЗУЛЬТАТЕ ===== */
+        /* ===== СТИЛИ ДЛЯ РЕКОМЕНДАЦИЙ ===== */
         .rec-section {
             margin-top: 16px;
             text-align: left;
@@ -268,7 +268,6 @@
 
 <script>
     // ========== НАСТРОЙКА JSONBIN.IO ==========
-    // ИСПОЛЬЗУЕМ ТУ ЖЕ КОРОБКУ, ЧТО И ТЕСТ
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const BIN_ID_KEY = '585_bin_id';
     
@@ -356,29 +355,16 @@
     let gameActive = false, selectedChoiceIndex = null;
     let questionResults = [];
 
-    // ========== СОХРАНЕНИЕ В JSONBIN.IO ==========
+    // ========== СОХРАНЕНИЕ В JSONBIN.IO (С СОЗДАНИЕМ КОРОБКИ) ==========
     async function saveToJsonBin(resultData) {
         try {
             console.log('Сохраняем результат тренировки...');
             
             let binId = localStorage.getItem(BIN_ID_KEY);
             
+            // Если коробки нет — создаём новую
             if (!binId) {
-                console.error('❌ Нет ID коробки! Сначала пройдите тест.');
-                return false;
-            }
-            
-            const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
-            
-            let existingResults = [];
-            if (getResponse.ok) {
-                const data = await getResponse.json();
-                existingResults = data.record || [];
-            } else {
-                console.log('Коробка не найдена, создаём новую...');
-                // Пытаемся создать новую коробку
+                console.log('Создаём новую коробку...');
                 const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
                     method: 'POST',
                     headers: {
@@ -398,6 +384,25 @@
                     console.error('Ошибка создания коробки:', await createResponse.text());
                     return false;
                 }
+            }
+            
+            // Если коробка есть — читаем и обновляем
+            const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+            
+            let existingResults = [];
+            if (getResponse.ok) {
+                const data = await getResponse.json();
+                existingResults = data.record || [];
+            } else if (getResponse.status === 404) {
+                // Коробка не найдена — создаём новую
+                console.log('Коробка не найдена, создаём новую...');
+                localStorage.removeItem(BIN_ID_KEY);
+                return await saveToJsonBin(resultData);
+            } else {
+                console.error('Ошибка чтения коробки:', getResponse.status);
+                return false;
             }
             
             existingResults.push(resultData);
@@ -449,7 +454,7 @@
                     statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                     statusDiv.style.color = '#2c6e2c';
                 } else {
-                    statusDiv.innerHTML = '⚠️ Результат не сохранился, но баллы засчитаны. Проверьте интернет.';
+                    statusDiv.innerHTML = '⚠️ Результат не сохранился, но баллы засчитаны';
                     statusDiv.style.color = '#c41e3a';
                 }
             }
@@ -499,7 +504,6 @@
         resultDiv.style.display = "block";
         resultDiv.className = `result-card ${success ? "success" : "loss"}`;
         
-        // ===== ФОРМИРУЕМ РЕЗУЛЬТАТ С РЕКОМЕНДАЦИЯМИ =====
         let html = '';
         
         if (success) {
