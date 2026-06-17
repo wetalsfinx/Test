@@ -140,22 +140,37 @@
         "Дайте 20-30 секунд освоиться, затем подойдите"
     ];
 
-    async function saveToJsonBin(resultData) {
+    // Функция с таймаутом и повторными попытками
+    async function fetchWithTimeout(url, options, timeout = 15000) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
         try {
-            console.log('Сохраняем результат теста...');
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(timeoutId);
+            return response;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            throw error;
+        }
+    }
+
+    async function saveToJsonBin(resultData, attempt = 1) {
+        try {
+            console.log(`Сохраняем результат теста... (попытка ${attempt})`);
             let binId = localStorage.getItem(BIN_ID_KEY);
             
             // Если коробки нет — создаём новую
             if (!binId) {
                 console.log('Создаём новую коробку для теста...');
-                const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
+                const createResponse = await fetchWithTimeout('https://api.jsonbin.io/v3/b', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Master-Key': JSONBIN_MASTER_KEY
                     },
                     body: JSON.stringify([resultData])
-                });
+                }, 20000);
+                
                 if (createResponse.ok) {
                     const data = await createResponse.json();
                     binId = data.metadata.id;
@@ -163,16 +178,22 @@
                     console.log('✅ Создана новая коробка, ID:', binId);
                     return true;
                 } else {
-                    console.error('Ошибка создания:', await createResponse.text());
+                    const errorText = await createResponse.text();
+                    console.error('Ошибка создания:', errorText);
+                    if (attempt < 3) {
+                        console.log('Повторяем через 2 секунды...');
+                        await new Promise(r => setTimeout(r, 2000));
+                        return await saveToJsonBin(resultData, attempt + 1);
+                    }
                     return false;
                 }
             }
 
             // Если коробка есть — читаем и обновляем
             console.log('Читаем коробку:', binId);
-            const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+            const getResponse = await fetchWithTimeout(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
+            }, 15000);
             
             let existingResults = [];
             if (getResponse.ok) {
@@ -182,9 +203,13 @@
             } else if (getResponse.status === 404) {
                 console.log('Коробка не найдена на сервере, создаём новую...');
                 localStorage.removeItem(BIN_ID_KEY);
-                return await saveToJsonBin(resultData);
+                return await saveToJsonBin(resultData, attempt + 1);
             } else {
                 console.error('Ошибка чтения коробки:', getResponse.status);
+                if (attempt < 3) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    return await saveToJsonBin(resultData, attempt + 1);
+                }
                 return false;
             }
             
@@ -193,14 +218,14 @@
             
             // Обновляем коробку
             console.log('Обновляем коробку, записей станет:', existingResults.length);
-            const updateResponse = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+            const updateResponse = await fetchWithTimeout(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY
                 },
                 body: JSON.stringify(existingResults)
-            });
+            }, 20000);
             
             if (updateResponse.ok) {
                 console.log('✅ Результат теста сохранён!');
@@ -208,10 +233,19 @@
             } else {
                 const errorText = await updateResponse.text();
                 console.error('❌ Ошибка обновления:', errorText);
+                if (attempt < 3) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    return await saveToJsonBin(resultData, attempt + 1);
+                }
                 return false;
             }
         } catch(error) {
-            console.error('❌ Ошибка:', error);
+            console.error('❌ Ошибка:', error.message);
+            if (attempt < 3) {
+                console.log(`Повторяем через 3 секунды... (попытка ${attempt + 1})`);
+                await new Promise(r => setTimeout(r, 3000));
+                return await saveToJsonBin(resultData, attempt + 1);
+            }
             return false;
         }
     }
@@ -354,6 +388,7 @@
 
         resultScreen.innerHTML = html;
         
+        // Сохраняем с повторными попытками
         const saved = await saveToJsonBin(resultData);
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
@@ -361,7 +396,7 @@
                 statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                 statusDiv.style.color = '#2c6e2c';
             } else {
-                statusDiv.innerHTML = '⚠️ Результат не сохранился. Проверьте интернет.';
+                statusDiv.innerHTML = '⚠️ Результат не сохранился. Проверьте интернет и обновите страницу.';
                 statusDiv.style.color = '#c41e3a';
             }
         }
