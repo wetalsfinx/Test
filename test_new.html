@@ -140,7 +140,7 @@
         "Дайте 20-30 секунд освоиться, затем подойдите"
     ];
 
-    // Функция с таймаутом и повторными попытками
+    // Функция с таймаутом
     async function fetchWithTimeout(url, options, timeout = 15000) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -176,6 +176,7 @@
                     binId = data.metadata.id;
                     localStorage.setItem(BIN_ID_KEY, binId);
                     console.log('✅ Создана новая коробка, ID:', binId);
+                    // После создания коробки — сразу выходим с успехом, данные уже внутри
                     return true;
                 } else {
                     const errorText = await createResponse.text();
@@ -388,7 +389,6 @@
 
         resultScreen.innerHTML = html;
         
-        // Сохраняем с повторными попытками
         const saved = await saveToJsonBin(resultData);
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
@@ -396,7 +396,7 @@
                 statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                 statusDiv.style.color = '#2c6e2c';
             } else {
-                statusDiv.innerHTML = '⚠️ Результат не сохранился. Проверьте интернет и обновите страницу.';
+                statusDiv.innerHTML = '⚠️ Результат не сохранился. Проверьте интернет.';
                 statusDiv.style.color = '#c41e3a';
             }
         }
