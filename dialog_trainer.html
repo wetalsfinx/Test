@@ -263,10 +263,10 @@
 
 <script>
     // ===================================================================
-    // НАСТРОЙКА JSONBIN.IO
+    // НАСТРОЙКА — МОЙ БЕСПЛАТНЫЙ ПРОКСИ-СЕРВЕР (Pipedream)
     // ===================================================================
-    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7'; // <-- ВАШ ID
+    const PROXY_URL = 'https://eo1jf9yeum1qx9v.m.pipedream.net';
+    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7';
 
     // ===================================================================
     // ДАННЫЕ ТРЕНАЖЁРА
@@ -357,94 +357,35 @@
     let questionResults = [];
 
     // ===================================================================
-    // СОХРАНЕНИЕ В JSONBIN.IO (С ДЛИТЕЛЬНЫМ ТАЙМАУТОМ)
+    // СОХРАНЕНИЕ ЧЕРЕЗ ПРОКСИ (без CORS)
     // ===================================================================
-    async function saveToJsonBin(resultData, attempt = 1) {
+    async function saveToProxy(resultData) {
         try {
-            console.log(`Сохраняем результат тренировки... (попытка ${attempt})`);
+            console.log('Сохраняем результат через прокси...');
             
-            // Читаем текущие данные из коробки
-            console.log('Читаем коробку:', FIXED_BIN_ID);
-            const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            const payload = {
+                binId: FIXED_BIN_ID,
+                data: resultData
+            };
+            
+            const response = await fetch(PROXY_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
             });
             
-            let existingResults = [];
-            if (getResponse.ok) {
-                const data = await getResponse.json();
-                existingResults = data.record || [];
-                console.log('Записей в коробке:', existingResults.length);
-            } else if (getResponse.status === 404) {
-                console.log('Коробка не найдена, создаём новую...');
-                const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY
-                    },
-                    body: JSON.stringify([resultData])
-                });
-                if (createResponse.ok) {
-                    const data = await createResponse.json();
-                    const newBinId = data.metadata.id;
-                    console.log('✅ Создана новая коробка, ID:', newBinId);
-                    alert('⚠️ Внимание! Создана новая коробка. Обновите ID в дашборде на: ' + newBinId);
-                    return true;
-                } else {
-                    console.error('Ошибка создания:', await createResponse.text());
-                    return false;
-                }
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Результат сохранён через прокси!');
+                return true;
             } else {
-                console.error('Ошибка чтения коробки:', getResponse.status);
-                return false;
-            }
-            
-            // Добавляем новый результат
-            existingResults.push(resultData);
-            
-            // Обновляем коробку с увеличенным таймаутом
-            console.log('Обновляем коробку, записей станет:', existingResults.length);
-            
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 секунд
-            
-            try {
-                const updateResponse = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY
-                    },
-                    body: JSON.stringify(existingResults),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                
-                if (updateResponse.ok) {
-                    console.log('✅ Результат тренировки сохранён!');
-                    return true;
-                } else {
-                    const errorText = await updateResponse.text();
-                    console.error('❌ Ошибка обновления:', errorText);
-                    if (attempt < 3) {
-                        console.log(`Повторяем через 3 секунды... (попытка ${attempt + 1})`);
-                        await new Promise(r => setTimeout(r, 3000));
-                        return await saveToJsonBin(resultData, attempt + 1);
-                    }
-                    return false;
-                }
-            } catch(fetchError) {
-                clearTimeout(timeoutId);
-                console.error('❌ Ошибка сети:', fetchError.message);
-                if (attempt < 3) {
-                    console.log(`Повторяем через 5 секунд... (попытка ${attempt + 1})`);
-                    await new Promise(r => setTimeout(r, 5000));
-                    return await saveToJsonBin(resultData, attempt + 1);
-                }
+                console.error('Ошибка прокси:', response.status);
                 return false;
             }
         } catch(error) {
-            console.error('❌ Критическая ошибка:', error);
+            console.error('❌ Ошибка прокси:', error);
             return false;
         }
     }
@@ -468,17 +409,17 @@
         
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
-            statusDiv.innerHTML = '⏳ Сохранение в облако...';
+            statusDiv.innerHTML = '⏳ Сохранение...';
             statusDiv.style.color = '#f59e0b';
         }
         
-        saveToJsonBin(resultData).then(saved => {
+        saveToProxy(resultData).then(saved => {
             if (statusDiv) {
                 if (saved) {
-                    statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
+                    statusDiv.innerHTML = '✅ Результат сохранён!';
                     statusDiv.style.color = '#2c6e2c';
                 } else {
-                    statusDiv.innerHTML = '⚠️ Результат НЕ сохранился. Попробуйте позже.';
+                    statusDiv.innerHTML = '⚠️ Не сохранилось. Попробуйте позже.';
                     statusDiv.style.color = '#c41e3a';
                 }
             }
