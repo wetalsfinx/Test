@@ -2,996 +2,630 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>585GOLD | Аналитика</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>585GOLD | Тренировка продаж</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: #e9edf2;
+            background: #fff0f0;
+            margin: 0;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .main-container { max-width: 700px; margin: 0 auto; }
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .employee-view { padding: 20px; }
+            .choice-btn { font-size: 14px; padding: 12px 14px; }
+            .next-btn { font-size: 16px; padding: 12px 20px; }
+        }
+        :root {
+            --primary-red: #c41e3a;
+            --primary-rose: #e8a0b4;
+            --primary-white: #ffffff;
+            --light-rose: #fff0f3;
+            --dark-red: #8b1a2c;
+            --green-success: #2c6e2c;
+        }
+        .employee-view {
+            background: var(--primary-white);
+            border-radius: 28px;
             padding: 24px;
-            color: #1e2a3a;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 1px solid var(--primary-rose);
         }
-        .container { max-width: 1440px; margin: 0 auto; }
-
-        .header {
-            background: white;
-            border-radius: 12px;
-            padding: 16px 24px;
-            margin-bottom: 20px;
+        .employee-view h1 {
+            color: var(--primary-red);
+            margin-top: 0;
+            font-size: 26px;
+            text-align: center;
+        }
+        .register-form {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #c41e3a;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-        }
-        .header h1 { font-size: 22px; font-weight: 600; color: #1e2a3a; }
-        .header h1 span { color: #c41e3a; }
-        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn {
-            padding: 6px 18px;
-            border: 1px solid #d0d7dd;
-            border-radius: 6px;
-            background: white;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            color: #1e2a3a;
-            transition: 0.2s;
-        }
-        .btn:hover { background: #f0f3f6; }
-        .btn-primary { background: #c41e3a; color: white; border-color: #c41e3a; }
-        .btn-primary:hover { background: #a0162e; }
-        .btn-success { background: #16a34a; color: white; border-color: #16a34a; }
-        .btn-success:hover { background: #15803d; }
-        .btn-danger { color: #c41e3a; border-color: #f5c6cb; }
-        .btn-danger:hover { background: #fef2f2; }
-
-        .filter-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 14px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 16px 24px;
-            border: 1px solid #e2e8f0;
-        }
-        .filter-group { display: flex; align-items: center; gap: 6px; }
-        .filter-group label { font-size: 13px; font-weight: 500; color: #4a5a6a; }
-        .filter-group select, .filter-group input {
-            padding: 5px 12px;
-            border: 1px solid #d0d7dd;
-            border-radius: 6px;
-            font-size: 13px;
-            background: white;
-            color: #1e2a3a;
-        }
-        .filter-group input { width: 150px; }
-        .status-text {
-            margin-left: auto;
-            font-size: 13px;
-            color: #6a7a8a;
-            background: #f0f3f6;
-            padding: 4px 14px;
-            border-radius: 40px;
-        }
-
-        .tabs-wrap {
-            display: flex;
-            gap: 4px;
-            background: white;
-            padding: 4px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-        }
-        .tab-btn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            background: transparent;
-            color: #64748b;
-            transition: 0.15s;
-        }
-        .tab-btn.active { background: #c41e3a; color: white; }
-        .tab-btn:hover:not(.active) { background: #f1f5f9; }
-
-        .main-number {
-            background: white;
-            border-radius: 12px;
-            padding: 20px 24px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .main-number .label { font-size: 16px; font-weight: 500; color: #4a5a6a; }
-        .main-number .value { font-size: 48px; font-weight: 700; color: #1e2a3a; }
-        .main-number .sub { font-size: 14px; color: #6a7a8a; }
-
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            flex-direction: column;
             gap: 12px;
-            margin-bottom: 20px;
         }
-        .status-card {
-            background: white;
-            border-radius: 12px;
-            padding: 14px 18px;
-            border-left: 5px solid #c41e3a;
-            border: 1px solid #e2e8f0;
-            border-left-width: 5px;
-            transition: 0.15s;
+        .register-form input, .register-form select {
+            padding: 14px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--primary-rose);
+            font-size: 16px;
+            width: 100%;
+            background: var(--primary-white);
         }
-        .status-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); transform: translateY(-2px); }
-        .status-card .label { font-size: 13px; color: #6a7a8a; font-weight: 500; }
-        .status-card .value { font-size: 28px; font-weight: 700; color: #1e2a3a; line-height: 1.2; margin-top: 4px; }
-        .status-card.blue { border-left-color: #3b82f6; }
-        .status-card.green { border-left-color: #16a34a; }
-        .status-card.orange { border-left-color: #f59e0b; }
-        .status-card.red { border-left-color: #dc2626; }
-        .status-card.purple { border-left-color: #8b5cf6; }
-        .status-card.teal { border-left-color: #14b8a6; }
-
-        .alert-box {
-            background: #fef2f2;
-            border-left: 4px solid #dc2626;
-            padding: 10px 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: none;
-            font-size: 14px;
-            color: #991b1b;
-        }
-        .alert-box.success { background: #f0fdf4; border-left-color: #16a34a; color: #166534; }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 16px 20px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 20px;
-        }
-        .card-title { font-size: 15px; font-weight: 600; color: #1e2a3a; margin-bottom: 12px; }
-        .chart-box { height: 200px; }
-
-        .charts-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .charts-row-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .employee-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid #f1f5f9;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .employee-item:hover { background: #f8fafc; padding-left: 6px; border-radius: 4px; }
-        .badge {
-            padding: 2px 12px;
-            border-radius: 40px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .badge-green { background: #dcfce7; color: #166534; }
-        .badge-yellow { background: #fef9c3; color: #854d0e; }
-        .badge-red { background: #fee2e2; color: #991b1b; }
-        .badge-purple { background: #f3e8ff; color: #6b21a8; }
-        .empty { color: #94a3b8; text-align: center; padding: 16px 0; font-size: 14px; }
-
-        .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { text-align: left; padding: 10px 8px; font-weight: 600; color: #4a5a6a; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 8px; border-bottom: 1px solid #edf2f7; }
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(4px);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            max-width: 600px;
-            width: 92%;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-        .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #c41e3a; }
-        .modal-summary { background: #f8fafc; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid #c41e3a; }
-        .answer-item {
-            background: #f8fafc;
-            padding: 12px 14px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            border-left: 3px solid #c41e3a;
-        }
-        .answer-item .q { font-weight: 600; font-size: 14px; }
-        .answer-item .user-answer { color: #c41e3a; font-size: 13px; margin: 4px 0; }
-        .answer-item .correct-answer { color: #16a34a; font-size: 13px; margin: 4px 0; }
-        .answer-item .rec {
-            background: #f0fdf4;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-top: 6px;
-            color: #166534;
-            border-left: 3px solid #16a34a;
-        }
-        .answer-item .rec-wrong {
-            background: #fef2f2;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-top: 6px;
-            color: #991b1b;
-            border-left: 3px solid #dc2626;
-        }
-        .modal-close {
-            margin-top: 16px;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            background: #c41e3a;
+        .register-form button {
+            background: var(--primary-red);
             color: white;
-            font-weight: 600;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .register-form button:hover { background: var(--dark-red); }
+        .game-container {
+            background: var(--primary-white);
+            border-radius: 28px;
+            overflow: hidden;
+            margin-top: 16px;
+            border: 1px solid var(--primary-rose);
+        }
+        .chat-area { padding: 18px; background: var(--light-rose); border-bottom: 1px solid var(--primary-rose); }
+        .client-message {
+            background: var(--primary-white);
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 15px;
+            color: #333;
+            border-left: 4px solid var(--primary-red);
+        }
+        .choices-area { padding: 16px 18px 18px 18px; background: var(--primary-white); }
+        .choice-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: var(--light-rose);
+            border: 1px solid var(--primary-rose);
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #333;
+        }
+        .choice-btn:hover { background: #f5e0e0; }
+        .choice-btn.selected {
+            background: var(--primary-rose);
+            border: 2px solid var(--primary-red);
+        }
+        .next-area {
+            padding: 0 18px 20px 18px;
+            display: flex;
+            justify-content: center;
+        }
+        .next-btn {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 20px;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
             width: 100%;
         }
-        .modal-close:hover { background: #a0162e; }
+        .next-btn:hover { background: var(--dark-red); }
+        .next-btn:disabled {
+            background: var(--primary-rose);
+            cursor: not-allowed;
+        }
+        .result-card {
+            padding: 18px;
+            margin: 16px 18px 18px 18px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .result-card.success { background: #e8f0e8; border-left: 8px solid var(--green-success); color: var(--green-success); }
+        .result-card.loss { background: #ffe0e0; border-left: 8px solid var(--primary-red); color: var(--primary-red); }
+        .applied-rules {
+            background: var(--light-rose);
+            border-radius: 24px;
+            padding: 12px 16px;
+            margin: 16px 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            border: 1px solid var(--primary-rose);
+        }
+        .applied-rule { background: #c41e3a20; color: var(--primary-red); padding: 4px 12px; border-radius: 40px; font-size: 12px; }
+        .restart-btn {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 16px;
+            margin: 0 18px 20px 18px;
+            width: calc(100% - 36px);
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .restart-btn:hover { background: var(--dark-red); }
+        .current-user {
+            background: var(--light-rose);
+            padding: 10px 16px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-bottom: 16px;
+            color: var(--primary-red);
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .save-status { font-size: 12px; color: #666; margin-top: 10px; text-align: center; }
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ddd;
+            transition: 0.3s;
+        }
+        .dot.active { background: var(--primary-red); }
+        .dot.done { background: var(--green-success); }
+        .dot.failed { background: #c41e3a; }
 
-        @media (max-width: 1024px) {
-            .charts-row-3 { grid-template-columns: 1fr 1fr; }
+        .rec-section {
+            margin-top: 16px;
+            text-align: left;
+            border-top: 2px dashed #e8a0b4;
+            padding-top: 16px;
         }
-        @media (max-width: 800px) {
-            .charts-row { grid-template-columns: 1fr; }
-            .charts-row-3 { grid-template-columns: 1fr; }
-            .status-grid { grid-template-columns: 1fr 1fr; }
-            .main-number .value { font-size: 36px; }
+        .rec-section h4 {
+            color: #c41e3a;
+            font-size: 15px;
+            margin-bottom: 12px;
+            text-align: center;
         }
-        @media (max-width: 500px) {
-            .status-grid { grid-template-columns: 1fr; }
-            .filter-bar { flex-direction: column; align-items: stretch; }
-            .status-text { margin-left: 0; text-align: center; }
+        .rec-item {
+            background: #f8f4f0;
+            border-radius: 16px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            border-left: 4px solid #c41e3a;
+        }
+        .rec-item .rec-rule {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a1a2e;
+        }
+        .rec-item .rec-tip {
+            font-size: 13px;
+            color: #854d0e;
+            margin-top: 4px;
+        }
+        .rec-perfect {
+            text-align: center;
+            padding: 16px;
+            background: #e8f0e8;
+            border-radius: 16px;
+            color: #2c6e2c;
+            margin-top: 12px;
         }
     </style>
 </head>
 <body>
-<div class="container">
 
-    <!-- ШАПКА -->
-    <div class="header">
-        <h1>📊 585GOLD <span>| Аналитика</span></h1>
-        <div class="header-actions">
-            <button class="btn btn-success" id="exportPdfBtn">📄 PDF</button>
-            <button class="btn" id="exportBtn">CSV</button>
-            <button class="btn btn-primary" id="loadBtn">Загрузить</button>
-            <button class="btn btn-danger" id="clearAllBtn">🗑️ Сбросить</button>
-        </div>
-    </div>
-
-    <!-- ВКЛАДКИ -->
-    <div class="tabs-wrap">
-        <button class="tab-btn active" data-tab="dashboard">📊 Дашборд</button>
-        <button class="tab-btn" data-tab="cities">🏙️ Города</button>
-        <button class="tab-btn" data-tab="feedback">📝 Фидбек</button>
-    </div>
-
-    <!-- ФИЛЬТРЫ -->
-    <div class="filter-bar">
-        <div class="filter-group">
-            <label>Тип</label>
-            <select id="typeFilter">
-                <option value="all">Все</option>
-                <option value="test">📝 Тест</option>
-                <option value="trainer">🎯 Тренировка</option>
+<div class="main-container">
+    <div class="employee-view">
+        <h1>🎯 585GOLD | Тренировка продаж</h1>
+        <p style="text-align: center; color: #666; font-size: 14px;">Пройди диалог с клиентом</p>
+        <div class="register-form" id="registerForm">
+            <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
+            <select id="userCity">
+                <option value="">Выберите город</option>
+                <option value="Петрозаводск">Петрозаводск</option>
+                <option value="Казань">Казань</option>
+                <option value="Кандалакша">Кандалакша</option>
+                <option value="Владимир">Владимир</option>
+                <option value="Санкт-Петербург">Санкт-Петербург</option>
+                <option value="Тюмень">Тюмень</option>
             </select>
+            <button id="startGameBtn">Начать диалог</button>
         </div>
-        <div class="filter-group">
-            <label>Город</label>
-            <select id="cityFilter"><option value="all">Все города</option></select>
-        </div>
-        <div class="filter-group">
-            <label>Балл</label>
-            <select id="percentFilter">
-                <option value="all">Все</option>
-                <option value="85">≥85%</option>
-                <option value="70">≥70%</option>
-                <option value="50">&lt;50%</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <input type="text" id="searchInput" placeholder="Поиск по имени">
-        </div>
-        <button class="btn" id="resetFiltersBtn">Сбросить</button>
-        <span class="status-text" id="status">Нет данных</span>
-    </div>
-
-    <!-- АЛЕРТЫ -->
-    <div id="alertContainer"></div>
-
-    <!-- ДАШБОРД -->
-    <div id="dashboardTab">
-
-        <div class="main-number">
-            <div>
-                <div class="label">Всего прохождений</div>
-                <div class="value" id="mainTotal">0</div>
-            </div>
-            <div>
-                <div class="sub">Средний балл: <strong id="mainAvg">0%</strong></div>
+        <div id="currentUserDisplay" class="current-user" style="display: none;"></div>
+        <div id="gameContainer" style="display: none;">
+            <div class="game-container">
+                <div class="progress-indicator" id="progressDots"></div>
+                <div class="chat-area" id="chatArea"></div>
+                <div class="applied-rules">
+                    <span>🏆 Применённые правила:</span>
+                    <span id="emptyRulesMsg">(пока ни одного)</span>
+                    <div id="appliedRulesList" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                </div>
+                <div class="choices-area" id="choicesArea"></div>
+                <div class="next-area" id="nextArea">
+                    <button class="next-btn" id="nextBtn" disabled>➡ Далее</button>
+                </div>
+                <div class="result-card" id="resultCard" style="display: none;"></div>
+                <div id="saveStatus" class="save-status"></div>
             </div>
         </div>
-
-        <div class="status-grid">
-            <div class="status-card blue"><div class="label">📝 Тестов</div><div class="value" id="sTest">0</div></div>
-            <div class="status-card purple"><div class="label">🎯 Тренировок</div><div class="value" id="sTrainer">0</div></div>
-            <div class="status-card green"><div class="label">🏆 Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
-            <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="sAvg">0%</div></div>
-            <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
-            <div class="status-card teal"><div class="label">❌ Ошибок</div><div class="value" id="sErrors">0</div></div>
-        </div>
-
-        <div class="charts-row">
-            <div class="card">
-                <div class="card-title">🎯 Соотношение результатов</div>
-                <div class="chart-box"><canvas id="pieChart"></canvas></div>
-            </div>
-            <div class="card">
-                <div class="card-title">📈 Динамика среднего балла</div>
-                <div id="trendContainer"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
-                <div id="trendFallback" class="empty" style="display:none;">Недостаточно данных</div>
-            </div>
-        </div>
-
-        <div class="charts-row-3">
-            <div class="card">
-                <div class="card-title">🏆 Топ сотрудников</div>
-                <div id="topList"><div class="empty">Нет данных</div></div>
-            </div>
-            <div class="card">
-                <div class="card-title">🏙️ Рейтинг городов</div>
-                <div class="chart-box"><canvas id="cityBarChart"></canvas></div>
-            </div>
-            <div class="card">
-                <div class="card-title">📊 Распределение баллов</div>
-                <div class="chart-box"><canvas id="scoreBarChart"></canvas></div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">👥 Сотрудники (<span id="empCount">0</span>)</div>
-            <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
-        </div>
-    </div>
-
-    <!-- ГОРОДА -->
-    <div id="citiesTab" style="display:none; margin-top:20px;">
-        <div class="card">
-            <div class="card-title">Статистика по городам</div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно</th><th>Ошибок</th><th>Провал</th></tr></thead>
-                    <tbody id="cityStatsBody"></tbody>
-                </table>
-            </div>
-            <button class="btn btn-primary" id="exportCityBtn" style="margin-top:12px;">CSV</button>
-        </div>
-    </div>
-
-    <!-- ФИДБЕК -->
-    <div id="feedbackTab" style="display:none; margin-top:20px;">
-        <div class="card">
-            <div class="card-title">Фидбек для города</div>
-            <select id="feedbackCitySelect" style="padding:6px 12px;border-radius:6px;border:1px solid #d0d7dd;width:100%;max-width:280px;margin-bottom:12px;">
-                <option value="">-- Выберите город --</option>
-            </select>
-            <button class="btn btn-primary" id="generateFeedbackBtn">Сгенерировать</button>
-            <div id="feedbackResult" style="margin-top:16px;"></div>
-        </div>
-    </div>
-
-    <div id="loadingSkeleton" class="empty" style="display:none;">Загрузка...</div>
-</div>
-
-<!-- МОДАЛКА -->
-<div id="modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-title" id="modalTitle">Детали</div>
-        <div id="modalAnswers"></div>
-        <button class="modal-close" onclick="closeModal()">Закрыть</button>
     </div>
 </div>
 
 <script>
-    // ================================================================
-    //  ЛОГИКА
-    // ================================================================
+    // ===================================================================
+    // НАСТРОЙКА — МОЙ БЕСПЛАТНЫЙ ПРОКСИ-СЕРВЕР (Pipedream)
+    // ===================================================================
+    const PROXY_URL = 'https://eo1jf9yeum1qx9v.m.pipedream.net';
+    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7';
 
-    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    // ФИКСИРОВАННЫЙ ID КОРОБКИ (общий для всех устройств)
-    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7'; // <-- ВСТАВЬ СВОЙ ID КОРОБКИ
-    
-    let allData = [], filteredData = [];
-    let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, comparisonChart = null;
+    // ===================================================================
+    // ДАННЫЕ ТРЕНАЖЁРА
+    // ===================================================================
+    const ALL_RULES = [
+        { id: "initiative", name: "Проявляй инициативу", 
+          rec: "Не жди, пока клиент сам позовёт. Через 20-30 секунд подойди и спроси: «Какое изделие выбираете? Для себя или в подарок?»" },
+        { id: "askBeforeShow", name: "Задавай вопросы ДО показа", 
+          rec: "Сначала спроси «для какого случая?», «кто получатель?», «какие предпочтения?». Только потом показывай украшения." },
+        { id: "emotionalHPW", name: "Презентуй с эмоцией (ХПВ)", 
+          rec: "Привязывай украшение к событию: «Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите»." },
+        { id: "fittingOffer", name: "Предлагай примерку через «Давайте»", 
+          rec: "Всегда предлагай примерку фразой «Давайте примерим». Клиент, который примерил, покупает в 3 раза чаще." },
+        { id: "alternative", name: "Не отпускай без альтернативы", 
+          rec: "Если нет размера или модели — сразу покажи похожие варианты и каталог заказов." },
+        { id: "warmClosing", name: "Завершай с теплотой", 
+          rec: "Завершай с теплотой: «Спасибо, что зашли! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»." }
+    ];
 
-    // ===== СБРОС =====
-    document.getElementById('clearAllBtn').onclick = async () => {
-        if (!confirm('Удалить все результаты?')) return;
-        if (!confirm('Точно?')) return;
+    const QUESTIONS = [
+        {
+            client: "Клиент зашёл, молча смотрит на витрину с кольцами около 25 секунд. Что делаете?",
+            ruleId: "initiative",
+            correct: 1,
+            choices: [
+                "«Добрый день! Выбираете что-то конкретное или просто смотрите?»",
+                "«Добрый день. У нас сегодня скидка 30% на бриллианты. Какое изделие выбираете? Для себя или в подарок?»",
+                "«Здравствуйте! Если нужна помощь — обращайтесь» (и отхожу)"
+            ]
+        },
+        {
+            client: "Клиент: «Хочу подарить жене кольцо, бюджет до 40 000 ₽». Что делаете?",
+            ruleId: "askBeforeShow",
+            correct: 1,
+            choices: [
+                "«Отлично! Давайте посмотрим вот эту коллекцию — она как раз в вашем бюджете»",
+                "«А для какого случая? Что ей нравится?»",
+                "«40 тысяч — хороший бюджет. Покажу несколько вариантов в нейтральном стиле, а вы выберете»"
+            ]
+        },
+        {
+            client: "Клиент: «Годовщина 10 лет. Жена любит винтажный стиль». Показываете кольцо. Что говорите?",
+            ruleId: "emotionalHPW",
+            correct: 2,
+            choices: [
+                "«Это кольцо из нашей винтажной коллекции. Очень качественная огранка, хорошая цена»",
+                "«Такие кольца сейчас хорошо покупают — это тренд сезона»",
+                "«Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите. Оно создано для таких моментов»"
+            ]
+        },
+        {
+            client: "Клиент заинтересовался: «Да, это близко. Можно посмотреть?»",
+            ruleId: "fittingOffer",
+            correct: 1,
+            choices: [
+                "«Хотите, чтобы я показала это кольцо поближе?»",
+                "«Давайте посмотрим на него вблизи — так вы сразу увидите, как оно прекрасно. Давайте примерим?»",
+                "«У нас есть зеркало вон там — можете померить, если захотите»"
+            ]
+        },
+        {
+            client: "Клиент посмотрел кольцо, улыбается: «Красиво… но размера 16,5 нет в наличии». Что делаете?",
+            ruleId: "alternative",
+            correct: 0,
+            choices: [
+                "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ — сможем заказать точно под размер»",
+                "«Как жаль! Давайте посмотрим, что ещё есть в этой витрине»",
+                "«Можем заказать с доставкой через 2-3 недели. Внесёте предоплату?»"
+            ]
+        },
+        {
+            client: "Клиент выбрал похожую модель, оформил заказ. Прощается. Что говорите?",
+            ruleId: "warmClosing",
+            correct: 2,
+            choices: [
+                "«Спасибо за покупку! Хорошего дня»",
+                "«Будем рады видеть вас снова. У нас обновления коллекции каждую неделю»",
+                "«Спасибо, что зашли к нам! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»"
+            ]
+        }
+    ];
+
+    // ===================================================================
+    // СОСТОЯНИЕ
+    // ===================================================================
+    let currentQuestionIndex = 0, currentAnswers = [], appliedRules = [], currentUserName = null, currentUserCity = null;
+    let gameActive = false, selectedChoiceIndex = null;
+    let questionResults = [];
+
+    // ===================================================================
+    // СОХРАНЕНИЕ ЧЕРЕЗ ПРОКСИ (без CORS)
+    // ===================================================================
+    async function saveToProxy(resultData) {
         try {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-                method: 'PUT',
+            console.log('Сохраняем результат через прокси...');
+            
+            const payload = {
+                binId: FIXED_BIN_ID,
+                data: resultData
+            };
+            
+            const response = await fetch(PROXY_URL, {
+                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify([])
+                body: JSON.stringify(payload)
             });
+            
             if (response.ok) {
-                alert('✅ Очищено');
-                location.reload();
-            } else alert('Ошибка: ' + response.status);
-        } catch(e) { alert('Ошибка: ' + e.message); }
-    };
+                const result = await response.json();
+                console.log('✅ Результат сохранён через прокси!');
+                return true;
+            } else {
+                console.error('Ошибка прокси:', response.status);
+                return false;
+            }
+        } catch(error) {
+            console.error('❌ Ошибка прокси:', error);
+            return false;
+        }
+    }
 
-    // ===== ВКЛАДКИ =====
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            const tab = this.dataset.tab;
-            document.getElementById('dashboardTab').style.display = tab === 'dashboard' ? 'block' : 'none';
-            document.getElementById('citiesTab').style.display = tab === 'cities' ? 'block' : 'none';
-            document.getElementById('feedbackTab').style.display = tab === 'feedback' ? 'block' : 'none';
-            if (tab === 'cities') renderCityStats();
-        });
-    });
-
-    // ----- ЗАГРУЗКА (БЕЗ LOCAL STORAGE) -----
-    async function loadResults() {
-        document.getElementById('loadingSkeleton').style.display = 'block';
-        document.getElementById('status').textContent = 'Загрузка...';
-        try {
-            const cacheBuster = '?t=' + Date.now();
-            const r = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest${cacheBuster}`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
-            
-            if (!r.ok) {
-                if (r.status === 404) {
-                    document.getElementById('status').textContent = '❌ Коробка не найдена. Сначала пройдите тест.';
+    function saveResult(success) {
+        const resultData = {
+            id: Date.now(),
+            type: 'trainer',
+            user_name: currentUserName,
+            city: currentUserCity,
+            score: appliedRules.length,
+            total: ALL_RULES.length,
+            percent: Math.round((appliedRules.length / ALL_RULES.length) * 100),
+            passed: success,
+            rules_applied: appliedRules,
+            rules_count: appliedRules.length,
+            answers: currentAnswers,
+            date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
+        };
+        
+        const statusDiv = document.getElementById('saveStatus');
+        if (statusDiv) {
+            statusDiv.innerHTML = '⏳ Сохранение...';
+            statusDiv.style.color = '#f59e0b';
+        }
+        
+        saveToProxy(resultData).then(saved => {
+            if (statusDiv) {
+                if (saved) {
+                    statusDiv.innerHTML = '✅ Результат сохранён!';
+                    statusDiv.style.color = '#2c6e2c';
                 } else {
-                    document.getElementById('status').textContent = '❌ Ошибка: ' + r.status;
+                    statusDiv.innerHTML = '⚠️ Не сохранилось. Попробуйте позже.';
+                    statusDiv.style.color = '#c41e3a';
                 }
-                document.getElementById('loadingSkeleton').style.display = 'none';
-                return;
             }
-            
-            const data = await r.json();
-            const results = (data.record || []).map(d => ({ ...d, type: d.type || 'test' }));
-            
-            if (!results.length) {
-                document.getElementById('status').textContent = 'Нет результатов';
-                document.getElementById('loadingSkeleton').style.display = 'none';
-                return;
-            }
-            
-            allData = results.map(r => ({
-                id: r.id || Date.now() + Math.random(),
-                type: r.type || 'test',
-                user_name: r.user_name || 'Аноним',
-                city: r.city || 'Не указан',
-                score: r.score || 0,
-                total: r.total || (r.type === 'trainer' ? 6 : 11),
-                percent: r.percent || Math.round((r.score / (r.total || 11)) * 100),
-                answers: r.answers || [],
-                date: r.date || new Date().toISOString()
-            }));
-            
-            const cities = [...new Set(allData.map(r => r.city))];
-            document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
-            document.getElementById('feedbackCitySelect').innerHTML = '<option value="">-- Выберите город --</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
-            
-            renderCityStats();
-            applyFilters();
-            document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${allData.filter(r=>r.type==='test').length}, тренировка: ${allData.filter(r=>r.type==='trainer').length})`;
-        } catch(e) { 
-            console.error(e); 
-            document.getElementById('status').textContent = 'Ошибка: ' + e.message;
-        }
-        document.getElementById('loadingSkeleton').style.display = 'none';
+        });
     }
 
-    // ----- ТРЕНД -----
-    function renderTrendChart() {
-        const map = new Map();
-        allData.forEach(r => {
-            const d = new Date(r.date).toLocaleDateString('ru-RU');
-            if (!map.has(d)) map.set(d, { sum: 0, count: 0 });
-            const v = map.get(d);
-            v.sum += r.percent;
-            v.count++;
+    // ===================================================================
+    // ЛОГИКА ТРЕНАЖЁРА
+    // ===================================================================
+    function nextStep() {
+        if (!gameActive || selectedChoiceIndex === null) return;
+        
+        const isCorrect = selectedChoiceIndex === QUESTIONS[currentQuestionIndex].correct;
+        const ruleId = QUESTIONS[currentQuestionIndex].ruleId;
+        
+        currentAnswers.push({ 
+            question: currentQuestionIndex, 
+            selected: selectedChoiceIndex, 
+            correct: isCorrect, 
+            ruleId: ruleId,
+            questionText: QUESTIONS[currentQuestionIndex].client,
+            selectedText: QUESTIONS[currentQuestionIndex].choices[selectedChoiceIndex],
+            correctText: QUESTIONS[currentQuestionIndex].choices[QUESTIONS[currentQuestionIndex].correct]
         });
-        const dates = [...map.keys()].sort((a,b) => new Date(a) - new Date(b));
-        const values = dates.map(d => Math.round(map.get(d).sum / map.get(d).count));
-
-        const container = document.getElementById('trendContainer');
-        const fallback = document.getElementById('trendFallback');
-
-        if (dates.length < 2) {
-            container.style.display = 'none';
-            fallback.style.display = 'block';
-            return;
+        
+        questionResults[currentQuestionIndex] = isCorrect;
+        
+        if (isCorrect) {
+            const r = ALL_RULES.find(x => x.id === ruleId);
+            if (r && !appliedRules.includes(r.name)) appliedRules.push(r.name);
         }
-        container.style.display = 'block';
-        fallback.style.display = 'none';
-
-        if (trendChart) trendChart.destroy();
-        const ctx = document.getElementById('trendChart').getContext('2d');
-        if (!ctx) return;
-
-        const isLine = dates.length >= 3;
-        if (isLine) {
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: '%',
-                        data: values,
-                        borderColor: '#c41e3a',
-                        backgroundColor: 'rgba(196,30,58,0.05)',
-                        fill: true,
-                        tension: 0.3,
-                        pointBackgroundColor: values.map(v => v >= 85 ? '#16a34a' : v >= 70 ? '#f59e0b' : '#dc2626'),
-                        pointRadius: 4,
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+'%' } } }
-                }
-            });
+        
+        currentQuestionIndex++;
+        if (currentQuestionIndex >= QUESTIONS.length) {
+            finishGame();
         } else {
-            trendChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: dates, datasets: [{ label: '%', data: values, backgroundColor: '#c41e3a', borderRadius: 4 }] },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+'%' } } }
-                }
-            });
+            selectedChoiceIndex = null;
+            renderQuestion();
         }
     }
 
-    // ----- СТАТИСТИКА ГОРОДОВ -----
-    function renderCityStats() {
-        const map = new Map();
-        allData.forEach(r => {
-            if (!map.has(r.city)) map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0, qe: new Array(11).fill(0) });
-            const c = map.get(r.city);
-            c.count++; c.sum += r.percent; if (r.percent >= 85) c.success++; c.errors += (r.total - r.score);
-            if (r.answers) r.answers.forEach((a, i) => { if (!a.correct) c.qe[i]++; });
-        });
-        const qTexts = ['Приветствие','Бюджет','Серьги','Серебро→Золото','Футляр','Дороговато','Нет размера','Подарок маме','Другие модели','Сплит','Клиент идёт'];
-        const stats = [...map.entries()].map(([city, d]) => {
-            const idx = d.qe.reduce((a,b,i,arr) => b > arr[a] ? i : a, 0);
-            return { city, count: d.count, avg: Math.round(d.sum/d.count), success: d.success, errors: d.errors, fail: qTexts[idx] || '—' };
-        }).sort((a,b) => b.avg - a.avg);
-
-        const tbody = document.getElementById('cityStatsBody');
-        tbody.innerHTML = '';
-        stats.forEach(c => {
-            const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<b>${c.city}</b>`;
-            row.insertCell(1).textContent = c.count;
-            row.insertCell(2).innerHTML = `<span style="color:${c.avg>=85?'#16a34a':c.avg>=70?'#f59e0b':'#dc2626'}">${c.avg}%</span>`;
-            row.insertCell(3).textContent = `${c.success}/${c.count}`;
-            row.insertCell(4).textContent = c.errors;
-            row.insertCell(5).innerHTML = `<span class="badge badge-red">${c.fail}</span>`;
-        });
-
-        if (comparisonChart) comparisonChart.destroy();
-        const ctx = document.getElementById('comparisonChart')?.getContext('2d');
-        if (ctx && stats.length > 1) {
-            comparisonChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: stats.map(c => c.city),
-                    datasets: [{ label: 'Средний балл', data: stats.map(c => c.avg), backgroundColor: stats.map(c => c.avg>=85?'#16a34a':c.avg>=70?'#f59e0b':'#dc2626'), borderRadius: 4 }]
-                },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+'%' } } } }
-            });
-        }
-    }
-
-    // ----- ФИЛЬТРЫ -----
-    function applyFilters() {
-        let filtered = [...allData];
-        const type = document.getElementById('typeFilter').value;
-        if (type !== 'all') filtered = filtered.filter(r => r.type === type);
-        const city = document.getElementById('cityFilter').value;
-        if (city !== 'all') filtered = filtered.filter(r => r.city === city);
-        const percent = document.getElementById('percentFilter').value;
-        if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
-        else if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
-        else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
-        const search = document.getElementById('searchInput').value.toLowerCase().trim();
-        if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
-        filteredData = filtered;
-        renderDashboard();
-        renderAlerts();
-        renderTrendChart();
-    }
-
-    // ----- АЛЕРТЫ -----
-    function renderAlerts() {
-        const container = document.getElementById('alertContainer');
-        container.innerHTML = '';
-        if (!filteredData.length) return;
-        const total = filteredData.length;
-        const low = filteredData.filter(r => r.percent < 70).length;
-        const success = filteredData.filter(r => r.percent >= 85).length;
-        if (low > 0 && (low / total) > 0.3) {
-            container.innerHTML = `<div class="alert-box"><strong>🚨 Внимание:</strong> ${low} сотрудников (${Math.round(low/total*100)}%) показали низкий результат (<70%). Требуется обучение!</div>`;
-        } else if (success / total > 0.7 && total > 2) {
-            container.innerHTML = `<div class="alert-box success"><strong>🎉 Отлично!</strong> ${success} сотрудников (${Math.round(success/total*100)}%) успешно прошли тестирование.</div>`;
-        }
-    }
-
-    // ----- ОСНОВНАЯ ОТРИСОВКА -----
-    function renderDashboard() {
-        if (!filteredData.length) {
-            document.getElementById('mainTotal').textContent = '0';
-            document.getElementById('mainAvg').textContent = '0%';
-            ['sTest','sTrainer','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
-                document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
-            });
-            document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
-            document.getElementById('employeeList').innerHTML = '<div class="empty">Нет данных</div>';
-            document.getElementById('empCount').textContent = '0';
-            return;
-        }
-
-        const total = filteredData.length;
-        const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
-        const success = filteredData.filter(r => r.percent >= 85).length;
-        const errors = filteredData.reduce((s,r) => s + (r.total - r.score), 0);
-        const testCount = filteredData.filter(r => r.type === 'test').length;
-        const trainerCount = filteredData.filter(r => r.type === 'trainer').length;
-        const low = filteredData.filter(r => r.percent < 70).length;
-        const medium = total - success - low;
-
-        document.getElementById('mainTotal').textContent = total;
-        document.getElementById('mainAvg').textContent = avg + '%';
-        document.getElementById('mainAvg').style.color = avg >= 85 ? '#16a34a' : avg >= 70 ? '#f59e0b' : '#dc2626';
-        document.getElementById('sTest').textContent = testCount;
-        document.getElementById('sTrainer').textContent = trainerCount;
-        document.getElementById('sSuccess').textContent = success;
-        document.getElementById('sAvg').textContent = avg + '%';
-        document.getElementById('sLow').textContent = low;
-        document.getElementById('sErrors').textContent = errors;
-
-        // ----- КРУГОВАЯ -----
-        if (pieChart) pieChart.destroy();
-        const pieCtx = document.getElementById('pieChart').getContext('2d');
-        if (total > 0) {
-            pieChart = new Chart(pieCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['✅ Успешно (≥85%)', '⚠️ Средне (70-84%)', '❌ Низкий (<70%)'],
-                    datasets: [{
-                        data: [success, medium, low],
-                        backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'],
-                        borderColor: ['white', 'white', 'white'],
-                        borderWidth: 2,
-                        hoverOffset: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    cutout: '60%',
-                    plugins: {
-                        legend: { position: 'bottom', labels: { padding: 12, font: { size: 11, weight: '500' }, usePointStyle: true } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) {
-                                    const total = ctx.dataset.data.reduce((a,b) => a + b, 0);
-                                    return `${ctx.label}: ${ctx.parsed} (${total > 0 ? Math.round(ctx.parsed/total*100) : 0}%)`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // ----- ТОП СОТРУДНИКОВ -----
-        const top5 = [...filteredData].filter(r => r.percent >= 85).sort((a,b) => b.percent - a.percent).slice(0,5);
-        document.getElementById('topList').innerHTML = top5.length ? top5.map((r,i) => `
-            <div class="employee-item" onclick="showDetails(${r.id})">
-                <span><b>${i+1}.</b> ${r.user_name} (${r.city})</span>
-                <span class="badge ${r.type==='trainer'?'badge-purple':'badge-green'}">${r.percent}%</span>
-            </div>
-        `).join('') : '<div class="empty">Нет данных</div>';
-
-        // ----- РЕЙТИНГ ГОРОДОВ -----
-        const cityMap = new Map();
-        filteredData.forEach(r => {
-            if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
-            const c = cityMap.get(r.city);
-            c.sum += r.percent;
-            c.count++;
-        });
-        const cityRating = [...cityMap.entries()].map(([city, d]) => ({ 
-            city, 
-            avg: Math.round(d.sum/d.count), 
-            count: d.count 
-        })).sort((a,b) => b.avg - a.avg);
-
-        if (cityBarChart) cityBarChart.destroy();
-        const cityCtx = document.getElementById('cityBarChart').getContext('2d');
-        if (cityCtx && cityRating.length > 0) {
-            cityBarChart = new Chart(cityCtx, {
-                type: 'bar',
-                data: {
-                    labels: cityRating.map(c => c.city),
-                    datasets: [{
-                        label: 'Средний балл (%)',
-                        data: cityRating.map(c => c.avg),
-                        backgroundColor: cityRating.map(c => c.avg >= 85 ? '#16a34a' : c.avg >= 70 ? '#f59e0b' : '#dc2626'),
-                        borderRadius: 4,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) {
-                                    const city = cityRating[ctx.dataIndex];
-                                    return `${city.avg}% (${city.count} сотрудников)`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: { 
-                            beginAtZero: true, 
-                            max: 100,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            ticks: { callback: v => v + '%' }
-                        },
-                        y: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        // ----- РАСПРЕДЕЛЕНИЕ БАЛЛОВ -----
-        const bins = [0,0,0,0,0];
-        filteredData.forEach(r => {
-            if (r.percent <= 20) bins[0]++;
-            else if (r.percent <= 40) bins[1]++;
-            else if (r.percent <= 60) bins[2]++;
-            else if (r.percent <= 80) bins[3]++;
-            else bins[4]++;
-        });
-        if (scoreBarChart) scoreBarChart.destroy();
-        const scoreCtx = document.getElementById('scoreBarChart').getContext('2d');
-        if (scoreCtx) {
-            scoreBarChart = new Chart(scoreCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
-                    datasets: [{
-                        data: bins,
-                        backgroundColor: '#c41e3a',
-                        borderRadius: 4,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        // ----- СОТРУДНИКИ -----
-        document.getElementById('empCount').textContent = filteredData.length;
-        document.getElementById('employeeList').innerHTML = filteredData.map(r => `
-            <div class="employee-item" onclick="showDetails(${r.id})">
-                <div style="flex:1;cursor:pointer;">
-                    <b>${r.user_name}</b> (${r.city})
-                    <span class="badge ${r.type==='trainer'?'badge-purple':r.percent>=85?'badge-green':r.percent>=70?'badge-yellow':'badge-red'}">${r.percent}%</span>
+    function finishGame() {
+        gameActive = false;
+        const success = appliedRules.length === 6;
+        document.getElementById("choicesArea").innerHTML = "";
+        document.getElementById("nextArea").style.display = "none";
+        
+        const resultDiv = document.getElementById("resultCard");
+        resultDiv.style.display = "block";
+        resultDiv.className = `result-card ${success ? "success" : "loss"}`;
+        
+        let html = '';
+        
+        if (success) {
+            html = `
+                <h2>🏆 ПОБЕДА!</h2>
+                <p>Вы применили все 6 правил!</p>
+                <p style="font-size:14px; color:#666;">Результат: ${appliedRules.length}/6</p>
+                <div class="rec-perfect">
+                    🎉 <strong>ИДЕАЛЬНО!</strong> Вы применили все правила в диалоге!
                 </div>
-                <button class="btn" style="padding:0 10px;background:transparent;color:#dc2626;border:1px solid #fecaca;border-radius:4px;cursor:pointer;" onclick="deleteRow(${r.id})">✕</button>
-            </div>
-        `).join('');
-    }
-
-    // ----- УДАЛЕНИЕ -----
-    function deleteRow(id) {
-        if (!confirm('Удалить из текущего просмотра?')) return;
-        allData = allData.filter(r => r.id !== id);
-        applyFilters();
-        renderCityStats();
-    }
-
-    // ----- МОДАЛКА -----
-    function showDetails(id) {
-        const emp = filteredData.find(r => r.id === id);
-        if (!emp) return;
-        document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}%`;
-        let html = `<div class="modal-summary">✅ Правильных: ${emp.score} из ${emp.total}</div>`;
-        const recs = [
-            "Не спрашивайте 'Чем помочь?'. Сразу дайте ценность: акция + 'Для себя или в подарок?'",
-            "НЕ показывайте товар сразу. Сначала спросите: 'Для какого случая?'",
-            "Предлагайте доп. товар через образ: 'Давайте подберём серьги из той же коллекции'",
-            "Не критикуйте выбор. Скажите: 'Давайте примерим оба варианта'",
-            "Не спрашивайте 'Футляр нужен?'. Говорите: 'Давайте выберем красивый футляр'",
-            "На 'дороговато' отвечайте: 'А с чем вы сравниваете?'",
-            "Не отправляйте клиента ждать. Дайте альтернативу сейчас",
-            "Продавайте эмоцию: 'Это кольцо станет идеальным напоминанием'",
-            "Не говорите просто 'Да'. Предложите дополнения",
-            "Сплит предлагайте ДО озвучивания цены",
-            "Дайте 20-30 секунд освоиться, затем подойдите"
-        ];
-        if (emp.answers && emp.answers.length) {
-            emp.answers.forEach((a, i) => {
-                const isCorrect = a.correct;
-                const rec = recs[i] || 'Изучите правильный ответ.';
+            `;
+        } else {
+            const missingRules = ALL_RULES.filter(r => !appliedRules.includes(r.name));
+            
+            html = `
+                <h2>😞 ДИАЛОГ НЕ ПРОЙДЕН</h2>
+                <p>Применено правил: ${appliedRules.length} из 6</p>
+            `;
+            
+            if (missingRules.length > 0) {
                 html += `
-                    <div class="answer-item">
-                        <div class="q">Вопрос ${i+1}: ${a.questionText}</div>
-                        <div class="user-answer">❌ Ваш ответ: ${a.selectedText}</div>
-                        <div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>
-                        <div class="${isCorrect ? 'rec' : 'rec-wrong'}">${isCorrect ? '✅ Верно!' : '📌 ' + rec}</div>
+                    <div class="rec-section">
+                        <h4>📚 КАКИЕ ПРАВИЛА НЕ ПРИМЕНЕНЫ</h4>
+                `;
+                
+                missingRules.forEach(rule => {
+                    html += `
+                        <div class="rec-item">
+                            <div class="rec-rule">❌ ${rule.name}</div>
+                            <div class="rec-tip">📌 ${rule.rec}</div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+            
+            if (appliedRules.length > 0) {
+                html += `
+                    <div style="margin-top: 12px; text-align: center; font-size: 14px; color: #2c6e2c;">
+                        ✅ ${appliedRules.length} правил вы применили — так держать!
                     </div>
                 `;
-            });
+            }
         }
-        document.getElementById('modalAnswers').innerHTML = html;
-        document.getElementById('modal').style.display = 'flex';
+        
+        resultDiv.innerHTML = html;
+        
+        // Сохраняем результат
+        saveResult(success);
+        
+        // Кнопка перезапуска
+        const existingBtn = resultDiv.parentNode.querySelector('.restart-btn');
+        if (!existingBtn) {
+            const btn = document.createElement("button");
+            btn.className = "restart-btn";
+            btn.innerText = "🔄 Пройти заново";
+            btn.onclick = () => resetGame();
+            resultDiv.parentNode.appendChild(btn);
+        }
     }
 
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
-
-    // ----- ФИДБЕК -----
-    function generateFeedback() {
-        const city = document.getElementById('feedbackCitySelect').value;
-        if (!city) { alert('Выберите город'); return; }
-        const data = allData.filter(r => r.city === city);
-        if (!data.length) { alert('Нет данных'); return; }
-        const total = data.length;
-        const avg = Math.round(data.reduce((s,r) => s + r.percent, 0) / total);
-        const success = data.filter(r => r.percent >= 85).length;
-        const failed = data.filter(r => r.percent < 70).length;
-        const testCount = data.filter(r => r.type === 'test').length;
-        const trainerCount = data.filter(r => r.type === 'trainer').length;
-        document.getElementById('feedbackResult').innerHTML = `
-            <div style="background:#f8fafc;padding:14px 16px;border-radius:6px;border-left:3px solid #c41e3a;margin-top:12px;">
-                <h4 style="margin-bottom:8px;">${city}</h4>
-                <p>👥 ${total} сотрудников</p>
-                <p>📈 Средний балл: ${avg}%</p>
-                <p>🏆 Успешно: ${success}/${total}</p>
-                <p>🔴 Требуют доработки: ${failed}</p>
-                <p>📝 Тестов: ${testCount} | 🎯 Тренировок: ${trainerCount}</p>
-            </div>
-        `;
-    }
-
-    // ----- ЭКСПОРТ PDF -----
-    document.getElementById('exportPdfBtn').onclick = async function() {
-        const el = document.getElementById('dashboardTab');
-        if (!el) return;
-        try {
-            const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#e9edf2', useCORS: true });
-            const img = canvas.toDataURL('image/png');
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('landscape', 'mm', 'a3');
-            const w = pdf.internal.pageSize.getWidth();
-            const h = pdf.internal.pageSize.getHeight();
-            pdf.addImage(img, 'PNG', 0, 0, w, h);
-            pdf.save(`585GOLD_${new Date().toISOString().slice(0,10)}.pdf`);
-        } catch(e) { alert('Ошибка PDF: ' + e.message); }
-    };
-
-    // ----- ЭКСПОРТ CSV -----
-    function exportCSV() {
-        if (!filteredData.length) return alert('Нет данных');
-        let csv = "Тип,Имя,Город,Правильных,Всего,Процент\n";
-        filteredData.forEach(r => csv += `"${r.type==='trainer'?'Тренировка':'Тест'}","${r.user_name}","${r.city}",${r.score},${r.total},${r.percent}%\n`);
-        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'results.csv';
-        a.click();
-    }
-
-    function exportCityCSV() {
-        const map = new Map();
-        allData.forEach(r => {
-            if (!map.has(r.city)) map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0 });
-            const c = map.get(r.city);
-            c.count++; c.sum += r.percent; if (r.percent >= 85) c.success++; c.errors += (r.total - r.score);
+    function renderQuestion() {
+        const q = QUESTIONS[currentQuestionIndex];
+        document.getElementById("chatArea").innerHTML = `<div class="client-message">${q.client}</div>`;
+        
+        updateProgress();
+        
+        const rulesDiv = document.getElementById("appliedRulesList");
+        if (appliedRules.length) {
+            document.getElementById("emptyRulesMsg").style.display = "none";
+            rulesDiv.innerHTML = appliedRules.map(r => `<span class="applied-rule">✅ ${r}</span>`).join('');
+        } else {
+            document.getElementById("emptyRulesMsg").style.display = "inline";
+            rulesDiv.innerHTML = "";
+        }
+        
+        const choicesDiv = document.getElementById("choicesArea");
+        choicesDiv.innerHTML = "";
+        selectedChoiceIndex = null;
+        document.getElementById("nextBtn").disabled = true;
+        
+        q.choices.forEach((c, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "choice-btn";
+            btn.innerText = c;
+            btn.onclick = () => {
+                document.querySelectorAll(".choice-btn").forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+                selectedChoiceIndex = idx;
+                document.getElementById("nextBtn").disabled = false;
+            };
+            choicesDiv.appendChild(btn);
         });
-        const stats = [...map.entries()].map(([city, d]) => ({ city, count: d.count, avg: Math.round(d.sum/d.count), success: d.success, errors: d.errors })).sort((a,b) => b.avg - a.avg);
-        let csv = "Город,Сотрудников,Средний балл,Успешно,Ошибок\n";
-        stats.forEach(c => csv += `"${c.city}",${c.count},${c.avg}%,${c.success}/${c.count},${c.errors}\n`);
-        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'city_stats.csv';
-        a.click();
     }
 
-    function resetFilters() {
-        document.getElementById('typeFilter').value = 'all';
-        document.getElementById('cityFilter').value = 'all';
-        document.getElementById('percentFilter').value = 'all';
-        document.getElementById('searchInput').value = '';
-        applyFilters();
+    function updateProgress() {
+        const dotsContainer = document.getElementById('progressDots');
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < QUESTIONS.length; i++) {
+            const dot = document.createElement('span');
+            dot.className = 'dot';
+            if (i < currentQuestionIndex) {
+                dot.classList.add(questionResults[i] ? 'done' : 'failed');
+            } else if (i === currentQuestionIndex) {
+                dot.classList.add('active');
+            }
+            dotsContainer.appendChild(dot);
+        }
     }
 
-    // ===== ОБРАБОТЧИКИ =====
-    document.getElementById('loadBtn').onclick = loadResults;
-    document.getElementById('resetFiltersBtn').onclick = resetFilters;
-    document.getElementById('typeFilter').onchange = applyFilters;
-    document.getElementById('cityFilter').onchange = applyFilters;
-    document.getElementById('percentFilter').onchange = applyFilters;
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
-    document.getElementById('exportBtn').onclick = exportCSV;
-    document.getElementById('exportCityBtn').onclick = exportCityCSV;
-    document.getElementById('generateFeedbackBtn').onclick = generateFeedback;
+    function startGame(name, city) {
+        currentUserName = name;
+        currentUserCity = city;
+        currentQuestionIndex = 0;
+        appliedRules = [];
+        currentAnswers = [];
+        questionResults = [];
+        gameActive = true;
+        
+        document.getElementById("gameContainer").style.display = "block";
+        document.getElementById("currentUserDisplay").innerHTML = `👤 ${name} (${city})`;
+        document.getElementById("currentUserDisplay").style.display = "inline-block";
+        document.getElementById("registerForm").style.display = "none";
+        document.getElementById("resultCard").style.display = "none";
+        document.getElementById("saveStatus").innerHTML = '';
+        
+        const oldBtn = document.querySelector('.restart-btn');
+        if (oldBtn) oldBtn.remove();
+        
+        renderQuestion();
+    }
 
-    // ЗАПУСК
-    loadResults();
+    function resetGame() {
+        const name = currentUserName;
+        const city = currentUserCity;
+        startGame(name, city);
+    }
+
+    // ===================================================================
+    // ОБРАБОТЧИКИ
+    // ===================================================================
+    document.getElementById("startGameBtn").onclick = () => {
+        const name = document.getElementById("userName").value.trim();
+        const city = document.getElementById("userCity").value;
+        if (!name) return alert("Введите имя");
+        if (!city) return alert("Выберите город");
+        startGame(name, city);
+    };
+    
+    document.getElementById("nextBtn").onclick = nextStep;
+
+    document.getElementById("userName").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("startGameBtn").click();
+    });
 </script>
 </body>
 </html>
