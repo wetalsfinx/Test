@@ -266,8 +266,7 @@
     // НАСТРОЙКА JSONBIN.IO
     // ===================================================================
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    // ФИКСИРОВАННЫЙ ID КОРОБКИ (из консоли)
-    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7';
+    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7'; // <-- ВАШ ID
 
     // ===================================================================
     // ДАННЫЕ ТРЕНАЖЁРА
@@ -358,7 +357,7 @@
     let questionResults = [];
 
     // ===================================================================
-    // СОХРАНЕНИЕ В JSONBIN.IO (С ПОВТОРНЫМИ ПОПЫТКАМИ)
+    // СОХРАНЕНИЕ В JSONBIN.IO (С ДЛИТЕЛЬНЫМ ТАЙМАУТОМ)
     // ===================================================================
     async function saveToJsonBin(resultData, attempt = 1) {
         try {
@@ -366,7 +365,7 @@
             
             // Читаем текущие данные из коробки
             console.log('Читаем коробку:', FIXED_BIN_ID);
-            const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest?t=${Date.now()}`, {
+            const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
             
@@ -377,7 +376,6 @@
                 console.log('Записей в коробке:', existingResults.length);
             } else if (getResponse.status === 404) {
                 console.log('Коробка не найдена, создаём новую...');
-                // Создаём новую коробку
                 const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
                     method: 'POST',
                     headers: {
@@ -406,8 +404,9 @@
             
             // Обновляем коробку с увеличенным таймаутом
             console.log('Обновляем коробку, записей станет:', existingResults.length);
+            
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 секунд таймаут
+            const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 секунд
             
             try {
                 const updateResponse = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
@@ -467,10 +466,9 @@
             timestamp: new Date().toLocaleString('ru-RU')
         };
         
-        // Показываем статус сохранения
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
-            statusDiv.innerHTML = '⏳ Сохранение...';
+            statusDiv.innerHTML = '⏳ Сохранение в облако...';
             statusDiv.style.color = '#f59e0b';
         }
         
@@ -480,7 +478,7 @@
                     statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                     statusDiv.style.color = '#2c6e2c';
                 } else {
-                    statusDiv.innerHTML = '⚠️ Результат НЕ сохранился. Проверьте интернет.';
+                    statusDiv.innerHTML = '⚠️ Результат НЕ сохранился. Попробуйте позже.';
                     statusDiv.style.color = '#c41e3a';
                 }
             }
