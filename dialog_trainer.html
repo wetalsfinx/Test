@@ -263,12 +263,10 @@
 
 <script>
     // ===================================================================
-    // НАСТРОЙКА — МОЙ БЕСПЛАТНЫЙ ПРОКСИ-СЕРВЕР (Pipedream)
+    // НАСТРОЙКА JSONBIN.IO (ПРЯМОЕ СОХРАНЕНИЕ)
     // ===================================================================
-    const PROXY_URL = 'https://eo1jf9yeum1qx9v.m.pipedream.net';
-    
-    // ⚠️ ВСТАВЬ СВОЙ ID КОРОБКИ (ТОТ ЖЕ, ЧТО В ДАШБОРДЕ)
-    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7';
+    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
+    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7'; // <-- ТВОЙ ID КОРОБКИ
 
     // ===================================================================
     // ДАННЫЕ ТРЕНАЖЁРА
@@ -359,35 +357,69 @@
     let questionResults = [];
 
     // ===================================================================
-    // СОХРАНЕНИЕ ЧЕРЕЗ ПРОКСИ (без CORS)
+    // СОХРАНЕНИЕ В JSONBIN.IO (УПРОЩЁННОЕ, БЕЗ CORS)
     // ===================================================================
-    async function saveToProxy(resultData) {
+    async function saveToJsonBin(resultData) {
         try {
-            console.log('Сохраняем результат через прокси...');
+            console.log('Сохраняем результат...');
             
-            const payload = {
-                binId: FIXED_BIN_ID,
-                data: resultData
-            };
-            
-            const response = await fetch(PROXY_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
+            // Шаг 1: читаем текущие данные
+            const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
             
-            if (response.ok) {
-                const result = await response.json();
-                console.log('✅ Результат сохранён через прокси!');
+            let existingResults = [];
+            if (getResponse.ok) {
+                const data = await getResponse.json();
+                existingResults = data.record || [];
+                console.log('Записей в коробке:', existingResults.length);
+            } else if (getResponse.status === 404) {
+                console.log('Коробка не найдена, создаём новую...');
+                const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY
+                    },
+                    body: JSON.stringify([resultData])
+                });
+                if (createResponse.ok) {
+                    const data = await createResponse.json();
+                    const newBinId = data.metadata.id;
+                    console.log('✅ Создана новая коробка, ID:', newBinId);
+                    alert('⚠️ Внимание! Создана новая коробка. Обновите ID в дашборде на: ' + newBinId);
+                    return true;
+                } else {
+                    console.error('Ошибка создания:', await createResponse.text());
+                    return false;
+                }
+            } else {
+                console.error('Ошибка чтения:', getResponse.status);
+                return false;
+            }
+            
+            // Шаг 2: добавляем новый результат
+            existingResults.push(resultData);
+            
+            // Шаг 3: обновляем коробку
+            const updateResponse = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY
+                },
+                body: JSON.stringify(existingResults)
+            });
+            
+            if (updateResponse.ok) {
+                console.log('✅ Результат сохранён!');
                 return true;
             } else {
-                console.error('Ошибка прокси:', response.status);
+                console.error('Ошибка обновления:', await updateResponse.text());
                 return false;
             }
         } catch(error) {
-            console.error('❌ Ошибка прокси:', error);
+            console.error('❌ Ошибка:', error);
             return false;
         }
     }
@@ -415,13 +447,13 @@
             statusDiv.style.color = '#f59e0b';
         }
         
-        saveToProxy(resultData).then(saved => {
+        saveToJsonBin(resultData).then(saved => {
             if (statusDiv) {
                 if (saved) {
-                    statusDiv.innerHTML = '✅ Результат сохранён!';
+                    statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
                     statusDiv.style.color = '#2c6e2c';
                 } else {
-                    statusDiv.innerHTML = '⚠️ Не сохранилось. Попробуйте позже.';
+                    statusDiv.innerHTML = '⚠️ Результат НЕ сохранился. Проверьте интернет.';
                     statusDiv.style.color = '#c41e3a';
                 }
             }
