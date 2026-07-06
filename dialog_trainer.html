@@ -265,7 +265,7 @@
     // ===================================================================
     // НАСТРОЙКА — GitHub API
     // ===================================================================
-    const GITHUB_TOKEN = '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';
+    const GITHUB_TOKEN = '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';
     const REPO_OWNER = 'wetalsfinx';
     const REPO_NAME = 'Test';
     const DATA_FILE = 'dialog_results.json';
@@ -374,7 +374,7 @@
             try {
                 const getResponse = await fetch(apiUrl, {
                     headers: {
-                        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                        'Authorization': `token ${GITHUB_TOKEN}`,
                         'Accept': 'application/vnd.github.v3+json',
                         'If-None-Match': ''
                     }
