@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Результаты диалогов</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        h1 { color: #c41e3a; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 10px; border-bottom: 2px solid #c41e3a; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .badge { padding: 4px 12px; border-radius: 40px; font-size: 12px; font-weight: 600; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-fail { background: #fee2e2; color: #991b1b; }
+        .btn { padding: 10px 24px; border: none; border-radius: 8px; background: #c41e3a; color: white; font-weight: 600; cursor: pointer; }
+        .btn:hover { background: #a0162e; }
+        .btn-green { background: #16a34a; }
+        .btn-green:hover { background: #15803d; }
+        .empty { color: #94a3b8; text-align: center; padding: 40px 0; }
+        .blob-id { background: #f1f5f9; padding: 8px 14px; border-radius: 8px; font-family: monospace; font-size: 13px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h1>📊 Результаты диалогов (JSONBlob)</h1>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+            <button class="btn" onclick="loadResults()">🔄 Загрузить</button>
+            <button class="btn btn-green" onclick="exportCSV()">📎 Скачать CSV</button>
+            <button class="btn" style="background:#64748b;" onclick="clearBlobId()">🗑️ Сбросить ID</button>
+        </div>
+        <div id="blobInfo" style="margin-bottom: 12px;"></div>
+        <div id="resultsContainer">
+            <div class="empty">Нажмите "Загрузить"</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'dialog_blob_id';
+    const JSONBLOB_URL = 'https://jsonblob.com/api/jsonBlob';
+
+    let currentResults = [];
+
+    async function loadResults() {
+        const container = document.getElementById('resultsContainer');
+        const info = document.getElementById('blobInfo');
+        const blobId = localStorage.getItem(STORAGE_KEY);
+        
+        if (!blobId) {
+            info.innerHTML = '⚠️ Нет сохранённого ID. Сначала пройдите диалог.';
+            container.innerHTML = '<div class="empty">Нет данных</div>';
+            return;
+        }
+        
+        info.innerHTML = `📦 ID блоба: <span class="blob-id">${blobId}</span>`;
+        container.innerHTML = '<div class="empty">Загрузка...</div>';
+        
+        try {
+            const response = await fetch(`${JSONBLOB_URL}/${blobId}`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    info.innerHTML = '⚠️ Блоб не найден. Возможно, он был удалён.';
+                    container.innerHTML = '<div class="empty">Нет данных</div>';
+                    return;
+                }
+                throw new Error('Ошибка загрузки');
+            }
+            
+            const data = await response.json();
+            currentResults = Array.isArray(data) ? data : [data];
+            
+            if (!currentResults.length) {
+                container.innerHTML = '<div class="empty">Нет результатов</div>';
+                return;
+            }
+            
+            renderResults();
+        } catch(error) {
+            console.error(error);
+            container.innerHTML = '<div class="empty">❌ Ошибка загрузки. Проверьте интернет.</div>';
+        }
+    }
+
+    function renderResults() {
+        const container = document.getElementById('resultsContainer');
+        
+        let html = `
+            <p><strong>Всего диалогов:</strong> ${currentResults.length}</p>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Сотрудник</th>
+                            <th>Город</th>
+                            <th>Правил</th>
+                            <th>Результат</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        currentResults.slice().reverse().forEach(r => {
+            html += `
+                <tr>
+                    <td>${r.timestamp || r.date || '—'}</td>
+                    <td>${r.user_name || 'Аноним'}</td>
+                    <td>${r.city || '—'}</td>
+                    <td>${r.score}/${r.total || 6}</td>
+                    <td><span class="badge ${r.passed ? 'badge-success' : 'badge-fail'}">${r.passed ? '✅ Прошёл' : '❌ Не прошёл'}</span></td>
+                </tr>
+            `;
+        });
+        
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+    }
+
+    function exportCSV() {
+        if (!currentResults.length) { alert('Нет данных'); return; }
+        
+        let csv = "Дата,Сотрудник,Город,Правил,Процент,Результат\n";
+        currentResults.forEach(r => {
+            csv += `"${r.timestamp || r.date || ''}","${r.user_name || 'Аноним'}","${r.city || ''}","${r.score}/${r.total || 6}","${r.percent || 0}%","${r.passed ? 'Прошёл' : 'Не прошёл'}"\n`;
+        });
+        
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `dialog_results.csv`;
+        a.click();
+    }
+
+    function clearBlobId() {
+        if (!confirm('Сбросить ID блоба?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        document.getElementById('blobInfo').innerHTML = '✅ ID сброшен. При следующем прохождении диалога создастся новый блоб.';
+        document.getElementById('resultsContainer').innerHTML = '<div class="empty">Нет данных</div>';
+        currentResults = [];
+    }
+
+    // Автозагрузка при открытии
+    loadResults();
+</script>
+</body>
+</html>
