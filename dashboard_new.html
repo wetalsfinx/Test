@@ -198,6 +198,7 @@
         .badge-yellow { background: #fef9c3; color: #854d0e; }
         .badge-red { background: #fee2e2; color: #991b1b; }
         .badge-purple { background: #f3e8ff; color: #6b21a8; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
         .empty { color: #94a3b8; text-align: center; padding: 16px 0; font-size: 14px; }
 
         .table-wrap { overflow-x: auto; }
@@ -255,6 +256,16 @@
             color: #991b1b;
             border-left: 3px solid #dc2626;
         }
+        .rule-item {
+            background: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #16a34a;
+        }
+        .rule-item.failed { border-left-color: #dc2626; background: #fef2f2; }
+        .rule-item .rule-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .rule-item .rule-status { font-size: 13px; }
         .modal-close {
             margin-top: 16px;
             padding: 10px;
@@ -317,7 +328,15 @@
         </div>
         <div class="filter-group">
             <label>Город</label>
-            <select id="cityFilter"><option value="all">Все города</option></select>
+            <select id="cityFilter">
+                <option value="all">Все города</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
+                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
+                <option value="Калининград">Калининград</option>
+                <option value="Нижний Тагил">Нижний Тагил</option>
+            </select>
         </div>
         <div class="filter-group">
             <label>Балл</label>
@@ -399,7 +418,7 @@
             <div class="card-title">Статистика по городам</div>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно</th><th>Ошибок</th><th>Провал</th></tr></thead>
+                    <thead><tr><th>Город</th><th>Сотрудников</th><th>Средний балл</th><th>Успешно</th><th>Ошибок</th><th>Слабое место</th></tr></thead>
                     <tbody id="cityStatsBody"></tbody>
                 </table>
             </div>
@@ -413,6 +432,12 @@
             <div class="card-title">Фидбек для города</div>
             <select id="feedbackCitySelect" style="padding:6px 12px;border-radius:6px;border:1px solid #d0d7dd;width:100%;max-width:280px;margin-bottom:12px;">
                 <option value="">-- Выберите город --</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
+                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
+                <option value="Калининград">Калининград</option>
+                <option value="Нижний Тагил">Нижний Тагил</option>
             </select>
             <button class="btn btn-primary" id="generateFeedbackBtn">Сгенерировать</button>
             <div id="feedbackResult" style="margin-top:16px;"></div>
@@ -437,7 +462,42 @@
     // ================================================================
 
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7'; // <-- ВАШ ID КОРОБКИ
+    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7';
+    
+    // Предопределённые города
+    const CITIES = [
+        'Уфа',
+        'Екатеринбург',
+        'Санкт-Петербург, Московский, 2',
+        'Санкт-Петербург, Новаторов, 112',
+        'Калининград',
+        'Нижний Тагил'
+    ];
+
+    // Рекомендации для ТЕСТА (11 вопросов)
+    const TEST_RECOMMENDATIONS = [
+        "Не спрашивайте 'Чем помочь?'. Сразу дайте ценность: акция + 'Для себя или в подарок?'",
+        "НЕ показывайте товар сразу. Сначала спросите: 'Для какого случая?'",
+        "Предлагайте доп. товар через образ: 'Давайте подберём серьги из той же коллекции'",
+        "Не критикуйте выбор. Скажите: 'Давайте примерим оба варианта'",
+        "Не спрашивайте 'Футляр нужен?'. Говорите: 'Давайте выберем красивый футляр'",
+        "На 'дороговато' отвечайте: 'А с чем вы сравниваете?'",
+        "Не отправляйте клиента ждать. Дайте альтернативу сейчас",
+        "Продавайте эмоцию: 'Это кольцо станет идеальным напоминанием'",
+        "Не говорите просто 'Да'. Предложите дополнения",
+        "Сплит предлагайте ДО озвучивания цены",
+        "Дайте 20-30 секунд освоиться, затем подойдите"
+    ];
+
+    // Правила для ТРЕНИРОВКИ (6 правил)
+    const TRAINER_RULES = [
+        { id: "initiative", name: "Проявляй инициативу", rec: "Через 20-30 секунд подойди и спроси: «Какое изделие выбираете? Для себя или в подарок?»" },
+        { id: "askBeforeShow", name: "Задавай вопросы ДО показа", rec: "Сначала спроси «для какого случая?», «кто получатель?». Только потом показывай украшения." },
+        { id: "emotionalHPW", name: "Презентуй с эмоцией (ХПВ)", rec: "Привязывай украшение к событию: «Это кольцо будет напоминать о вашей годовщине...»" },
+        { id: "fittingOffer", name: "Предлагай примерку через «Давайте»", rec: "Всегда предлагай примерку фразой «Давайте примерим»." },
+        { id: "alternative", name: "Не отпускай без альтернативы", rec: "Если нет размера — сразу покажи похожие варианты и каталог заказов." },
+        { id: "warmClosing", name: "Завершай с теплотой", rec: "«Спасибо, что зашли! Если будете выбирать подарки — заходите...»" }
+    ];
     
     let allData = [], filteredData = [];
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, comparisonChart = null;
@@ -513,12 +573,21 @@
                 total: r.total || (r.type === 'trainer' ? 6 : 11),
                 percent: r.percent || Math.round((r.score / (r.total || 11)) * 100),
                 answers: r.answers || [],
+                rules_applied: r.rules_applied || [],
                 date: r.date || new Date().toISOString()
             }));
             
-            const cities = [...new Set(allData.map(r => r.city))];
-            document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
-            document.getElementById('feedbackCitySelect').innerHTML = '<option value="">-- Выберите город --</option>' + cities.map(c => `<option value="${c}">${c}</option>`).join('');
+            // Добавляем города из данных, которых нет в предустановленных
+            const dataCities = [...new Set(allData.map(r => r.city))];
+            const allCities = [...new Set([...CITIES, ...dataCities])];
+            
+            const cityFilter = document.getElementById('cityFilter');
+            cityFilter.innerHTML = '<option value="all">Все города</option>' + 
+                allCities.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            const feedbackCitySelect = document.getElementById('feedbackCitySelect');
+            feedbackCitySelect.innerHTML = '<option value="">-- Выберите город --</option>' + 
+                allCities.map(c => `<option value="${c}">${c}</option>`).join('');
             
             renderCityStats();
             applyFilters();
@@ -601,15 +670,60 @@
     function renderCityStats() {
         const map = new Map();
         allData.forEach(r => {
-            if (!map.has(r.city)) map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0, qe: new Array(11).fill(0) });
+            if (!map.has(r.city)) {
+                map.set(r.city, { 
+                    count: 0, 
+                    sum: 0, 
+                    success: 0, 
+                    errors: 0, 
+                    testQe: new Array(11).fill(0),
+                    trainerRules: {}
+                });
+            }
             const c = map.get(r.city);
-            c.count++; c.sum += r.percent; if (r.percent >= 85) c.success++; c.errors += (r.total - r.score);
-            if (r.answers) r.answers.forEach((a, i) => { if (!a.correct) c.qe[i]++; });
+            c.count++; 
+            c.sum += r.percent; 
+            if (r.percent >= 85) c.success++; 
+            c.errors += (r.total - r.score);
+            
+            if (r.type === 'test' && r.answers) {
+                r.answers.forEach((a, i) => { if (!a.correct) c.testQe[i]++; });
+            } else if (r.type === 'trainer' && r.rules_applied) {
+                // Подсчитываем, какие правила НЕ были применены
+                TRAINER_RULES.forEach(rule => {
+                    if (!r.rules_applied.includes(rule.name)) {
+                        c.trainerRules[rule.name] = (c.trainerRules[rule.name] || 0) + 1;
+                    }
+                });
+            }
         });
-        const qTexts = ['Приветствие','Бюджет','Серьги','Серебро→Золото','Футляр','Дороговато','Нет размера','Подарок маме','Другие модели','Сплит','Клиент идёт'];
+        
+        const testQTexts = ['Приветствие','Бюджет','Серьги','Серебро→Золото','Футляр','Дороговато','Нет размера','Подарок маме','Другие модели','Сплит','Клиент идёт'];
+        
         const stats = [...map.entries()].map(([city, d]) => {
-            const idx = d.qe.reduce((a,b,i,arr) => b > arr[a] ? i : a, 0);
-            return { city, count: d.count, avg: Math.round(d.sum/d.count), success: d.success, errors: d.errors, fail: qTexts[idx] || '—' };
+            let weakPoint = '—';
+            
+            // Определяем слабое место
+            const testMaxIdx = d.testQe.reduce((a,b,i,arr) => b > arr[a] ? i : a, 0);
+            const testMaxErrors = d.testQe[testMaxIdx];
+            
+            const trainerMaxRule = Object.entries(d.trainerRules).sort((a,b) => b[1] - a[1])[0];
+            const trainerMaxErrors = trainerMaxRule ? trainerMaxRule[1] : 0;
+            
+            if (testMaxErrors >= trainerMaxErrors && testMaxErrors > 0) {
+                weakPoint = `📝 ${testQTexts[testMaxIdx] || '—'}`;
+            } else if (trainerMaxErrors > 0) {
+                weakPoint = `🎯 ${trainerMaxRule[0]}`;
+            }
+            
+            return { 
+                city, 
+                count: d.count, 
+                avg: Math.round(d.sum/d.count), 
+                success: d.success, 
+                errors: d.errors, 
+                weakPoint
+            };
         }).sort((a,b) => b.avg - a.avg);
 
         const tbody = document.getElementById('cityStatsBody');
@@ -621,7 +735,7 @@
             row.insertCell(2).innerHTML = `<span style="color:${c.avg>=85?'#16a34a':c.avg>=70?'#f59e0b':'#dc2626'}">${c.avg}%</span>`;
             row.insertCell(3).textContent = `${c.success}/${c.count}`;
             row.insertCell(4).textContent = c.errors;
-            row.insertCell(5).innerHTML = `<span class="badge badge-red">${c.fail}</span>`;
+            row.insertCell(5).innerHTML = `<span class="badge badge-red">${c.weakPoint}</span>`;
         });
 
         if (comparisonChart) comparisonChart.destroy();
@@ -866,35 +980,43 @@
     function showDetails(id) {
         const emp = filteredData.find(r => r.id === id);
         if (!emp) return;
-        document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}%`;
+        
+        const typeLabel = emp.type === 'trainer' ? '🎯 Тренировка' : '📝 Тест';
+        document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}% [${typeLabel}]`;
+        
         let html = `<div class="modal-summary">✅ Правильных: ${emp.score} из ${emp.total}</div>`;
-        const recs = [
-            "Не спрашивайте 'Чем помочь?'. Сразу дайте ценность: акция + 'Для себя или в подарок?'",
-            "НЕ показывайте товар сразу. Сначала спросите: 'Для какого случая?'",
-            "Предлагайте доп. товар через образ: 'Давайте подберём серьги из той же коллекции'",
-            "Не критикуйте выбор. Скажите: 'Давайте примерим оба варианта'",
-            "Не спрашивайте 'Футляр нужен?'. Говорите: 'Давайте выберем красивый футляр'",
-            "На 'дороговато' отвечайте: 'А с чем вы сравниваете?'",
-            "Не отправляйте клиента ждать. Дайте альтернативу сейчас",
-            "Продавайте эмоцию: 'Это кольцо станет идеальным напоминанием'",
-            "Не говорите просто 'Да'. Предложите дополнения",
-            "Сплит предлагайте ДО озвучивания цены",
-            "Дайте 20-30 секунд освоиться, затем подойдите"
-        ];
-        if (emp.answers && emp.answers.length) {
-            emp.answers.forEach((a, i) => {
-                const isCorrect = a.correct;
-                const rec = recs[i] || 'Изучите правильный ответ.';
+        
+        if (emp.type === 'trainer') {
+            // Для тренировки показываем правила
+            html += `<h4 style="margin:12px 0 8px;">Применённые правила:</h4>`;
+            
+            TRAINER_RULES.forEach(rule => {
+                const applied = emp.rules_applied && emp.rules_applied.includes(rule.name);
                 html += `
-                    <div class="answer-item">
-                        <div class="q">Вопрос ${i+1}: ${a.questionText}</div>
-                        <div class="user-answer">❌ Ваш ответ: ${a.selectedText}</div>
-                        <div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>
-                        <div class="${isCorrect ? 'rec' : 'rec-wrong'}">${isCorrect ? '✅ Верно!' : '📌 ' + rec}</div>
+                    <div class="rule-item ${applied ? '' : 'failed'}">
+                        <div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>
+                        ${!applied ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:4px;">📌 ${rule.rec}</div>` : ''}
                     </div>
                 `;
             });
+        } else {
+            // Для теста показываем вопросы
+            if (emp.answers && emp.answers.length) {
+                emp.answers.forEach((a, i) => {
+                    const isCorrect = a.correct;
+                    const rec = TEST_RECOMMENDATIONS[i] || 'Изучите правильный ответ.';
+                    html += `
+                        <div class="answer-item">
+                            <div class="q">Вопрос ${i+1}: ${a.questionText}</div>
+                            <div class="user-answer">❌ Ваш ответ: ${a.selectedText}</div>
+                            <div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>
+                            <div class="${isCorrect ? 'rec' : 'rec-wrong'}">${isCorrect ? '✅ Верно!' : '📌 ' + rec}</div>
+                        </div>
+                    `;
+                });
+            }
         }
+        
         document.getElementById('modalAnswers').innerHTML = html;
         document.getElementById('modal').style.display = 'flex';
     }
@@ -913,6 +1035,22 @@
         const failed = data.filter(r => r.percent < 70).length;
         const testCount = data.filter(r => r.type === 'test').length;
         const trainerCount = data.filter(r => r.type === 'trainer').length;
+        
+        // Находим самое слабое правило для тренировки
+        const trainerData = data.filter(r => r.type === 'trainer');
+        const ruleFailures = {};
+        trainerData.forEach(r => {
+            if (r.rules_applied) {
+                TRAINER_RULES.forEach(rule => {
+                    if (!r.rules_applied.includes(rule.name)) {
+                        ruleFailures[rule.name] = (ruleFailures[rule.name] || 0) + 1;
+                    }
+                });
+            }
+        });
+        
+        const weakestRule = Object.entries(ruleFailures).sort((a,b) => b[1] - a[1])[0];
+        
         document.getElementById('feedbackResult').innerHTML = `
             <div style="background:#f8fafc;padding:14px 16px;border-radius:6px;border-left:3px solid #c41e3a;margin-top:12px;">
                 <h4 style="margin-bottom:8px;">${city}</h4>
@@ -921,6 +1059,7 @@
                 <p>🏆 Успешно: ${success}/${total}</p>
                 <p>🔴 Требуют доработки: ${failed}</p>
                 <p>📝 Тестов: ${testCount} | 🎯 Тренировок: ${trainerCount}</p>
+                ${weakestRule ? `<p>⚠️ Самое слабое правило: <b>${weakestRule[0]}</b> (${weakestRule[1]} раз не применено)</p>` : ''}
             </div>
         `;
     }
