@@ -225,7 +225,7 @@
 
 <div class="main-container">
     <div class="employee-view">
-        <h1>🎯 585GOLD | Тренировка продаж</h1>
+        <h1> 585GOLD | Тренировка продаж</h1>
         <p style="text-align: center; color: #666; font-size: 14px;">Пройди диалог с клиентом</p>
         <div class="register-form" id="registerForm">
             <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
@@ -263,11 +263,10 @@
 
 <script>
     // ===================================================================
-    // НАСТРОЙКА — JSONBin.io
+    // НАСТРОЙКА — JSONBlob.io (РАБОТАЕТ БЕЗ CORS)
     // ===================================================================
-    const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b';
-    const BIN_ID = '6a32af38f5f4af5e290249b7';
-    const MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
+    const JSONBLOB_URL = 'https://jsonblob.com/api/jsonBlob';
+    const STORAGE_KEY = 'dialog_trainer_blob_id';
 
     // ===================================================================
     // ДАННЫЕ ТРЕНАЖЁРА
@@ -358,102 +357,67 @@
     let questionResults = [];
 
     // ===================================================================
-    // СОХРАНЕНИЕ В JSONBin.io
+    // СОХРАНЕНИЕ В JSONBlob
     // ===================================================================
- async function saveToJsonBin(resultData) {
-    try {
-        console.log('📤 Сохраняем в JSONBin...');
-        
-        // Пробуем прочитать текущие данные
-        const getUrl = `${JSONBIN_API_URL}/${BIN_ID}/latest`;
-        console.log('Читаем bin...');
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 секунд
-        
-        let allResults = [];
-        
+    async function saveToJsonBlob(resultData) {
         try {
-            const getResponse = await fetch(getUrl, {
-                method: 'GET',
-                headers: { 
-                    'X-Master-Key': MASTER_KEY,
-                    'X-Bin-Meta': 'false'
-                },
-                signal: controller.signal
-            });
+            console.log('📤 Сохраняем в JSONBlob...');
             
-            clearTimeout(timeoutId);
+            let blobId = localStorage.getItem(STORAGE_KEY);
             
-            if (getResponse.ok) {
-                const getData = await getResponse.json();
-                allResults = Array.isArray(getData.record) ? getData.record : [];
-                console.log(`📦 Найдено записей: ${allResults.length}`);
+            if (blobId) {
+                // Читаем существующие данные
+                try {
+                    const getResponse = await fetch(`${JSONBLOB_URL}/${blobId}`);
+                    if (getResponse.ok) {
+                        const existingData = await getResponse.json();
+                        const allResults = Array.isArray(existingData) ? existingData : [];
+                        allResults.push(resultData);
+                        
+                        // Обновляем
+                        const putResponse = await fetch(`${JSONBLOB_URL}/${blobId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(allResults)
+                        });
+                        
+                        if (putResponse.ok) {
+                            console.log('✅ Обновлено! Всего записей:', allResults.length);
+                            return true;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Ошибка чтения, создаём новый blob');
+                    localStorage.removeItem(STORAGE_KEY);
+                }
             }
-        } catch (readError) {
-            console.warn('⚠️ Не удалось прочитать bin, создаём с нуля:', readError.message);
-        }
-        
-        // Добавляем новый результат
-        allResults.push(resultData);
-        
-        // Обновляем bin
-        const putUrl = `${JSONBIN_API_URL}/${BIN_ID}`;
-        console.log('Обновляем bin...');
-        
-        const putController = new AbortController();
-        const putTimeoutId = setTimeout(() => putController.abort(), 10000);
-        
-        try {
-            const putResponse = await fetch(putUrl, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': MASTER_KEY,
-                    'X-Bin-Meta': 'false'
-                },
-                body: JSON.stringify(allResults),
-                signal: putController.signal
+            
+            // Создаём новый blob
+            const createResponse = await fetch(JSONBLOB_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([resultData])
             });
             
-            clearTimeout(putTimeoutId);
-            
-            if (putResponse.ok) {
-                console.log('✅ Сохранено! Всего записей:', allResults.length);
-                return true;
-            } else {
-                const errorText = await putResponse.text();
-                console.error('❌ Ошибка PUT:', putResponse.status, errorText);
-                
-                // Пробуем альтернативный метод — POST для создания новой версии
-                console.log('🔄 Пробуем POST вместо PUT...');
-                const postResponse = await fetch(putUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': MASTER_KEY
-                    },
-                    body: JSON.stringify(allResults)
-                });
-                
-                if (postResponse.ok) {
-                    console.log('✅ Сохранено через POST!');
+            if (createResponse.ok) {
+                const location = createResponse.headers.get('location');
+                const newBlobId = location ? location.split('/').pop() : null;
+                if (newBlobId) {
+                    localStorage.setItem(STORAGE_KEY, newBlobId);
+                    console.log('✅ Создан новый blob, ID:', newBlobId);
                     return true;
                 }
-                
-                return false;
             }
-        } catch (putError) {
-            clearTimeout(putTimeoutId);
-            console.error('❌ Таймаут или ошибка сети:', putError.message);
+            
+            console.error('❌ Ошибка сохранения');
+            return false;
+            
+        } catch(error) {
+            console.error('❌ Ошибка:', error);
             return false;
         }
-        
-    } catch(error) {
-        console.error('❌ Критическая ошибка:', error);
-        return false;
     }
-}
+
     function saveResult(success) {
         const resultData = {
             id: Date.now(),
@@ -477,7 +441,7 @@
             statusDiv.style.color = '#f59e0b';
         }
         
-        saveToJsonBin(resultData).then(saved => {
+        saveToJsonBlob(resultData).then(saved => {
             if (statusDiv) {
                 if (saved) {
                     statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
@@ -564,7 +528,7 @@
                     html += `
                         <div class="rec-item">
                             <div class="rec-rule">❌ ${rule.name}</div>
-                            <div class="rec-tip">📌 ${rule.rec}</div>
+                            <div class="rec-tip"> ${rule.rec}</div>
                         </div>
                     `;
                 });
