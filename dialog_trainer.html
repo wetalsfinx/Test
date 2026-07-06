@@ -263,6 +263,122 @@
 
 <script>
     // ===================================================================
+    // НАСТРОЙКА — JSONBIN.IO (КАК В ТЕСТЕ)
+    // ===================================================================
+    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
+    const BIN_ID_KEY = '585_dialog_bin_id';
+
+    // Функция с таймаутом
+    async function fetchWithTimeout(url, options, timeout = 15000) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        try {
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(timeoutId);
+            return response;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            throw error;
+        }
+    }
+
+    async function saveToJsonBin(resultData, attempt = 1) {
+        try {
+            console.log(`Сохраняем результат диалога... (попытка ${attempt})`);
+            let binId = localStorage.getItem(BIN_ID_KEY);
+            
+            // Если коробки нет — создаём новую
+            if (!binId) {
+                console.log('Создаём новую коробку для диалога...');
+                const createResponse = await fetchWithTimeout('https://api.jsonbin.io/v3/b', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY
+                    },
+                    body: JSON.stringify([resultData])
+                }, 20000);
+                
+                if (createResponse.ok) {
+                    const data = await createResponse.json();
+                    binId = data.metadata.id;
+                    localStorage.setItem(BIN_ID_KEY, binId);
+                    console.log('✅ Создана новая коробка, ID:', binId);
+                    return true;
+                } else {
+                    const errorText = await createResponse.text();
+                    console.error('Ошибка создания:', errorText);
+                    if (attempt < 3) {
+                        console.log('Повторяем через 2 секунды...');
+                        await new Promise(r => setTimeout(r, 2000));
+                        return await saveToJsonBin(resultData, attempt + 1);
+                    }
+                    return false;
+                }
+            }
+
+            // Если коробка есть — читаем и обновляем
+            console.log('Читаем коробку:', binId);
+            const getResponse = await fetchWithTimeout(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            }, 15000);
+            
+            let existingResults = [];
+            if (getResponse.ok) {
+                const data = await getResponse.json();
+                existingResults = data.record || [];
+                console.log('Записей в коробке:', existingResults.length);
+            } else if (getResponse.status === 404) {
+                console.log('Коробка не найдена на сервере, создаём новую...');
+                localStorage.removeItem(BIN_ID_KEY);
+                return await saveToJsonBin(resultData, attempt + 1);
+            } else {
+                console.error('Ошибка чтения коробки:', getResponse.status);
+                if (attempt < 3) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    return await saveToJsonBin(resultData, attempt + 1);
+                }
+                return false;
+            }
+            
+            // Добавляем новый результат
+            existingResults.push(resultData);
+            
+            // Обновляем коробку
+            console.log('Обновляем коробку, записей станет:', existingResults.length);
+            const updateResponse = await fetchWithTimeout(`https://api.jsonbin.io/v3/b/${binId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY
+                },
+                body: JSON.stringify(existingResults)
+            }, 20000);
+            
+            if (updateResponse.ok) {
+                console.log('✅ Результат диалога сохранён!');
+                return true;
+            } else {
+                const errorText = await updateResponse.text();
+                console.error('❌ Ошибка обновления:', errorText);
+                if (attempt < 3) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    return await saveToJsonBin(resultData, attempt + 1);
+                }
+                return false;
+            }
+        } catch(error) {
+            console.error('❌ Ошибка:', error.message);
+            if (attempt < 3) {
+                console.log(`Повторяем через 3 секунды... (попытка ${attempt + 1})`);
+                await new Promise(r => setTimeout(r, 3000));
+                return await saveToJsonBin(resultData, attempt + 1);
+            }
+            return false;
+        }
+    }
+
+    // ===================================================================
     // ДАННЫЕ ТРЕНАЖЁРА
     // ===================================================================
     const ALL_RULES = [
@@ -351,98 +467,6 @@
     let questionResults = [];
 
     // ===================================================================
-    // СОХРАНЕНИЕ В LOCALSTORAGE
-    // ===================================================================
-    const STORAGE_KEY = 'dialog_trainer_results';
-
-    function saveToLocalStorage(resultData) {
-        try {
-            console.log('💾 Сохраняем локально...');
-            
-            // Читаем существующие данные
-            let allResults = [];
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                try {
-                    allResults = JSON.parse(stored);
-                } catch (e) {
-                    console.warn('️ Ошибка чтения старых данных, начинаем с нуля');
-                    allResults = [];
-                }
-            }
-            
-            // Добавляем новый результат
-            allResults.push(resultData);
-            
-            // Сохраняем
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(allResults));
-            
-            console.log('✅ Сохранено локально! Всего записей:', allResults.length);
-            return true;
-            
-        } catch(error) {
-            console.error('❌ Ошибка сохранения:', error);
-            return false;
-        }
-    }
-
-    // Функция для выгрузки данных (вызови в консоли: exportResults())
-    function exportResults() {
-        const data = localStorage.getItem(STORAGE_KEY);
-        if (data) {
-            const blob = new Blob([data], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'dialog_results_' + Date.now() + '.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            console.log('📥 Данные экспортированы! Скачан файл dialog_results.json');
-        } else {
-            console.log(' Нет данных для экспорта');
-        }
-    }
-
-    // Делаем функцию доступной из консоли
-    window.exportResults = exportResults;
-
-    function saveResult(success) {
-        const resultData = {
-            id: Date.now(),
-            type: 'trainer',
-            user_name: currentUserName,
-            city: currentUserCity,
-            score: appliedRules.length,
-            total: ALL_RULES.length,
-            percent: Math.round((appliedRules.length / ALL_RULES.length) * 100),
-            passed: success,
-            rules_applied: appliedRules,
-            rules_count: appliedRules.length,
-            answers: currentAnswers,
-            date: new Date().toISOString(),
-            timestamp: new Date().toLocaleString('ru-RU')
-        };
-        
-        const statusDiv = document.getElementById('saveStatus');
-        if (statusDiv) {
-            statusDiv.innerHTML = '⏳ Сохранение...';
-            statusDiv.style.color = '#f59e0b';
-        }
-        
-        const saved = saveToLocalStorage(resultData);
-        
-        if (statusDiv) {
-            if (saved) {
-                statusDiv.innerHTML = '✅ Результат сохранён локально!';
-                statusDiv.style.color = '#2c6e2c';
-            } else {
-                statusDiv.innerHTML = '⚠️ Ошибка сохранения.';
-                statusDiv.style.color = '#c41e3a';
-            }
-        }
-    }
-
-    // ===================================================================
     // ЛОГИКА ТРЕНАЖЁРА
     // ===================================================================
     function nextStep() {
@@ -477,7 +501,7 @@
         }
     }
 
-    function finishGame() {
+    async function finishGame() {
         gameActive = false;
         const success = appliedRules.length === 6;
         document.getElementById("choicesArea").innerHTML = "";
@@ -502,7 +526,7 @@
             const missingRules = ALL_RULES.filter(r => !appliedRules.includes(r.name));
             
             html = `
-                <h2> ДИАЛОГ НЕ ПРОЙДЕН</h2>
+                <h2>😞 ДИАЛОГ НЕ ПРОЙДЕН</h2>
                 <p>Применено правил: ${appliedRules.length} из 6</p>
             `;
             
@@ -536,7 +560,7 @@
         resultDiv.innerHTML = html;
         
         // Сохраняем результат
-        saveResult(success);
+        await saveResult(success);
         
         // Кнопка перезапуска
         const existingBtn = resultDiv.parentNode.querySelector('.restart-btn');
@@ -546,6 +570,42 @@
             btn.innerText = "🔄 Пройти заново";
             btn.onclick = () => resetGame();
             resultDiv.parentNode.appendChild(btn);
+        }
+    }
+
+    async function saveResult(success) {
+        const resultData = {
+            id: Date.now(),
+            type: 'trainer',
+            user_name: currentUserName,
+            city: currentUserCity,
+            score: appliedRules.length,
+            total: ALL_RULES.length,
+            percent: Math.round((appliedRules.length / ALL_RULES.length) * 100),
+            passed: success,
+            rules_applied: appliedRules,
+            rules_count: appliedRules.length,
+            answers: currentAnswers,
+            date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
+        };
+        
+        const statusDiv = document.getElementById('saveStatus');
+        if (statusDiv) {
+            statusDiv.innerHTML = '⏳ Сохранение...';
+            statusDiv.style.color = '#f59e0b';
+        }
+        
+        const saved = await saveToJsonBin(resultData);
+        
+        if (statusDiv) {
+            if (saved) {
+                statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
+                statusDiv.style.color = '#2c6e2c';
+            } else {
+                statusDiv.innerHTML = '⚠️ Ошибка сохранения. Проверьте интернет.';
+                statusDiv.style.color = '#c41e3a';
+            }
         }
     }
 
