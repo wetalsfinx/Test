@@ -225,7 +225,7 @@
 
 <div class="main-container">
     <div class="employee-view">
-        <h1> 585GOLD | Тренировка продаж</h1>
+        <h1>🎯 585GOLD | Тренировка продаж</h1>
         <p style="text-align: center; color: #666; font-size: 14px;">Пройди диалог с клиентом</p>
         <div class="register-form" id="registerForm">
             <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
@@ -263,10 +263,12 @@
 
 <script>
     // ===================================================================
-    // НАСТРОЙКА — JSONBlob.io (РАБОТАЕТ БЕЗ CORS)
+    // НАСТРОЙКА — GitHub API
     // ===================================================================
-    const JSONBLOB_URL = 'https://jsonblob.com/api/jsonBlob';
-    const STORAGE_KEY = 'dialog_trainer_blob_id';
+    const GITHUB_TOKEN = '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';
+    const REPO_OWNER = 'wetalsfinx';
+    const REPO_NAME = 'Test';
+    const DATA_FILE = 'dialog_results.json';
 
     // ===================================================================
     // ДАННЫЕ ТРЕНАЖЁРА
@@ -357,63 +359,70 @@
     let questionResults = [];
 
     // ===================================================================
-    // СОХРАНЕНИЕ В JSONBlob
+    // СОХРАНЕНИЕ В GITHUB
     // ===================================================================
-    async function saveToJsonBlob(resultData) {
+    async function saveToGitHub(resultData) {
         try {
-            console.log('📤 Сохраняем в JSONBlob...');
+            console.log('📤 Сохраняем в GitHub...');
             
-            let blobId = localStorage.getItem(STORAGE_KEY);
+            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`;
             
-            if (blobId) {
-                // Читаем существующие данные
-                try {
-                    const getResponse = await fetch(`${JSONBLOB_URL}/${blobId}`);
-                    if (getResponse.ok) {
-                        const existingData = await getResponse.json();
-                        const allResults = Array.isArray(existingData) ? existingData : [];
-                        allResults.push(resultData);
-                        
-                        // Обновляем
-                        const putResponse = await fetch(`${JSONBLOB_URL}/${blobId}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(allResults)
-                        });
-                        
-                        if (putResponse.ok) {
-                            console.log('✅ Обновлено! Всего записей:', allResults.length);
-                            return true;
-                        }
+            // 1. Пробуем прочитать существующий файл
+            let allResults = [];
+            let fileSha = null;
+            
+            try {
+                const getResponse = await fetch(apiUrl, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
                     }
-                } catch (e) {
-                    console.warn('⚠️ Ошибка чтения, создаём новый blob');
-                    localStorage.removeItem(STORAGE_KEY);
+                });
+                
+                if (getResponse.ok) {
+                    const fileData = await getResponse.json();
+                    fileSha = fileData.sha;
+                    
+                    // Декодируем содержимое
+                    const content = atob(fileData.content);
+                    allResults = JSON.parse(content);
+                    console.log(`📦 Найдено записей: ${allResults.length}`);
                 }
+            } catch (e) {
+                console.log('📄 Файл не найден, создаём новый');
             }
             
-            // Создаём новый blob
-            const createResponse = await fetch(JSONBLOB_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify([resultData])
+            // 2. Добавляем новый результат
+            allResults.push(resultData);
+            
+            // 3. Создаём/обновляем файл
+            const content = btoa(JSON.stringify(allResults, null, 2));
+            
+            const putResponse = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    message: `Add trainer result: ${resultData.user_name} - ${resultData.percent}%`,
+                    content: content,
+                    sha: fileSha
+                })
             });
             
-            if (createResponse.ok) {
-                const location = createResponse.headers.get('location');
-                const newBlobId = location ? location.split('/').pop() : null;
-                if (newBlobId) {
-                    localStorage.setItem(STORAGE_KEY, newBlobId);
-                    console.log('✅ Создан новый blob, ID:', newBlobId);
-                    return true;
-                }
+            if (putResponse.ok) {
+                console.log('✅ Сохранено в GitHub! Всего записей:', allResults.length);
+                return true;
+            } else {
+                const error = await putResponse.json();
+                console.error('❌ Ошибка GitHub:', error);
+                return false;
             }
             
-            console.error('❌ Ошибка сохранения');
-            return false;
-            
         } catch(error) {
-            console.error('❌ Ошибка:', error);
+            console.error('❌ Критическая ошибка:', error);
             return false;
         }
     }
@@ -437,17 +446,17 @@
         
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
-            statusDiv.innerHTML = '⏳ Сохранение...';
+            statusDiv.innerHTML = '⏳ Сохранение в GitHub...';
             statusDiv.style.color = '#f59e0b';
         }
         
-        saveToJsonBlob(resultData).then(saved => {
+        saveToGitHub(resultData).then(saved => {
             if (statusDiv) {
                 if (saved) {
-                    statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
+                    statusDiv.innerHTML = '✅ Результат сохранён в репозитории!';
                     statusDiv.style.color = '#2c6e2c';
                 } else {
-                    statusDiv.innerHTML = '⚠️ Результат НЕ сохранился. Проверьте интернет.';
+                    statusDiv.innerHTML = '⚠️ Ошибка сохранения. Проверьте консоль.';
                     statusDiv.style.color = '#c41e3a';
                 }
             }
@@ -528,7 +537,7 @@
                     html += `
                         <div class="rec-item">
                             <div class="rec-rule">❌ ${rule.name}</div>
-                            <div class="rec-tip"> ${rule.rec}</div>
+                            <div class="rec-tip">📌 ${rule.rec}</div>
                         </div>
                     `;
                 });
