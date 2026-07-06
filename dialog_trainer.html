@@ -360,72 +360,100 @@
     // ===================================================================
     // СОХРАНЕНИЕ В JSONBin.io
     // ===================================================================
-   async function saveToJsonBin(resultData) {
+ async function saveToJsonBin(resultData) {
     try {
-        console.log('📤 Начало сохранения...');
-        console.log('BIN_ID:', BIN_ID);
+        console.log('📤 Сохраняем в JSONBin...');
         
+        // Пробуем прочитать текущие данные
         const getUrl = `${JSONBIN_API_URL}/${BIN_ID}/latest`;
-        console.log('GET запрос:', getUrl);
+        console.log('Читаем bin...');
         
-        // 1. Пробуем прочитать
-        const getResponse = await fetch(getUrl, {
-            method: 'GET',
-            headers: { 
-                'X-Master-Key': MASTER_KEY,
-                'X-Bin-Meta': 'false'
-            }
-        });
-        
-        console.log('GET статус:', getResponse.status);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 секунд
         
         let allResults = [];
         
-        if (getResponse.ok) {
-            const getData = await getResponse.json();
-            console.log('Полученные данные:', getData);
-            allResults = getData.record || [];
-        } else {
-            const errorText = await getResponse.text();
-            console.error('❌ Ошибка чтения bin:', getResponse.status, errorText);
-            throw new Error(`Не удалось прочитать bin: ${getResponse.status}`);
+        try {
+            const getResponse = await fetch(getUrl, {
+                method: 'GET',
+                headers: { 
+                    'X-Master-Key': MASTER_KEY,
+                    'X-Bin-Meta': 'false'
+                },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (getResponse.ok) {
+                const getData = await getResponse.json();
+                allResults = Array.isArray(getData.record) ? getData.record : [];
+                console.log(`📦 Найдено записей: ${allResults.length}`);
+            }
+        } catch (readError) {
+            console.warn('⚠️ Не удалось прочитать bin, создаём с нуля:', readError.message);
         }
         
-        // 2. Добавляем новый результат
+        // Добавляем новый результат
         allResults.push(resultData);
-        console.log('Всего записей после добавления:', allResults.length);
         
-        // 3. Обновляем
+        // Обновляем bin
         const putUrl = `${JSONBIN_API_URL}/${BIN_ID}`;
-        console.log('PUT запрос:', putUrl);
+        console.log('Обновляем bin...');
         
-        const putResponse = await fetch(putUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': MASTER_KEY
-            },
-            body: JSON.stringify(allResults)
-        });
+        const putController = new AbortController();
+        const putTimeoutId = setTimeout(() => putController.abort(), 10000);
         
-        console.log('PUT статус:', putResponse.status);
-        
-        if (putResponse.ok) {
-            console.log('✅ Успешно сохранено!');
-            return true;
-        } else {
-            const errorData = await putResponse.json();
-            console.error('❌ Ошибка сохранения:', putResponse.status, errorData);
+        try {
+            const putResponse = await fetch(putUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': MASTER_KEY,
+                    'X-Bin-Meta': 'false'
+                },
+                body: JSON.stringify(allResults),
+                signal: putController.signal
+            });
+            
+            clearTimeout(putTimeoutId);
+            
+            if (putResponse.ok) {
+                console.log('✅ Сохранено! Всего записей:', allResults.length);
+                return true;
+            } else {
+                const errorText = await putResponse.text();
+                console.error('❌ Ошибка PUT:', putResponse.status, errorText);
+                
+                // Пробуем альтернативный метод — POST для создания новой версии
+                console.log('🔄 Пробуем POST вместо PUT...');
+                const postResponse = await fetch(putUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': MASTER_KEY
+                    },
+                    body: JSON.stringify(allResults)
+                });
+                
+                if (postResponse.ok) {
+                    console.log('✅ Сохранено через POST!');
+                    return true;
+                }
+                
+                return false;
+            }
+        } catch (putError) {
+            clearTimeout(putTimeoutId);
+            console.error('❌ Таймаут или ошибка сети:', putError.message);
             return false;
         }
         
     } catch(error) {
-        console.error('❌ Критическая ошибка:', error.message);
-        console.error('Stack:', error.stack);
+        console.error('❌ Критическая ошибка:', error);
         return false;
     }
 }
-
     function saveResult(success) {
         const resultData = {
             id: Date.now(),
