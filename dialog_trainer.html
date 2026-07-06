@@ -265,7 +265,7 @@
     // ===================================================================
     // НАСТРОЙКА — GitHub API
     // ===================================================================
-    const GITHUB_TOKEN = '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';
+    const GITHUB_TOKEN = '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';
     const REPO_OWNER = 'wetalsfinx';
     const REPO_NAME = 'Test';
     const DATA_FILE = 'dialog_results.json';
@@ -374,8 +374,9 @@
             try {
                 const getResponse = await fetch(apiUrl, {
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Accept': 'application/vnd.github.v3+json'
+                        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'If-None-Match': ''
                     }
                 });
                 
@@ -387,28 +388,33 @@
                     const content = atob(fileData.content);
                     allResults = JSON.parse(content);
                     console.log(`📦 Найдено записей: ${allResults.length}`);
+                } else if (getResponse.status === 404) {
+                    console.log('📄 Файл не найден, создаём новый');
+                } else {
+                    console.error('❌ Ошибка чтения файла:', getResponse.status);
                 }
             } catch (e) {
-                console.log('📄 Файл не найден, создаём новый');
+                console.warn('⚠️ Ошибка при чтении:', e.message);
             }
             
             // 2. Добавляем новый результат
             allResults.push(resultData);
             
-            // 3. Создаём/обновляем файл
-            const content = btoa(JSON.stringify(allResults, null, 2));
+            // 3. Кодируем в UTF-8 для GitHub
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(allResults, null, 2))));
             
+            // 4. Создаём/обновляем файл
             const putResponse = await fetch(apiUrl, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/vnd.github.v3+json'
                 },
                 body: JSON.stringify({
                     message: `Add trainer result: ${resultData.user_name} - ${resultData.percent}%`,
                     content: content,
-                    sha: fileSha
+                    sha: fileSha || undefined
                 })
             });
             
@@ -417,7 +423,7 @@
                 return true;
             } else {
                 const error = await putResponse.json();
-                console.error('❌ Ошибка GitHub:', error);
+                console.error('❌ Ошибка GitHub:', putResponse.status, error);
                 return false;
             }
             
