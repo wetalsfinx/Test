@@ -263,14 +263,6 @@
 
 <script>
     // ===================================================================
-    // НАСТРОЙКА — GitHub API
-    // ===================================================================
-    const GITHUB_TOKEN = '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';
-    const REPO_OWNER = 'wetalsfinx';
-    const REPO_NAME = 'Test';
-    const DATA_FILE = 'dialog_results.json';
-
-    // ===================================================================
     // ДАННЫЕ ТРЕНАЖЁРА
     // ===================================================================
     const ALL_RULES = [
@@ -359,79 +351,60 @@
     let questionResults = [];
 
     // ===================================================================
-    // СОХРАНЕНИЕ В GITHUB
+    // СОХРАНЕНИЕ В LOCALSTORAGE
     // ===================================================================
-    async function saveToGitHub(resultData) {
+    const STORAGE_KEY = 'dialog_trainer_results';
+
+    function saveToLocalStorage(resultData) {
         try {
-            console.log('📤 Сохраняем в GitHub...');
+            console.log('💾 Сохраняем локально...');
             
-            const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_FILE}`;
-            
-            // 1. Пробуем прочитать существующий файл
+            // Читаем существующие данные
             let allResults = [];
-            let fileSha = null;
-            
-            try {
-                const getResponse = await fetch(apiUrl, {
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'If-None-Match': ''
-                    }
-                });
-                
-                if (getResponse.ok) {
-                    const fileData = await getResponse.json();
-                    fileSha = fileData.sha;
-                    
-                    // Декодируем содержимое
-                    const content = atob(fileData.content);
-                    allResults = JSON.parse(content);
-                    console.log(`📦 Найдено записей: ${allResults.length}`);
-                } else if (getResponse.status === 404) {
-                    console.log('📄 Файл не найден, создаём новый');
-                } else {
-                    console.error('❌ Ошибка чтения файла:', getResponse.status);
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    allResults = JSON.parse(stored);
+                } catch (e) {
+                    console.warn('️ Ошибка чтения старых данных, начинаем с нуля');
+                    allResults = [];
                 }
-            } catch (e) {
-                console.warn('⚠️ Ошибка при чтении:', e.message);
             }
             
-            // 2. Добавляем новый результат
+            // Добавляем новый результат
             allResults.push(resultData);
             
-            // 3. Кодируем в UTF-8 для GitHub
-            const content = btoa(unescape(encodeURIComponent(JSON.stringify(allResults, null, 2))));
+            // Сохраняем
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(allResults));
             
-            // 4. Создаём/обновляем файл
-            const putResponse = await fetch(apiUrl, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/vnd.github.v3+json'
-                },
-                body: JSON.stringify({
-                    message: `Add trainer result: ${resultData.user_name} - ${resultData.percent}%`,
-                    content: content,
-                    sha: fileSha || undefined
-                })
-            });
-            
-            if (putResponse.ok) {
-                console.log('✅ Сохранено в GitHub! Всего записей:', allResults.length);
-                return true;
-            } else {
-                const error = await putResponse.json();
-                console.error('❌ Ошибка GitHub:', putResponse.status, error);
-                return false;
-            }
+            console.log('✅ Сохранено локально! Всего записей:', allResults.length);
+            return true;
             
         } catch(error) {
-            console.error('❌ Критическая ошибка:', error);
+            console.error('❌ Ошибка сохранения:', error);
             return false;
         }
     }
+
+    // Функция для выгрузки данных (вызови в консоли: exportResults())
+    function exportResults() {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dialog_results_' + Date.now() + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            console.log('📥 Данные экспортированы! Скачан файл dialog_results.json');
+        } else {
+            console.log(' Нет данных для экспорта');
+        }
+    }
+
+    // Делаем функцию доступной из консоли
+    window.exportResults = exportResults;
 
     function saveResult(success) {
         const resultData = {
@@ -452,21 +425,21 @@
         
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
-            statusDiv.innerHTML = '⏳ Сохранение в GitHub...';
+            statusDiv.innerHTML = '⏳ Сохранение...';
             statusDiv.style.color = '#f59e0b';
         }
         
-        saveToGitHub(resultData).then(saved => {
-            if (statusDiv) {
-                if (saved) {
-                    statusDiv.innerHTML = '✅ Результат сохранён в репозитории!';
-                    statusDiv.style.color = '#2c6e2c';
-                } else {
-                    statusDiv.innerHTML = '⚠️ Ошибка сохранения. Проверьте консоль.';
-                    statusDiv.style.color = '#c41e3a';
-                }
+        const saved = saveToLocalStorage(resultData);
+        
+        if (statusDiv) {
+            if (saved) {
+                statusDiv.innerHTML = '✅ Результат сохранён локально!';
+                statusDiv.style.color = '#2c6e2c';
+            } else {
+                statusDiv.innerHTML = '⚠️ Ошибка сохранения.';
+                statusDiv.style.color = '#c41e3a';
             }
-        });
+        }
     }
 
     // ===================================================================
@@ -529,7 +502,7 @@
             const missingRules = ALL_RULES.filter(r => !appliedRules.includes(r.name));
             
             html = `
-                <h2>😞 ДИАЛОГ НЕ ПРОЙДЕН</h2>
+                <h2> ДИАЛОГ НЕ ПРОЙДЕН</h2>
                 <p>Применено правил: ${appliedRules.length} из 6</p>
             `;
             
