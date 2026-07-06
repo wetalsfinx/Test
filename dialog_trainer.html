@@ -263,10 +263,10 @@
 
 <script>
     // ===================================================================
-    // НАСТРОЙКА JSONBIN.IO (ПРЯМОЕ СОХРАНЕНИЕ)
+    // НАСТРОЙКА — JSONBlob (РАБОТАЕТ БЕЗ CORS)
     // ===================================================================
-    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7'; // <-- ТВОЙ ID КОРОБКИ
+    const JSONBLOB_URL = 'https://jsonblob.com/api/jsonBlob';
+    const STORAGE_KEY = 'dialog_blob_id';
 
     // ===================================================================
     // ДАННЫЕ ТРЕНАЖЁРА
@@ -357,67 +357,56 @@
     let questionResults = [];
 
     // ===================================================================
-    // СОХРАНЕНИЕ В JSONBIN.IO (УПРОЩЁННОЕ, БЕЗ CORS)
+    // СОХРАНЕНИЕ В JSONBlob
     // ===================================================================
-    async function saveToJsonBin(resultData) {
+    async function saveToJsonBlob(resultData) {
         try {
-            console.log('Сохраняем результат...');
+            console.log('Сохраняем результат в JSONBlob...');
             
-            // Шаг 1: читаем текущие данные
-            const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
+            // Проверяем, есть ли уже ID коробки
+            let blobId = localStorage.getItem(STORAGE_KEY);
             
-            let existingResults = [];
-            if (getResponse.ok) {
-                const data = await getResponse.json();
-                existingResults = data.record || [];
-                console.log('Записей в коробке:', existingResults.length);
-            } else if (getResponse.status === 404) {
-                console.log('Коробка не найдена, создаём новую...');
-                const createResponse = await fetch('https://api.jsonbin.io/v3/b', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY
-                    },
-                    body: JSON.stringify([resultData])
-                });
-                if (createResponse.ok) {
-                    const data = await createResponse.json();
-                    const newBinId = data.metadata.id;
-                    console.log('✅ Создана новая коробка, ID:', newBinId);
-                    alert('⚠️ Внимание! Создана новая коробка. Обновите ID в дашборде на: ' + newBinId);
-                    return true;
-                } else {
-                    console.error('Ошибка создания:', await createResponse.text());
-                    return false;
+            if (blobId) {
+                // Если есть — читаем и обновляем
+                const getResponse = await fetch(`${JSONBLOB_URL}/${blobId}`);
+                if (getResponse.ok) {
+                    const existingData = await getResponse.json();
+                    const allResults = Array.isArray(existingData) ? existingData : [];
+                    allResults.push(resultData);
+                    
+                    const putResponse = await fetch(`${JSONBLOB_URL}/${blobId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(allResults)
+                    });
+                    
+                    if (putResponse.ok) {
+                        console.log('✅ Результат обновлён в JSONBlob!');
+                        return true;
+                    }
                 }
-            } else {
-                console.error('Ошибка чтения:', getResponse.status);
-                return false;
+                // Если не получилось — создаём новый
+                localStorage.removeItem(STORAGE_KEY);
             }
             
-            // Шаг 2: добавляем новый результат
-            existingResults.push(resultData);
-            
-            // Шаг 3: обновляем коробку
-            const updateResponse = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                },
-                body: JSON.stringify(existingResults)
+            // Создаём новый блоб
+            const createResponse = await fetch(JSONBLOB_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([resultData])
             });
             
-            if (updateResponse.ok) {
-                console.log('✅ Результат сохранён!');
-                return true;
-            } else {
-                console.error('Ошибка обновления:', await updateResponse.text());
-                return false;
+            if (createResponse.ok) {
+                const blobId = createResponse.headers.get('location')?.split('/').pop();
+                if (blobId) {
+                    localStorage.setItem(STORAGE_KEY, blobId);
+                    console.log('✅ Создан новый блоб, ID:', blobId);
+                    return true;
+                }
             }
+            
+            console.error('Ошибка сохранения в JSONBlob');
+            return false;
         } catch(error) {
             console.error('❌ Ошибка:', error);
             return false;
@@ -447,7 +436,7 @@
             statusDiv.style.color = '#f59e0b';
         }
         
-        saveToJsonBin(resultData).then(saved => {
+        saveToJsonBlob(resultData).then(saved => {
             if (statusDiv) {
                 if (saved) {
                     statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
@@ -461,7 +450,7 @@
     }
 
     // ===================================================================
-    // ЛОГИКА ТРЕНАЖЁРА
+    // ЛОГИКА ТРЕНАЖЁРА (без изменений)
     // ===================================================================
     function nextStep() {
         if (!gameActive || selectedChoiceIndex === null) return;
