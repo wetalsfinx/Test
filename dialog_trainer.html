@@ -360,53 +360,71 @@
     // ===================================================================
     // СОХРАНЕНИЕ В JSONBin.io
     // ===================================================================
-    async function saveToJsonBin(resultData) {
-        try {
-            console.log('📤 Сохраняем результат в JSONBin.io...');
-            
-            // 1. Читаем текущие данные
-            const getResponse = await fetch(`${JSONBIN_API_URL}/${BIN_ID}/latest`, {
-                method: 'GET',
-                headers: { 'X-Master-Key': MASTER_KEY }
-            });
-            
-            let allResults = [];
-            
-            if (getResponse.ok) {
-                const getData = await getResponse.json();
-                allResults = getData.record || [];
-                console.log(`📦 Найдено записей: ${allResults.length}`);
-            } else {
-                console.warn('⚠️ Bin пуст или ошибка чтения');
+   async function saveToJsonBin(resultData) {
+    try {
+        console.log('📤 Начало сохранения...');
+        console.log('BIN_ID:', BIN_ID);
+        
+        const getUrl = `${JSONBIN_API_URL}/${BIN_ID}/latest`;
+        console.log('GET запрос:', getUrl);
+        
+        // 1. Пробуем прочитать
+        const getResponse = await fetch(getUrl, {
+            method: 'GET',
+            headers: { 
+                'X-Master-Key': MASTER_KEY,
+                'X-Bin-Meta': 'false'
             }
-            
-            // 2. Добавляем новый результат
-            allResults.push(resultData);
-            
-            // 3. Обновляем bin
-            const putResponse = await fetch(`${JSONBIN_API_URL}/${BIN_ID}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': MASTER_KEY
-                },
-                body: JSON.stringify(allResults)
-            });
-            
-            if (putResponse.ok) {
-                console.log('✅ Результат сохранён! Всего записей:', allResults.length);
-                return true;
-            } else {
-                const error = await putResponse.json();
-                console.error('❌ Ошибка сохранения:', error);
-                return false;
-            }
-            
-        } catch(error) {
-            console.error('❌ Критическая ошибка:', error);
+        });
+        
+        console.log('GET статус:', getResponse.status);
+        
+        let allResults = [];
+        
+        if (getResponse.ok) {
+            const getData = await getResponse.json();
+            console.log('Полученные данные:', getData);
+            allResults = getData.record || [];
+        } else {
+            const errorText = await getResponse.text();
+            console.error('❌ Ошибка чтения bin:', getResponse.status, errorText);
+            throw new Error(`Не удалось прочитать bin: ${getResponse.status}`);
+        }
+        
+        // 2. Добавляем новый результат
+        allResults.push(resultData);
+        console.log('Всего записей после добавления:', allResults.length);
+        
+        // 3. Обновляем
+        const putUrl = `${JSONBIN_API_URL}/${BIN_ID}`;
+        console.log('PUT запрос:', putUrl);
+        
+        const putResponse = await fetch(putUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': MASTER_KEY
+            },
+            body: JSON.stringify(allResults)
+        });
+        
+        console.log('PUT статус:', putResponse.status);
+        
+        if (putResponse.ok) {
+            console.log('✅ Успешно сохранено!');
+            return true;
+        } else {
+            const errorData = await putResponse.json();
+            console.error('❌ Ошибка сохранения:', putResponse.status, errorData);
             return false;
         }
+        
+    } catch(error) {
+        console.error('❌ Критическая ошибка:', error.message);
+        console.error('Stack:', error.stack);
+        return false;
     }
+}
 
     function saveResult(success) {
         const resultData = {
