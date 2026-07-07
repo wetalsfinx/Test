@@ -124,7 +124,7 @@
 <script>
     // ========== НАСТРОЙКА JSONBIN.IO ==========
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const BIN_ID_KEY = '585_bin_id';
+    const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7'; // ТОТ ЖЕ BIN, ЧТО И В ДАШБОРДЕ!
     
     const RECOMMENDATIONS = [
         "Не спрашивайте 'Чем помочь?'. Сразу дайте ценность: акция + спросите 'Для себя или в подарок?'",
@@ -140,26 +140,13 @@
         "Дайте 20-30 секунд освоиться, затем подойдите"
     ];
 
-    // ========== УПРОЩЁННОЕ СОХРАНЕНИЕ ==========
+    // ========== СОХРАНЕНИЕ В ФИКСИРОВАННЫЙ BIN ==========
     async function saveToJsonBin(resultData) {
         try {
-            let binId = localStorage.getItem(BIN_ID_KEY);
+            console.log('Сохраняем результат теста...');
             
-            if (!binId) {
-                const res = await fetch('https://api.jsonbin.io/v3/b', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-                    body: JSON.stringify([resultData])
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    localStorage.setItem(BIN_ID_KEY, data.metadata.id);
-                    return true;
-                }
-                return false;
-            }
-
-            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+            // Читаем текущие данные из фиксированного bin
+            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
             
@@ -167,17 +154,29 @@
             if (getRes.ok) {
                 const data = await getRes.json();
                 allResults = data.record || [];
+                console.log('Записей в bin:', allResults.length);
             }
             
+            // Добавляем новый результат
             allResults.push(resultData);
             
-            const putRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+            // Обновляем bin
+            const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY
+                },
                 body: JSON.stringify(allResults)
             });
             
-            return putRes.ok;
+            if (putRes.ok) {
+                console.log('✅ Результат сохранён! Всего записей:', allResults.length);
+                return true;
+            } else {
+                console.error('Ошибка сохранения:', putRes.status);
+                return false;
+            }
         } catch(e) {
             console.error('Ошибка сохранения:', e);
             return false;
