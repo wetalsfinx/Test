@@ -279,6 +279,230 @@
         }
         .modal-close:hover { background: #a0162e; }
 
+        /* ===== НОВЫЕ СТИЛИ ДЛЯ ФИДБЕКА ===== */
+        .feedback-wrapper {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        }
+        .feedback-header {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .feedback-header h3 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+        .feedback-header p { font-size: 13px; opacity: 0.9; }
+        .feedback-stats {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .feedback-stat-pill {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .feedback-section {
+            margin-bottom: 28px;
+        }
+        .feedback-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e2a3a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .feedback-section-title .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        /* Темы (сильные/слабые) */
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+        .topic-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .topic-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        }
+        .topic-card.strong {
+            border-left: 4px solid #16a34a;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+        }
+        .topic-card.weak {
+            border-left: 4px solid #dc2626;
+            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+        }
+        .topic-rank {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: white;
+        }
+        .topic-card.strong .topic-rank { background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); }
+        .topic-card.weak .topic-rank { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); }
+        .topic-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e2a3a;
+            margin-bottom: 8px;
+            padding-right: 36px;
+        }
+        .topic-percent {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .topic-card.strong .topic-percent { color: #16a34a; }
+        .topic-card.weak .topic-percent { color: #dc2626; }
+        .topic-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .topic-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+        .topic-card.strong .topic-bar-fill { background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%); }
+        .topic-card.weak .topic-bar-fill { background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%); }
+        .topic-details {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        
+        /* Рекомендации */
+        .recommendations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .rec-card {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 16px 20px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .rec-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.15);
+        }
+        .rec-card-title {
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 6px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rec-card-text {
+            color: #1e3a8a;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        /* Сравнение СПб */
+        .spb-comparison {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .spb-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .spb-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+        .spb-shop {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .spb-shop-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: #1e2a3a;
+            margin-bottom: 12px;
+        }
+        .spb-shop-score {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .spb-shop-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+        .spb-vs {
+            font-size: 20px;
+            font-weight: 700;
+            color: #92400e;
+        }
+        .spb-winner {
+            background: #dcfce7 !important;
+            border: 2px solid #16a34a;
+        }
+        
         @media (max-width: 1024px) {
             .charts-row-3 { grid-template-columns: 1fr 1fr; }
         }
@@ -287,11 +511,14 @@
             .charts-row-3 { grid-template-columns: 1fr; }
             .status-grid { grid-template-columns: 1fr 1fr; }
             .main-number .value { font-size: 36px; }
+            .spb-grid { grid-template-columns: 1fr; }
+            .spb-vs { text-align: center; }
         }
         @media (max-width: 500px) {
             .status-grid { grid-template-columns: 1fr; }
             .filter-bar { flex-direction: column; align-items: stretch; }
             .status-text { margin-left: 0; text-align: center; }
+            .topics-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -429,17 +656,18 @@
     <!-- ФИДБЕК -->
     <div id="feedbackTab" style="display:none; margin-top:20px;">
         <div class="card">
-            <div class="card-title">Фидбек для города</div>
-            <select id="feedbackCitySelect" style="padding:6px 12px;border-radius:6px;border:1px solid #d0d7dd;width:100%;max-width:280px;margin-bottom:12px;">
-                <option value="">-- Выберите город --</option>
+            <div class="card-title">📝 Фидбек по городу / магазину</div>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 16px;">Выберите город или магазин для получения детального анализа сильных и слабых сторон</p>
+            <select id="feedbackCitySelect" style="padding:8px 14px;border-radius:8px;border:1px solid #d0d7dd;width:100%;max-width:400px;margin-bottom:12px;font-size:14px;">
+                <option value="">-- Выберите город / магазин --</option>
                 <option value="Уфа">Уфа</option>
                 <option value="Екатеринбург">Екатеринбург</option>
-                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
-                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
+                <option value="Санкт-Петербург, Московский, 2">🏪 Санкт-Петербург, Московский, 2</option>
+                <option value="Санкт-Петербург, Новаторов, 112">🏪 Санкт-Петербург, Новаторов, 112</option>
                 <option value="Калининград">Калининград</option>
                 <option value="Нижний Тагил">Нижний Тагил</option>
             </select>
-            <button class="btn btn-primary" id="generateFeedbackBtn">Сгенерировать</button>
+            <button class="btn btn-primary" id="generateFeedbackBtn">🔍 Сгенерировать фидбек</button>
             <div id="feedbackResult" style="margin-top:16px;"></div>
         </div>
     </div>
@@ -464,7 +692,6 @@
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const FIXED_BIN_ID = '6a32af38f5f4af5e290249b7';
     
-    // Предопределённые города
     const CITIES = [
         'Уфа',
         'Екатеринбург',
@@ -474,19 +701,34 @@
         'Нижний Тагил'
     ];
 
-    // Рекомендации для ТЕСТА (11 вопросов)
-    const TEST_RECOMMENDATIONS = [
-        "Не спрашивайте 'Чем помочь?'. Сразу дайте ценность: акция + 'Для себя или в подарок?'",
-        "НЕ показывайте товар сразу. Сначала спросите: 'Для какого случая?'",
-        "Предлагайте доп. товар через образ: 'Давайте подберём серьги из той же коллекции'",
-        "Не критикуйте выбор. Скажите: 'Давайте примерим оба варианта'",
-        "Не спрашивайте 'Футляр нужен?'. Говорите: 'Давайте выберем красивый футляр'",
-        "На 'дороговато' отвечайте: 'А с чем вы сравниваете?'",
-        "Не отправляйте клиента ждать. Дайте альтернативу сейчас",
-        "Продавайте эмоцию: 'Это кольцо станет идеальным напоминанием'",
-        "Не говорите просто 'Да'. Предложите дополнения",
-        "Сплит предлагайте ДО озвучивания цены",
-        "Дайте 20-30 секунд освоиться, затем подойдите"
+    // Названия тем для ТЕСТА (11 вопросов)
+    const TEST_TOPICS = [
+        'Приветствие и установление контакта',
+        'Выявление бюджета',
+        'Предложение дополнительных товаров',
+        'Работа с выбором материала',
+        'Предложение сопутствующих товаров',
+        'Работа с возражением "дорого"',
+        'Предложение альтернативы при отсутствии размера',
+        'Эмоциональная презентация подарка',
+        'Предложение дополнительных моделей',
+        'Предложение рассрочки (Сплит)',
+        'Проявление инициативы при молчаливом клиенте'
+    ];
+
+    // Общие рекомендации для ТЕСТА (без упоминания индивидуальных бесед/тренингов)
+    const TEST_GENERAL_RECS = [
+        "Изучите стандарты приветствия в ювелирном магазине. Используйте готовые формулы с ценностью для клиента.",
+        "Отработайте навыки выявления бюджета через открытые вопросы. Собирайте информацию до показа товара.",
+        "Практикуйте навык предложения сопутствующих товаров через создание законченного образа.",
+        "Изучите техники мягкой переориентации клиента без критики его выбора.",
+        "Используйте готовые формулировки для предложения сопутствующих товаров.",
+        "Отработайте техники работы с ценовыми возражениями через уточняющие вопросы.",
+        "Изучите стандарты работы с отсутствием товара в наличии. Всегда предлагайте альтернативу.",
+        "Практикуйте эмоциональную презентацию через привязку к событиям и чувствам клиента.",
+        "Используйте технику «дополнительных вариантов» для расширения выбора клиента.",
+        "Изучите правильную последовательность предложения рассрочки — до озвучивания итоговой цены.",
+        "Отработайте стандарты проявления инициативы через 20-30 секунд после захода клиента."
     ];
 
     // Правила для ТРЕНИРОВКИ (6 правил)
@@ -498,6 +740,16 @@
         { id: "alternative", name: "Не отпускай без альтернативы", rec: "Если нет размера — сразу покажи похожие варианты и каталог заказов." },
         { id: "warmClosing", name: "Завершай с теплотой", rec: "«Спасибо, что зашли! Если будете выбирать подарки — заходите...»" }
     ];
+
+    // Общие рекомендации для ТРЕНИРОВКИ (без упоминания индивидуальных бесед/тренингов)
+    const TRAINER_GENERAL_RECS = {
+        "initiative": "Изучите стандарты проявления инициативы в работе с клиентами. Используйте готовые формулы подхода.",
+        "askBeforeShow": "Отработайте последовательность вопросов перед показом товара. Собирайте информацию о потребностях клиента.",
+        "emotionalHPW": "Практикуйте эмоциональную презентацию через привязку украшений к значимым событиям в жизни клиента.",
+        "fittingOffer": "Используйте стандартную формулировку «Давайте примерим» для предложения примерки. Это увеличивает конверсию.",
+        "alternative": "Изучите стандарты работы с отсутствием товара. Всегда предлагайте альтернативу или каталог на заказ.",
+        "warmClosing": "Отработайте техники тёплого завершения диалога. Используйте готовые формулы прощания."
+    };
     
     let allData = [], filteredData = [];
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, comparisonChart = null;
@@ -577,16 +829,11 @@
                 date: r.date || new Date().toISOString()
             }));
             
-            // Добавляем города из данных, которых нет в предустановленных
             const dataCities = [...new Set(allData.map(r => r.city))];
             const allCities = [...new Set([...CITIES, ...dataCities])];
             
             const cityFilter = document.getElementById('cityFilter');
             cityFilter.innerHTML = '<option value="all">Все города</option>' + 
-                allCities.map(c => `<option value="${c}">${c}</option>`).join('');
-            
-            const feedbackCitySelect = document.getElementById('feedbackCitySelect');
-            feedbackCitySelect.innerHTML = '<option value="">-- Выберите город --</option>' + 
                 allCities.map(c => `<option value="${c}">${c}</option>`).join('');
             
             renderCityStats();
@@ -689,7 +936,6 @@
             if (r.type === 'test' && r.answers) {
                 r.answers.forEach((a, i) => { if (!a.correct) c.testQe[i]++; });
             } else if (r.type === 'trainer' && r.rules_applied) {
-                // Подсчитываем, какие правила НЕ были применены
                 TRAINER_RULES.forEach(rule => {
                     if (!r.rules_applied.includes(rule.name)) {
                         c.trainerRules[rule.name] = (c.trainerRules[rule.name] || 0) + 1;
@@ -703,7 +949,6 @@
         const stats = [...map.entries()].map(([city, d]) => {
             let weakPoint = '—';
             
-            // Определяем слабое место
             const testMaxIdx = d.testQe.reduce((a,b,i,arr) => b > arr[a] ? i : a, 0);
             const testMaxErrors = d.testQe[testMaxIdx];
             
@@ -819,7 +1064,7 @@
         document.getElementById('sLow').textContent = low;
         document.getElementById('sErrors').textContent = errors;
 
-        // ----- КРУГОВАЯ -----
+        // КРУГОВАЯ
         if (pieChart) pieChart.destroy();
         const pieCtx = document.getElementById('pieChart').getContext('2d');
         if (total > 0) {
@@ -854,7 +1099,7 @@
             });
         }
 
-        // ----- ТОП СОТРУДНИКОВ -----
+        // ТОП СОТРУДНИКОВ
         const top5 = [...filteredData].filter(r => r.percent >= 85).sort((a,b) => b.percent - a.percent).slice(0,5);
         document.getElementById('topList').innerHTML = top5.length ? top5.map((r,i) => `
             <div class="employee-item" onclick="showDetails(${r.id})">
@@ -863,7 +1108,7 @@
             </div>
         `).join('') : '<div class="empty">Нет данных</div>';
 
-        // ----- РЕЙТИНГ ГОРОДОВ -----
+        // РЕЙТИНГ ГОРОДОВ
         const cityMap = new Map();
         filteredData.forEach(r => {
             if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
@@ -920,7 +1165,7 @@
             });
         }
 
-        // ----- РАСПРЕДЕЛЕНИЕ БАЛЛОВ -----
+        // РАСПРЕДЕЛЕНИЕ БАЛЛОВ
         const bins = [0,0,0,0,0];
         filteredData.forEach(r => {
             if (r.percent <= 20) bins[0]++;
@@ -955,7 +1200,7 @@
             });
         }
 
-        // ----- СОТРУДНИКИ -----
+        // СОТРУДНИКИ
         document.getElementById('empCount').textContent = filteredData.length;
         document.getElementById('employeeList').innerHTML = filteredData.map(r => `
             <div class="employee-item" onclick="showDetails(${r.id})">
@@ -987,9 +1232,7 @@
         let html = `<div class="modal-summary">✅ Правильных: ${emp.score} из ${emp.total}</div>`;
         
         if (emp.type === 'trainer') {
-            // Для тренировки показываем правила
             html += `<h4 style="margin:12px 0 8px;">Применённые правила:</h4>`;
-            
             TRAINER_RULES.forEach(rule => {
                 const applied = emp.rules_applied && emp.rules_applied.includes(rule.name);
                 html += `
@@ -1000,11 +1243,10 @@
                 `;
             });
         } else {
-            // Для теста показываем вопросы
             if (emp.answers && emp.answers.length) {
                 emp.answers.forEach((a, i) => {
                     const isCorrect = a.correct;
-                    const rec = TEST_RECOMMENDATIONS[i] || 'Изучите правильный ответ.';
+                    const rec = TEST_GENERAL_RECS[i] || 'Изучите правильный ответ.';
                     html += `
                         <div class="answer-item">
                             <div class="q">Вопрос ${i+1}: ${a.questionText}</div>
@@ -1023,61 +1265,230 @@
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-    // ----- ФИДБЕК -----
+    // ================================================================
+    //  НОВЫЙ ФИДБЕК ПО ГОРОДУ
+    // ================================================================
+
     function generateFeedback() {
         const city = document.getElementById('feedbackCitySelect').value;
         if (!city) { alert('Выберите город'); return; }
-        const data = allData.filter(r => r.city === city);
-        if (!data.length) { alert('Нет данных'); return; }
-        const total = data.length;
-        const avg = Math.round(data.reduce((s,r) => s + r.percent, 0) / total);
-        const success = data.filter(r => r.percent >= 85).length;
-        const failed = data.filter(r => r.percent < 70).length;
-        const testCount = data.filter(r => r.type === 'test').length;
-        const trainerCount = data.filter(r => r.type === 'trainer').length;
         
-        // Находим самое слабое правило для тренировки
-        const trainerData = data.filter(r => r.type === 'trainer');
-        const ruleFailures = {};
-        trainerData.forEach(r => {
-            if (r.rules_applied) {
-                TRAINER_RULES.forEach(rule => {
-                    if (!r.rules_applied.includes(rule.name)) {
-                        ruleFailures[rule.name] = (ruleFailures[rule.name] || 0) + 1;
-                    }
-                });
-            }
+        const cityData = allData.filter(r => r.city === city);
+        if (!cityData.length) {
+            document.getElementById('feedbackResult').innerHTML = '<div class="empty">Нет данных по этому городу</div>';
+            return;
+        }
+        
+        // Общая статистика
+        const total = cityData.length;
+        const avg = Math.round(cityData.reduce((s,r) => s + r.percent, 0) / total);
+        const success = cityData.filter(r => r.percent >= 85).length;
+        const failed = cityData.filter(r => r.percent < 70).length;
+        const testCount = cityData.filter(r => r.type === 'test').length;
+        const trainerCount = cityData.filter(r => r.type === 'trainer').length;
+        
+        // ===== РАСЧЁТ ТЕМ =====
+        // Для теста: считаем процент правильных ответов по каждому вопросу
+        const testData = cityData.filter(r => r.type === 'test');
+        const testTopicStats = TEST_TOPICS.map((topic, i) => {
+            let correct = 0, total = 0;
+            testData.forEach(r => {
+                if (r.answers && r.answers[i]) {
+                    total++;
+                    if (r.answers[i].correct) correct++;
+                }
+            });
+            const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
+            return {
+                type: 'test',
+                index: i,
+                name: topic,
+                correct,
+                total,
+                percent,
+                rec: TEST_GENERAL_RECS[i]
+            };
         });
         
-        const weakestRule = Object.entries(ruleFailures).sort((a,b) => b[1] - a[1])[0];
+        // Для тренировки: считаем процент применения каждого правила
+        const trainerData = cityData.filter(r => r.type === 'trainer');
+        const trainerTopicStats = TRAINER_RULES.map((rule, i) => {
+            let applied = 0, total = trainerData.length;
+            trainerData.forEach(r => {
+                if (r.rules_applied && r.rules_applied.includes(rule.name)) {
+                    applied++;
+                }
+            });
+            const percent = total > 0 ? Math.round((applied / total) * 100) : 0;
+            return {
+                type: 'trainer',
+                index: i,
+                name: rule.name,
+                correct: applied,
+                total,
+                percent,
+                rec: TRAINER_GENERAL_RECS[rule.id]
+            };
+        });
         
-        document.getElementById('feedbackResult').innerHTML = `
-            <div style="background:#f8fafc;padding:14px 16px;border-radius:6px;border-left:3px solid #c41e3a;margin-top:12px;">
-                <h4 style="margin-bottom:8px;">${city}</h4>
-                <p>👥 ${total} сотрудников</p>
-                <p>📈 Средний балл: ${avg}%</p>
-                <p>🏆 Успешно: ${success}/${total}</p>
-                <p>🔴 Требуют доработки: ${failed}</p>
-                <p>📝 Тестов: ${testCount} | 🎯 Тренировок: ${trainerCount}</p>
-                ${weakestRule ? `<p>⚠️ Самое слабое правило: <b>${weakestRule[0]}</b> (${weakestRule[1]} раз не применено)</p>` : ''}
-            </div>
+        // Объединяем все темы
+        const allTopics = [...testTopicStats, ...trainerTopicStats].filter(t => t.total > 0);
+        
+        // Сортируем по проценту
+        const sortedByPercent = [...allTopics].sort((a,b) => b.percent - a.percent);
+        
+        // Топ-5 сильных тем
+        const topStrong = sortedByPercent.slice(0, 5);
+        
+        // Топ-3-4 слабых тем
+        const topWeak = sortedByPercent.slice(-4).reverse();
+        
+        // ===== СРАВНЕНИЕ СПб =====
+        let spbComparisonHtml = '';
+        if (city.startsWith('Санкт-Петербург')) {
+            const mosData = allData.filter(r => r.city === 'Санкт-Петербург, Московский, 2');
+            const novData = allData.filter(r => r.city === 'Санкт-Петербург, Новаторов, 112');
+            
+            if (mosData.length > 0 && novData.length > 0) {
+                const mosAvg = Math.round(mosData.reduce((s,r) => s + r.percent, 0) / mosData.length);
+                const novAvg = Math.round(novData.reduce((s,r) => s + r.percent, 0) / novData.length);
+                
+                const winner = mosAvg > novAvg ? 'mos' : novAvg > mosAvg ? 'nov' : 'tie';
+                
+                spbComparisonHtml = `
+                    <div class="spb-comparison">
+                        <div class="spb-title">🏪 Сравнение магазинов Санкт-Петербурга</div>
+                        <div class="spb-grid">
+                            <div class="spb-shop ${winner === 'mos' ? 'spb-winner' : ''}">
+                                <div class="spb-shop-name">📍 Московский, 2</div>
+                                <div class="spb-shop-score" style="color: ${mosAvg>=85?'#16a34a':mosAvg>=70?'#f59e0b':'#dc2626'}">${mosAvg}%</div>
+                                <div class="spb-shop-label">${mosData.length} прохождений</div>
+                            </div>
+                            <div class="spb-vs">VS</div>
+                            <div class="spb-shop ${winner === 'nov' ? 'spb-winner' : ''}">
+                                <div class="spb-shop-name">📍 Новаторов, 112</div>
+                                <div class="spb-shop-score" style="color: ${novAvg>=85?'#16a34a':novAvg>=70?'#f59e0b':'#dc2626'}">${novAvg}%</div>
+                                <div class="spb-shop-label">${novData.length} прохождений</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // ===== ФОРМИРОВАНИЕ HTML =====
+        let html = `
+            <div class="feedback-wrapper">
+                <div class="feedback-header">
+                    <div>
+                        <h3>🏙️ ${city}</h3>
+                        <p>Детальный анализ сильных и слабых сторон</p>
+                    </div>
+                    <div class="feedback-stats">
+                        <div class="feedback-stat-pill">👥 ${total} сотрудников</div>
+                        <div class="feedback-stat-pill">📈 ${avg}% средний балл</div>
+                        <div class="feedback-stat-pill">🏆 ${success}/${total} успешно</div>
+                    </div>
+                </div>
+                
+                ${spbComparisonHtml}
+                
+                <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+                    <span class="badge badge-blue">📝 Тестов: ${testCount}</span>
+                    <span class="badge badge-purple">🎯 Тренировок: ${trainerCount}</span>
+                    ${failed > 0 ? `<span class="badge badge-red">🔴 Требуют внимания: ${failed}</span>` : ''}
+                </div>
         `;
+        
+        // Топ-5 сильных тем
+        if (topStrong.length > 0) {
+            html += `
+                <div class="feedback-section">
+                    <div class="feedback-section-title">
+                        <div class="icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534;">✅</div>
+                        Сильные стороны — темы, где продавцы отвечают правильно
+                    </div>
+                    <div class="topics-grid">
+            `;
+            topStrong.forEach((topic, i) => {
+                const icon = topic.type === 'trainer' ? '🎯' : '📝';
+                html += `
+                    <div class="topic-card strong">
+                        <div class="topic-rank">${i+1}</div>
+                        <div class="topic-name">${icon} ${topic.name}</div>
+                        <div class="topic-percent">${topic.percent}%</div>
+                        <div class="topic-bar">
+                            <div class="topic-bar-fill" style="width: ${topic.percent}%"></div>
+                        </div>
+                        <div class="topic-details">
+                            Правильных ответов: ${topic.correct} из ${topic.total}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+        }
+        
+        // Топ-3-4 зоны развития
+        if (topWeak.length > 0) {
+            html += `
+                <div class="feedback-section">
+                    <div class="feedback-section-title">
+                        <div class="icon" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b;">⚠️</div>
+                        Зоны развития — темы, где чаще всего ошибаются
+                    </div>
+                    <div class="topics-grid">
+            `;
+            topWeak.forEach((topic, i) => {
+                const icon = topic.type === 'trainer' ? '🎯' : '📝';
+                html += `
+                    <div class="topic-card weak">
+                        <div class="topic-rank">${i+1}</div>
+                        <div class="topic-name">${icon} ${topic.name}</div>
+                        <div class="topic-percent">${topic.percent}%</div>
+                        <div class="topic-bar">
+                            <div class="topic-bar-fill" style="width: ${topic.percent}%"></div>
+                        </div>
+                        <div class="topic-details">
+                            Правильных ответов: ${topic.correct} из ${topic.total} (${100-topic.percent}% ошибок)
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+        }
+        
+        // Общие рекомендации по слабым темам
+        if (topWeak.length > 0) {
+            html += `
+                <div class="feedback-section">
+                    <div class="feedback-section-title">
+                        <div class="icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af;">💡</div>
+                        Общие рекомендации по зонам развития
+                    </div>
+                    <div class="recommendations-list">
+            `;
+            topWeak.forEach((topic, i) => {
+                html += `
+                    <div class="rec-card">
+                        <div class="rec-card-title">
+                            📌 ${i+1}. ${topic.name}
+                        </div>
+                        <div class="rec-card-text">${topic.rec}</div>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+        }
+        
+        html += `</div>`;
+        
+        document.getElementById('feedbackResult').innerHTML = html;
     }
 
     // ----- ЭКСПОРТ PDF -----
     document.getElementById('exportPdfBtn').onclick = async function() {
-        const el = document.getElementById('dashboardTab');
-        if (!el) return;
-        try {
-            const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#e9edf2', useCORS: true });
-            const img = canvas.toDataURL('image/png');
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('landscape', 'mm', 'a3');
-            const w = pdf.internal.pageSize.getWidth();
-            const h = pdf.internal.pageSize.getHeight();
-            pdf.addImage(img, 'PNG', 0, 0, w, h);
-            pdf.save(`585GOLD_${new Date().toISOString().slice(0,10)}.pdf`);
-        } catch(e) { alert('Ошибка PDF: ' + e.message); }
+        alert('Функция экспорта в PDF будет доступна в следующей версии. Используйте CSV или сделайте скриншот.');
     };
 
     // ----- ЭКСПОРТ CSV -----
