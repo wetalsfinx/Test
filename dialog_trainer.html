@@ -268,54 +268,48 @@
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const BIN_ID_KEY = '585_bin_id';  // ← ИСПРАВЛЕНО: тот же ключ, что у теста!
 
-    // Функция с таймаутом
-    async function fetchWithTimeout(url, options, timeout = 15000) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(url, { ...options, signal: controller.signal });
-            clearTimeout(timeoutId);
-            return response;
-        } catch (error) {
-            clearTimeout(timeoutId);
-            throw error;
-        }
-    }
-
-    async function saveToJsonBin(resultData, attempt = 1) {
-        try {
-            console.log(`Сохраняем результат диалога... (попытка ${attempt})`);
-            let binId = localStorage.getItem(BIN_ID_KEY);
-            
-            // Если коробки нет — создаём новую
-            if (!binId) {
-                console.log('Создаём новую коробку для диалога...');
-                const createResponse = await fetchWithTimeout('https://api.jsonbin.io/v3/b', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY
-                    },
-                    body: JSON.stringify([resultData])
-                }, 20000);
-                
-                if (createResponse.ok) {
-                    const data = await createResponse.json();
-                    binId = data.metadata.id;
-                    localStorage.setItem(BIN_ID_KEY, binId);
-                    console.log('✅ Создана новая коробка, ID:', binId);
-                    return true;
-                } else {
-                    const errorText = await createResponse.text();
-                    console.error('Ошибка создания:', errorText);
-                    if (attempt < 3) {
-                        console.log('Повторяем через 2 секунды...');
-                        await new Promise(r => setTimeout(r, 2000));
-                        return await saveToJsonBin(resultData, attempt + 1);
-                    }
-                    return false;
-                }
+      async function saveToJsonBin(resultData) {
+    try {
+        let binId = localStorage.getItem(BIN_ID_KEY);
+        
+        if (!binId) {
+            const res = await fetch('https://api.jsonbin.io/v3/b', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+                body: JSON.stringify([resultData])
+            });
+            if (res.ok) {
+                const data = await res.json();
+                localStorage.setItem(BIN_ID_KEY, data.metadata.id);
+                return true;
             }
+            return false;
+        }
+
+        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+        });
+        
+        let allResults = [];
+        if (getRes.ok) {
+            const data = await getRes.json();
+            allResults = data.record || [];
+        }
+        
+        allResults.push(resultData);
+        
+        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+            body: JSON.stringify(allResults)
+        });
+        
+        return putRes.ok;
+    } catch(e) {
+        console.error('Ошибка сохранения:', e);
+        return false;
+    }
+}
 
             // Если коробка есть — читаем и обновляем
             console.log('Читаем коробку:', binId);
