@@ -154,12 +154,13 @@ async function saveToJsonBin(resultData) {
         if (getRes.ok) {
             const data = await getRes.json();
             allResults = data.record?.results || data.record || [];
+            console.log('📦 Записей в bin:', allResults.length);
         }
         
         // Добавляем новый результат
         allResults.push(resultData);
         
-        // Сохраняем (без таймаута, без AbortController)
+        // Просто сохраняем (без таймаута)
         const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
             method: 'PUT',
             headers: { 
@@ -170,7 +171,7 @@ async function saveToJsonBin(resultData) {
         });
         
         if (putRes.ok) {
-            console.log('✅ Сохранено! Записей:', allResults.length);
+            console.log('✅ Сохранено! Всего записей:', allResults.length);
             return true;
         } else {
             console.error('❌ Ошибка:', putRes.status);
