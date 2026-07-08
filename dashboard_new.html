@@ -598,18 +598,43 @@
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, comparisonChart = null;
 
     document.getElementById('clearAllBtn').onclick = async () => {
-        if (!confirm('Удалить все результаты?')) return;
-        if (!confirm('Точно?')) return;
-        try {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+    if (!confirm('⚠️ Удалить ВСЕ результаты из обоих bin?')) return;
+    if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
+    
+    try {
+        const BIN_TEST = '6a4df991da38895dfe3eed24';
+        const BIN_DIALOG = '6a4e1335f5f4af5e2970eea5';
+        
+        // Очищаем оба bin
+        const [resTest, resDialog] = await Promise.all([
+            fetch(`https://api.jsonbin.io/v3/b/${BIN_TEST}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY
+                },
                 body: JSON.stringify({ results: [] })
-            });
-            if (response.ok) { alert('✅ Очищено'); location.reload(); }
-            else alert('Ошибка: ' + response.status);
-        } catch(e) { alert('Ошибка: ' + e.message); }
-    };
+            }),
+            fetch(`https://api.jsonbin.io/v3/b/${BIN_DIALOG}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY
+                },
+                body: JSON.stringify({ results: [] })
+            })
+        ]);
+        
+        if (resTest.ok && resDialog.ok) {
+            alert('✅ Все данные удалены!');
+            location.reload();
+        } else {
+            alert('Ошибка очистки:\nТест: ' + resTest.status + '\nДиалог: ' + resDialog.status);
+        }
+    } catch(e) {
+        alert('Ошибка: ' + e.message);
+    }
+};
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
