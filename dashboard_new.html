@@ -624,58 +624,80 @@
     });
 
     async function loadResults() {
-        document.getElementById('loadingSkeleton').style.display = 'block';
-        document.getElementById('status').textContent = 'Загрузка...';
-        try {
-            const r = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest?t=${Date.now()}`, {
+    document.getElementById('loadingSkeleton').style.display = 'block';
+    document.getElementById('status').textContent = 'Загрузка...';
+    
+    // BIN IDs
+    const BIN_TEST = '6a4df991da38895dfe3eed24';
+    const BIN_DIALOG = '6a4e1335f5f4af5e2970eea5';
+    
+    try {
+        // Читаем из обоих bin параллельно
+        const [resTest, resDialog] = await Promise.all([
+            fetch(`https://api.jsonbin.io/v3/b/${BIN_TEST}/latest?t=${Date.now()}`, {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
-            
-            if (!r.ok) {
-                document.getElementById('status').textContent = r.status === 404 ? '❌ Коробка не найдена' : '❌ Ошибка: ' + r.status;
-                document.getElementById('loadingSkeleton').style.display = 'none';
-                return;
-            }
-            
-            const data = await r.json();
-            const rawResults = data.record?.results || data.record || [];
-            const results = Array.isArray(rawResults) ? rawResults.map(d => ({ ...d, type: d.type || 'test' })) : [];
-            
-            if (!results.length) {
-                document.getElementById('status').textContent = 'Нет результатов';
-                document.getElementById('loadingSkeleton').style.display = 'none';
-                return;
-            }
-            
-            allData = results.map(r => ({
-                id: r.id || Date.now() + Math.random(),
-                type: r.type || 'test',
-                user_name: r.user_name || 'Аноним',
-                city: r.city || 'Не указан',
-                score: r.score || 0,
-                total: r.total || (r.type === 'trainer' ? 6 : 11),
-                percent: r.percent || Math.round((r.score / (r.total || 11)) * 100),
-                answers: r.answers || [],
-                rules_applied: r.rules_applied || [],
-                date: r.date || new Date().toISOString()
-            }));
-            
-            const dataCities = [...new Set(allData.map(r => r.city))];
-            const allCities = [...new Set([...CITIES, ...dataCities])];
-            
-            document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + 
-                allCities.map(c => `<option value="${c}">${c}</option>`).join('');
-            
-            renderCityStats();
-            applyFilters();
-            document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${allData.filter(r=>r.type==='test').length}, тренировка: ${allData.filter(r=>r.type==='trainer').length})`;
-        } catch(e) { 
-            console.error(e); 
-            document.getElementById('status').textContent = 'Ошибка: ' + e.message;
+            }),
+            fetch(`https://api.jsonbin.io/v3/b/${BIN_DIALOG}/latest?t=${Date.now()}`, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            })
+        ]);
+        
+        let allResults = [];
+        
+        // Читаем результаты теста
+        if (resTest.ok) {
+            const dataTest = await resTest.json();
+            const resultsTest = dataTest.record?.results || dataTest.record || [];
+            allResults = allResults.concat(Array.isArray(resultsTest) ? resultsTest : []);
+            console.log('📦 Загружено тестов:', resultsTest.length);
         }
-        document.getElementById('loadingSkeleton').style.display = 'none';
+        
+        // Читаем результаты диалога
+        if (resDialog.ok) {
+            const dataDialog = await resDialog.json();
+            const resultsDialog = dataDialog.record?.results || dataDialog.record || [];
+            allResults = allResults.concat(Array.isArray(resultsDialog) ? resultsDialog : []);
+            console.log('📦 Загружено диалогов:', resultsDialog.length);
+        }
+        
+        if (!allResults.length) {
+            document.getElementById('status').textContent = 'Нет результатов';
+            document.getElementById('loadingSkeleton').style.display = 'none';
+            return;
+        }
+        
+        // Обрабатываем данные
+        allData = allResults.map(r => ({
+            id: r.id || Date.now() + Math.random(),
+            type: r.type || 'test',
+            user_name: r.user_name || 'Аноним',
+            city: r.city || 'Не указан',
+            score: r.score || 0,
+            total: r.total || (r.type === 'trainer' ? 6 : 11),
+            percent: r.percent || Math.round((r.score / (r.total || 11)) * 100),
+            answers: r.answers || [],
+            rules_applied: r.rules_applied || [],
+            date: r.date || new Date().toISOString()
+        }));
+        
+        // Сортируем по дате (новые сверху)
+        allData.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        const dataCities = [...new Set(allData.map(r => r.city))];
+        const allCities = [...new Set([...CITIES, ...dataCities])];
+        
+        document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + 
+            allCities.map(c => `<option value="${c}">${c}</option>`).join('');
+        
+        renderCityStats();
+        applyFilters();
+        document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${allData.filter(r=>r.type==='test').length}, тренировка: ${allData.filter(r=>r.type==='trainer').length})`;
+    } catch(e) { 
+        console.error(e); 
+        document.getElementById('status').textContent = 'Ошибка: ' + e.message;
     }
-
+    document.getElementById('loadingSkeleton').style.display = 'none';
+}
     function renderTrendChart() {
         const map = new Map();
         allData.forEach(r => {
