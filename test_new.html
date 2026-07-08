@@ -256,14 +256,18 @@ async function saveToJsonBin(resultData) {
             const q = shuffledQuestions[i];
             const isCorrect = (selectedIdx === q.correct);
             if (isCorrect) correctCount++;
-            answersDetail.push({
-                questionNum: i + 1,
-                selected: selectedIdx,
-                correct: isCorrect,
-                questionText: q.text,
-                selectedText: q.options[selectedIdx],
-                correctText: q.options[q.correct]
-            });
+            // Находим оригинальный индекс вопроса
+const originalIndex = ORIGINAL_QUESTIONS.findIndex(oq => oq.text === q.text);
+
+answersDetail.push({
+    questionNum: i + 1,
+    originalIndex: originalIndex, // ВАЖНО!
+    selected: selectedIdx,
+    correct: isCorrect,
+    questionText: q.text,
+    selectedText: q.options[selectedIdx],
+    correctText: q.options[q.correct]
+});
         }
         const percent = Math.round((correctCount / shuffledQuestions.length) * 100);
         const passed = percent >= 85;
