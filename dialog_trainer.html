@@ -289,10 +289,14 @@
         try {
             console.log(`📤 Сохраняем результат диалога... (попытка ${attempt})`);
             
-            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-                method: 'GET',
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY, 'X-Bin-Meta': 'false' }
-            });
+            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest?t=${Date.now()}`, {
+    method: 'GET',
+    headers: { 
+        'X-Master-Key': JSONBIN_MASTER_KEY,
+        'X-Bin-Meta': 'false',
+        'Cache-Control': 'no-cache'
+    }
+});
             
             let allResults = [];
             if (getRes.ok) {
