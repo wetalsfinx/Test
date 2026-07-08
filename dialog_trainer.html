@@ -230,14 +230,14 @@
         <div class="register-form" id="registerForm">
             <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
             <select id="userCity">
-    <option value="">Выберите город</option>
-    <option value="Уфа">Уфа</option>
-    <option value="Екатеринбург">Екатеринбург</option>
-    <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
-    <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
-    <option value="Калининград">Калининград</option>
-    <option value="Нижний Тагил">Нижний Тагил</option>
-</select>
+                <option value="">Выберите город</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
+                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
+                <option value="Калининград">Калининград</option>
+                <option value="Нижний Тагил">Нижний Тагил</option>
+            </select>
             <button id="startGameBtn">Начать диалог</button>
         </div>
         <div id="currentUserDisplay" class="current-user" style="display: none;"></div>
@@ -252,7 +252,7 @@
                 </div>
                 <div class="choices-area" id="choicesArea"></div>
                 <div class="next-area" id="nextArea">
-                    <button class="next-btn" id="nextBtn" disabled>➡ Далее</button>
+                    <button class="next-btn" id="nextBtn" disabled> Далее</button>
                 </div>
                 <div class="result-card" id="resultCard" style="display: none;"></div>
                 <div id="saveStatus" class="save-status"></div>
@@ -262,237 +262,90 @@
 </div>
 
 <script>
-    // ===================================================================
-    // НАСТРОЙКА — JSONBIN.IO (ОДИН BIN С ТЕСТОМ!)
-    // ===================================================================
+    // ========== НАСТРОЙКА JSONBIN.IO ==========
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const BIN_ID_KEY = '585_bin_id';  // ← ИСПРАВЛЕНО: тот же ключ, что у теста!
-
-      async function saveToJsonBin(resultData) {
-    try {
-        let binId = localStorage.getItem(BIN_ID_KEY);
-        
-        if (!binId) {
-            const res = await fetch('https://api.jsonbin.io/v3/b', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-                body: JSON.stringify([resultData])
-            });
-            if (res.ok) {
-                const data = await res.json();
-                localStorage.setItem(BIN_ID_KEY, data.metadata.id);
-                return true;
-            }
-            return false;
-        }
-
-        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-        });
-        
-        let allResults = [];
-        if (getRes.ok) {
-            const data = await getRes.json();
-            allResults = data.record || [];
-        }
-        
-        allResults.push(resultData);
-        
-        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-            body: JSON.stringify(allResults)
-        });
-        
-        return putRes.ok;
-    } catch(e) {
-        console.error('Ошибка сохранения:', e);
-        return false;
-    }
-}
-
-            // Если коробка есть — читаем и обновляем
-            console.log('Читаем коробку:', binId);
-            const getResponse = await fetchWithTimeout(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            }, 15000);
-            
-            let existingResults = [];
-            if (getResponse.ok) {
-                const data = await getResponse.json();
-                existingResults = data.record || [];
-                console.log('Записей в коробке:', existingResults.length);
-            } else if (getResponse.status === 404) {
-                console.log('Коробка не найдена на сервере, создаём новую...');
-                localStorage.removeItem(BIN_ID_KEY);
-                return await saveToJsonBin(resultData, attempt + 1);
-            } else {
-                console.error('Ошибка чтения коробки:', getResponse.status);
-                if (attempt < 3) {
-                    await new Promise(r => setTimeout(r, 2000));
-                    return await saveToJsonBin(resultData, attempt + 1);
-                }
-                return false;
-            }
-            
-            // Добавляем новый результат
-            existingResults.push(resultData);
-            
-            // Обновляем коробку
-            console.log('Обновляем коробку, записей станет:', existingResults.length);
-            const updateResponse = await fetchWithTimeout(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                },
-                body: JSON.stringify(existingResults)
-            }, 20000);
-            
-            if (updateResponse.ok) {
-                console.log('✅ Результат диалога сохранён!');
-                return true;
-            } else {
-                const errorText = await updateResponse.text();
-                console.error('❌ Ошибка обновления:', errorText);
-                if (attempt < 3) {
-                    await new Promise(r => setTimeout(r, 2000));
-                    return await saveToJsonBin(resultData, attempt + 1);
-                }
-                return false;
-            }
-        } catch(error) {
-            console.error('❌ Ошибка:', error.message);
-            if (attempt < 3) {
-                console.log(`Повторяем через 3 секунды... (попытка ${attempt + 1})`);
-                await new Promise(r => setTimeout(r, 3000));
-                return await saveToJsonBin(resultData, attempt + 1);
-            }
-            return false;
-        }
-    }
-
-    // ===================================================================
-    // ДАННЫЕ ТРЕНАЖЁРА
-    // ===================================================================
+    const FIXED_BIN_ID = '6a4df991da38895dfe3eed24'; // НОВЫЙ BIN!
+    
     const ALL_RULES = [
-        { id: "initiative", name: "Проявляй инициативу", 
-          rec: "Не жди, пока клиент сам позовёт. Через 20-30 секунд подойди и спроси: «Какое изделие выбираете? Для себя или в подарок?»" },
-        { id: "askBeforeShow", name: "Задавай вопросы ДО показа", 
-          rec: "Сначала спроси «для какого случая?», «кто получатель?», «какие предпочтения?». Только потом показывай украшения." },
-        { id: "emotionalHPW", name: "Презентуй с эмоцией (ХПВ)", 
-          rec: "Привязывай украшение к событию: «Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите»." },
-        { id: "fittingOffer", name: "Предлагай примерку через «Давайте»", 
-          rec: "Всегда предлагай примерку фразой «Давайте примерим». Клиент, который примерил, покупает в 3 раза чаще." },
-        { id: "alternative", name: "Не отпускай без альтернативы", 
-          rec: "Если нет размера или модели — сразу покажи похожие варианты и каталог заказов." },
-        { id: "warmClosing", name: "Завершай с теплотой", 
-          rec: "Завершай с теплотой: «Спасибо, что зашли! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»." }
+        { id: "initiative", name: "Проявляй инициативу", rec: "Через 20-30 секунд подойди и спроси: «Какое изделие выбираете? Для себя или в подарок?»" },
+        { id: "askBeforeShow", name: "Задавай вопросы ДО показа", rec: "Сначала спроси «для какого случая?», «кто получатель?». Только потом показывай украшения." },
+        { id: "emotionalHPW", name: "Презентуй с эмоцией (ХПВ)", rec: "Привязывай украшение к событию: «Это кольцо будет напоминать о вашей годовщине...»" },
+        { id: "fittingOffer", name: "Предлагай примерку через «Давайте»", rec: "Всегда предлагай примерку фразой «Давайте примерим»." },
+        { id: "alternative", name: "Не отпускай без альтернативы", rec: "Если нет размера — сразу покажи похожие варианты и каталог заказов." },
+        { id: "warmClosing", name: "Завершай с теплотой", rec: "«Спасибо, что зашли! Если будете выбирать подарки — заходите...»" }
     ];
 
     const QUESTIONS = [
-        {
-            client: "Клиент зашёл, молча смотрит на витрину с кольцами около 25 секунд. Что делаете?",
-            ruleId: "initiative",
-            correct: 1,
-            choices: [
-                "«Добрый день! Выбираете что-то конкретное или просто смотрите?»",
-                "«Добрый день. У нас сегодня скидка 30% на бриллианты. Какое изделие выбираете? Для себя или в подарок?»",
-                "«Здравствуйте! Если нужна помощь — обращайтесь» (и отхожу)"
-            ]
-        },
-        {
-            client: "Клиент: «Хочу подарить жене кольцо, бюджет до 40 000 ₽». Что делаете?",
-            ruleId: "askBeforeShow",
-            correct: 1,
-            choices: [
-                "«Отлично! Давайте посмотрим вот эту коллекцию — она как раз в вашем бюджете»",
-                "«А для какого случая? Что ей нравится?»",
-                "«40 тысяч — хороший бюджет. Покажу несколько вариантов в нейтральном стиле, а вы выберете»"
-            ]
-        },
-        {
-            client: "Клиент: «Годовщина 10 лет. Жена любит винтажный стиль». Показываете кольцо. Что говорите?",
-            ruleId: "emotionalHPW",
-            correct: 2,
-            choices: [
-                "«Это кольцо из нашей винтажной коллекции. Очень качественная огранка, хорошая цена»",
-                "«Такие кольца сейчас хорошо покупают — это тренд сезона»",
-                "«Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите. Оно создано для таких моментов»"
-            ]
-        },
-        {
-            client: "Клиент заинтересовался: «Да, это близко. Можно посмотреть?»",
-            ruleId: "fittingOffer",
-            correct: 1,
-            choices: [
-                "«Хотите, чтобы я показала это кольцо поближе?»",
-                "«Давайте посмотрим на него вблизи — так вы сразу увидите, как оно прекрасно. Давайте примерим?»",
-                "«У нас есть зеркало вон там — можете померить, если захотите»"
-            ]
-        },
-        {
-            client: "Клиент посмотрел кольцо, улыбается: «Красиво… но размера 16,5 нет в наличии». Что делаете?",
-            ruleId: "alternative",
-            correct: 0,
-            choices: [
-                "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ — сможем заказать точно под размер»",
-                "«Как жаль! Давайте посмотрим, что ещё есть в этой витрине»",
-                "«Можем заказать с доставкой через 2-3 недели. Внесёте предоплату?»"
-            ]
-        },
-        {
-            client: "Клиент выбрал похожую модель, оформил заказ. Прощается. Что говорите?",
-            ruleId: "warmClosing",
-            correct: 2,
-            choices: [
-                "«Спасибо за покупку! Хорошего дня»",
-                "«Будем рады видеть вас снова. У нас обновления коллекции каждую неделю»",
-                "«Спасибо, что зашли к нам! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»"
-            ]
-        }
+        { client: "Клиент зашёл, молча смотрит на витрину с кольцами около 25 секунд. Что делаете?", ruleId: "initiative", correct: 1, choices: ["«Добрый день! Выбираете что-то конкретное или просто смотрите?»", "«Добрый день. У нас сегодня скидка 30% на бриллианты. Какое изделие выбираете? Для себя или в подарок?»", "«Здравствуйте! Если нужна помощь — обращайтесь» (и отхожу)"] },
+        { client: "Клиент: «Хочу подарить жене кольцо, бюджет до 40 000 ₽». Что делаете?", ruleId: "askBeforeShow", correct: 1, choices: ["«Отлично! Давайте посмотрим вот эту коллекцию — она как раз в вашем бюджете»", "«А для какого случая? Что ей нравится?»", "«40 тысяч — хороший бюджет. Покажу несколько вариантов в нейтральном стиле, а вы выберете»"] },
+        { client: "Клиент: «Годовщина 10 лет. Жена любит винтажный стиль». Показываете кольцо. Что говорите?", ruleId: "emotionalHPW", correct: 2, choices: ["«Это кольцо из нашей винтажной коллекции. Очень качественная огранка, хорошая цена»", "«Такие кольца сейчас хорошо покупают — это тренд сезона»", "«Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите. Оно создано для таких моментов»"] },
+        { client: "Клиент заинтересовался: «Да, это близко. Можно посмотреть?»", ruleId: "fittingOffer", correct: 1, choices: ["«Хотите, чтобы я показала это кольцо поближе?»", "«Давайте посмотрим на него вблизи — так вы сразу увидите, как оно прекрасно. Давайте примерим?»", "«У нас есть зеркало вон там — можете померить, если захотите»"] },
+        { client: "Клиент посмотрел кольцо, улыбается: «Красиво… но размера 16,5 нет в наличии». Что делаете?", ruleId: "alternative", correct: 0, choices: ["«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ — сможем заказать точно под размер»", "«Как жаль! Давайте посмотрим, что ещё есть в этой витрине»", "«Можем заказать с доставкой через 2-3 недели. Внесёте предоплату?»"] },
+        { client: "Клиент выбрал похожую модель, оформил заказ. Прощается. Что говорите?", ruleId: "warmClosing", correct: 2, choices: ["«Спасибо за покупку! Хорошего дня»", "«Будем рады видеть вас снова. У нас обновления коллекции каждую неделю»", "«Спасибо, что зашли к нам! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»"] }
     ];
 
-    // ===================================================================
-    // СОСТОЯНИЕ
-    // ===================================================================
+    // ========== СОХРАНЕНИЕ В JSONBIN ==========
+    async function saveToJsonBin(resultData, attempt = 1) {
+        try {
+            console.log(`📤 Сохраняем результат диалога... (попытка ${attempt})`);
+            
+            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+                method: 'GET',
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY, 'X-Bin-Meta': 'false' }
+            });
+            
+            let allResults = [];
+            if (getRes.ok) {
+                const data = await getRes.json();
+                allResults = data.record?.results || data.record || [];
+                console.log('📦 Записей в bin:', allResults.length);
+            }
+            
+            allResults.push(resultData);
+            
+            const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+                body: JSON.stringify({ results: allResults })
+            });
+            
+            if (putRes.ok) {
+                console.log('✅ Результат сохранён! Всего записей:', allResults.length);
+                return true;
+            } else {
+                if (attempt < 3) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    return await saveToJsonBin(resultData, attempt + 1);
+                }
+                return false;
+            }
+        } catch(e) {
+            console.error(' Ошибка:', e.message);
+            if (attempt < 3) {
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                return await saveToJsonBin(resultData, attempt + 1);
+            }
+            return false;
+        }
+    }
+
     let currentQuestionIndex = 0, currentAnswers = [], appliedRules = [], currentUserName = null, currentUserCity = null;
     let gameActive = false, selectedChoiceIndex = null;
     let questionResults = [];
 
-    // ===================================================================
-    // ЛОГИКА ТРЕНАЖЁРА
-    // ===================================================================
     function nextStep() {
         if (!gameActive || selectedChoiceIndex === null) return;
-        
         const isCorrect = selectedChoiceIndex === QUESTIONS[currentQuestionIndex].correct;
         const ruleId = QUESTIONS[currentQuestionIndex].ruleId;
-        
-        currentAnswers.push({ 
-            question: currentQuestionIndex, 
-            selected: selectedChoiceIndex, 
-            correct: isCorrect, 
-            ruleId: ruleId,
-            questionText: QUESTIONS[currentQuestionIndex].client,
-            selectedText: QUESTIONS[currentQuestionIndex].choices[selectedChoiceIndex],
-            correctText: QUESTIONS[currentQuestionIndex].choices[QUESTIONS[currentQuestionIndex].correct]
-        });
-        
+        currentAnswers.push({ question: currentQuestionIndex, selected: selectedChoiceIndex, correct: isCorrect, ruleId });
         questionResults[currentQuestionIndex] = isCorrect;
-        
         if (isCorrect) {
             const r = ALL_RULES.find(x => x.id === ruleId);
             if (r && !appliedRules.includes(r.name)) appliedRules.push(r.name);
         }
-        
         currentQuestionIndex++;
-        if (currentQuestionIndex >= QUESTIONS.length) {
-            finishGame();
-        } else {
-            selectedChoiceIndex = null;
-            renderQuestion();
-        }
+        if (currentQuestionIndex >= QUESTIONS.length) finishGame();
+        else { selectedChoiceIndex = null; renderQuestion(); }
     }
 
     async function finishGame() {
@@ -500,63 +353,26 @@
         const success = appliedRules.length === 6;
         document.getElementById("choicesArea").innerHTML = "";
         document.getElementById("nextArea").style.display = "none";
-        
         const resultDiv = document.getElementById("resultCard");
         resultDiv.style.display = "block";
         resultDiv.className = `result-card ${success ? "success" : "loss"}`;
         
         let html = '';
-        
         if (success) {
-            html = `
-                <h2>🏆 ПОБЕДА!</h2>
-                <p>Вы применили все 6 правил!</p>
-                <p style="font-size:14px; color:#666;">Результат: ${appliedRules.length}/6</p>
-                <div class="rec-perfect">
-                    🎉 <strong>ИДЕАЛЬНО!</strong> Вы применили все правила в диалоге!
-                </div>
-            `;
+            html = `<h2>🏆 ПОБЕДА!</h2><p>Вы применили все 6 правил!</p><p style="font-size:14px; color:#666;">Результат: ${appliedRules.length}/6</p><div class="rec-perfect"> <strong>ИДЕАЛЬНО!</strong></div>`;
         } else {
             const missingRules = ALL_RULES.filter(r => !appliedRules.includes(r.name));
-            
-            html = `
-                <h2>😞 ДИАЛОГ НЕ ПРОЙДЕН</h2>
-                <p>Применено правил: ${appliedRules.length} из 6</p>
-            `;
-            
+            html = `<h2>😞 ДИАЛОГ НЕ ПРОЙДЕН</h2><p>Применено правил: ${appliedRules.length} из 6</p>`;
             if (missingRules.length > 0) {
-                html += `
-                    <div class="rec-section">
-                        <h4>📚 КАКИЕ ПРАВИЛА НЕ ПРИМЕНЕНЫ</h4>
-                `;
-                
+                html += `<div class="rec-section"><h4>📚 НЕ ПРИМЕНЕНЫ</h4>`;
                 missingRules.forEach(rule => {
-                    html += `
-                        <div class="rec-item">
-                            <div class="rec-rule">❌ ${rule.name}</div>
-                            <div class="rec-tip">📌 ${rule.rec}</div>
-                        </div>
-                    `;
+                    html += `<div class="rec-item"><div class="rec-rule">❌ ${rule.name}</div><div class="rec-tip">📌 ${rule.rec}</div></div>`;
                 });
-                
                 html += `</div>`;
             }
-            
-            if (appliedRules.length > 0) {
-                html += `
-                    <div style="margin-top: 12px; text-align: center; font-size: 14px; color: #2c6e2c;">
-                        ✅ ${appliedRules.length} правил вы применили — так держать!
-                    </div>
-                `;
-            }
         }
-        
         resultDiv.innerHTML = html;
-        
-        // Сохраняем результат
         await saveResult(success);
-        
-        // Кнопка перезапуска
         const existingBtn = resultDiv.parentNode.querySelector('.restart-btn');
         if (!existingBtn) {
             const btn = document.createElement("button");
@@ -569,46 +385,26 @@
 
     async function saveResult(success) {
         const resultData = {
-            id: Date.now(),
-            type: 'trainer',
-            user_name: currentUserName,
-            city: currentUserCity,
-            score: appliedRules.length,
-            total: ALL_RULES.length,
+            id: Date.now(), type: 'trainer', user_name: currentUserName, city: currentUserCity,
+            score: appliedRules.length, total: ALL_RULES.length,
             percent: Math.round((appliedRules.length / ALL_RULES.length) * 100),
-            passed: success,
-            rules_applied: appliedRules,
-            rules_count: appliedRules.length,
-            answers: currentAnswers,
-            date: new Date().toISOString(),
+            passed: success, rules_applied: appliedRules, rules_count: appliedRules.length,
+            answers: currentAnswers, date: new Date().toISOString(),
             timestamp: new Date().toLocaleString('ru-RU')
         };
-        
         const statusDiv = document.getElementById('saveStatus');
-        if (statusDiv) {
-            statusDiv.innerHTML = '⏳ Сохранение...';
-            statusDiv.style.color = '#f59e0b';
-        }
-        
+        if (statusDiv) { statusDiv.innerHTML = '⏳ Сохранение...'; statusDiv.style.color = '#f59e0b'; }
         const saved = await saveToJsonBin(resultData);
-        
         if (statusDiv) {
-            if (saved) {
-                statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
-                statusDiv.style.color = '#2c6e2c';
-            } else {
-                statusDiv.innerHTML = '⚠️ Ошибка сохранения. Проверьте интернет.';
-                statusDiv.style.color = '#c41e3a';
-            }
+            if (saved) { statusDiv.innerHTML = '✅ Результат сохранён!'; statusDiv.style.color = '#2c6e2c'; }
+            else { statusDiv.innerHTML = '⚠️ Ошибка сохранения.'; statusDiv.style.color = '#c41e3a'; }
         }
     }
 
     function renderQuestion() {
         const q = QUESTIONS[currentQuestionIndex];
         document.getElementById("chatArea").innerHTML = `<div class="client-message">${q.client}</div>`;
-        
         updateProgress();
-        
         const rulesDiv = document.getElementById("appliedRulesList");
         if (appliedRules.length) {
             document.getElementById("emptyRulesMsg").style.display = "none";
@@ -617,12 +413,10 @@
             document.getElementById("emptyRulesMsg").style.display = "inline";
             rulesDiv.innerHTML = "";
         }
-        
         const choicesDiv = document.getElementById("choicesArea");
         choicesDiv.innerHTML = "";
         selectedChoiceIndex = null;
         document.getElementById("nextBtn").disabled = true;
-        
         q.choices.forEach((c, idx) => {
             const btn = document.createElement("button");
             btn.className = "choice-btn";
@@ -643,46 +437,28 @@
         for (let i = 0; i < QUESTIONS.length; i++) {
             const dot = document.createElement('span');
             dot.className = 'dot';
-            if (i < currentQuestionIndex) {
-                dot.classList.add(questionResults[i] ? 'done' : 'failed');
-            } else if (i === currentQuestionIndex) {
-                dot.classList.add('active');
-            }
+            if (i < currentQuestionIndex) dot.classList.add(questionResults[i] ? 'done' : 'failed');
+            else if (i === currentQuestionIndex) dot.classList.add('active');
             dotsContainer.appendChild(dot);
         }
     }
 
     function startGame(name, city) {
-        currentUserName = name;
-        currentUserCity = city;
-        currentQuestionIndex = 0;
-        appliedRules = [];
-        currentAnswers = [];
-        questionResults = [];
-        gameActive = true;
-        
+        currentUserName = name; currentUserCity = city; currentQuestionIndex = 0;
+        appliedRules = []; currentAnswers = []; questionResults = []; gameActive = true;
         document.getElementById("gameContainer").style.display = "block";
         document.getElementById("currentUserDisplay").innerHTML = `👤 ${name} (${city})`;
         document.getElementById("currentUserDisplay").style.display = "inline-block";
         document.getElementById("registerForm").style.display = "none";
         document.getElementById("resultCard").style.display = "none";
         document.getElementById("saveStatus").innerHTML = '';
-        
         const oldBtn = document.querySelector('.restart-btn');
         if (oldBtn) oldBtn.remove();
-        
         renderQuestion();
     }
 
-    function resetGame() {
-        const name = currentUserName;
-        const city = currentUserCity;
-        startGame(name, city);
-    }
+    function resetGame() { startGame(currentUserName, currentUserCity); }
 
-    // ===================================================================
-    // ОБРАБОТЧИКИ
-    // ===================================================================
     document.getElementById("startGameBtn").onclick = () => {
         const name = document.getElementById("userName").value.trim();
         const city = document.getElementById("userCity").value;
@@ -690,9 +466,7 @@
         if (!city) return alert("Выберите город");
         startGame(name, city);
     };
-    
     document.getElementById("nextBtn").onclick = nextStep;
-
     document.getElementById("userName").addEventListener("keydown", (e) => {
         if (e.key === "Enter") document.getElementById("startGameBtn").click();
     });
