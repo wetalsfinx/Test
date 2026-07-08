@@ -226,46 +226,47 @@
     ];
 
     // ========== СОХРАНЕНИЕ В JSONBIN ==========
-    async function saveToJsonBin(resultData) {
-        try {
-            console.log('📤 Сохраняем результат диалога...');
-            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest?t=${Date.now()}`, {
-                method: 'GET',
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY, 'X-Bin-Meta': 'false', 'Cache-Control': 'no-cache' }
-            });
-            let allResults = [];
-            if (getRes.ok) {
-                const data = await getRes.json();
-                allResults = data.record?.results || data.record || [];
-                console.log('📦 Записей в bin:', allResults.length);
-            }
-            allResults.push(resultData);
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
-            try {
-                const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-                    body: JSON.stringify({ results: allResults }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (putRes.ok) {
-                    console.log('✅ Сохранено! Записей:', allResults.length);
-                    return true;
-                }
-                console.error('❌ Ошибка:', putRes.status);
-                return false;
-            } catch (fetchError) {
-                clearTimeout(timeoutId);
-                console.error('❌ Таймаут:', fetchError.message);
-                return false;
-            }
-        } catch(e) {
-            console.error('❌ Ошибка:', e.message);
+   async function saveToJsonBin(resultData) {
+    try {
+        console.log('📤 Сохраняем результат диалога...');
+        
+        // Просто читаем bin
+        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+        });
+        
+        let allResults = [];
+        if (getRes.ok) {
+            const data = await getRes.json();
+            allResults = data.record?.results || data.record || [];
+            console.log('📦 Записей в bin:', allResults.length);
+        }
+        
+        // Добавляем новый результат
+        allResults.push(resultData);
+        
+        // Просто сохраняем (без таймаута)
+        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_MASTER_KEY
+            },
+            body: JSON.stringify({ results: allResults })
+        });
+        
+        if (putRes.ok) {
+            console.log('✅ Сохранено! Всего записей:', allResults.length);
+            return true;
+        } else {
+            console.error('❌ Ошибка сохранения:', putRes.status);
             return false;
         }
+    } catch(e) {
+        console.error('❌ Ошибка:', e.message);
+        return false;
     }
+}
 
     // ========== СОСТОЯНИЕ (ЭТОГО НЕ БЫЛО!) ==========
     let currentQuestionIndex = 0;
