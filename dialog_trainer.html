@@ -285,72 +285,66 @@
     ];
 
     // ========== СОХРАНЕНИЕ В JSONBIN ==========
-    async function saveToJsonBin(resultData, attempt = 1) {
-        try {
-            console.log(`📤 Сохраняем результат диалога... (попытка ${attempt})`);
-            
-            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest?t=${Date.now()}`, {
-    method: 'GET',
-    headers: { 
-        'X-Master-Key': JSONBIN_MASTER_KEY,
-        'X-Bin-Meta': 'false',
-        'Cache-Control': 'no-cache'
-    }
-});
-            
-            let allResults = [];
-            if (getRes.ok) {
-                const data = await getRes.json();
-                allResults = data.record?.results || data.record || [];
-                console.log('📦 Записей в bin:', allResults.length);
+   async function saveToJsonBin(resultData) {
+    try {
+        console.log('📤 Сохраняем результат диалога...');
+        
+        // Читаем текущие данные (с обходом кеша)
+        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest?t=${Date.now()}`, {
+            method: 'GET',
+            headers: { 
+                'X-Master-Key': JSONBIN_MASTER_KEY,
+                'X-Bin-Meta': 'false',
+                'Cache-Control': 'no-cache'
             }
-            
-            allResults.push(resultData);
-            
+        });
+        
+        let allResults = [];
+        if (getRes.ok) {
+            const data = await getRes.json();
+            allResults = data.record?.results || data.record || [];
+            console.log('📦 Записей в bin:', allResults.length);
+        } else {
+            console.warn('⚠️ Не удалось прочитать bin, начинаем с нуля');
+        }
+        
+        // Добавляем новый результат
+        allResults.push(resultData);
+        
+        // Обновляем bin (с таймаутом)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 сек максимум
+        
+        try {
             const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-                body: JSON.stringify({ results: allResults })
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY
+                },
+                body: JSON.stringify({ results: allResults }),
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
             
             if (putRes.ok) {
                 console.log('✅ Результат сохранён! Всего записей:', allResults.length);
                 return true;
             } else {
-                if (attempt < 3) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    return await saveToJsonBin(resultData, attempt + 1);
-                }
+                console.error('❌ Ошибка сохранения:', putRes.status);
                 return false;
             }
-        } catch(e) {
-            console.error(' Ошибка:', e.message);
-            if (attempt < 3) {
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                return await saveToJsonBin(resultData, attempt + 1);
-            }
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            console.error('❌ Таймаут сохранения:', fetchError.message);
             return false;
         }
+    } catch(e) {
+        console.error('❌ Ошибка сохранения:', e.message);
+        return false;
     }
-
-    let currentQuestionIndex = 0, currentAnswers = [], appliedRules = [], currentUserName = null, currentUserCity = null;
-    let gameActive = false, selectedChoiceIndex = null;
-    let questionResults = [];
-
-    function nextStep() {
-        if (!gameActive || selectedChoiceIndex === null) return;
-        const isCorrect = selectedChoiceIndex === QUESTIONS[currentQuestionIndex].correct;
-        const ruleId = QUESTIONS[currentQuestionIndex].ruleId;
-        currentAnswers.push({ question: currentQuestionIndex, selected: selectedChoiceIndex, correct: isCorrect, ruleId });
-        questionResults[currentQuestionIndex] = isCorrect;
-        if (isCorrect) {
-            const r = ALL_RULES.find(x => x.id === ruleId);
-            if (r && !appliedRules.includes(r.name)) appliedRules.push(r.name);
-        }
-        currentQuestionIndex++;
-        if (currentQuestionIndex >= QUESTIONS.length) finishGame();
-        else { selectedChoiceIndex = null; renderQuestion(); }
-    }
+}
 
     async function finishGame() {
         gameActive = false;
