@@ -994,7 +994,6 @@
         renderCityStats();
     }
 
-    // ✅ ИСПРАВЛЕННАЯ ФУНКЦИЯ — БЕЗ ДУБЛИРОВАНИЯ
     function showDetails(id) {
         const emp = filteredData.find(r => r.id === id);
         if (!emp) return;
@@ -1014,7 +1013,6 @@
         } else {
             if (emp.answers && emp.answers.length) {
                 emp.answers.forEach((a) => {
-                    // Используем originalIndex для правильной рекомендации
                     const recIndex = (a.originalIndex !== undefined) ? a.originalIndex : ((a.questionNum || 1) - 1);
                     const rec = TEST_GENERAL_RECS[recIndex] || 'Изучите правильный ответ.';
                     
@@ -1040,59 +1038,39 @@
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-    // ✅ ИСПРАВЛЕННАЯ ФУНКЦИЯ — ИСПОЛЬЗУЕТ originalIndex
-   function calculateCityTopics(cityData) {
-    const testData = cityData.filter(r => r.type === 'test');
-    const trainerData = cityData.filter(r => r.type === 'trainer');
-    
-    // Считаем статистику по тестам
-    const testTopicStats = TEST_TOPICS.map((topic, i) => {
-        let correct = 0, total = 0;
-        testData.forEach(r => {
-            if (r.answers) {
-                // Ищем ответ с нужным originalIndex
-                const answer = r.answers.find(a => a.originalIndex === i);
-                if (answer) {
-                    total++;
-                    if (answer.correct) correct++;
+    function calculateCityTopics(cityData) {
+        const testData = cityData.filter(r => r.type === 'test');
+        const trainerData = cityData.filter(r => r.type === 'trainer');
+        
+        const testTopicStats = TEST_TOPICS.map((topic, i) => {
+            let correct = 0, total = 0;
+            testData.forEach(r => {
+                if (r.answers) {
+                    const answer = r.answers.find(a => a.originalIndex === i);
+                    if (answer) {
+                        total++;
+                        if (answer.correct) correct++;
+                    }
                 }
-            }
+            });
+            return { type: 'test', index: i, name: topic, correct, total, percent: total > 0 ? Math.round((correct/total)*100) : 0, rec: TEST_GENERAL_RECS[i] };
         });
-        return { 
-            type: 'test', 
-            index: i, 
-            name: topic, 
-            correct, 
-            total, 
-            percent: total > 0 ? Math.round((correct/total)*100) : 0, 
-            rec: TEST_GENERAL_RECS[i] 
-        };
-    });
-    
-    // Считаем статистику по тренировкам
-    const trainerTopicStats = TRAINER_RULES.map((rule, i) => {
-        let applied = 0, totalAttempts = 0;
-        trainerData.forEach(r => {
-            if (r.rules_applied) {
-                totalAttempts++;
-                if (r.rules_applied.includes(rule.name)) {
-                    applied++;
+        
+        const trainerTopicStats = TRAINER_RULES.map((rule) => {
+            let applied = 0, totalAttempts = 0;
+            trainerData.forEach(r => {
+                if (r.rules_applied) {
+                    totalAttempts++;
+                    if (r.rules_applied.includes(rule.name)) {
+                        applied++;
+                    }
                 }
-            }
+            });
+            return { type: 'trainer', name: rule.name, correct: applied, total: totalAttempts, percent: totalAttempts > 0 ? Math.round((applied/totalAttempts)*100) : 0, rec: TRAINER_GENERAL_RECS[rule.id] };
         });
-        return { 
-            type: 'trainer', 
-            name: rule.name, 
-            correct: applied, 
-            total: totalAttempts, 
-            percent: totalAttempts > 0 ? Math.round((applied/totalAttempts)*100) : 0, 
-            rec: TRAINER_GENERAL_RECS[rule.id] 
-        };
-    });
-    
-    // Возвращаем только темы, где были попытки
-    return [...testTopicStats, ...trainerTopicStats].filter(t => t.total > 0);
-}
+        
+        return [...testTopicStats, ...trainerTopicStats].filter(t => t.total > 0);
+    }
 
     function generateFeedback() {
         const city = document.getElementById('feedbackCitySelect').value;
