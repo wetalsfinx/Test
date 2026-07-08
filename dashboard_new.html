@@ -1024,7 +1024,24 @@
         } else {
             if (emp.answers && emp.answers.length) {
                 emp.answers.forEach((a, i) => {
-                    const rec = TEST_GENERAL_RECS[i] || 'Изучите правильный ответ.';
+    // Используем originalIndex для правильной рекомендации
+    const recIndex = a.originalIndex !== undefined ? a.originalIndex : i;
+    const rec = TEST_GENERAL_RECS[recIndex] || 'Изучите правильный ответ.';
+    
+    const correctAnswerHtml = a.correct ? '' : 
+        `<div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>`;
+    
+    html += `<div class="answer-item">
+        <div class="q">Вопрос ${a.questionNum}: ${a.questionText}</div>
+        <div class="user-answer" style="color: ${a.correct ? '#16a34a' : '#dc2626'}">
+            ${a.correct ? '✅' : '❌'} Ваш ответ: ${a.selectedText}
+        </div>
+        ${correctAnswerHtml}
+        <div class="${a.correct ? 'rec' : 'rec-wrong'}">
+            ${a.correct ? '✅ Верно!' : '📌 ' + rec}
+        </div>
+    </div>`;
+});
                     html += `<div class="answer-item">
                         <div class="q">Вопрос ${i+1}: ${a.questionText}</div>
                         <div class="user-answer">❌ Ваш ответ: ${a.selectedText}</div>
