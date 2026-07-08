@@ -124,7 +124,7 @@
 <script>
     // ========== НАСТРОЙКА JSONBIN.IO ==========
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const FIXED_BIN_ID = '6a4df991da38895dfe3eed24'; // НОВЫЙ BIN!
+    const FIXED_BIN_ID = '6a4df991da38895dfe3eed24';
     
     const RECOMMENDATIONS = [
         "Не спрашивайте 'Чем помочь?'. Сразу дайте ценность: акция + спросите 'Для себя или в подарок?'",
@@ -141,47 +141,44 @@
     ];
 
     // ========== СОХРАНЕНИЕ В JSONBIN ==========
-async function saveToJsonBin(resultData) {
-    try {
-        console.log('📤 Сохраняем результат теста...');
-        
-        // Читаем bin (без кеша)
-        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-        });
-        
-        let allResults = [];
-        if (getRes.ok) {
-            const data = await getRes.json();
-            allResults = data.record?.results || data.record || [];
-            console.log('📦 Записей в bin:', allResults.length);
-        }
-        
-        // Добавляем новый результат
-        allResults.push(resultData);
-        
-        // Просто сохраняем (без таймаута)
-        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_MASTER_KEY
-            },
-            body: JSON.stringify({ results: allResults })
-        });
-        
-        if (putRes.ok) {
-            console.log('✅ Сохранено! Всего записей:', allResults.length);
-            return true;
-        } else {
-            console.error('❌ Ошибка:', putRes.status);
+    async function saveToJsonBin(resultData) {
+        try {
+            console.log('📤 Сохраняем результат теста...');
+            
+            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+            
+            let allResults = [];
+            if (getRes.ok) {
+                const data = await getRes.json();
+                allResults = data.record?.results || data.record || [];
+                console.log('📦 Записей в bin:', allResults.length);
+            }
+            
+            allResults.push(resultData);
+            
+            const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY
+                },
+                body: JSON.stringify({ results: allResults })
+            });
+            
+            if (putRes.ok) {
+                console.log('✅ Сохранено! Всего записей:', allResults.length);
+                return true;
+            } else {
+                console.error('❌ Ошибка:', putRes.status);
+                return false;
+            }
+        } catch(e) {
+            console.error('❌ Ошибка:', e.message);
             return false;
         }
-    } catch(e) {
-        console.error('❌ Ошибка:', e.message);
-        return false;
     }
-}
 
     // ========== ВОПРОСЫ ТЕСТА ==========
     const ORIGINAL_QUESTIONS = [
@@ -257,18 +254,19 @@ async function saveToJsonBin(resultData) {
             const q = shuffledQuestions[i];
             const isCorrect = (selectedIdx === q.correct);
             if (isCorrect) correctCount++;
+            
             // Находим оригинальный индекс вопроса
-const originalIndex = ORIGINAL_QUESTIONS.findIndex(oq => oq.text === q.text);
+            const originalIndex = ORIGINAL_QUESTIONS.findIndex(oq => oq.text === q.text);
 
-answersDetail.push({
-    questionNum: i + 1,
-    originalIndex: originalIndex, // ВАЖНО!
-    selected: selectedIdx,
-    correct: isCorrect,
-    questionText: q.text,
-    selectedText: q.options[selectedIdx],
-    correctText: q.options[q.correct]
-});
+            answersDetail.push({
+                questionNum: i + 1,
+                originalIndex: originalIndex, // ВАЖНО!
+                selected: selectedIdx,
+                correct: isCorrect,
+                questionText: q.text,
+                selectedText: q.options[selectedIdx],
+                correctText: q.options[q.correct]
+            });
         }
         const percent = Math.round((correctCount / shuffledQuestions.length) * 100);
         const passed = percent >= 85;
@@ -301,9 +299,11 @@ answersDetail.push({
             html += `<div class="recommendations-section"><div class="rec-perfect">🎉 <strong>ИДЕАЛЬНО!</strong> Все ответы верны!</div></div>`;
         } else {
             html += `<div class="recommendations-section"><h3>📚 РЕКОМЕНДАЦИИ ПО ОШИБКАМ</h3>`;
-            answersDetail.forEach((a, i) => {
+            // ✅ ИСПРАВЛЕНО: используем originalIndex вместо i
+            answersDetail.forEach((a) => {
                 if (!a.correct) {
-                    const rec = RECOMMENDATIONS[i] || 'Изучите правильный ответ.';
+                    const recIndex = a.originalIndex !== undefined ? a.originalIndex : 0;
+                    const rec = RECOMMENDATIONS[recIndex] || 'Изучите правильный ответ.';
                     html += `
                         <div class="rec-item">
                             <div class="rec-q">Вопрос ${a.questionNum}: ${a.questionText}</div>
