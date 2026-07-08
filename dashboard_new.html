@@ -215,7 +215,7 @@
         .modal-summary { background: #f8fafc; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid #c41e3a; }
         .answer-item { background: #f8fafc; padding: 12px 14px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #c41e3a; }
         .answer-item .q { font-weight: 600; font-size: 14px; }
-        .answer-item .user-answer { color: #c41e3a; font-size: 13px; margin: 4px 0; }
+        .answer-item .user-answer { font-size: 13px; margin: 4px 0; }
         .answer-item .correct-answer { color: #16a34a; font-size: 13px; margin: 4px 0; }
         .answer-item .rec { background: #f0fdf4; padding: 6px 12px; border-radius: 4px; font-size: 13px; margin-top: 6px; color: #166534; border-left: 3px solid #16a34a; }
         .answer-item .rec-wrong { background: #fef2f2; padding: 6px 12px; border-radius: 4px; font-size: 13px; margin-top: 6px; color: #991b1b; border-left: 3px solid #dc2626; }
@@ -226,7 +226,6 @@
         .modal-close { margin-top: 16px; padding: 10px; border: none; border-radius: 6px; background: #c41e3a; color: white; font-weight: 600; cursor: pointer; width: 100%; }
         .modal-close:hover { background: #a0162e; }
 
-        /* ФИДБЕК */
         .feedback-wrapper {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
             border-radius: 16px;
@@ -391,8 +390,8 @@
     </div>
 
     <div class="tabs-wrap">
-        <button class="tab-btn active" data-tab="dashboard"> Дашборд</button>
-        <button class="tab-btn" data-tab="cities">️ Города</button>
+        <button class="tab-btn active" data-tab="dashboard">📊 Дашборд</button>
+        <button class="tab-btn" data-tab="cities">🏙️ Города</button>
         <button class="tab-btn" data-tab="feedback">📝 Фидбек</button>
     </div>
 
@@ -402,7 +401,7 @@
             <select id="typeFilter">
                 <option value="all">Все</option>
                 <option value="test">📝 Тест</option>
-                <option value="trainer"> Тренировка</option>
+                <option value="trainer">🎯 Тренировка</option>
             </select>
         </div>
         <div class="filter-group">
@@ -448,7 +447,7 @@
 
         <div class="status-grid">
             <div class="status-card blue"><div class="label">📝 Тестов</div><div class="value" id="sTest">0</div></div>
-            <div class="status-card purple"><div class="label"> Тренировок</div><div class="value" id="sTrainer">0</div></div>
+            <div class="status-card purple"><div class="label">🎯 Тренировок</div><div class="value" id="sTrainer">0</div></div>
             <div class="status-card green"><div class="label">🏆 Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
             <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="sAvg">0%</div></div>
             <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
@@ -469,7 +468,7 @@
 
         <div class="charts-row-3">
             <div class="card">
-                <div class="card-title"> Топ сотрудников</div>
+                <div class="card-title">🏆 Топ сотрудников</div>
                 <div id="topList"><div class="empty">Нет данных</div></div>
             </div>
             <div class="card">
@@ -539,7 +538,6 @@
 
 <script>
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const FIXED_BIN_ID = '6a4df991da38895dfe3eed24';
     
     const CITIES = [
         'Уфа', 'Екатеринбург',
@@ -598,43 +596,36 @@
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, comparisonChart = null;
 
     document.getElementById('clearAllBtn').onclick = async () => {
-    if (!confirm('⚠️ Удалить ВСЕ результаты из обоих bin?')) return;
-    if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
-    
-    try {
-        const BIN_TEST = '6a4df991da38895dfe3eed24';
-        const BIN_DIALOG = '6a4e1335f5f4af5e2970eea5';
+        if (!confirm('⚠️ Удалить ВСЕ результаты из обоих bin?')) return;
+        if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
         
-        // Очищаем оба bin
-        const [resTest, resDialog] = await Promise.all([
-            fetch(`https://api.jsonbin.io/v3/b/${BIN_TEST}`, {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                },
-                body: JSON.stringify({ results: [] })
-            }),
-            fetch(`https://api.jsonbin.io/v3/b/${BIN_DIALOG}`, {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                },
-                body: JSON.stringify({ results: [] })
-            })
-        ]);
-        
-        if (resTest.ok && resDialog.ok) {
-            alert('✅ Все данные удалены!');
-            location.reload();
-        } else {
-            alert('Ошибка очистки:\nТест: ' + resTest.status + '\nДиалог: ' + resDialog.status);
+        try {
+            const BIN_TEST = '6a4df991da38895dfe3eed24';
+            const BIN_DIALOG = '6a4e1335f5f4af5e2970eea5';
+            
+            const [resTest, resDialog] = await Promise.all([
+                fetch(`https://api.jsonbin.io/v3/b/${BIN_TEST}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+                    body: JSON.stringify({ results: [] })
+                }),
+                fetch(`https://api.jsonbin.io/v3/b/${BIN_DIALOG}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+                    body: JSON.stringify({ results: [] })
+                })
+            ]);
+            
+            if (resTest.ok && resDialog.ok) {
+                alert('✅ Все данные удалены!');
+                location.reload();
+            } else {
+                alert('Ошибка очистки:\nТест: ' + resTest.status + '\nДиалог: ' + resDialog.status);
+            }
+        } catch(e) {
+            alert('Ошибка: ' + e.message);
         }
-    } catch(e) {
-        alert('Ошибка: ' + e.message);
-    }
-};
+    };
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -649,80 +640,75 @@
     });
 
     async function loadResults() {
-    document.getElementById('loadingSkeleton').style.display = 'block';
-    document.getElementById('status').textContent = 'Загрузка...';
-    
-    // BIN IDs
-    const BIN_TEST = '6a4df991da38895dfe3eed24';
-    const BIN_DIALOG = '6a4e1335f5f4af5e2970eea5';
-    
-    try {
-        // Читаем из обоих bin параллельно
-        const [resTest, resDialog] = await Promise.all([
-            fetch(`https://api.jsonbin.io/v3/b/${BIN_TEST}/latest?t=${Date.now()}`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            }),
-            fetch(`https://api.jsonbin.io/v3/b/${BIN_DIALOG}/latest?t=${Date.now()}`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            })
-        ]);
+        document.getElementById('loadingSkeleton').style.display = 'block';
+        document.getElementById('status').textContent = 'Загрузка...';
         
-        let allResults = [];
+        const BIN_TEST = '6a4df991da38895dfe3eed24';
+        const BIN_DIALOG = '6a4e1335f5f4af5e2970eea5';
         
-        // Читаем результаты теста
-        if (resTest.ok) {
-            const dataTest = await resTest.json();
-            const resultsTest = dataTest.record?.results || dataTest.record || [];
-            allResults = allResults.concat(Array.isArray(resultsTest) ? resultsTest : []);
-            console.log('📦 Загружено тестов:', resultsTest.length);
+        try {
+            const [resTest, resDialog] = await Promise.all([
+                fetch(`https://api.jsonbin.io/v3/b/${BIN_TEST}/latest?t=${Date.now()}`, {
+                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                }),
+                fetch(`https://api.jsonbin.io/v3/b/${BIN_DIALOG}/latest?t=${Date.now()}`, {
+                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                })
+            ]);
+            
+            let allResults = [];
+            
+            if (resTest.ok) {
+                const dataTest = await resTest.json();
+                const resultsTest = dataTest.record?.results || dataTest.record || [];
+                allResults = allResults.concat(Array.isArray(resultsTest) ? resultsTest : []);
+                console.log('📦 Загружено тестов:', resultsTest.length);
+            }
+            
+            if (resDialog.ok) {
+                const dataDialog = await resDialog.json();
+                const resultsDialog = dataDialog.record?.results || dataDialog.record || [];
+                allResults = allResults.concat(Array.isArray(resultsDialog) ? resultsDialog : []);
+                console.log('📦 Загружено диалогов:', resultsDialog.length);
+            }
+            
+            if (!allResults.length) {
+                document.getElementById('status').textContent = 'Нет результатов';
+                document.getElementById('loadingSkeleton').style.display = 'none';
+                return;
+            }
+            
+            allData = allResults.map(r => ({
+                id: r.id || Date.now() + Math.random(),
+                type: r.type || 'test',
+                user_name: r.user_name || 'Аноним',
+                city: r.city || 'Не указан',
+                score: r.score || 0,
+                total: r.total || (r.type === 'trainer' ? 6 : 11),
+                percent: r.percent || Math.round((r.score / (r.total || 11)) * 100),
+                answers: r.answers || [],
+                rules_applied: r.rules_applied || [],
+                date: r.date || new Date().toISOString()
+            }));
+            
+            allData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const dataCities = [...new Set(allData.map(r => r.city))];
+            const allCities = [...new Set([...CITIES, ...dataCities])];
+            
+            document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + 
+                allCities.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            renderCityStats();
+            applyFilters();
+            document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${allData.filter(r=>r.type==='test').length}, тренировка: ${allData.filter(r=>r.type==='trainer').length})`;
+        } catch(e) { 
+            console.error(e); 
+            document.getElementById('status').textContent = 'Ошибка: ' + e.message;
         }
-        
-        // Читаем результаты диалога
-        if (resDialog.ok) {
-            const dataDialog = await resDialog.json();
-            const resultsDialog = dataDialog.record?.results || dataDialog.record || [];
-            allResults = allResults.concat(Array.isArray(resultsDialog) ? resultsDialog : []);
-            console.log('📦 Загружено диалогов:', resultsDialog.length);
-        }
-        
-        if (!allResults.length) {
-            document.getElementById('status').textContent = 'Нет результатов';
-            document.getElementById('loadingSkeleton').style.display = 'none';
-            return;
-        }
-        
-        // Обрабатываем данные
-        allData = allResults.map(r => ({
-            id: r.id || Date.now() + Math.random(),
-            type: r.type || 'test',
-            user_name: r.user_name || 'Аноним',
-            city: r.city || 'Не указан',
-            score: r.score || 0,
-            total: r.total || (r.type === 'trainer' ? 6 : 11),
-            percent: r.percent || Math.round((r.score / (r.total || 11)) * 100),
-            answers: r.answers || [],
-            rules_applied: r.rules_applied || [],
-            date: r.date || new Date().toISOString()
-        }));
-        
-        // Сортируем по дате (новые сверху)
-        allData.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        const dataCities = [...new Set(allData.map(r => r.city))];
-        const allCities = [...new Set([...CITIES, ...dataCities])];
-        
-        document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + 
-            allCities.map(c => `<option value="${c}">${c}</option>`).join('');
-        
-        renderCityStats();
-        applyFilters();
-        document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${allData.filter(r=>r.type==='test').length}, тренировка: ${allData.filter(r=>r.type==='trainer').length})`;
-    } catch(e) { 
-        console.error(e); 
-        document.getElementById('status').textContent = 'Ошибка: ' + e.message;
+        document.getElementById('loadingSkeleton').style.display = 'none';
     }
-    document.getElementById('loadingSkeleton').style.display = 'none';
-}
+
     function renderTrendChart() {
         const map = new Map();
         allData.forEach(r => {
@@ -787,7 +773,10 @@
             c.errors += (r.total - r.score);
             
             if (r.type === 'test' && r.answers) {
-                r.answers.forEach((a, i) => { if (!a.correct) c.testQe[i]++; });
+                r.answers.forEach((a) => { 
+                    const idx = (a.originalIndex !== undefined) ? a.originalIndex : (r.answers.indexOf(a));
+                    if (!a.correct && idx >= 0 && idx < 11) c.testQe[idx]++; 
+                });
             } else if (r.type === 'trainer' && r.rules_applied) {
                 TRAINER_RULES.forEach(rule => {
                     if (!r.rules_applied.includes(rule.name)) {
@@ -797,7 +786,7 @@
             }
         });
         
-        const testQTexts = ['Приветствие','Бюджет','Серьги','Серебро→Золото','Футляр','Дороговато','Нет размера','Подарок маме','Другие модели','Сплит','Клиент идёт'];
+        const testQTexts = ['Приветствие','Бюджет','Доп. товары','Материал','Сопутствующие','Дороговато','Нет размера','Подарок','Другие модели','Сплит','Инициатива'];
         
         const stats = [...map.entries()].map(([city, d]) => {
             let weakPoint = '—';
@@ -807,7 +796,7 @@
             const trainerMaxErrors = trainerMaxRule ? trainerMaxRule[1] : 0;
             
             if (testMaxErrors >= trainerMaxErrors && testMaxErrors > 0) {
-                weakPoint = ` ${testQTexts[testMaxIdx] || '—'}`;
+                weakPoint = `📝 ${testQTexts[testMaxIdx] || '—'}`;
             } else if (trainerMaxErrors > 0) {
                 weakPoint = `🎯 ${trainerMaxRule[0]}`;
             }
@@ -1005,6 +994,7 @@
         renderCityStats();
     }
 
+    // ✅ ИСПРАВЛЕННАЯ ФУНКЦИЯ — БЕЗ ДУБЛИРОВАНИЯ
     function showDetails(id) {
         const emp = filteredData.find(r => r.id === id);
         if (!emp) return;
@@ -1023,30 +1013,23 @@
             });
         } else {
             if (emp.answers && emp.answers.length) {
-                emp.answers.forEach((a, i) => {
-    // Используем originalIndex для правильной рекомендации
-    const recIndex = a.originalIndex !== undefined ? a.originalIndex : i;
-    const rec = TEST_GENERAL_RECS[recIndex] || 'Изучите правильный ответ.';
-    
-    const correctAnswerHtml = a.correct ? '' : 
-        `<div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>`;
-    
-    html += `<div class="answer-item">
-        <div class="q">Вопрос ${a.questionNum}: ${a.questionText}</div>
-        <div class="user-answer" style="color: ${a.correct ? '#16a34a' : '#dc2626'}">
-            ${a.correct ? '✅' : '❌'} Ваш ответ: ${a.selectedText}
-        </div>
-        ${correctAnswerHtml}
-        <div class="${a.correct ? 'rec' : 'rec-wrong'}">
-            ${a.correct ? '✅ Верно!' : '📌 ' + rec}
-        </div>
-    </div>`;
-});
+                emp.answers.forEach((a) => {
+                    // Используем originalIndex для правильной рекомендации
+                    const recIndex = (a.originalIndex !== undefined) ? a.originalIndex : ((a.questionNum || 1) - 1);
+                    const rec = TEST_GENERAL_RECS[recIndex] || 'Изучите правильный ответ.';
+                    
+                    const correctAnswerHtml = a.correct ? '' : 
+                        `<div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>`;
+                    
                     html += `<div class="answer-item">
-                        <div class="q">Вопрос ${i+1}: ${a.questionText}</div>
-                        <div class="user-answer">❌ Ваш ответ: ${a.selectedText}</div>
-                        <div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>
-                        <div class="${a.correct ? 'rec' : 'rec-wrong'}">${a.correct ? '✅ Верно!' : '📌 ' + rec}</div>
+                        <div class="q">Вопрос ${a.questionNum || '?'}: ${a.questionText}</div>
+                        <div class="user-answer" style="color: ${a.correct ? '#16a34a' : '#dc2626'}">
+                            ${a.correct ? '✅' : '❌'} Ваш ответ: ${a.selectedText}
+                        </div>
+                        ${correctAnswerHtml}
+                        <div class="${a.correct ? 'rec' : 'rec-wrong'}">
+                            ${a.correct ? '✅ Верно!' : '📌 ' + rec}
+                        </div>
                     </div>`;
                 });
             }
@@ -1057,14 +1040,19 @@
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
+    // ✅ ИСПРАВЛЕННАЯ ФУНКЦИЯ — ИСПОЛЬЗУЕТ originalIndex
     function calculateCityTopics(cityData) {
         const testData = cityData.filter(r => r.type === 'test');
         const testTopicStats = TEST_TOPICS.map((topic, i) => {
             let correct = 0, total = 0;
             testData.forEach(r => {
-                if (r.answers && r.answers[i]) {
-                    total++;
-                    if (r.answers[i].correct) correct++;
+                if (r.answers) {
+                    // Ищем ответ с нужным originalIndex
+                    const answer = r.answers.find(a => a.originalIndex === i);
+                    if (answer) {
+                        total++;
+                        if (answer.correct) correct++;
+                    }
                 }
             });
             return { type: 'test', index: i, name: topic, correct, total, percent: total > 0 ? Math.round((correct/total)*100) : 0, rec: TEST_GENERAL_RECS[i] };
@@ -1120,7 +1108,7 @@
                         <div class="spb-title">🏪 Сравнение магазинов Санкт-Петербурга</div>
                         <div class="spb-grid">
                             <div class="spb-shop ${winner === 'mos' ? 'spb-winner' : ''}">
-                                <div class="spb-shop-name"> Московский, 2</div>
+                                <div class="spb-shop-name">📍 Московский, 2</div>
                                 <div class="spb-shop-score" style="color: ${mosAvg>=85?'#16a34a':mosAvg>=70?'#f59e0b':'#dc2626'}">${mosAvg}%</div>
                                 <div class="spb-shop-label">${mosData.length} прохождений</div>
                             </div>
@@ -1146,7 +1134,7 @@
                     <div class="feedback-stats">
                         <div class="feedback-stat-pill">👥 ${total} сотрудников</div>
                         <div class="feedback-stat-pill">📈 ${avg}% средний балл</div>
-                        <div class="feedback-stat-pill"> ${success}/${total} успешно</div>
+                        <div class="feedback-stat-pill">🏆 ${success}/${total} успешно</div>
                     </div>
                 </div>
                 ${spbComparisonHtml}
@@ -1200,7 +1188,7 @@
         if (topWeak.length > 0) {
             html += `<div class="feedback-section">
                 <div class="feedback-section-title">
-                    <div class="icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af;"></div>
+                    <div class="icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af;">💡</div>
                     Общие рекомендации по зонам развития
                 </div>
                 <div class="recommendations-list">`;
@@ -1239,11 +1227,11 @@
         
         let text = `═══════════════════════════════════════\n`;
         text += `📊 ФИДБЕК ПО РЕЗУЛЬТАТАМ ОБУЧЕНИЯ\n`;
-        text += `️ ${city}\n`;
+        text += `🏙️ ${city}\n`;
         text += `📅 ${new Date().toLocaleDateString('ru-RU')}\n`;
         text += `═══════════════════════════════════════\n\n`;
         
-        text += ` ОБЩАЯ СТАТИСТИКА\n`;
+        text += `📈 ОБЩАЯ СТАТИСТИКА\n`;
         text += `• Всего прохождений: ${total}\n`;
         text += `• Средний балл: ${avg}%\n`;
         text += `• Успешно (≥85%): ${success} из ${total}\n`;
@@ -1259,7 +1247,7 @@
         }
         
         if (topWeak.length > 0) {
-            text += `️ ЗОНЫ РАЗВИТИЯ\n`;
+            text += `⚠️ ЗОНЫ РАЗВИТИЯ\n`;
             text += `───────────────────────────────────────\n`;
             topWeak.forEach((t, i) => {
                 text += `${i+1}. ${t.name} — ${t.percent}% (${100-t.percent}% ошибок)\n`;
