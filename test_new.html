@@ -141,44 +141,54 @@
     ];
 
     // ========== СОХРАНЕНИЕ В JSONBIN ==========
-    async function saveToJsonBin(resultData) {
-        try {
-            console.log('📤 Сохраняем результат теста...');
-            
-            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
-            
-            let allResults = [];
-            if (getRes.ok) {
-                const data = await getRes.json();
-                allResults = data.record?.results || data.record || [];
-                console.log('📦 Записей в bin:', allResults.length);
-            }
-            
-            allResults.push(resultData);
-            
-            const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                },
-                body: JSON.stringify({ results: allResults })
-            });
-            
-            if (putRes.ok) {
-                console.log('✅ Сохранено! Всего записей:', allResults.length);
-                return true;
-            } else {
-                console.error('❌ Ошибка:', putRes.status);
-                return false;
-            }
-        } catch(e) {
-            console.error('❌ Ошибка:', e.message);
+   async function saveToJsonBin(resultData, attempt = 1) {
+    try {
+        console.log(`📤 Сохраняем результат теста... (попытка ${attempt})`);
+        
+        // Читаем bin
+        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+        });
+        
+        let allResults = [];
+        if (getRes.ok) {
+            const data = await getRes.json();
+            allResults = data.record?.results || data.record || [];
+            console.log('📦 Записей в bin:', allResults.length);
+        }
+        
+        // Добавляем новый результат
+        allResults.push(resultData);
+        
+        // Сохраняем
+        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_MASTER_KEY
+            },
+            body: JSON.stringify({ results: allResults })
+        });
+        
+        if (putRes.ok) {
+            console.log('✅ Сохранено! Всего записей:', allResults.length);
+            return true;
+        } else {
+            console.error('❌ Ошибка сохранения:', putRes.status);
             return false;
         }
+    } catch(e) {
+        console.error('❌ Ошибка:', e.message);
+        
+        // Пробуем ещё раз (до 3 попыток)
+        if (attempt < 3) {
+            console.log(`⏳ Повторяем через 3 секунды...`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            return await saveToJsonBin(resultData, attempt + 1);
+        }
+        return false;
     }
+}
 
     // ========== ВОПРОСЫ ТЕСТА ==========
     const ORIGINAL_QUESTIONS = [
