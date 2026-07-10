@@ -1094,38 +1094,7 @@
         const sorted = [...allTopics].sort((a,b) => b.percent - a.percent);
         const topStrong = sorted.slice(0, 5);
         const topWeak = sorted.slice(-4).reverse();
-        
-        let spbComparisonHtml = '';
-        if (city.startsWith('Санкт-Петербург')) {
-            const mosData = allData.filter(r => r.city === 'Санкт-Петербург, Московский, 2');
-            const novData = allData.filter(r => r.city === 'Санкт-Петербург, Новаторов, 112');
-            
-            if (mosData.length > 0 && novData.length > 0) {
-                const mosAvg = Math.round(mosData.reduce((s,r) => s + r.percent, 0) / mosData.length);
-                const novAvg = Math.round(novData.reduce((s,r) => s + r.percent, 0) / novData.length);
-                const winner = mosAvg > novAvg ? 'mos' : novAvg > mosAvg ? 'nov' : 'tie';
-                
-                spbComparisonHtml = `
-                    <div class="spb-comparison">
-                        <div class="spb-title">🏪 Сравнение магазинов Санкт-Петербурга</div>
-                        <div class="spb-grid">
-                            <div class="spb-shop ${winner === 'mos' ? 'spb-winner' : ''}">
-                                <div class="spb-shop-name">📍 Московский, 2</div>
-                                <div class="spb-shop-score" style="color: ${mosAvg>=85?'#16a34a':mosAvg>=70?'#f59e0b':'#dc2626'}">${mosAvg}%</div>
-                                <div class="spb-shop-label">${mosData.length} прохождений</div>
-                            </div>
-                            <div class="spb-vs">VS</div>
-                            <div class="spb-shop ${winner === 'nov' ? 'spb-winner' : ''}">
-                                <div class="spb-shop-name">📍 Новаторов, 112</div>
-                                <div class="spb-shop-score" style="color: ${novAvg>=85?'#16a34a':novAvg>=70?'#f59e0b':'#dc2626'}">${novAvg}%</div>
-                                <div class="spb-shop-label">${novData.length} прохождений</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        
+             
         let html = `
             <div class="feedback-wrapper">
                 <div class="feedback-header">
@@ -1435,7 +1404,13 @@ ${content}
     document.getElementById('exportCityBtn').onclick = exportCityCSV;
     document.getElementById('generateFeedbackBtn').onclick = generateFeedback;
 
+    // Автообновление каждые 30 секунд
+setInterval(() => {
+    console.log('🔄 Автообновление дашборда...');
     loadResults();
+}, 30000);
+
+loadResults();
 </script>
 </body>
 </html>
