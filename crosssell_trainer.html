@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>585GOLD | Тренажёр допродаж</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #fff0f0;
+            margin: 0;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .main-container { max-width: 700px; margin: 0 auto; }
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .employee-view { padding: 20px; }
+            .choice-btn { font-size: 14px; padding: 12px 14px; }
+            .next-btn { font-size: 16px; padding: 12px 20px; }
+        }
+        :root {
+            --primary-red: #c41e3a;
+            --primary-rose: #e8a0b4;
+            --primary-white: #ffffff;
+            --light-rose: #fff0f3;
+            --dark-red: #8b1a2c;
+            --green-success: #2c6e2c;
+        }
+        .employee-view {
+            background: var(--primary-white);
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 1px solid var(--primary-rose);
+        }
+        .employee-view h1 {
+            color: var(--primary-red);
+            margin-top: 0;
+            font-size: 26px;
+            text-align: center;
+        }
+        .register-form { display: flex; flex-direction: column; gap: 12px; }
+        .register-form input, .register-form select {
+            padding: 14px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--primary-rose);
+            font-size: 16px;
+            width: 100%;
+            background: var(--primary-white);
+        }
+        .register-form button {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .register-form button:hover { background: var(--dark-red); }
+        .game-container {
+            background: var(--primary-white);
+            border-radius: 28px;
+            overflow: hidden;
+            margin-top: 16px;
+            border: 1px solid var(--primary-rose);
+        }
+        .chat-area { padding: 18px; background: var(--light-rose); border-bottom: 1px solid var(--primary-rose); }
+        .client-message {
+            background: var(--primary-white);
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 15px;
+            color: #333;
+            border-left: 4px solid var(--primary-red);
+        }
+        .choices-area { padding: 16px 18px 18px 18px; background: var(--primary-white); }
+        .choice-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: var(--light-rose);
+            border: 1px solid var(--primary-rose);
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #333;
+        }
+        .choice-btn:hover { background: #f5e0e0; }
+        .choice-btn.selected {
+            background: var(--primary-rose);
+            border: 2px solid var(--primary-red);
+        }
+        .next-area { padding: 0 18px 20px 18px; display: flex; justify-content: center; }
+        .next-btn {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        .next-btn:hover { background: var(--dark-red); }
+        .next-btn:disabled { background: var(--primary-rose); cursor: not-allowed; }
+        .result-card { padding: 18px; margin: 16px 18px 18px 18px; border-radius: 20px; text-align: center; }
+        .result-card.success { background: #e8f0e8; border-left: 8px solid var(--green-success); color: var(--green-success); }
+        .result-card.loss { background: #ffe0e0; border-left: 8px solid var(--primary-red); color: var(--primary-red); }
+        .applied-rules {
+            background: var(--light-rose);
+            border-radius: 24px;
+            padding: 12px 16px;
+            margin: 16px 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            border: 1px solid var(--primary-rose);
+        }
+        .applied-rule { background: #c41e3a20; color: var(--primary-red); padding: 4px 12px; border-radius: 40px; font-size: 12px; }
+        .restart-btn {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 16px;
+            margin: 0 18px 20px 18px;
+            width: calc(100% - 36px);
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .restart-btn:hover { background: var(--dark-red); }
+        .current-user {
+            background: var(--light-rose);
+            padding: 10px 16px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-bottom: 16px;
+            color: var(--primary-red);
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .save-status { font-size: 12px; color: #666; margin-top: 10px; text-align: center; }
+        .progress-indicator { display: flex; justify-content: center; gap: 8px; margin: 12px 0; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: #ddd; transition: 0.3s; }
+        .dot.active { background: var(--primary-red); }
+        .dot.done { background: var(--green-success); }
+        .dot.failed { background: #c41e3a; }
+        .rec-section { margin-top: 16px; text-align: left; border-top: 2px dashed #e8a0b4; padding-top: 16px; }
+        .rec-section h4 { color: #c41e3a; font-size: 15px; margin-bottom: 12px; text-align: center; }
+        .rec-item { background: #f8f4f0; border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; border-left: 4px solid #c41e3a; }
+        .rec-item .rec-rule { font-weight: 600; font-size: 14px; color: #1a1a2e; }
+        .rec-item .rec-tip { font-size: 13px; color: #854d0e; margin-top: 4px; }
+        .rec-perfect { text-align: center; padding: 16px; background: #e8f0e8; border-radius: 16px; color: #2c6e2c; margin-top: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="employee-view">
+        <h1>💎 585GOLD | Тренажёр допродаж</h1>
+        <p style="text-align: center; color: #666; font-size: 14px;">Научись увеличивать средний чек</p>
+        <div class="register-form" id="registerForm">
+            <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
+            <select id="userCity">
+                <option value="">Выберите город</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
+                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
+                <option value="Калининград">Калининград</option>
+                <option value="Нижний Тагил">Нижний Тагил</option>
+            </select>
+            <button id="startGameBtn">Начать тренажёр</button>
+        </div>
+        <div id="currentUserDisplay" class="current-user" style="display: none;"></div>
+        <div id="gameContainer" style="display: none;">
+            <div class="game-container">
+                <div class="progress-indicator" id="progressDots"></div>
+                <div class="chat-area" id="chatArea"></div>
+                <div class="applied-rules">
+                    <span>💰 Применённые правила:</span>
+                    <span id="emptyRulesMsg">(пока ни одного)</span>
+                    <div id="appliedRulesList" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                </div>
+                <div class="choices-area" id="choicesArea"></div>
+                <div class="next-area" id="nextArea">
+                    <button class="next-btn" id="nextBtn" disabled>Далее</button>
+                </div>
+                <div class="result-card" id="resultCard" style="display: none;"></div>
+                <div id="saveStatus" class="save-status"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== НАСТРОЙКА JSONBIN.IO ==========
+    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
+    const FIXED_BIN_ID = '6a54919fda38895dfe554040';
+    
+    const CROSSSELL_RULES = [
+        { id: "set", name: "Предлагай комплекты", rec: "К кольцу всегда предлагай серьги из той же коллекции — это увеличивает чек на 40-60%" },
+        { id: "chain_pendant", name: "Цепочка + кулон", rec: "К цепочке обязательно предложи кулон или подвеску — они продаются вместе в 70% случаев" },
+        { id: "gift_wrapping", name: "Подарочная упаковка", rec: "При покупке подарка всегда предлагай футляр и подарочную упаковку — это забота о клиенте" },
+        { id: "care", name: "Средства ухода", rec: "К любой покупке предлагай чистящее средство и салфетку — это продлевает жизнь украшения" },
+        { id: "certificate", name: "Подарочный сертификат", rec: "Если клиент не знает, что хочет — предложи подарочный сертификат, это идеальный выход" },
+        { id: "active_question", name: "Активный вопрос", rec: "Молчаливому клиенту задай открытый вопрос: «Что вы планируете дополнить к вашей покупке?»" }
+    ];
+
+    const SCENARIOS = [
+        { 
+            client: "Клиентка выбрала золотое кольцо с бриллиантом за 45 000 ₽. Она примеряет и улыбается. Что делаешь?", 
+            ruleId: "set", 
+            correct: 1, 
+            choices: [
+                "«Отличный выбор! Оформляем покупку?»",
+                "«К этому кольцу идеально подойдут серьги из той же коллекции — давайте примерим комплект?»",
+                "«Возьмёте футляр за 800 ₽?»"
+            ] 
+        },
+        { 
+            client: "Клиент купил серьги с жемчугом. Доволен выбором. Что предложишь дополнительно?", 
+            ruleId: "set", 
+            correct: 2, 
+            choices: [
+                "«Спасибо за покупку! Хорошего дня!»",
+                "«Возьмите чистящее средство для жемчуга»",
+                "«К этим серьгам идеально подойдёт подвеска из той же коллекции — показать? Вместе они смотрятся потрясающе»"
+            ] 
+        },
+        { 
+            client: "Мужчина выбрал золотую цепочку 50 см. Говорит: «Беру». Что делаешь?", 
+            ruleId: "chain_pendant", 
+            correct: 1, 
+            choices: [
+                "«Отлично, оформляем!»",
+                "«К этой цепочке идеально подойдёт вот этот крестик или кулон — примерьте вместе, смотрится очень стильно»",
+                "«Возьмёте футляр?»"
+            ] 
+        },
+        { 
+            client: "Клиентка говорит: «Покупаю кольцо в подарок маме на юбилей». Выбрала красивое кольцо. Что предложишь?", 
+            ruleId: "gift_wrapping", 
+            correct: 2, 
+            choices: [
+                "«Хороший выбор! Оформляем?»",
+                "«Возьмите чистящее средство»",
+                "«Давайте оформим в подарочный футляр с бархатной отделкой — мама будет в восторге от такой подачи. И открытку с поздравлением добавить?»"
+            ] 
+        },
+        { 
+            client: "Клиент выбрал дорогое кольцо за 80 000 ₽. Что предложишь для ухода?", 
+            ruleId: "care", 
+            correct: 1, 
+            choices: [
+                "«Спасибо за покупку!»",
+                "«Для такого украшения обязательно возьмите профессиональное чистящее средство и специальную салфетку — это сохранит блеск на годы»",
+                "«Возьмёте футляр?»"
+            ] 
+        },
+        { 
+            client: "Мужчина зашёл в магазин, смотрит на витрины, но не может определиться. Говорит: «Не знаю, что выбрать для жены на годовщину». Что делаешь?", 
+            ruleId: "certificate", 
+            correct: 2, 
+            choices: [
+                "«Посмотрите вот эти кольца — они популярные»",
+                "«Может, серьги? Они всегда подходят»",
+                "«Знаете что? Подарочный сертификат на 50 000 ₽ — идеальный выход. Жена сама выберет то, что ей понравится. И вы точно угодите!»"
+            ] 
+        },
+        { 
+            client: "Клиентка купила браслет. Молчит, собирает сумку. Что делаешь?", 
+            ruleId: "active_question", 
+            correct: 1, 
+            choices: [
+                "«Спасибо за покупку! До свидания!»",
+                "«Скажите, а что ещё вы планируете добавить к вашей коллекции? Может, подберём что-то, что дополнит этот браслет?»",
+                "«Возьмёте футляр?»"
+            ] 
+        },
+        { 
+            client: "Девушка выбрала скромные серьги за 8 000 ₽. Что предложишь для увеличения чека?", 
+            ruleId: "set", 
+            correct: 2, 
+            choices: [
+                "«Хорошо, оформляем?»",
+                "«Возьмите ещё что-нибудь»",
+                "«К этим серьгам идеально подойдёт тонкая цепочка с подвеской — вместе они создадут элегантный комплект. Показать варианты?»"
+            ] 
+        }
+    ];
+
+    // ========== СОХРАНЕНИЕ В JSONBIN ==========
+    async function saveToJsonBin(resultData) {
+        try {
+            console.log('📤 Сохраняем результат допродаж...');
+            
+            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+            
+            let allResults = [];
+            if (getRes.ok) {
+                const data = await getRes.json();
+                allResults = data.record?.results || data.record || [];
+                console.log('📦 Записей в bin:', allResults.length);
+            }
+            
+            allResults.push(resultData);
+            
+            const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY
+                },
+                body: JSON.stringify({ results: allResults })
+            });
+            
+            if (putRes.ok) {
+                console.log('✅ Сохранено! Всего записей:', allResults.length);
+                return true;
+            } else {
+                console.error('❌ Ошибка сохранения:', putRes.status);
+                return false;
+            }
+        } catch(e) {
+            console.error('❌ Ошибка:', e.message);
+            return false;
+        }
+    }
+
+    let currentQuestionIndex = 0;
+    let currentAnswers = [];
+    let appliedRules = [];
+    let currentUserName = null;
+    let currentUserCity = null;
+    let gameActive = false;
+    let selectedChoiceIndex = null;
+    let questionResults = [];
+
+    function nextStep() {
+        if (!gameActive || selectedChoiceIndex === null) return;
+        
+        const isCorrect = selectedChoiceIndex === SCENARIOS[currentQuestionIndex].correct;
+        const ruleId = SCENARIOS[currentQuestionIndex].ruleId;
+        
+        currentAnswers.push({ 
+            question: currentQuestionIndex, 
+            selected: selectedChoiceIndex, 
+            correct: isCorrect, 
+            ruleId: ruleId
+        });
+        
+        questionResults[currentQuestionIndex] = isCorrect;
+        
+        if (isCorrect) {
+            const r = CROSSSELL_RULES.find(x => x.id === ruleId);
+            if (r && !appliedRules.includes(r.name)) appliedRules.push(r.name);
+        }
+        
+        currentQuestionIndex++;
+        
+        if (currentQuestionIndex >= SCENARIOS.length) {
+            finishGame();
+        } else {
+            selectedChoiceIndex = null;
+            renderQuestion();
+        }
+    }
+
+    async function finishGame() {
+        gameActive = false;
+        const success = appliedRules.length >= 5;
+        document.getElementById("choicesArea").innerHTML = "";
+        document.getElementById("nextArea").style.display = "none";
+        const resultDiv = document.getElementById("resultCard");
+        resultDiv.style.display = "block";
+        resultDiv.className = `result-card ${success ? "success" : "loss"}`;
+        
+        let html = '';
+        if (success) {
+            html = `<h2>🏆 ОТЛИЧНО!</h2><p>Вы освоили ${appliedRules.length} из ${CROSSSELL_RULES.length} правил допродаж!</p><p style="font-size:14px; color:#666;">Средний чек вырастет на 30-50%</p><div class="rec-perfect"><strong>💰 ВЫ МАСТЕР ДОПРОДАЖ!</strong></div>`;
+        } else {
+            const missingRules = CROSSSELL_RULES.filter(r => !appliedRules.includes(r.name));
+            html = `<h2>📚 ЕСТЬ НАД ЧЕМ РАБОТАТЬ</h2><p>Применено правил: ${appliedRules.length} из ${CROSSSELL_RULES.length}</p>`;
+            if (missingRules.length > 0) {
+                html += `<div class="rec-section"><h4>💡 ЧТО НУЖНО ОСВОИТЬ</h4>`;
+                missingRules.forEach(rule => {
+                    html += `<div class="rec-item"><div class="rec-rule">❌ ${rule.name}</div><div class="rec-tip">📌 ${rule.rec}</div></div>`;
+                });
+                html += `</div>`;
+            }
+        }
+        resultDiv.innerHTML = html;
+        await saveResult(success);
+        const existingBtn = resultDiv.parentNode.querySelector('.restart-btn');
+        if (!existingBtn) {
+            const btn = document.createElement("button");
+            btn.className = "restart-btn";
+            btn.innerText = "🔄 Пройти заново";
+            btn.onclick = () => resetGame();
+            resultDiv.parentNode.appendChild(btn);
+        }
+    }
+
+    async function saveResult(success) {
+        const resultData = {
+            id: Date.now(), 
+            type: 'crosssell', 
+            user_name: currentUserName, 
+            city: currentUserCity,
+            score: appliedRules.length, 
+            total: CROSSSELL_RULES.length,
+            percent: Math.round((appliedRules.length / CROSSSELL_RULES.length) * 100),
+            passed: success, 
+            rules_applied: appliedRules, 
+            rules_count: appliedRules.length,
+            answers: currentAnswers, 
+            date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
+        };
+        const statusDiv = document.getElementById('saveStatus');
+        if (statusDiv) { 
+            statusDiv.innerHTML = '⏳ Сохранение...'; 
+            statusDiv.style.color = '#f59e0b'; 
+        }
+        const saved = await saveToJsonBin(resultData);
+        if (statusDiv) {
+            if (saved) { 
+                statusDiv.innerHTML = '✅ Результат сохранён!'; 
+                statusDiv.style.color = '#2c6e2c'; 
+            } else { 
+                statusDiv.innerHTML = '⚠️ Ошибка сохранения.'; 
+                statusDiv.style.color = '#c41e3a'; 
+            }
+        }
+    }
+
+    function renderQuestion() {
+        const q = SCENARIOS[currentQuestionIndex];
+        document.getElementById("chatArea").innerHTML = `<div class="client-message">${q.client}</div>`;
+        updateProgress();
+        const rulesDiv = document.getElementById("appliedRulesList");
+        if (appliedRules.length) {
+            document.getElementById("emptyRulesMsg").style.display = "none";
+            rulesDiv.innerHTML = appliedRules.map(r => `<span class="applied-rule">✅ ${r}</span>`).join('');
+        } else {
+            document.getElementById("emptyRulesMsg").style.display = "inline";
+            rulesDiv.innerHTML = "";
+        }
+        const choicesDiv = document.getElementById("choicesArea");
+        choicesDiv.innerHTML = "";
+        selectedChoiceIndex = null;
+        document.getElementById("nextBtn").disabled = true;
+        q.choices.forEach((c, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "choice-btn";
+            btn.innerText = c;
+            btn.onclick = () => {
+                document.querySelectorAll(".choice-btn").forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+                selectedChoiceIndex = idx;
+                document.getElementById("nextBtn").disabled = false;
+            };
+            choicesDiv.appendChild(btn);
+        });
+    }
+
+    function updateProgress() {
+        const dotsContainer = document.getElementById('progressDots');
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < SCENARIOS.length; i++) {
+            const dot = document.createElement('span');
+            dot.className = 'dot';
+            if (i < currentQuestionIndex) dot.classList.add(questionResults[i] ? 'done' : 'failed');
+            else if (i === currentQuestionIndex) dot.classList.add('active');
+            dotsContainer.appendChild(dot);
+        }
+    }
+
+    function startGame(name, city) {
+        currentUserName = name; 
+        currentUserCity = city; 
+        currentQuestionIndex = 0;
+        appliedRules = []; 
+        currentAnswers = []; 
+        questionResults = []; 
+        gameActive = true;
+        document.getElementById("gameContainer").style.display = "block";
+        document.getElementById("currentUserDisplay").innerHTML = `👤 ${name} (${city})`;
+        document.getElementById("currentUserDisplay").style.display = "inline-block";
+        document.getElementById("registerForm").style.display = "none";
+        document.getElementById("resultCard").style.display = "none";
+        document.getElementById("saveStatus").innerHTML = '';
+        const oldBtn = document.querySelector('.restart-btn');
+        if (oldBtn) oldBtn.remove();
+        renderQuestion();
+    }
+
+    function resetGame() { 
+        startGame(currentUserName, currentUserCity); 
+    }
+
+    document.getElementById("startGameBtn").onclick = () => {
+        const name = document.getElementById("userName").value.trim();
+        const city = document.getElementById("userCity").value;
+        if (!name) return alert("Введите имя");
+        if (!city) return alert("Выберите город");
+        startGame(name, city);
+    };
+    document.getElementById("nextBtn").onclick = nextStep;
+    document.getElementById("userName").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("startGameBtn").click();
+    });
+</script>
+</body>
+</html>
