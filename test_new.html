@@ -181,7 +181,7 @@ window.addEventListener('load', async () => {
     ];
 
     // ========== СОХРАНЕНИЕ В JSONBIN (КАК В ДИАЛОГЕ) ==========
-    async function saveToJsonBin(resultData) {
+async function saveToJsonBin(resultData) {
     try {
         console.log('📤 Сохраняем результат теста...');
         
@@ -193,17 +193,15 @@ window.addEventListener('load', async () => {
         if (getRes.ok) {
             const data = await getRes.json();
             allResults = data.record?.results || data.record || [];
-            console.log(' Найдено записей в bin:', allResults.length);
+            console.log('📦 Найдено записей в bin:', allResults.length);
         } else {
-            console.error('❌ Не удалось прочитать bin. Статус:', getRes.status);
+            console.error(' Не удалось прочитать bin. Статус:', getRes.status);
             
-            // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
             const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
             localBackup.push(resultData);
             localStorage.setItem('test_backup', JSON.stringify(localBackup));
-            console.log('💾 Сохранено локально (бэкап)');
             
-            alert('⚠️ Ошибка сети! Результат НЕ сохранён на сервере, но сохранён локально в вашем браузере. При следующем открытии теста он будет отправлен автоматически.');
+            alert('️ Ошибка сети! Результат НЕ сохранён на сервере, но сохранён локально. При следующем открытии теста он будет отправлен автоматически.');
             return false;
         }
         
@@ -225,7 +223,6 @@ window.addEventListener('load', async () => {
         } else {
             console.error('❌ Ошибка сохранения:', putRes.status);
             
-            // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
             const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
             localBackup.push(resultData);
             localStorage.setItem('test_backup', JSON.stringify(localBackup));
@@ -236,7 +233,6 @@ window.addEventListener('load', async () => {
     } catch(e) {
         console.error('❌ Критическая ошибка:', e.message);
         
-        // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
         const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
         localBackup.push(resultData);
         localStorage.setItem('test_backup', JSON.stringify(localBackup));
