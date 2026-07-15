@@ -185,7 +185,10 @@ async function saveToJsonBin(resultData) {
     try {
         console.log('📤 Сохраняем результат теста...');
         
-        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+        // Определяем ID bin (может называться по-разному)
+        const binId = FIXED_BIN_ID || BIN_ID || BIN_TEST || '6a4df991da38895dfe3eed24';
+        
+        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
             headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
         });
         
@@ -193,21 +196,23 @@ async function saveToJsonBin(resultData) {
         if (getRes.ok) {
             const data = await getRes.json();
             allResults = data.record?.results || data.record || [];
-            console.log('📦 Найдено записей в bin:', allResults.length);
+            console.log(' Записей в bin:', allResults.length);
         } else {
-            console.error(' Не удалось прочитать bin. Статус:', getRes.status);
+            console.error(' Не удалось прочитать bin');
             
+            // Сохраняем локально
             const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
             localBackup.push(resultData);
             localStorage.setItem('test_backup', JSON.stringify(localBackup));
+            console.log('💾 Сохранено локально:', localBackup.length);
             
-            alert('️ Ошибка сети! Результат НЕ сохранён на сервере, но сохранён локально. При следующем открытии теста он будет отправлен автоматически.');
+            alert('⚠️ Ошибка сети! Результат сохранён локально.');
             return false;
         }
         
         allResults.push(resultData);
         
-        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json',
@@ -217,27 +222,28 @@ async function saveToJsonBin(resultData) {
         });
         
         if (putRes.ok) {
-            console.log('✅ Сохранено! Всего записей:', allResults.length);
-            alert('✅ Результат успешно сохранён! Спасибо за прохождение теста.');
+            console.log('✅ Сохранено! Всего:', allResults.length);
+            alert('✅ Результат успешно сохранён!');
             return true;
         } else {
-            console.error('❌ Ошибка сохранения:', putRes.status);
+            console.error('❌ Ошибка сохранения');
             
             const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
             localBackup.push(resultData);
             localStorage.setItem('test_backup', JSON.stringify(localBackup));
             
-            alert('⚠️ Ошибка при сохранении на сервере. Результат сохранён локально и будет отправлен автоматически.');
+            alert('⚠️ Ошибка сервера. Результат сохранён локально.');
             return false;
         }
     } catch(e) {
-        console.error('❌ Критическая ошибка:', e.message);
+        console.error('❌ Ошибка:', e.message);
         
         const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
         localBackup.push(resultData);
         localStorage.setItem('test_backup', JSON.stringify(localBackup));
+        console.log('💾 Сохранено локально в catch:', localBackup.length);
         
-        alert('⚠️ Произошёл сбой связи. Результат сохранён локально и будет отправлен автоматически.');
+        alert('⚠️ Сбой связи. Результат сохранён локально.');
         return false;
     }
 }
