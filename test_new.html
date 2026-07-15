@@ -122,6 +122,46 @@
 </div>
 
 <script>
+    //  АВТОМАТИЧЕСКАЯ ДОЗАГРУЗКА НЕСОХРАНЁННЫХ РЕЗУЛЬТАТОВ
+window.addEventListener('load', async () => {
+    const backup = JSON.parse(localStorage.getItem('test_backup') || '[]');
+    if (backup.length > 0) {
+        console.log(`🔄 Найдено ${backup.length} несохранённых результатов теста. Отправляем...`);
+        
+        for (let result of backup) {
+            try {
+                const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                });
+                
+                if (getRes.ok) {
+                    const data = await getRes.json();
+                    let allResults = data.record?.results || data.record || [];
+                    
+                    // Проверяем дубликаты
+                    const isDuplicate = allResults.some(r => r.id === result.id);
+                    if (!isDuplicate) {
+                        allResults.push(result);
+                        await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+                            method: 'PUT',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': JSONBIN_MASTER_KEY
+                            },
+                            body: JSON.stringify({ results: allResults })
+                        });
+                        console.log('✅ Отправлено:', result.user_name);
+                    }
+                }
+            } catch(e) {
+                console.error('❌ Ошибка дозагрузки:', e.message);
+            }
+        }
+        
+        localStorage.removeItem('test_backup');
+        console.log('✅ Все локальные результаты теста отправлены!');
+    }
+});
     // ========== НАСТРОЙКА JSONBIN.IO ==========
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const FIXED_BIN_ID = '6a4df991da38895dfe3eed24';
@@ -142,46 +182,69 @@
 
     // ========== СОХРАНЕНИЕ В JSONBIN (КАК В ДИАЛОГЕ) ==========
     async function saveToJsonBin(resultData) {
-        try {
-            console.log('📤 Сохраняем результат теста...');
+    try {
+        console.log('📤 Сохраняем результат теста...');
+        
+        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+        });
+        
+        let allResults = [];
+        if (getRes.ok) {
+            const data = await getRes.json();
+            allResults = data.record?.results || data.record || [];
+            console.log(' Найдено записей в bin:', allResults.length);
+        } else {
+            console.error('❌ Не удалось прочитать bin. Статус:', getRes.status);
             
-            // Просто читаем bin
-            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
+            // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
+            const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('test_backup', JSON.stringify(localBackup));
+            console.log('💾 Сохранено локально (бэкап)');
             
-            let allResults = [];
-            if (getRes.ok) {
-                const data = await getRes.json();
-                allResults = data.record?.results || data.record || [];
-                console.log('📦 Записей в bin:', allResults.length);
-            }
-            
-            // Добавляем новый результат
-            allResults.push(resultData);
-            
-            // Просто сохраняем (без таймаута)
-            const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                },
-                body: JSON.stringify({ results: allResults })
-            });
-            
-            if (putRes.ok) {
-                console.log('✅ Сохранено! Всего записей:', allResults.length);
-                return true;
-            } else {
-                console.error('❌ Ошибка сохранения:', putRes.status);
-                return false;
-            }
-        } catch(e) {
-            console.error('❌ Ошибка:', e.message);
+            alert('⚠️ Ошибка сети! Результат НЕ сохранён на сервере, но сохранён локально в вашем браузере. При следующем открытии теста он будет отправлен автоматически.');
             return false;
         }
+        
+        allResults.push(resultData);
+        
+        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_MASTER_KEY
+            },
+            body: JSON.stringify({ results: allResults })
+        });
+        
+        if (putRes.ok) {
+            console.log('✅ Сохранено! Всего записей:', allResults.length);
+            alert('✅ Результат успешно сохранён! Спасибо за прохождение теста.');
+            return true;
+        } else {
+            console.error('❌ Ошибка сохранения:', putRes.status);
+            
+            // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
+            const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('test_backup', JSON.stringify(localBackup));
+            
+            alert('⚠️ Ошибка при сохранении на сервере. Результат сохранён локально и будет отправлен автоматически.');
+            return false;
+        }
+    } catch(e) {
+        console.error('❌ Критическая ошибка:', e.message);
+        
+        // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
+        const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
+        localBackup.push(resultData);
+        localStorage.setItem('test_backup', JSON.stringify(localBackup));
+        
+        alert('⚠️ Произошёл сбой связи. Результат сохранён локально и будет отправлен автоматически.');
+        return false;
     }
+}
 
     // ========== ВОПРОСЫ ТЕСТА ==========
     const ORIGINAL_QUESTIONS = [
