@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>585GOLD | Тренировка продаж</title>
+    
+    <!-- 🔥 ПОДКЛЮЧЕНИЕ FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
     <style>
         * { box-sizing: border-box; }
         body {
@@ -148,7 +153,7 @@
             font-weight: bold;
             font-size: 14px;
         }
-        .save-status { font-size: 12px; color: #666; margin-top: 10px; text-align: center; }
+        .save-status { font-size: 14px; font-weight: 600; margin-top: 10px; text-align: center; }
         .progress-indicator { display: flex; justify-content: center; gap: 8px; margin: 12px 0; }
         .dot { width: 12px; height: 12px; border-radius: 50%; background: #ddd; transition: 0.3s; }
         .dot.active { background: var(--primary-red); }
@@ -203,50 +208,40 @@
 </div>
 
 <script>
-    // 🔄 АВТОМАТИЧЕСКАЯ ДОЗАГРУЗКА НЕСОХРАНЁННЫХ РЕЗУЛЬТАТОВ
-window.addEventListener('load', async () => {
-    const backup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
-    if (backup.length > 0) {
-        console.log(`🔄 Найдено ${backup.length} несохранённых результатов диалога. Отправляем...`);
-        
-        for (let result of backup) {
-            try {
-                const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                });
-                
-                if (getRes.ok) {
-                    const data = await getRes.json();
-                    let allResults = data.record?.results || data.record || [];
-                    
-                    // Проверяем дубликаты
-                    const isDuplicate = allResults.some(r => r.id === result.id);
-                    if (!isDuplicate) {
-                        allResults.push(result);
-                        await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-                            method: 'PUT',
-                            headers: { 
-                                'Content-Type': 'application/json',
-                                'X-Master-Key': JSONBIN_MASTER_KEY
-                            },
-                            body: JSON.stringify({ results: allResults })
-                        });
-                        console.log('✅ Отправлено:', result.user_name);
-                    }
+    // ========== 🔥 ИНИЦИАЛИЗАЦИЯ FIREBASE ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+        authDomain: "gold-8105a.firebaseapp.com",
+        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gold-8105a",
+        storageBucket: "gold-8105a.firebasestorage.app",
+        messagingSenderId: "195469188947",
+        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ========== 🔄 АВТОМАТИЧЕСКАЯ ДОЗАГРУЗКА НЕСОХРАНЁННЫХ РЕЗУЛЬТАТОВ ==========
+    window.addEventListener('load', async () => {
+        const backup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
+        if (backup.length > 0) {
+            console.log(`🔄 Найдено ${backup.length} несохранённых результатов диалога. Отправляем в Firebase...`);
+            
+            for (let result of backup) {
+                try {
+                    const newRef = db.ref('results/dialog').push();
+                    await newRef.set(result);
+                    console.log('✅ Отправлено из бэкапа:', result.user_name);
+                } catch(e) {
+                    console.error('❌ Ошибка дозагрузки из бэкапа:', e.message);
                 }
-            } catch(e) {
-                console.error('❌ Ошибка дозагрузки:', e.message);
             }
+            
+            localStorage.removeItem('dialog_backup');
+            console.log('✅ Все локальные результаты диалога отправлены в Firebase!');
         }
-        
-        localStorage.removeItem('dialog_backup');
-        console.log('✅ Все локальные результаты отправлены!');
-    }
-});
-    // ========== НАСТРОЙКА JSONBIN.IO ==========
-    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const FIXED_BIN_ID = '6a4e1335f5f4af5e2970eea5'; // BIN ДЛЯ ДИАЛОГА
-    
+    });
+
     const ALL_RULES = [
         { id: "initiative", name: "Проявляй инициативу", rec: "Через 20-30 секунд подойди и спроси: «Какое изделие выбираете? Для себя или в подарок?»" },
         { id: "askBeforeShow", name: "Задавай вопросы ДО показа", rec: "Сначала спроси «для какого случая?», «кто получатель?». Только потом показывай украшения." },
@@ -265,73 +260,43 @@ window.addEventListener('load', async () => {
         { client: "Клиент выбрал похожую модель, оформил заказ. Прощается. Что говорите?", ruleId: "warmClosing", correct: 2, choices: ["«Спасибо за покупку! Хорошего дня»", "«Будем рады видеть вас снова. У нас обновления коллекции каждую неделю»", "«Спасибо, что зашли к нам! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»"] }
     ];
 
-    // ========== СОХРАНЕНИЕ В JSONBIN ==========
-  async function saveToJsonBin(resultData) {
-    try {
-        console.log('📤 Сохраняем результат диалога...');
-        
-        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-        });
-        
-        let allResults = [];
-        if (getRes.ok) {
-            const data = await getRes.json();
-            allResults = data.record?.results || data.record || [];
-            console.log('📦 Найдено записей в bin:', allResults.length);
-        } else {
-            console.error('❌ Не удалось прочитать bin. Статус:', getRes.status);
-            
-            // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
+    // ========== 🔥 НОВАЯ ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE ==========
+    async function saveToFirebase(resultData) {
+        // 1. Сначала сохраняем локально на всякий случай (мгновенно)
+        try {
             const localBackup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
-            localBackup.push(resultData);
-            localStorage.setItem('dialog_backup', JSON.stringify(localBackup));
-            console.log('💾 Сохранено локально (бэкап)');
-            
-            alert('️ Ошибка сети! Результат НЕ сохранён на сервере, но сохранён локально в вашем браузере. При следующем открытии тренажёра он будет отправлен автоматически.');
-            return false;
+            if (!localBackup.some(r => r.id === resultData.id)) {
+                localBackup.push(resultData);
+                localStorage.setItem('dialog_backup', JSON.stringify(localBackup));
+            }
+            console.log('💾 Временно сохранено локально');
+        } catch(e) {
+            console.error('Не удалось сохранить локально:', e);
         }
-        
-        allResults.push(resultData);
-        
-        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_MASTER_KEY
-            },
-            body: JSON.stringify({ results: allResults })
-        });
-        
-        if (putRes.ok) {
-            console.log('✅ Сохранено! Всего записей:', allResults.length);
-            alert('✅ Результат успешно сохранён! Спасибо за прохождение тренировки.');
-            return true;
-        } else {
-            console.error('❌ Ошибка сохранения:', putRes.status);
-            
-            // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
-            const localBackup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
-            localBackup.push(resultData);
-            localStorage.setItem('dialog_backup', JSON.stringify(localBackup));
-            
-            alert('⚠️ Ошибка при сохранении на сервере. Результат сохранён локально и будет отправлен автоматически.');
-            return false;
-        }
-    } catch(e) {
-        console.error('❌ Критическая ошибка:', e.message);
-        
-        // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
-        const localBackup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
-        localBackup.push(resultData);
-        localStorage.setItem('dialog_backup', JSON.stringify(localBackup));
-        
-        alert('⚠️ Произошёл сбой связи. Результат сохранён локально и будет отправлен автоматически.');
-        return false;
-    }
-}
 
-    // ========== СОСТОЯНИЕ (ЭТОГО НЕ БЫЛО!) ==========
+        // 2. Пытаемся отправить в Firebase
+        try {
+            console.log('📤 Отправка в Firebase...');
+            const newRef = db.ref('results/dialog').push();
+            await newRef.set(resultData);
+            
+            console.log('✅ Успешно сохранено в Firebase! ID:', newRef.key);
+            
+            // 3. Если успешно, удаляем из локального бэкапа
+            try {
+                const backup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
+                const filtered = backup.filter(r => r.id !== resultData.id);
+                localStorage.setItem('dialog_backup', JSON.stringify(filtered));
+            } catch(e) {}
+            
+            return true;
+        } catch (error) {
+            console.error('❌ Ошибка сохранения в Firebase:', error);
+            return false;
+        }
+    }
+
+    // ========== СОСТОЯНИЕ ==========
     let currentQuestionIndex = 0;
     let currentAnswers = [];
     let appliedRules = [];
@@ -341,7 +306,7 @@ window.addEventListener('load', async () => {
     let selectedChoiceIndex = null;
     let questionResults = [];
 
-    // ========== ЛОГИКА ПЕРЕХОДА (ЭТОГО НЕ БЫЛО!) ==========
+    // ========== ЛОГИКА ПЕРЕХОДА ==========
     function nextStep() {
         if (!gameActive || selectedChoiceIndex === null) return;
         
@@ -418,10 +383,13 @@ window.addEventListener('load', async () => {
         };
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) { statusDiv.innerHTML = '⏳ Сохранение...'; statusDiv.style.color = '#f59e0b'; }
-        const saved = await saveToJsonBin(resultData);
+        
+        // 🔥 ВЫЗОВ НОВОЙ ФУНКЦИИ FIREBASE
+        const saved = await saveToFirebase(resultData);
+        
         if (statusDiv) {
-            if (saved) { statusDiv.innerHTML = '✅ Результат сохранён!'; statusDiv.style.color = '#2c6e2c'; }
-            else { statusDiv.innerHTML = '⚠️ Ошибка сохранения.'; statusDiv.style.color = '#c41e3a'; }
+            if (saved) { statusDiv.innerHTML = '✅ Результат мгновенно сохранён!'; statusDiv.style.color = '#2c6e2c'; }
+            else { statusDiv.innerHTML = '⚠️ Сохранено локально, будет отправлено при следующем запуске.'; statusDiv.style.color = '#f59e0b'; }
         }
     }
 
