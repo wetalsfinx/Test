@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>585GOLD — Тест продаж</title>
+    
+    <!-- 🔥 ПОДКЛЮЧЕНИЕ FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -65,7 +70,7 @@
         .result-box.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
         .result-box.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
         .restart-btn { background: #c41e3a; margin-top: 16px; }
-        .save-status { font-size: 12px; color: #666; margin-top: 10px; text-align: center; }
+        .save-status { font-size: 14px; font-weight: 600; margin-top: 10px; text-align: center; }
         .recommendations-section {
             margin-top: 20px;
             text-align: left;
@@ -122,50 +127,40 @@
 </div>
 
 <script>
-    //  АВТОМАТИЧЕСКАЯ ДОЗАГРУЗКА НЕСОХРАНЁННЫХ РЕЗУЛЬТАТОВ
-window.addEventListener('load', async () => {
-    const backup = JSON.parse(localStorage.getItem('test_backup') || '[]');
-    if (backup.length > 0) {
-        console.log(`🔄 Найдено ${backup.length} несохранённых результатов теста. Отправляем...`);
-        
-        for (let result of backup) {
-            try {
-                const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                });
-                
-                if (getRes.ok) {
-                    const data = await getRes.json();
-                    let allResults = data.record?.results || data.record || [];
-                    
-                    // Проверяем дубликаты
-                    const isDuplicate = allResults.some(r => r.id === result.id);
-                    if (!isDuplicate) {
-                        allResults.push(result);
-                        await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-                            method: 'PUT',
-                            headers: { 
-                                'Content-Type': 'application/json',
-                                'X-Master-Key': JSONBIN_MASTER_KEY
-                            },
-                            body: JSON.stringify({ results: allResults })
-                        });
-                        console.log('✅ Отправлено:', result.user_name);
-                    }
+    // ========== 🔥 ИНИЦИАЛИЗАЦИЯ FIREBASE ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+        authDomain: "gold-8105a.firebaseapp.com",
+        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gold-8105a",
+        storageBucket: "gold-8105a.firebasestorage.app",
+        messagingSenderId: "195469188947",
+        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ========== 🔄 АВТОМАТИЧЕСКАЯ ДОЗАГРУЗКА НЕСОХРАНЁННЫХ РЕЗУЛЬТАТОВ ==========
+    window.addEventListener('load', async () => {
+        const backup = JSON.parse(localStorage.getItem('test_backup') || '[]');
+        if (backup.length > 0) {
+            console.log(`🔄 Найдено ${backup.length} несохранённых результатов теста. Отправляем в Firebase...`);
+            
+            for (let result of backup) {
+                try {
+                    const newRef = db.ref('results/test').push();
+                    await newRef.set(result);
+                    console.log('✅ Отправлено из бэкапа:', result.user_name);
+                } catch(e) {
+                    console.error('❌ Ошибка дозагрузки из бэкапа:', e.message);
                 }
-            } catch(e) {
-                console.error('❌ Ошибка дозагрузки:', e.message);
             }
+            
+            localStorage.removeItem('test_backup');
+            console.log('✅ Все локальные результаты теста отправлены в Firebase!');
         }
-        
-        localStorage.removeItem('test_backup');
-        console.log('✅ Все локальные результаты теста отправлены!');
-    }
-});
-    // ========== НАСТРОЙКА JSONBIN.IO ==========
-    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    const FIXED_BIN_ID = '6a4df991da38895dfe3eed24';
-    
+    });
+
     const RECOMMENDATIONS = [
         "Не спрашивайте 'Чем помочь?'. Сразу дайте ценность: акция + спросите 'Для себя или в подарок?'",
         "Когда клиент назвал бюджет, НЕ показывайте товар сразу. Сначала спросите: 'А для какого случая?'",
@@ -176,72 +171,45 @@ window.addEventListener('load', async () => {
         "Не отправляйте клиента ждать. Дайте альтернативу сейчас",
         "Продавайте эмоцию: 'Это кольцо станет идеальным напоминанием'",
         "Не говорите просто 'Да'. Предложите дополнения",
-        "Сплит предлагайте  как вариант оплаты покупки",
+        "Сплит предлагайте как вариант оплаты покупки",
         "Дайте 20-30 секунд освоиться, затем подойдите"
     ];
 
-    // ========== СОХРАНЕНИЕ В JSONBIN (КАК В ДИАЛОГЕ) ==========
-async function saveToJsonBin(resultData) {
-    // Сначала сохраняем локально (на всякий случай)
-    try {
-        const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
-        localBackup.push(resultData);
-        localStorage.setItem('test_backup', JSON.stringify(localBackup));
-        console.log('💾 Временно сохранено локально');
-    } catch(e) {
-        console.error('Не удалось сохранить локально:', e);
-    }
-    
-    try {
-        console.log('📤 Отправляем на сервер...');
-        
-        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-        });
-        
-        let allResults = [];
-        if (getRes.ok) {
-            const data = await getRes.json();
-            allResults = data.record?.results || data.record || [];
-            console.log('📦 Найдено записей:', allResults.length);
-        } else {
-            console.error('❌ Не удалось прочитать bin');
-            alert('⚠️ Ошибка сети! Результат сохранён локально и будет отправлен автоматически.');
-            return false;
+    // ========== 🔥 НОВАЯ ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE ==========
+    async function saveToFirebase(resultData) {
+        // 1. Сначала сохраняем локально на всякий случай (мгновенно)
+        try {
+            const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
+            if (!localBackup.some(r => r.id === resultData.id)) {
+                localBackup.push(resultData);
+                localStorage.setItem('test_backup', JSON.stringify(localBackup));
+            }
+            console.log('💾 Временно сохранено локально');
+        } catch(e) {
+            console.error('Не удалось сохранить локально:', e);
         }
-        
-        allResults.push(resultData);
-        
-        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_MASTER_KEY
-            },
-            body: JSON.stringify({ results: allResults })
-        });
-        
-        if (putRes.ok) {
-            console.log('✅ Успешно сохранено! Всего:', allResults.length);
-            // Удаляем из локального бэкапа
+
+        // 2. Пытаемся отправить в Firebase
+        try {
+            console.log('📤 Отправка в Firebase...');
+            const newRef = db.ref('results/test').push();
+            await newRef.set(resultData);
+            
+            console.log('✅ Успешно сохранено в Firebase! ID:', newRef.key);
+            
+            // 3. Если успешно, удаляем из локального бэкапа
             try {
                 const backup = JSON.parse(localStorage.getItem('test_backup') || '[]');
                 const filtered = backup.filter(r => r.id !== resultData.id);
                 localStorage.setItem('test_backup', JSON.stringify(filtered));
             } catch(e) {}
-            alert('✅ Результат успешно сохранён! Спасибо за прохождение теста.');
+            
             return true;
-        } else {
-            console.error('❌ Ошибка сохранения на сервере');
-            alert('⚠️ Ошибка сервера. Результат сохранён локально и будет отправлен автоматически.');
+        } catch (error) {
+            console.error('❌ Ошибка сохранения в Firebase:', error);
             return false;
         }
-    } catch(e) {
-        console.error(' Критическая ошибка:', e.message);
-        alert('⚠️ Сбой связи. Результат сохранён локально и будет отправлен автоматически.');
-        return false;
     }
-}
 
     // ========== ВОПРОСЫ ТЕСТА ==========
     const ORIGINAL_QUESTIONS = [
@@ -318,12 +286,11 @@ async function saveToJsonBin(resultData) {
             const isCorrect = (selectedIdx === q.correct);
             if (isCorrect) correctCount++;
             
-            // Находим оригинальный индекс вопроса
             const originalIndex = ORIGINAL_QUESTIONS.findIndex(oq => oq.text === q.text);
 
             answersDetail.push({
                 questionNum: i + 1,
-                originalIndex: originalIndex, // ВАЖНО!
+                originalIndex: originalIndex,
                 selected: selectedIdx,
                 correct: isCorrect,
                 questionText: q.text,
@@ -362,7 +329,6 @@ async function saveToJsonBin(resultData) {
             html += `<div class="recommendations-section"><div class="rec-perfect">🎉 <strong>ИДЕАЛЬНО!</strong> Все ответы верны!</div></div>`;
         } else {
             html += `<div class="recommendations-section"><h3>📚 РЕКОМЕНДАЦИИ ПО ОШИБКАМ</h3>`;
-            // ✅ ИСПРАВЛЕНО: используем originalIndex вместо i
             answersDetail.forEach((a) => {
                 if (!a.correct) {
                     const recIndex = a.originalIndex !== undefined ? a.originalIndex : 0;
@@ -388,15 +354,16 @@ async function saveToJsonBin(resultData) {
 
         resultScreen.innerHTML = html;
         
-        const saved = await saveToJsonBin(resultData);
+        // 🔥 ВЫЗОВ НОВОЙ ФУНКЦИИ FIREBASE
+        const saved = await saveToFirebase(resultData);
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
             if (saved) {
-                statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
+                statusDiv.innerHTML = '✅ Результат мгновенно сохранён!';
                 statusDiv.style.color = '#2c6e2c';
             } else {
-                statusDiv.innerHTML = '⚠️ Результат не сохранился. Проверьте интернет.';
-                statusDiv.style.color = '#c41e3a';
+                statusDiv.innerHTML = '⚠️ Результат сохранён локально и будет отправлен при следующем запуске.';
+                statusDiv.style.color = '#f59e0b';
             }
         }
     }
