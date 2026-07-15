@@ -650,12 +650,13 @@
         });
     });
 
-        async function loadResults() {
+           async function loadResults() {
         document.getElementById('loadingSkeleton').style.display = 'block';
         document.getElementById('status').textContent = 'Загрузка...';
         
         const BIN_TEST = '6a4df991da38895dfe3eed24';
         const BIN_DIALOG = '6a4e1335f5f4af5e2970eea5';
+        const BIN_CROSSSELL = '6a54919fda38895dfe554040'; // 🆕 ДОБАВЛЕНО
         
         try {
             // 💾 СОХРАНЯЕМ ТЕКУЩИЕ ФИЛЬТРЫ ДО ЗАГРУЗКИ
@@ -664,11 +665,15 @@
             const savedPercent = document.getElementById('percentFilter').value;
             const savedSearch = document.getElementById('searchInput').value;
             
-            const [resTest, resDialog] = await Promise.all([
+            // 🔄 ЗАГРУЖАЕМ ВСЕ 3 BIN ОДНОВРЕМЕННО
+            const [resTest, resDialog, resCrosssell] = await Promise.all([
                 fetch(`https://api.jsonbin.io/v3/b/${BIN_TEST}/latest?t=${Date.now()}`, {
                     headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
                 }),
                 fetch(`https://api.jsonbin.io/v3/b/${BIN_DIALOG}/latest?t=${Date.now()}`, {
+                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                }),
+                fetch(`https://api.jsonbin.io/v3/b/${BIN_CROSSSELL}/latest?t=${Date.now()}`, {
                     headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
                 })
             ]);
@@ -679,7 +684,7 @@
                 const dataTest = await resTest.json();
                 const resultsTest = dataTest.record?.results || dataTest.record || [];
                 allResults = allResults.concat(Array.isArray(resultsTest) ? resultsTest : []);
-                console.log(' Загружено тестов:', resultsTest.length);
+                console.log('📦 Загружено тестов:', resultsTest.length);
             }
             
             if (resDialog.ok) {
@@ -687,6 +692,14 @@
                 const resultsDialog = dataDialog.record?.results || dataDialog.record || [];
                 allResults = allResults.concat(Array.isArray(resultsDialog) ? resultsDialog : []);
                 console.log('📦 Загружено диалогов:', resultsDialog.length);
+            }
+            
+            // 🆕 ДОБАВЛЕНО: Загрузка допродаж
+            if (resCrosssell.ok) {
+                const dataCrosssell = await resCrosssell.json();
+                const resultsCrosssell = dataCrosssell.record?.results || dataCrosssell.record || [];
+                allResults = allResults.concat(Array.isArray(resultsCrosssell) ? resultsCrosssell : []);
+                console.log('💰 Загружено допродаж:', resultsCrosssell.length);
             }
             
             if (!allResults.length) {
@@ -701,8 +714,8 @@
                 user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
                 score: r.score || 0,
-                total: r.total || (r.type === 'trainer' ? 6 : 11),
-                percent: r.percent || Math.round((r.score / (r.total || 11)) * 100),
+                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : 11), // 🆕 Обновлено
+                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : 11))) * 100), // 🆕 Обновлено
                 answers: r.answers || [],
                 rules_applied: r.rules_applied || [],
                 date: r.date || new Date().toISOString()
@@ -713,7 +726,6 @@
             const dataCities = [...new Set(allData.map(r => r.city))];
             const allCities = [...new Set([...CITIES, ...dataCities])];
             
-            // 🔄 ОБНОВЛЯЕМ СПИСОК ГОРОДОВ
             document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + 
                 allCities.map(c => `<option value="${c}">${c}</option>`).join('');
             
@@ -725,7 +737,13 @@
             
             renderCityStats();
             applyFilters();
-            document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${allData.filter(r=>r.type==='test').length}, тренировка: ${allData.filter(r=>r.type==='trainer').length})`;
+            
+            // 🆕 Обновлено сообщение статуса
+            const testCount = allData.filter(r => r.type === 'test').length;
+            const trainerCount = allData.filter(r => r.type === 'trainer').length;
+            const crosssellCount = allData.filter(r => r.type === 'crosssell').length;
+            document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${testCount}, тренировка: ${trainerCount}, допродажи: ${crosssellCount})`;
+            
         } catch(e) { 
             console.error(e); 
             document.getElementById('status').textContent = 'Ошибка: ' + e.message;
