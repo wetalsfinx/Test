@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>585GOLD | Аналитика</title>
+    
+    <!-- 🔥 ПОДКЛЮЧЕНИЕ FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -524,12 +529,19 @@
 </div>
 
 <script>
-    const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
-    
-    const BIN_TEST = '6a4df991da38895dfe3eed24';
-    const BIN_DIALOG = '6a4e1335f5f4af5e2970eea5';
-    const BIN_CROSSSELL = '6a54919fda38895dfe554040';
-    
+    // ========== 🔥 ИНИЦИАЛИЗАЦИЯ FIREBASE ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+        authDomain: "gold-8105a.firebaseapp.com",
+        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gold-8105a",
+        storageBucket: "gold-8105a.firebasestorage.app",
+        messagingSenderId: "195469188947",
+        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     const CITIES = [
         'Уфа', 'Екатеринбург',
         'Санкт-Петербург, Московский, 2',
@@ -604,35 +616,19 @@
     let allData = [], filteredData = [];
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null;
 
+    // 🔥 ОБНОВЛЕННАЯ ФУНКЦИЯ СБРОСА (FIREBASE)
     document.getElementById('clearAllBtn').onclick = async () => {
-        if (!confirm('⚠️ Удалить ВСЕ результаты из всех трёх bin?')) return;
+        if (!confirm('⚠️ Удалить ВСЕ результаты из Firebase?')) return;
         if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
         
         try {
-            const [resTest, resDialog, resCrosssell] = await Promise.all([
-                fetch(`https://api.jsonbin.io/v3/b/${BIN_TEST}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-                    body: JSON.stringify({ results: [] })
-                }),
-                fetch(`https://api.jsonbin.io/v3/b/${BIN_DIALOG}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-                    body: JSON.stringify({ results: [] })
-                }),
-                fetch(`https://api.jsonbin.io/v3/b/${BIN_CROSSSELL}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-                    body: JSON.stringify({ results: [] })
-                })
+            await Promise.all([
+                db.ref('results/test').set(null),
+                db.ref('results/dialog').set(null),
+                db.ref('results/crosssell').set(null)
             ]);
-            
-            if (resTest.ok && resDialog.ok && resCrosssell.ok) {
-                alert('✅ Все данные удалены!');
-                location.reload();
-            } else {
-                alert('Ошибка очистки:\nТест: ' + resTest.status + '\nДиалог: ' + resDialog.status + '\nДопродажи: ' + resCrosssell.status);
-            }
+            alert('✅ Все данные удалены!');
+            location.reload();
         } catch(e) {
             alert('Ошибка: ' + e.message);
         }
@@ -650,56 +646,41 @@
         });
     });
 
-           async function loadResults() {
+    // 🔥 ОБНОВЛЕННАЯ ФУНКЦИЯ ЗАГРУЗКИ (FIREBASE)
+    async function loadResults() {
         document.getElementById('loadingSkeleton').style.display = 'block';
         document.getElementById('status').textContent = 'Загрузка...';
         
-        const BIN_TEST = '6a4df991da38895dfe3eed24';
-        const BIN_DIALOG = '6a4e1335f5f4af5e2970eea5';
-        const BIN_CROSSSELL = '6a54919fda38895dfe554040'; // 🆕 ДОБАВЛЕНО
-        
         try {
-            // 💾 СОХРАНЯЕМ ТЕКУЩИЕ ФИЛЬТРЫ ДО ЗАГРУЗКИ
             const savedType = document.getElementById('typeFilter').value;
             const savedCity = document.getElementById('cityFilter').value;
             const savedPercent = document.getElementById('percentFilter').value;
             const savedSearch = document.getElementById('searchInput').value;
             
-            // 🔄 ЗАГРУЖАЕМ ВСЕ 3 BIN ОДНОВРЕМЕННО
-            const [resTest, resDialog, resCrosssell] = await Promise.all([
-                fetch(`https://api.jsonbin.io/v3/b/${BIN_TEST}/latest?t=${Date.now()}`, {
-                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                }),
-                fetch(`https://api.jsonbin.io/v3/b/${BIN_DIALOG}/latest?t=${Date.now()}`, {
-                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                }),
-                fetch(`https://api.jsonbin.io/v3/b/${BIN_CROSSSELL}/latest?t=${Date.now()}`, {
-                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                })
+            const [testSnap, dialogSnap, crossSnap] = await Promise.all([
+                db.ref('results/test').get(),
+                db.ref('results/dialog').get(),
+                db.ref('results/crosssell').get()
             ]);
             
             let allResults = [];
             
-            if (resTest.ok) {
-                const dataTest = await resTest.json();
-                const resultsTest = dataTest.record?.results || dataTest.record || [];
-                allResults = allResults.concat(Array.isArray(resultsTest) ? resultsTest : []);
-                console.log('📦 Загружено тестов:', resultsTest.length);
+            const testData = testSnap.val();
+            if (testData) {
+                Object.values(testData).forEach(item => { item.type = 'test'; allResults.push(item); });
+                console.log('📦 Загружено тестов:', Object.values(testData).length);
             }
             
-            if (resDialog.ok) {
-                const dataDialog = await resDialog.json();
-                const resultsDialog = dataDialog.record?.results || dataDialog.record || [];
-                allResults = allResults.concat(Array.isArray(resultsDialog) ? resultsDialog : []);
-                console.log('📦 Загружено диалогов:', resultsDialog.length);
+            const dialogData = dialogSnap.val();
+            if (dialogData) {
+                Object.values(dialogData).forEach(item => { item.type = 'trainer'; allResults.push(item); });
+                console.log('📦 Загружено диалогов:', Object.values(dialogData).length);
             }
             
-            // 🆕 ДОБАВЛЕНО: Загрузка допродаж
-            if (resCrosssell.ok) {
-                const dataCrosssell = await resCrosssell.json();
-                const resultsCrosssell = dataCrosssell.record?.results || dataCrosssell.record || [];
-                allResults = allResults.concat(Array.isArray(resultsCrosssell) ? resultsCrosssell : []);
-                console.log('💰 Загружено допродаж:', resultsCrosssell.length);
+            const crossData = crossSnap.val();
+            if (crossData) {
+                Object.values(crossData).forEach(item => { item.type = 'crosssell'; allResults.push(item); });
+                console.log('💰 Загружено допродаж:', Object.values(crossData).length);
             }
             
             if (!allResults.length) {
@@ -714,8 +695,8 @@
                 user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
                 score: r.score || 0,
-                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : 11), // 🆕 Обновлено
-                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : 11))) * 100), // 🆕 Обновлено
+                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : 11),
+                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : 11))) * 100),
                 answers: r.answers || [],
                 rules_applied: r.rules_applied || [],
                 date: r.date || new Date().toISOString()
@@ -729,7 +710,6 @@
             document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + 
                 allCities.map(c => `<option value="${c}">${c}</option>`).join('');
             
-            // ♻️ ВОССТАНАВЛИВАЕМ ФИЛЬТРЫ ПОСЛЕ ОБНОВЛЕНИЯ
             document.getElementById('typeFilter').value = savedType;
             document.getElementById('cityFilter').value = savedCity;
             document.getElementById('percentFilter').value = savedPercent;
@@ -738,7 +718,6 @@
             renderCityStats();
             applyFilters();
             
-            // 🆕 Обновлено сообщение статуса
             const testCount = allData.filter(r => r.type === 'test').length;
             const trainerCount = allData.filter(r => r.type === 'trainer').length;
             const crosssellCount = allData.filter(r => r.type === 'crosssell').length;
