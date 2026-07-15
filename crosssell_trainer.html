@@ -203,6 +203,46 @@
 </div>
 
 <script>
+    // 🔄 АВТОМАТИЧЕСКАЯ ДОЗАГРУЗКА НЕСОХРАНЁННЫХ РЕЗУЛЬТАТОВ
+window.addEventListener('load', async () => {
+    const backup = JSON.parse(localStorage.getItem('crosssell_backup') || '[]');
+    if (backup.length > 0) {
+        console.log(` Найдено ${backup.length} несохранённых результатов допродаж. Отправляем...`);
+        
+        for (let result of backup) {
+            try {
+                const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                });
+                
+                if (getRes.ok) {
+                    const data = await getRes.json();
+                    let allResults = data.record?.results || data.record || [];
+                    
+                    // Проверяем дубликаты
+                    const isDuplicate = allResults.some(r => r.id === result.id);
+                    if (!isDuplicate) {
+                        allResults.push(result);
+                        await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+                            method: 'PUT',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': JSONBIN_MASTER_KEY
+                            },
+                            body: JSON.stringify({ results: allResults })
+                        });
+                        console.log('✅ Отправлено:', result.user_name);
+                    }
+                }
+            } catch(e) {
+                console.error('❌ Ошибка дозагрузки:', e.message);
+            }
+        }
+        
+        localStorage.removeItem('crosssell_backup');
+        console.log('✅ Все локальные результаты отправлены!');
+    }
+});
     // ========== НАСТРОЙКА JSONBIN.IO ==========
     const JSONBIN_MASTER_KEY = '$2a$10$x.8W4GI2iaP/X052IXSPXOVRirz3Jep1p9o.AHQyFwkP6L8f5YIW2';
     const FIXED_BIN_ID = '6a54919fda38895dfe554040';
@@ -331,82 +371,69 @@
 
     // ========== СОХРАНЕНИЕ В JSONBIN ==========
     async function saveToJsonBin(resultData) {
-        try {
-            console.log('📤 Сохраняем результат допродаж...');
-            
-            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
-            
-            let allResults = [];
-            if (getRes.ok) {
-                const data = await getRes.json();
-                allResults = data.record?.results || data.record || [];
-                console.log('📦 Записей в bin:', allResults.length);
-            }
-            
-            allResults.push(resultData);
-            
-            const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                },
-                body: JSON.stringify({ results: allResults })
-            });
-            
-            if (putRes.ok) {
-                console.log('✅ Сохранено! Всего записей:', allResults.length);
-                return true;
-            } else {
-                console.error('❌ Ошибка сохранения:', putRes.status);
-                return false;
-            }
-        } catch(e) {
-            console.error('❌ Ошибка:', e.message);
-            return false;
-        }
-    }
-
-    let currentQuestionIndex = 0;
-    let currentAnswers = [];
-    let appliedRules = [];
-    let currentUserName = null;
-    let currentUserCity = null;
-    let gameActive = false;
-    let selectedChoiceIndex = null;
-    let questionResults = [];
-
-    function nextStep() {
-        if (!gameActive || selectedChoiceIndex === null) return;
+    try {
+        console.log('📤 Сохраняем результат допродаж...');
         
-        const isCorrect = selectedChoiceIndex === SCENARIOS[currentQuestionIndex].correct;
-        const ruleId = SCENARIOS[currentQuestionIndex].ruleId;
-        
-        currentAnswers.push({ 
-            question: currentQuestionIndex, 
-            selected: selectedChoiceIndex, 
-            correct: isCorrect, 
-            ruleId: ruleId
+        const getRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}/latest`, {
+            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
         });
         
-        questionResults[currentQuestionIndex] = isCorrect;
-        
-        if (isCorrect) {
-            const r = CROSSSELL_RULES.find(x => x.id === ruleId);
-            if (r && !appliedRules.includes(r.name)) appliedRules.push(r.name);
-        }
-        
-        currentQuestionIndex++;
-        
-        if (currentQuestionIndex >= SCENARIOS.length) {
-            finishGame();
+        let allResults = [];
+        if (getRes.ok) {
+            const data = await getRes.json();
+            allResults = data.record?.results || data.record || [];
+            console.log('📦 Найдено записей в bin:', allResults.length);
         } else {
-            selectedChoiceIndex = null;
-            renderQuestion();
+            console.error('❌ Не удалось прочитать bin. Статус:', getRes.status);
+            
+            // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
+            const localBackup = JSON.parse(localStorage.getItem('crosssell_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('crosssell_backup', JSON.stringify(localBackup));
+            console.log('💾 Сохранено локально (бэкап)');
+            
+            alert('️ Ошибка сети! Результат НЕ сохранён на сервере, но сохранён локально в вашем браузере. При следующем открытии тренажёра он будет отправлен автоматически.');
+            return false;
         }
+        
+        allResults.push(resultData);
+        
+        const putRes = await fetch(`https://api.jsonbin.io/v3/b/${FIXED_BIN_ID}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_MASTER_KEY
+            },
+            body: JSON.stringify({ results: allResults })
+        });
+        
+        if (putRes.ok) {
+            console.log('✅ Сохранено! Всего записей:', allResults.length);
+            alert('✅ Результат успешно сохранён! Спасибо за прохождение тренажёра.');
+            return true;
+        } else {
+            console.error('❌ Ошибка сохранения:', putRes.status);
+            
+            // 💾 СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
+            const localBackup = JSON.parse(localStorage.getItem('crosssell_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('crosssell_backup', JSON.stringify(localBackup));
+            
+            alert('️ Ошибка при сохранении на сервере. Результат сохранён локально и будет отправлен автоматически.');
+            return false;
+        }
+    } catch(e) {
+        console.error('❌ Критическая ошибка:', e.message);
+        
+        //  СОХРАНЯЕМ ЛОКАЛЬНО КАК БЭКАП
+        const localBackup = JSON.parse(localStorage.getItem('crosssell_backup') || '[]');
+        localBackup.push(resultData);
+        localStorage.setItem('crosssell_backup', JSON.stringify(localBackup));
+        
+        alert('⚠️ Произошёл сбой связи. Результат сохранён локально и будет отправлен автоматически.');
+        return false;
     }
+}
 
     async function finishGame() {
         gameActive = false;
