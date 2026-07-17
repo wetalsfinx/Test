@@ -1035,13 +1035,53 @@
         `;}).join('');
     }
 
-    function deleteRow(id) {
-        if (!confirm('Удалить из текущего просмотра?')) return;
+   async function deleteRow(id) {
+    if (!confirm('Удалить этот результат навсегда?')) return;
+    
+    try {
+        // Находим запись, которую нужно удалить
+        const record = allData.find(r => r.id === id);
+        if (!record) {
+            alert('Запись не найдена');
+            return;
+        }
+        
+        // Определяем, в какой ветке Firebase лежит запись
+        let path = '';
+        if (record.type === 'test') path = 'results/test';
+        else if (record.type === 'trainer') path = 'results/dialog';
+        else if (record.type === 'crosssell') path = 'results/crosssell';
+        
+        if (path) {
+            // Получаем все записи из этой ветки
+            const snapshot = await db.ref(path).get();
+            const data = snapshot.val();
+            
+            if (data) {
+                // Ищем и удаляем конкретную запись по ID
+                for (let key in data) {
+                    if (data[key].id === id || 
+                        (data[key].user_name === record.user_name && 
+                         data[key].date === record.date)) {
+                        await db.ref(`${path}/${key}`).remove();
+                        console.log('✅ Удалено из Firebase:', key);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Обновляем локальный массив
         allData = allData.filter(r => r.id !== id);
         applyFilters();
         renderCityStats();
+        
+        alert('✅ Результат удалён!');
+    } catch (e) {
+        console.error('Ошибка удаления:', e);
+        alert('❌ Ошибка при удалении: ' + e.message);
     }
-
+}
     function showDetails(id) {
         const emp = filteredData.find(r => r.id === id);
         if (!emp) return;
