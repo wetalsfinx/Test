@@ -738,7 +738,17 @@
             const v = map.get(d);
             v.sum += r.percent; v.count++;
         });
-        const dates = [...map.keys()].sort((a,b) => new Date(a) - new Date(b));
+       const dates = [...map.keys()].sort((a, b) => {
+    // Парсим даты в формате ДД.ММ.ГГГГ
+    const [da, ma, ya] = a.split('.').map(Number);
+    const [db, mb, yb] = b.split('.').map(Number);
+    
+    // Сравниваем как даты
+    const dateA = new Date(ya, ma - 1, da);
+    const dateB = new Date(yb, mb - 1, db);
+    
+    return dateA - dateB;
+});
         const values = dates.map(d => Math.round(map.get(d).sum / map.get(d).count));
 
         const container = document.getElementById('trendContainer');
