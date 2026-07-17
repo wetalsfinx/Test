@@ -731,8 +731,8 @@
     }
 
     function renderTrendChart() {
-        const map = new Map();
-        allData.forEach(r => {
+    const map = new Map();
+    filteredData.forEach(r => {  // ← БЕРЁТ ОТФИЛЬТРОВАННЫЕ!
             const d = new Date(r.date).toLocaleDateString('ru-RU');
             if (!map.has(d)) map.set(d, { sum: 0, count: 0 });
             const v = map.get(d);
