@@ -920,17 +920,26 @@
     }
 
     function renderDashboard() {
-        if (!filteredData.length) {
-            document.getElementById('mainTotal').textContent = '0';
-            document.getElementById('mainAvg').textContent = '0%';
-            ['sTest','sTrainer','sCrosssell','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
-                document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
-            });
-            document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
-            document.getElementById('employeeList').innerHTML = '<div class="empty">Нет данных</div>';
-            document.getElementById('empCount').textContent = '0';
-            return;
-        }
+    //  ЕСЛИ ДАННЫХ НЕТ — УНИЧТОЖАЕМ ВСЕ ГРАФИКИ
+    if (!filteredData.length) {
+        document.getElementById('mainTotal').textContent = '0';
+        document.getElementById('mainAvg').textContent = '0%';
+        ['sTest','sTrainer','sCrosssell','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
+            document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
+        });
+        document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
+        document.getElementById('employeeList').innerHTML = '<div class="empty">Нет данных</div>';
+        document.getElementById('empCount').textContent = '0';
+        
+        // 🔥 УНИЧТОЖАЕМ ГРАФИКИ, ЧТОБЫ НЕ ПОКАЗЫВАЛИ СТАРЫЕ ДАННЫЕ
+        if (pieChart) { pieChart.destroy(); pieChart = null; }
+        if (cityBarChart) { cityBarChart.destroy(); cityBarChart = null; }
+        if (scoreBarChart) { scoreBarChart.destroy(); scoreBarChart = null; }
+        
+        return;
+    }
+
+    // ... дальше код остаётся без изменений ...
 
         const total = filteredData.length;
         const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
