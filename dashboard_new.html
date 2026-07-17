@@ -623,9 +623,9 @@
         
         try {
             await Promise.all([
-                db.ref('results/test').set(null),
-                db.ref('results/dialog').set(null),
-                db.ref('results/crosssell').set(null)
+                db.ref('results/test').remove(),
+                db.ref('results/dialog').remove(),
+                db.ref('results/crosssell').remove()
             ]);
             alert('✅ Все данные удалены!');
             location.reload();
@@ -718,11 +718,6 @@
             renderCityStats();
             applyFilters();
             
-            const testCount = allData.filter(r => r.type === 'test').length;
-            const trainerCount = allData.filter(r => r.type === 'trainer').length;
-            const crosssellCount = allData.filter(r => r.type === 'crosssell').length;
-            document.getElementById('status').textContent = `✅ ${allData.length} (тест: ${testCount}, тренировка: ${trainerCount}, допродажи: ${crosssellCount})`;
-            
         } catch(e) { 
             console.error(e); 
             document.getElementById('status').textContent = 'Ошибка: ' + e.message;
@@ -730,96 +725,91 @@
         document.getElementById('loadingSkeleton').style.display = 'none';
     }
 
-  function renderTrendChart() {
-    const map = new Map();
-    
-    // 🔥 ИСПРАВЛЕНО: используем filteredData вместо allData
-    filteredData.forEach(r => {
-        const d = new Date(r.date).toLocaleDateString('ru-RU');
-        if (!map.has(d)) map.set(d, { sum: 0, count: 0 });
-        const v = map.get(d);
-        v.sum += r.percent; 
-        v.count++;
-    });
-    
-    // 🔥 ИСПРАВЛЕНО: правильная сортировка дат
-    const dates = [...map.keys()].sort((a, b) => {
-        // Парсим даты в формате ДД.ММ.ГГГГ
-        const [da, ma, ya] = a.split('.').map(Number);
-        const [db, mb, yb] = b.split('.').map(Number);
+    function renderTrendChart() {
+        const map = new Map();
         
-        // Сравниваем как даты
-        const dateA = new Date(ya, ma - 1, da);
-        const dateB = new Date(yb, mb - 1, db);
+        // 🔥 ИСПРАВЛЕНО: используем filteredData вместо allData
+        filteredData.forEach(r => {
+            const d = new Date(r.date).toLocaleDateString('ru-RU');
+            if (!map.has(d)) map.set(d, { sum: 0, count: 0 });
+            const v = map.get(d);
+            v.sum += r.percent; 
+            v.count++;
+        });
         
-        return dateA - dateB;
-    });
-    
-    const values = dates.map(d => Math.round(map.get(d).sum / map.get(d).count));
+        // 🔥 ИСПРАВЛЕНО: правильная сортировка дат
+        const dates = [...map.keys()].sort((a, b) => {
+            const [da, ma, ya] = a.split('.').map(Number);
+            const [db, mb, yb] = b.split('.').map(Number);
+            const dateA = new Date(ya, ma - 1, da);
+            const dateB = new Date(yb, mb - 1, db);
+            return dateA - dateB;
+        });
+        
+        const values = dates.map(d => Math.round(map.get(d).sum / map.get(d).count));
 
-    const container = document.getElementById('trendContainer');
-    const fallback = document.getElementById('trendFallback');
+        const container = document.getElementById('trendContainer');
+        const fallback = document.getElementById('trendFallback');
 
-    if (dates.length < 2) {
-        container.style.display = 'none';
-        fallback.style.display = 'block';
-        return;
-    }
-    
-    container.style.display = 'block';
-    fallback.style.display = 'none';
+        if (dates.length < 2) {
+            container.style.display = 'none';
+            fallback.style.display = 'block';
+            return;
+        }
+        
+        container.style.display = 'block';
+        fallback.style.display = 'none';
 
-    if (trendChart) trendChart.destroy();
-    
-    const ctx = document.getElementById('trendChart').getContext('2d');
-    if (!ctx) return;
+        if (trendChart) trendChart.destroy();
+        
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        if (!ctx) return;
 
-    trendChart = new Chart(ctx, {
-        type: dates.length >= 3 ? 'line' : 'bar',
-        data: {
-            labels: dates,
-            datasets: [{
-                label: 'Средний балл',
-                data: values,
-                borderColor: '#c41e3a',
-                backgroundColor: dates.length >= 3 ? 'rgba(196,30,58,0.05)' : '#c41e3a',
-                fill: dates.length >= 3,
-                tension: 0.3,
-                pointBackgroundColor: values.map(v => v >= 85 ? '#16a34a' : v >= 70 ? '#f59e0b' : '#dc2626'),
-                pointRadius: 4,
-                borderWidth: 2,
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Средний балл: ' + context.parsed.y + '%';
+        trendChart = new Chart(ctx, {
+            type: dates.length >= 3 ? 'line' : 'bar',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Средний балл',
+                    data: values,
+                    borderColor: '#c41e3a',
+                    backgroundColor: dates.length >= 3 ? 'rgba(196,30,58,0.05)' : '#c41e3a',
+                    fill: dates.length >= 3,
+                    tension: 0.3,
+                    pointBackgroundColor: values.map(v => v >= 85 ? '#16a34a' : v >= 70 ? '#f59e0b' : '#dc2626'),
+                    pointRadius: 4,
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Средний балл: ' + context.parsed.y + '%';
+                            }
                         }
                     }
-                }
-            },
-            scales: { 
-                y: { 
-                    beginAtZero: true, 
-                    max: 100, 
-                    ticks: { 
-                        callback: v => v + '%' 
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        max: 100, 
+                        ticks: { callback: v => v + '%' } 
                     } 
-                } 
+                }
             }
-        }
-    });
-}
+        });
+    }
 
     function renderCityStats() {
         const map = new Map();
-        allData.forEach(r => {
+        // 🔥 ИСПРАВЛЕНО: используем filteredData, чтобы таблица городов тоже уважала фильтры
+        filteredData.forEach(r => {
             if (!map.has(r.city)) {
                 map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0, testQe: new Array(11).fill(0), trainerRules: {}, crosssellRules: {} });
             }
@@ -900,7 +890,15 @@
         else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
         const search = document.getElementById('searchInput').value.toLowerCase().trim();
         if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
+        
         filteredData = filtered;
+        
+        // 🔥 НОВОЕ: Обновляем текст статуса, чтобы он показывал отфильтрованные данные
+        const fTest = filteredData.filter(r => r.type === 'test').length;
+        const fTrainer = filteredData.filter(r => r.type === 'trainer').length;
+        const fCrosssell = filteredData.filter(r => r.type === 'crosssell').length;
+        document.getElementById('status').textContent = `✅ Показано: ${filteredData.length} (тест: ${fTest}, тренировка: ${fTrainer}, допродажи: ${fCrosssell})`;
+
         renderDashboard();
         renderAlerts();
         renderTrendChart();
@@ -1070,52 +1068,49 @@
         `;}).join('');
     }
 
-  async function deleteRow(id) {
-    if (!confirm('Удалить этот результат навсегда?')) return;
-    
-    try {
-        const record = allData.find(r => r.id === id);
-        if (!record) {
-            alert('Запись не найдена');
-            return;
-        }
+    async function deleteRow(id) {
+        if (!confirm('Удалить этот результат навсегда?')) return;
         
-        // Определяем путь в Firebase
-        let path = '';
-        if (record.type === 'test') path = 'results/test';
-        else if (record.type === 'trainer') path = 'results/dialog';
-        else if (record.type === 'crosssell') path = 'results/crosssell';
-        
-        if (path) {
-            // Получаем все записи
-            const snapshot = await db.ref(path).get();
-            const data = snapshot.val();
+        try {
+            const record = allData.find(r => r.id === id);
+            if (!record) {
+                alert('Запись не найдена');
+                return;
+            }
             
-            if (data) {
-                // Ищем по совпадению имени, даты и процента
-                for (let key in data) {
-                    const item = data[key];
-                    if (item.user_name === record.user_name && 
-                        item.date === record.date &&
-                        item.percent === record.percent) {
-                        await db.ref(`${path}/${key}`).remove();
-                        console.log('✅ Удалено из Firebase:', key);
-                        break;
+            let path = '';
+            if (record.type === 'test') path = 'results/test';
+            else if (record.type === 'trainer') path = 'results/dialog';
+            else if (record.type === 'crosssell') path = 'results/crosssell';
+            
+            if (path) {
+                const snapshot = await db.ref(path).get();
+                const data = snapshot.val();
+                
+                if (data) {
+                    for (let key in data) {
+                        const item = data[key];
+                        if (item.user_name === record.user_name && 
+                            item.date === record.date &&
+                            item.percent === record.percent) {
+                            await db.ref(`${path}/${key}`).remove();
+                            console.log('✅ Удалено из Firebase:', key);
+                            break;
+                        }
                     }
                 }
             }
+            
+            allData = allData.filter(r => r.id !== id);
+            applyFilters();
+            renderCityStats();
+            
+        } catch (e) {
+            console.error('Ошибка:', e);
+            alert('Ошибка: ' + e.message);
         }
-        
-        // Обновляем локально
-        allData = allData.filter(r => r.id !== id);
-        applyFilters();
-        renderCityStats();
-        
-    } catch (e) {
-        console.error('Ошибка:', e);
-        alert('Ошибка: ' + e.message);
     }
-}
+
     function showDetails(id) {
         const emp = filteredData.find(r => r.id === id);
         if (!emp) return;
@@ -1532,7 +1527,8 @@ ${content}
 
     function exportCityCSV() {
         const map = new Map();
-        allData.forEach(r => {
+        // 🔥 ИСПРАВЛЕНО: используем filteredData для экспорта
+        filteredData.forEach(r => {
             if (!map.has(r.city)) map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0 });
             const c = map.get(r.city);
             c.count++; c.sum += r.percent; if (r.percent >= 85) c.success++; c.errors += (r.total - r.score);
