@@ -879,30 +879,31 @@
     }
 
     function applyFilters() {
-        let filtered = [...allData];
-        const type = document.getElementById('typeFilter').value;
-        if (type !== 'all') filtered = filtered.filter(r => r.type === type);
-        const city = document.getElementById('cityFilter').value;
-        if (city !== 'all') filtered = filtered.filter(r => r.city === city);
-        const percent = document.getElementById('percentFilter').value;
-        if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
-        else if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
-        else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
-        const search = document.getElementById('searchInput').value.toLowerCase().trim();
-        if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
-        
-        filteredData = filtered;
-        
-        // 🔥 НОВОЕ: Обновляем текст статуса, чтобы он показывал отфильтрованные данные
-        const fTest = filteredData.filter(r => r.type === 'test').length;
-        const fTrainer = filteredData.filter(r => r.type === 'trainer').length;
-        const fCrosssell = filteredData.filter(r => r.type === 'crosssell').length;
-        document.getElementById('status').textContent = `✅ Показано: ${filteredData.length} (тест: ${fTest}, тренировка: ${fTrainer}, допродажи: ${fCrosssell})`;
+    let filtered = [...allData];
+    const type = document.getElementById('typeFilter').value;
+    if (type !== 'all') filtered = filtered.filter(r => r.type === type);
+    const city = document.getElementById('cityFilter').value;
+    if (city !== 'all') filtered = filtered.filter(r => r.city === city);
+    const percent = document.getElementById('percentFilter').value;
+    if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
+    else if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
+    else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
+    const search = document.getElementById('searchInput').value.toLowerCase().trim();
+    if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
+    
+    filteredData = filtered;
+    
+    // Обновляем текст статуса
+    const fTest = filteredData.filter(r => r.type === 'test').length;
+    const fTrainer = filteredData.filter(r => r.type === 'trainer').length;
+    const fCrosssell = filteredData.filter(r => r.type === 'crosssell').length;
+    document.getElementById('status').textContent = `✅ Показано: ${filteredData.length} (тест: ${fTest}, тренировка: ${fTrainer}, допродажи: ${fCrosssell})`;
 
-        renderDashboard();
-        renderAlerts();
-        renderTrendChart();
-    }
+    renderDashboard();
+    renderAlerts();
+    renderTrendChart();
+    renderCityStats(); // 🔥 ТЕПЕРЬ ТАБЛИЦА ГОРОДОВ ТОЖЕ ОБНОВЛЯЕТСЯ!
+}
 
     function renderAlerts() {
         const container = document.getElementById('alertContainer');
