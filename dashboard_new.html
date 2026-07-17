@@ -730,67 +730,92 @@
         document.getElementById('loadingSkeleton').style.display = 'none';
     }
 
-    function renderTrendChart() {
+  function renderTrendChart() {
     const map = new Map();
-    filteredData.forEach(r => {  // ← БЕРЁТ ОТФИЛЬТРОВАННЫЕ!
-            const d = new Date(r.date).toLocaleDateString('ru-RU');
-            if (!map.has(d)) map.set(d, { sum: 0, count: 0 });
-            const v = map.get(d);
-            v.sum += r.percent; v.count++;
-        });
-       const dates = [...map.keys()].sort((a, b) => {
-    // Парсим даты в формате ДД.ММ.ГГГГ
-    const [da, ma, ya] = a.split('.').map(Number);
-    const [db, mb, yb] = b.split('.').map(Number);
     
-    // Сравниваем как даты
-    const dateA = new Date(ya, ma - 1, da);
-    const dateB = new Date(yb, mb - 1, db);
+    // 🔥 ИСПРАВЛЕНО: используем filteredData вместо allData
+    filteredData.forEach(r => {
+        const d = new Date(r.date).toLocaleDateString('ru-RU');
+        if (!map.has(d)) map.set(d, { sum: 0, count: 0 });
+        const v = map.get(d);
+        v.sum += r.percent; 
+        v.count++;
+    });
     
-    return dateA - dateB;
-});
-        const values = dates.map(d => Math.round(map.get(d).sum / map.get(d).count));
+    // 🔥 ИСПРАВЛЕНО: правильная сортировка дат
+    const dates = [...map.keys()].sort((a, b) => {
+        // Парсим даты в формате ДД.ММ.ГГГГ
+        const [da, ma, ya] = a.split('.').map(Number);
+        const [db, mb, yb] = b.split('.').map(Number);
+        
+        // Сравниваем как даты
+        const dateA = new Date(ya, ma - 1, da);
+        const dateB = new Date(yb, mb - 1, db);
+        
+        return dateA - dateB;
+    });
+    
+    const values = dates.map(d => Math.round(map.get(d).sum / map.get(d).count));
 
-        const container = document.getElementById('trendContainer');
-        const fallback = document.getElementById('trendFallback');
+    const container = document.getElementById('trendContainer');
+    const fallback = document.getElementById('trendFallback');
 
-        if (dates.length < 2) {
-            container.style.display = 'none';
-            fallback.style.display = 'block';
-            return;
-        }
-        container.style.display = 'block';
-        fallback.style.display = 'none';
-
-        if (trendChart) trendChart.destroy();
-        const ctx = document.getElementById('trendChart').getContext('2d');
-        if (!ctx) return;
-
-        trendChart = new Chart(ctx, {
-            type: dates.length >= 3 ? 'line' : 'bar',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: '%',
-                    data: values,
-                    borderColor: '#c41e3a',
-                    backgroundColor: dates.length >= 3 ? 'rgba(196,30,58,0.05)' : '#c41e3a',
-                    fill: dates.length >= 3,
-                    tension: 0.3,
-                    pointBackgroundColor: values.map(v => v >= 85 ? '#16a34a' : v >= 70 ? '#f59e0b' : '#dc2626'),
-                    pointRadius: 4,
-                    borderWidth: 2,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v+'%' } } }
-            }
-        });
+    if (dates.length < 2) {
+        container.style.display = 'none';
+        fallback.style.display = 'block';
+        return;
     }
+    
+    container.style.display = 'block';
+    fallback.style.display = 'none';
+
+    if (trendChart) trendChart.destroy();
+    
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    if (!ctx) return;
+
+    trendChart = new Chart(ctx, {
+        type: dates.length >= 3 ? 'line' : 'bar',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Средний балл',
+                data: values,
+                borderColor: '#c41e3a',
+                backgroundColor: dates.length >= 3 ? 'rgba(196,30,58,0.05)' : '#c41e3a',
+                fill: dates.length >= 3,
+                tension: 0.3,
+                pointBackgroundColor: values.map(v => v >= 85 ? '#16a34a' : v >= 70 ? '#f59e0b' : '#dc2626'),
+                pointRadius: 4,
+                borderWidth: 2,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Средний балл: ' + context.parsed.y + '%';
+                        }
+                    }
+                }
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    max: 100, 
+                    ticks: { 
+                        callback: v => v + '%' 
+                    } 
+                } 
+            }
+        }
+    });
+}
 
     function renderCityStats() {
         const map = new Map();
