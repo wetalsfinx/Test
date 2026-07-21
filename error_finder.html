@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>585GOLD | Найди ошибку в диалоге</title>
+    
+    <!-- 🔥 FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #fff0f0;
+            margin: 0;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .main-container { max-width: 800px; margin: 0 auto; }
+        .employee-view {
+            background: white;
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 1px solid #e8a0b4;
+        }
+        .employee-view h1 {
+            color: #c41e3a;
+            margin-top: 0;
+            font-size: 26px;
+            text-align: center;
+        }
+        .register-form { display: flex; flex-direction: column; gap: 12px; }
+        .register-form input, .register-form select {
+            padding: 14px 16px;
+            border-radius: 30px;
+            border: 1px solid #e8a0b4;
+            font-size: 16px;
+            width: 100%;
+            background: white;
+        }
+        .register-form button {
+            background: #c41e3a;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .game-container {
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            margin-top: 16px;
+            border: 1px solid #e8a0b4;
+        }
+        .dialogue-area { padding: 18px; background: #fff0f3; }
+        .message {
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        .message.client {
+            background: white;
+            border-left: 4px solid #c41e3a;
+            margin-right: 20%;
+        }
+        .message.seller {
+            background: #f8f4f0;
+            border-left: 4px solid #666;
+            margin-left: 20%;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .message.seller:hover { background: #f0e8e0; }
+        .message.seller.selected {
+            background: #ffe0e0;
+            border-left-color: #dc2626;
+            box-shadow: 0 0 0 2px #dc2626;
+        }
+        .message.seller.correct {
+            background: #e8f0e8;
+            border-left-color: #16a34a;
+        }
+        .message.seller.wrong {
+            background: #ffe0e0;
+            border-left-color: #dc2626;
+        }
+        .message .speaker {
+            font-weight: 600;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .controls { padding: 16px 18px; background: white; }
+        .btn {
+            background: #c41e3a;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn:disabled { background: #e8a0b4; cursor: not-allowed; }
+        .result-card {
+            padding: 18px;
+            margin: 16px 18px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .result-card.success { background: #e8f0e8; border-left: 8px solid #16a34a; }
+        .result-card.fail { background: #ffe0e0; border-left: 8px solid #c41e3a; }
+        .explanation {
+            background: #f8f4f0;
+            border-radius: 16px;
+            padding: 12px 14px;
+            margin: 10px 0;
+            border-left: 4px solid #c41e3a;
+            text-align: left;
+        }
+        .explanation .error-text { color: #dc2626; font-weight: 600; }
+        .explanation .correct-text { color: #16a34a; font-weight: 600; }
+        .explanation .rec { background: #fff8e0; padding: 6px 12px; border-radius: 8px; margin-top: 6px; color: #854d0e; border-left: 3px solid #f59e0b; }
+        .progress { text-align: center; color: #666; margin-bottom: 16px; font-size: 13px; }
+        .save-status { font-size: 14px; font-weight: 600; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="employee-view">
+        <h1>🔍 585GOLD | Найди ошибку в диалоге</h1>
+        <p style="text-align: center; color: #666; font-size: 14px;">Кликай на фразы продавца, где нарушен алгоритм продаж</p>
+        
+        <div class="register-form" id="registerForm">
+            <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
+            <select id="userCity">
+                <option value="">Выберите город</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
+                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
+                <option value="Калининград">Калининград</option>
+                <option value="Нижний Тагил">Нижний Тагил</option>
+            </select>
+            <button id="startGameBtn">Начать игру</button>
+        </div>
+
+        <div id="gameContainer" style="display: none;">
+            <div class="game-container">
+                <div class="progress">Сценарий <span id="scenarioNum">1</span> из <span id="totalScenarios">7</span></div>
+                <div class="dialogue-area" id="dialogueArea"></div>
+                <div class="controls">
+                    <button class="btn" id="checkBtn" disabled>Проверить</button>
+                </div>
+                <div id="resultCard" class="result-card" style="display: none;"></div>
+                <div id="saveStatus" class="save-status"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== 🔥 FIREBASE ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+        authDomain: "gold-8105a.firebaseapp.com",
+        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gold-8105a",
+        storageBucket: "gold-8105a.firebasestorage.app",
+        messagingSenderId: "195469188947",
+        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ========== 🔄 АВТОДОЗАГРУЗКА ==========
+    window.addEventListener('load', async () => {
+        const backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
+        if (backup.length > 0) {
+            console.log(`🔄 Найдено ${backup.length} несохранённых результатов. Отправляем...`);
+            for (let result of backup) {
+                try {
+                    const newRef = db.ref('results/errorfinder').push();
+                    await newRef.set(result);
+                    console.log('✅ Отправлено:', result.user_name);
+                } catch(e) {
+                    console.error('❌ Ошибка:', e.message);
+                }
+            }
+            localStorage.removeItem('errorfinder_backup');
+        }
+    });
+
+    // ========== 📚 СЦЕНАРИИ ==========
+    const SCENARIOS = [
+        {
+            title: "Холодный клиент",
+            dialogue: [
+                { speaker: "client", text: "Клиент заходит в магазин, молча проходит к витрине с кольцами и начинает рассматривать." },
+                { speaker: "seller", text: "Добрый день! Вот у нас как раз новая коллекция колец с бриллиантами, посмотрите эту модель — она сейчас по акции.", error: true, explanation: "Продавец сразу показывает товар без установления контакта и выявления потребностей.", rec: "Сначала установите зрительный контакт, поприветствуйте, затем задайте вопрос: «Какое изделие выбираете? Для себя или в подарок?»" },
+                { speaker: "client", text: "Клиент кивает, но продолжает молча смотреть на витрину." },
+                { speaker: "seller", text: "Может быть, вам показать ещё вот эти серьги? Они тоже со скидкой.", error: true, explanation: "Продавец игнорирует сигнал клиента и продолжает навязывать товар.", rec: "Дайте клиенту 20-30 секунд освоиться, затем мягко начните диалог с открытого вопроса." }
+            ],
+            correctErrors: [1, 3]
+        },
+        {
+            title: "Подарок жене",
+            dialogue: [
+                { speaker: "client", text: "Мужчина: «Мне нужно кольцо в подарок жене, бюджет до 50 тысяч»." },
+                { speaker: "seller", text: "Отлично! Вот эта модель как раз 48 тысяч, золото 585 пробы, вес 3 грамма, фианиты.", error: true, explanation: "Продавец назвал цену и характеристики без выявления предпочтений.", rec: "Сначала спросите: «А какой стиль она предпочитает? Классика или что-то более современное? Есть ли у неё любимые камни?»" },
+                { speaker: "client", text: "Мужчина: «Хм, а что-нибудь попроще есть?»" },
+                { speaker: "seller", text: "Вот это кольцо за 35 тысяч, тоже хорошее.", error: true, explanation: "Продавец снова показывает товар без уточнения критериев.", rec: "Уточните: «Что значит попроще? Может быть, без камней или более тонкое кольцо?»" }
+            ],
+            correctErrors: [1, 3]
+        },
+        {
+            title: "Дорого!",
+            dialogue: [
+                { speaker: "client", text: "Клиентка: «Красивое кольцо, но дороговато... Я думала, дешевле будет»." },
+                { speaker: "seller", text: "Так это же золото с бриллиантом, а не бижутерия! Цена оправдана качеством.", error: true, explanation: "Продавец спорит с клиентом и обесценивает её сомнения.", rec: "Присоединитесь: «Понимаю, цена важна. А с чем вы сравниваете? Может быть, посмотрим альтернативные варианты?»" },
+                { speaker: "client", text: "Клиентка: «Ну не знаю, мне нужно подумать»." },
+                { speaker: "seller", text: "Хорошо, подумайте. Если что — я рядом.", error: true, explanation: "Продавец отпускает клиента без попытки закрыть сделку или предложить альтернативу.", rec: "Предложите: «Давайте я покажу похожие модели в другом ценовом диапазоне, чтобы было из чего выбрать»." }
+            ],
+            correctErrors: [1, 3]
+        },
+        {
+            title: "Просто смотрю",
+            dialogue: [
+                { speaker: "client", text: "Клиентка: «Я просто смотрю, мне пока ничего не нужно»." },
+                { speaker: "seller", text: "Хорошо, смотрите. Если что — обращайтесь.", error: true, explanation: "Продавец полностью отступает и не пытается выявить потребность.", rec: "Мягко спросите: «Понимаю. А вы для себя присматриваете или в подарок? Может быть, я расскажу о наших новинках?»" },
+                { speaker: "client", text: "Клиентка продолжает медленно идти вдоль витрины." },
+                { speaker: "seller", text: "Продавец стоит в стороне и наблюдает.", error: false, explanation: "Это правильная тактика — дать клиенту время освоиться." }
+            ],
+            correctErrors: [1]
+        },
+        {
+            title: "Мне нужно подумать",
+            dialogue: [
+                { speaker: "client", text: "Клиент посмотрел несколько колец и говорит: «Мне нужно подумать, я позже зайду»." },
+                { speaker: "seller", text: "Конечно, приходите! Вот моя визитка.", error: true, explanation: "Продавец отпускает клиента без попытки узнать причину сомнений или предложить альтернативу.", rec: "Спросите: «Понимаю. А что именно вас смущает? Может быть, я могу показать другие варианты или рассказать о доставке?»" },
+                { speaker: "client", text: "Клиент: «Да нет, всё нормально, просто нужно время»." },
+                { speaker: "seller", text: "Хорошо, будем ждать вас!", error: true, explanation: "Продавец не предлагает конкретное действие (замер размера, каталог, бронь).", rec: "Предложите: «Давайте я запишу ваш размер, и мы сможем быстро оформить покупку, когда вы вернётесь. Или могу отправить каталог в WhatsApp»." }
+            ],
+            correctErrors: [1, 3]
+        },
+        {
+            title: "А что есть ещё?",
+            dialogue: [
+                { speaker: "client", text: "Клиентка: «Мне нравится это кольцо, но покажу-ка я ещё что-нибудь»." },
+                { speaker: "seller", text: "Конечно! Вот ещё 10 колец из этой витрины, смотрите все.", error: true, explanation: "Продавец показывает всё подряд без уточнения критериев выбора.", rec: "Спросите: «Что именно вам понравилось в этом кольце? Стиль, камень, размер? Я подберу похожие варианты»." },
+                { speaker: "client", text: "Клиентка растерянно смотрит на множество колец." },
+                { speaker: "seller", text: "Может быть, вот это? Или вот это? А ещё есть вон то!", error: true, explanation: "Продавец продолжает хаотично показывать товар, увеличивая растерянность клиента.", rec: "Сузьте выбор: «Давайте посмотрим 2-3 модели, которые ближе всего к вашему вкусу»." }
+            ],
+            correctErrors: [1, 3]
+        },
+        {
+            title: "Беру",
+            dialogue: [
+                { speaker: "client", text: "Клиентка: «Всё, беру это кольцо!»" },
+                { speaker: "seller", text: "Отлично! Сейчас оформлю.", error: true, explanation: "Продавец не предлагает сопутствующие товары (футляр, средство для чистки, серьги из той же коллекции).", rec: "Скажите: «Отличный выбор! Давайте подберём к кольцу футляр и средство для ухода, чтобы оно всегда выглядело безупречно. Или может быть, серьги из той же коллекции?»" },
+                { speaker: "client", text: "Клиентка: «Нет, только кольцо»." },
+                { speaker: "seller", text: "Хорошо, пробиваем чек.", error: false, explanation: "Клиент отказался — продавец корректно завершает сделку." }
+            ],
+            correctErrors: [1]
+        }
+    ];
+
+    // ==========  СОСТОЯНИЕ ИГРЫ ==========
+    let currentScenario = 0;
+    let selectedErrors = [];
+    let gameResults = [];
+    let currentUserName = '';
+    let currentUserCity = '';
+
+    // ==========  ЗАПУСК ИГРЫ ==========
+    document.getElementById('startGameBtn').onclick = () => {
+        const name = document.getElementById('userName').value.trim();
+        const city = document.getElementById('userCity').value;
+        if (!name) return alert('Введите имя');
+        if (!city) return alert('Выберите город');
+        
+        currentUserName = name;
+        currentUserCity = city;
+        currentScenario = 0;
+        gameResults = [];
+        
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('gameContainer').style.display = 'block';
+        document.getElementById('totalScenarios').textContent = SCENARIOS.length;
+        
+        renderScenario();
+    };
+
+    // ========== 📖 РЕНДЕР СЦЕНАРИЯ ==========
+    function renderScenario() {
+        const scenario = SCENARIOS[currentScenario];
+        document.getElementById('scenarioNum').textContent = currentScenario + 1;
+        selectedErrors = [];
+        
+        const dialogueArea = document.getElementById('dialogueArea');
+        dialogueArea.innerHTML = '';
+        
+        scenario.dialogue.forEach((msg, idx) => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${msg.speaker}`;
+            msgDiv.dataset.idx = idx;
+            
+            if (msg.speaker === 'seller' && msg.error !== undefined) {
+                msgDiv.onclick = () => toggleError(idx, msgDiv);
+            }
+            
+            msgDiv.innerHTML = `
+                <div class="speaker">${msg.speaker === 'client' ? '👤 Клиент' : ' Продавец'}</div>
+                <div>${msg.text}</div>
+            `;
+            
+            dialogueArea.appendChild(msgDiv);
+        });
+        
+        document.getElementById('checkBtn').disabled = true;
+        document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('saveStatus').textContent = '';
+    }
+
+    // ==========  ВЫБОР ОШИБКИ ==========
+    function toggleError(idx, element) {
+        if (selectedErrors.includes(idx)) {
+            selectedErrors = selectedErrors.filter(i => i !== idx);
+            element.classList.remove('selected');
+        } else {
+            selectedErrors.push(idx);
+            element.classList.add('selected');
+        }
+        
+        document.getElementById('checkBtn').disabled = selectedErrors.length === 0;
+    }
+
+    // ========== ✅ ПРОВЕРКА ==========
+    document.getElementById('checkBtn').onclick = async () => {
+        const scenario = SCENARIOS[currentScenario];
+        const correctErrors = scenario.correctErrors;
+        
+        // Подсвечиваем правильные и неправильные ответы
+        const messages = document.querySelectorAll('.message.seller');
+        messages.forEach((msg, idx) => {
+            const globalIdx = parseInt(msg.dataset.idx);
+            if (correctErrors.includes(globalIdx)) {
+                msg.classList.add('correct');
+            }
+            if (selectedErrors.includes(globalIdx) && !correctErrors.includes(globalIdx)) {
+                msg.classList.add('wrong');
+            }
+        });
+        
+        // Считаем результат
+        const correctFound = selectedErrors.filter(e => correctErrors.includes(e)).length;
+        const wrongFound = selectedErrors.filter(e => !correctErrors.includes(e)).length;
+        const missedErrors = correctErrors.filter(e => !selectedErrors.includes(e)).length;
+        
+        const score = Math.max(0, correctFound - wrongFound);
+        const maxScore = correctErrors.length;
+        const percent = Math.round((score / maxScore) * 100);
+        
+        // Показываем результат
+        const resultCard = document.getElementById('resultCard');
+        resultCard.style.display = 'block';
+        resultCard.className = `result-card ${percent >= 70 ? 'success' : 'fail'}`;
+        
+        let html = `<h2>${percent >= 70 ? '✅ Отлично!' : '⚠️ Есть над чем поработать'}</h2>`;
+        html += `<p>Найдено ошибок: ${correctFound} из ${maxScore}</p>`;
+        html += `<p>Результат: ${percent}%</p>`;
+        
+        // Объяснения
+        html += '<div style="text-align: left; margin-top: 16px;">';
+        correctErrors.forEach(idx => {
+            const msg = scenario.dialogue[idx];
+            html += `
+                <div class="explanation">
+                    <div class="error-text">❌ Ошибка: ${msg.text}</div>
+                    <div style="margin-top: 6px;">${msg.explanation}</div>
+                    <div class="rec">📌 ${msg.rec}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        resultCard.innerHTML = html;
+        
+        // Сохраняем результат
+        gameResults.push({
+            scenario: scenario.title,
+            score: score,
+            maxScore: maxScore,
+            percent: percent,
+            selectedErrors: selectedErrors,
+            correctErrors: correctErrors
+        });
+        
+        // Переход к следующему сценарию или завершение
+        setTimeout(() => {
+            if (currentScenario < SCENARIOS.length - 1) {
+                currentScenario++;
+                renderScenario();
+            } else {
+                finishGame();
+            }
+        }, 5000);
+    };
+
+    // ========== 🏁 ЗАВЕРШЕНИЕ ИГРЫ ==========
+    async function finishGame() {
+        const totalScore = gameResults.reduce((sum, r) => sum + r.score, 0);
+        const maxTotal = gameResults.reduce((sum, r) => sum + r.maxScore, 0);
+        const avgPercent = Math.round((totalScore / maxTotal) * 100);
+        
+        const resultData = {
+            id: Date.now(),
+            type: 'errorfinder',
+            user_name: currentUserName,
+            city: currentUserCity,
+            score: totalScore,
+            total: maxTotal,
+            percent: avgPercent,
+            passed: avgPercent >= 70,
+            scenarios: gameResults,
+            date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
+        };
+        
+        // Сохранение в Firebase
+        const statusDiv = document.getElementById('saveStatus');
+        statusDiv.textContent = '⏳ Сохранение...';
+        statusDiv.style.color = '#f59e0b';
+        
+        try {
+            const localBackup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('errorfinder_backup', JSON.stringify(localBackup));
+            
+            const newRef = db.ref('results/errorfinder').push();
+            await newRef.set(resultData);
+            
+            const backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
+            const filtered = backup.filter(r => r.id !== resultData.id);
+            localStorage.setItem('errorfinder_backup', JSON.stringify(filtered));
+            
+            statusDiv.textContent = '✅ Результат сохранён!';
+            statusDiv.style.color = '#16a34a';
+        } catch(e) {
+            statusDiv.textContent = '⚠️ Сохранено локально';
+            statusDiv.style.color = '#f59e0b';
+        }
+        
+        // Финальный экран
+        const dialogueArea = document.getElementById('dialogueArea');
+        dialogueArea.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <h2>🎉 Игра завершена!</h2>
+                <p style="font-size: 18px;">Ваш результат: <strong>${avgPercent}%</strong></p>
+                <p>Найдено ошибок: ${totalScore} из ${maxTotal}</p>
+                <p style="margin-top: 16px;">${avgPercent >= 70 ? '✅ Отличный результат! Вы хорошо знаете алгоритм продаж.' : '⚠️ Рекомендуем повторить тренажёр и изучить алгоритм продаж.'}</p>
+                <button class="btn" onclick="location.reload()" style="margin-top: 20px; max-width: 300px;">🔄 Пройти ещё раз</button>
+            </div>
+        `;
+        
+        document.getElementById('checkBtn').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
