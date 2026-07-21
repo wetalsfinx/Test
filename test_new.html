@@ -3,101 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>585GOLD — Тест продаж</title>
+    <title>585GOLD | Тест знаний</title>
     
     <!-- 🔥 ПОДКЛЮЧЕНИЕ FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: #fff0f0;
-            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
             min-height: 100vh;
         }
-        .container { max-width: 650px; margin: 0 auto; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
         .card {
             background: white;
-            border-radius: 28px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: 1px solid #e8a0b4;
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            animation: slideIn 0.5s ease;
         }
-        h1 { color: #c41e3a; text-align: center; font-size: 24px; margin-bottom: 16px; }
-        .form-group { margin-bottom: 16px; }
-        label { font-weight: 600; display: block; margin-bottom: 6px; color: #333; }
-        input, select {
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 { 
+            color: #c41e3a; 
+            text-align: center; 
+            font-size: 32px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+        }
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { 
+            font-weight: 600; 
+            display: block; 
+            margin-bottom: 8px; 
+            color: #374151; 
+            font-size: 14px;
+        }
+        .form-group input, .form-group select {
             width: 100%;
-            padding: 12px 14px;
-            border-radius: 40px;
-            border: 1px solid #e8a0b4;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            font-size: 16px;
+            background: white;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #c41e3a;
+            box-shadow: 0 0 0 4px rgba(196,30,58,0.1);
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 18px 32px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #c41e3a;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin-top: 8px;
+        }
+        .btn-primary:hover { background: #a0162e; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(196,30,58,0.2); }
+        .btn-primary:disabled { background: #d1d5db; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .progress { 
+            text-align: center; 
+            color: #6b7280; 
+            margin-bottom: 24px; 
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .question-text { 
+            font-weight: 700; 
+            font-size: 18px; 
+            margin-bottom: 24px; 
+            line-height: 1.5; 
+            color: #1f2937;
+        }
+        
+        .option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
             font-size: 15px;
+            line-height: 1.5;
+            color: #374151;
+            transition: all 0.3s;
+            display: flex;
+            align-items: flex-start;
+        }
+        .option:hover {
+            border-color: #c41e3a;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(196,30,58,0.1);
+        }
+        .option.selected { 
+            background: #fff1f2; 
+            color: #9f1239;
+            border-color: #c41e3a; 
+            box-shadow: 0 4px 16px rgba(196,30,58,0.15);
+        }
+        .option-letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: #e5e7eb;
+            color: #4b5563;
+            font-weight: 700;
+            margin-right: 12px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .option.selected .option-letter {
+            background: #c41e3a;
+            color: white;
+        }
+        
+        .hidden { display: none; }
+        
+        .result-card {
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            animation: slideIn 0.5s ease;
+            border: 2px solid #e5e7eb;
             background: white;
         }
-        button {
+        .result-card.success { background: #d1fae5; border-color: #10b981; }
+        .result-card.fail { background: #fee2e2; border-color: #ef4444; }
+        
+        .result-card h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+        .result-card.success h2 { color: #065f46; }
+        .result-card.fail h2 { color: #991b1b; }
+        
+        .result-card p {
+            font-size: 16px;
+            color: #4b5563;
+            margin-bottom: 8px;
+        }
+        
+        .rec-section {
+            margin-top: 32px;
+            text-align: left;
+            border-top: 2px dashed #e5e7eb;
+            padding-top: 24px;
+        }
+        .rec-section h3 {
+            color: #1f2937;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .rec-item {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid #ef4444;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .rec-item .rec-q { 
+            font-weight: 600; 
+            font-size: 15px; 
+            color: #1f2937; 
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .rec-item .rec-wrong { 
+            font-size: 14px; 
+            color: #dc2626; 
+            margin-bottom: 4px; 
+        }
+        .rec-item .rec-correct { 
+            font-size: 14px; 
+            color: #059669; 
+            margin-bottom: 12px; 
+        }
+        .rec-item .rec-tip { 
+            background: #fef3c7; 
+            padding: 12px 16px; 
+            border-radius: 12px; 
+            font-size: 14px; 
+            color: #92400e; 
+            border-left: 3px solid #d97706; 
+            line-height: 1.5;
+        }
+        .rec-perfect { 
+            text-align: center; 
+            padding: 24px; 
+            background: white; 
+            border-radius: 16px; 
+            color: #065f46; 
+            margin-top: 24px; 
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .save-status { 
+            font-size: 14px; 
+            font-weight: 600; 
+            margin-top: 20px; 
+            text-align: center; 
+        }
+        
+        .restart-btn {
             background: #c41e3a;
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 40px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-        }
-        button:disabled { background: #e8a0b4; cursor: not-allowed; }
-        .progress { text-align: center; color: #666; margin-bottom: 16px; font-size: 13px; }
-        .question-text { font-weight: 700; font-size: 17px; margin-bottom: 16px; line-height: 1.4; }
-        .option {
-            background: #f8f4f0;
-            border: 1px solid #e2d6cc;
-            border-radius: 20px;
-            padding: 10px 14px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .option.selected { background: #c41e3a; color: white; border-color: #c41e3a; }
-        .hidden { display: none; }
-        .result-box {
-            text-align: center;
-            padding: 20px;
-            border-radius: 24px;
-        }
-        .result-box.success { background: #e8f0e8; border-left: 6px solid #2c6e2c; }
-        .result-box.fail { background: #ffe0e0; border-left: 6px solid #c41e3a; }
-        .restart-btn { background: #c41e3a; margin-top: 16px; }
-        .save-status { font-size: 14px; font-weight: 600; margin-top: 10px; text-align: center; }
-        .recommendations-section {
-            margin-top: 20px;
-            text-align: left;
-            border-top: 2px dashed #e8a0b4;
-            padding-top: 16px;
-        }
-        .rec-item {
-            background: #f8f4f0;
             border-radius: 16px;
-            padding: 12px 14px;
-            margin-bottom: 10px;
-            border-left: 4px solid #c41e3a;
+            padding: 18px 32px;
+            font-size: 16px;
+            margin-top: 24px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
         }
-        .rec-item .rec-q { font-weight: 600; font-size: 13px; color: #1a1a2e; }
-        .rec-item .rec-wrong { font-size: 13px; color: #c41e3a; margin: 4px 0; }
-        .rec-item .rec-correct { font-size: 13px; color: #2c6e2c; margin: 4px 0; }
-        .rec-item .rec-tip { background: #fff8e0; padding: 6px 12px; border-radius: 8px; font-size: 13px; margin-top: 6px; color: #854d0e; border-left: 3px solid #f59e0b; }
-        .rec-perfect { text-align: center; padding: 20px; background: #e8f0e8; border-radius: 16px; color: #2c6e2c; }
+        .restart-btn:hover { background: #a0162e; transform: translateY(-2px); }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .card { padding: 24px; }
+            h1 { font-size: 24px; }
+            .option { padding: 16px; font-size: 14px; }
+        }
     </style>
 </head>
 <body>
 <div class="container" id="app">
     <div id="regScreen" class="card">
-        <h1>🎯 585GOLD | Тест продаж</h1>
+        <h1>📝 585GOLD | Тест знаний</h1>
+        <p class="subtitle">Проверьте свои знания стандартов продаж</p>
         <div class="form-group">
             <label>Имя и фамилия</label>
-            <input type="text" id="userName" placeholder="Например: Иванова Анна">
+            <input type="text" id="userName" placeholder="Например: Иванова Анна" autocomplete="off">
         </div>
         <div class="form-group">
             <label>Город</label>
@@ -111,7 +286,7 @@
                 <option value="Нижний Тагил">Нижний Тагил</option>
             </select>
         </div>
-        <button id="startTestBtn">Начать тест</button>
+        <button class="btn-primary" id="startTestBtn">🚀 Начать тест</button>
     </div>
 
     <div id="quizScreen" class="hidden">
@@ -119,7 +294,7 @@
             <div class="progress">Вопрос <span id="qNum">1</span> из <span id="qTotal">11</span></div>
             <div id="questionText" class="question-text"></div>
             <div id="optionsContainer"></div>
-            <button id="nextQuestionBtn" disabled>➡ Далее</button>
+            <button class="btn-primary" id="nextQuestionBtn" style="margin-top: 24px;" disabled>➡️ Далее</button>
         </div>
     </div>
 
@@ -175,34 +350,23 @@
         "Дайте 20-30 секунд освоиться, затем подойдите"
     ];
 
-    // ========== 🔥 НОВАЯ ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE ==========
+    // ========== 🔥 ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE ==========
     async function saveToFirebase(resultData) {
-        // 1. Сначала сохраняем локально на всякий случай (мгновенно)
         try {
             const localBackup = JSON.parse(localStorage.getItem('test_backup') || '[]');
             if (!localBackup.some(r => r.id === resultData.id)) {
                 localBackup.push(resultData);
                 localStorage.setItem('test_backup', JSON.stringify(localBackup));
             }
-            console.log('💾 Временно сохранено локально');
-        } catch(e) {
-            console.error('Не удалось сохранить локально:', e);
-        }
+        } catch(e) { console.error('Не удалось сохранить локально:', e); }
 
-        // 2. Пытаемся отправить в Firebase
         try {
-            console.log('📤 Отправка в Firebase...');
             const newRef = db.ref('results/test').push();
             await newRef.set(resultData);
             
-            console.log('✅ Успешно сохранено в Firebase! ID:', newRef.key);
-            
-            // 3. Если успешно, удаляем из локального бэкапа
-            try {
-                const backup = JSON.parse(localStorage.getItem('test_backup') || '[]');
-                const filtered = backup.filter(r => r.id !== resultData.id);
-                localStorage.setItem('test_backup', JSON.stringify(filtered));
-            } catch(e) {}
+            const backup = JSON.parse(localStorage.getItem('test_backup') || '[]');
+            const filtered = backup.filter(r => r.id !== resultData.id);
+            localStorage.setItem('test_backup', JSON.stringify(filtered));
             
             return true;
         } catch (error) {
@@ -264,7 +428,7 @@
             const optionDiv = document.createElement('div');
             optionDiv.className = 'option';
             const letter = String.fromCharCode(65 + idx);
-            optionDiv.innerText = `${letter}) ${opt}`;
+            optionDiv.innerHTML = `<span class="option-letter">${letter}</span> ${opt}`;
             optionDiv.dataset.idx = idx;
             optionDiv.addEventListener('click', () => {
                 document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
@@ -318,17 +482,17 @@
         resultScreen.classList.remove('hidden');
 
         let html = `
-            <div class="result-box ${passed ? 'success' : 'fail'}">
+            <div class="result-card ${passed ? 'success' : 'fail'}">
                 <h2>${passed ? '🏆 Победа!' : '😞 Тест не пройден'}</h2>
-                <p>Правильных ответов: ${correctCount} из ${shuffledQuestions.length}</p>
-                <p>Ваш результат: ${percent}%</p>
-                <p>${passed ? 'Отлично! Вы применяете правила продаж.' : 'Порог успеха: 85%. Повторите и попробуйте снова.'}</p>
+                <p>Правильных ответов: <strong>${correctCount}</strong> из <strong>${shuffledQuestions.length}</strong></p>
+                <p>Ваш результат: <strong>${percent}%</strong></p>
+                <p style="margin-top: 12px;">${passed ? 'Отлично! Вы прекрасно применяете правила продаж.' : 'Порог успеха: 85%. Повторите тест и попробуйте снова.'}</p>
         `;
 
         if (correctCount === shuffledQuestions.length) {
-            html += `<div class="recommendations-section"><div class="rec-perfect">🎉 <strong>ИДЕАЛЬНО!</strong> Все ответы верны!</div></div>`;
+            html += `<div class="rec-section"><div class="rec-perfect">🎉 ИДЕАЛЬНО! Все ответы верны!</div></div>`;
         } else {
-            html += `<div class="recommendations-section"><h3>📚 РЕКОМЕНДАЦИИ ПО ОШИБКАМ</h3>`;
+            html += `<div class="rec-section"><h3>📚 РЕКОМЕНДАЦИИ ПО ОШИБКАМ</h3>`;
             answersDetail.forEach((a) => {
                 if (!a.correct) {
                     const recIndex = a.originalIndex !== undefined ? a.originalIndex : 0;
@@ -354,16 +518,15 @@
 
         resultScreen.innerHTML = html;
         
-        // 🔥 ВЫЗОВ НОВОЙ ФУНКЦИИ FIREBASE
         const saved = await saveToFirebase(resultData);
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
             if (saved) {
                 statusDiv.innerHTML = '✅ Результат мгновенно сохранён!';
-                statusDiv.style.color = '#2c6e2c';
+                statusDiv.style.color = '#10b981';
             } else {
                 statusDiv.innerHTML = '⚠️ Результат сохранён локально и будет отправлен при следующем запуске.';
-                statusDiv.style.color = '#f59e0b';
+                statusDiv.style.color = '#d97706';
             }
         }
     }
