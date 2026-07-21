@@ -958,7 +958,18 @@
         const total = filteredData.length;
         const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
         const success = filteredData.filter(r => r.percent >= 85).length;
-        const errors = filteredData.reduce((s,r) => s + (r.total - r.score), 0);
+        const errors = filteredData.reduce((s,r) => {
+    if (r.type === 'clienttype') {
+        // Для адаптации считаем количество неправильных ответов
+        return s + (r.scenarios ? r.scenarios.filter(sc => !sc.isCorrect).length : 0);
+    } else if (r.type === 'errorfinder') {
+        // Для "Найди ошибку" считаем пропущенные ошибки
+        return s + (r.total - r.score);
+    } else {
+        // Для остальных (тест, тренировка, допродажи)
+        return s + (r.total - r.score);
+    }
+}, 0);
         const testCount = filteredData.filter(r => r.type === 'test').length;
         const trainerCount = filteredData.filter(r => r.type === 'trainer').length;
         const crosssellCount = filteredData.filter(r => r.type === 'crosssell').length;
