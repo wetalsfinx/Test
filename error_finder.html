@@ -135,7 +135,6 @@
             text-align: left;
         }
         .explanation .error-text { color: #dc2626; font-weight: 600; }
-        .explanation .correct-text { color: #16a34a; font-weight: 600; }
         .explanation .rec { background: #fff8e0; padding: 6px 12px; border-radius: 8px; margin-top: 6px; color: #854d0e; border-left: 3px solid #f59e0b; }
         .progress { text-align: center; color: #666; margin-bottom: 16px; font-size: 13px; }
         .save-status { font-size: 14px; font-weight: 600; margin-top: 10px; text-align: center; }
@@ -146,7 +145,7 @@
 <div class="main-container">
     <div class="employee-view">
         <h1>🔍 585GOLD | Найди ошибку в диалоге</h1>
-        <p style="text-align: center; color: #666; font-size: 14px;">Кликай на фразы продавца, где нарушен алгоритм продаж</p>
+        <p style="text-align: center; color: #666; font-size: 14px;">В диалоге есть как правильные, так и ошибочные фразы продавца. Кликай только на те, где нарушен алгоритм!</p>
         
         <div class="register-form" id="registerForm">
             <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
@@ -208,295 +207,54 @@
         }
     });
 
-    // ========== 📚 СЦЕНАРИИ ==========
+    // ========== 📚 СЦЕНАРИИ (СМЕШАННЫЕ: ПРАВИЛЬНЫЕ + ОШИБОЧНЫЕ) ==========
     const SCENARIOS = [
         {
             title: "Холодный клиент",
             dialogue: [
                 { speaker: "client", text: "Клиент заходит в магазин, молча проходит к витрине с кольцами и начинает рассматривать." },
-                { speaker: "seller", text: "Добрый день! Вот у нас как раз новая коллекция колец с бриллиантами, посмотрите эту модель — она сейчас по акции.", error: true, explanation: "Продавец сразу показывает товар без установления контакта и выявления потребностей.", rec: "Сначала установите зрительный контакт, поприветствуйте, затем задайте вопрос: «Какое изделие выбираете? Для себя или в подарок?»" },
+                { speaker: "seller", text: "Добрый день! Добро пожаловать в 585GOLD.", error: false },
+                { speaker: "seller", text: "Вот у нас как раз новая коллекция колец с бриллиантами, посмотрите эту модель — она сейчас по акции.", error: true, explanation: "Продавец сразу показывает товар без установления зрительного контакта и выявления потребностей.", rec: "Сначала задайте вопрос: «Какое изделие выбираете? Для себя или в подарок?»" },
                 { speaker: "client", text: "Клиент кивает, но продолжает молча смотреть на витрину." },
-                { speaker: "seller", text: "Может быть, вам показать ещё вот эти серьги? Они тоже со скидкой.", error: true, explanation: "Продавец игнорирует сигнал клиента и продолжает навязывать товар.", rec: "Дайте клиенту 20-30 секунд освоиться, затем мягко начните диалог с открытого вопроса." }
+                { speaker: "seller", text: "Хорошо, изучите ассортимент. Я буду рядом, если нужно будет помочь с выбором размера.", error: false }
             ],
-            correctErrors: [1, 3]
+            correctErrors: [2]
         },
         {
             title: "Подарок жене",
             dialogue: [
                 { speaker: "client", text: "Мужчина: «Мне нужно кольцо в подарок жене, бюджет до 50 тысяч»." },
-                { speaker: "seller", text: "Отлично! Вот эта модель как раз 48 тысяч, золото 585 пробы, вес 3 грамма, фианиты.", error: true, explanation: "Продавец назвал цену и характеристики без выявления предпочтений.", rec: "Сначала спросите: «А какой стиль она предпочитает? Классика или что-то более современное? Есть ли у неё любимые камни?»" },
+                { speaker: "seller", text: "Отличный повод! А какой стиль она предпочитает: классику или что-то более современное?", error: false },
+                { speaker: "client", text: "Мужчина: «Ну, она любит простое, без лишних камней»." },
+                { speaker: "seller", text: "Понял. Вот эта модель как раз 48 тысяч, золото 585 пробы, вес 3 грамма, фианиты.", error: true, explanation: "Продавец проигнорировал пожелание клиента («без лишних камней») и просто перечислил сухие характеристики.", rec: "Предложите вариант, соответствующий запросу: «Тогда обратите внимание на эти гладкие модели или кольца с минималистичным дизайном»." },
                 { speaker: "client", text: "Мужчина: «Хм, а что-нибудь попроще есть?»" },
-                { speaker: "seller", text: "Вот это кольцо за 35 тысяч, тоже хорошее.", error: true, explanation: "Продавец снова показывает товар без уточнения критериев.", rec: "Уточните: «Что значит попроще? Может быть, без камней или более тонкое кольцо?»" }
+                { speaker: "seller", text: "Конечно, давайте посмотрим на обручальные кольца или модели с одной дорожкой фианитов.", error: false }
             ],
-            correctErrors: [1, 3]
+            correctErrors: [3]
         },
         {
             title: "Дорого!",
             dialogue: [
                 { speaker: "client", text: "Клиентка: «Красивое кольцо, но дороговато... Я думала, дешевле будет»." },
-                { speaker: "seller", text: "Так это же золото с бриллиантом, а не бижутерия! Цена оправдана качеством.", error: true, explanation: "Продавец спорит с клиентом и обесценивает её сомнения.", rec: "Присоединитесь: «Понимаю, цена важна. А с чем вы сравниваете? Может быть, посмотрим альтернативные варианты?»" },
+                { speaker: "seller", text: "Так это же золото с бриллиантом, а не бижутерия! Цена полностью оправдана качеством.", error: true, explanation: "Продавец спорит с клиентом и обесценивает её сомнения, вызывая защитную реакцию.", rec: "Присоединитесь к чувству: «Понимаю, цена важна. А с чем вы сравниваете? Может быть, посмотрим альтернативные варианты?»" },
                 { speaker: "client", text: "Клиентка: «Ну не знаю, мне нужно подумать»." },
-                { speaker: "seller", text: "Хорошо, подумайте. Если что — я рядом.", error: true, explanation: "Продавец отпускает клиента без попытки закрыть сделку или предложить альтернативу.", rec: "Предложите: «Давайте я покажу похожие модели в другом ценовом диапазоне, чтобы было из чего выбрать»." }
+                { speaker: "seller", text: "Я вас понимаю, покупка должна радовать. Давайте я покажу похожие модели в другом ценовом диапазоне, чтобы было из чего выбрать?", error: false }
             ],
-            correctErrors: [1, 3]
+            correctErrors: [1]
         },
         {
             title: "Просто смотрю",
             dialogue: [
                 { speaker: "client", text: "Клиентка: «Я просто смотрю, мне пока ничего не нужно»." },
-                { speaker: "seller", text: "Хорошо, смотрите. Если что — обращайтесь.", error: true, explanation: "Продавец полностью отступает и не пытается выявить потребность.", rec: "Мягко спросите: «Понимаю. А вы для себя присматриваете или в подарок? Может быть, я расскажу о наших новинках?»" },
-                { speaker: "client", text: "Клиентка продолжает медленно идти вдоль витрины." },
-                { speaker: "seller", text: "Продавец стоит в стороне и наблюдает.", error: false, explanation: "Это правильная тактика — дать клиенту время освоиться." }
+                { speaker: "seller", text: "Конечно, смотрите с удовольствием! Кстати, у нас как раз новое поступление. Вы для себя присматриваете или в подарок?", error: false },
+                { speaker: "client", text: "Клиентка: «Для себя, но пока не уверена»." },
+                { speaker: "seller", text: "Хорошо, смотрите. Если что — я рядом у кассы.", error: true, explanation: "Продавец полностью отступает и упускает возможность мягко направить диалог, оставляя клиента одного.", rec: "Мягко направьте: «Понимаю. Могу рассказать о наших хитах продаж, которые отлично смотрятся на каждый день»." }
             ],
-            correctErrors: [1]
+            correctErrors: [3]
         },
         {
             title: "Мне нужно подумать",
             dialogue: [
                 { speaker: "client", text: "Клиент посмотрел несколько колец и говорит: «Мне нужно подумать, я позже зайду»." },
-                { speaker: "seller", text: "Конечно, приходите! Вот моя визитка.", error: true, explanation: "Продавец отпускает клиента без попытки узнать причину сомнений или предложить альтернативу.", rec: "Спросите: «Понимаю. А что именно вас смущает? Может быть, я могу показать другие варианты или рассказать о доставке?»" },
-                { speaker: "client", text: "Клиент: «Да нет, всё нормально, просто нужно время»." },
-                { speaker: "seller", text: "Хорошо, будем ждать вас!", error: true, explanation: "Продавец не предлагает конкретное действие (замер размера, каталог, бронь).", rec: "Предложите: «Давайте я запишу ваш размер, и мы сможем быстро оформить покупку, когда вы вернётесь. Или могу отправить каталог в WhatsApp»." }
-            ],
-            correctErrors: [1, 3]
-        },
-        {
-            title: "А что есть ещё?",
-            dialogue: [
-                { speaker: "client", text: "Клиентка: «Мне нравится это кольцо, но покажу-ка я ещё что-нибудь»." },
-                { speaker: "seller", text: "Конечно! Вот ещё 10 колец из этой витрины, смотрите все.", error: true, explanation: "Продавец показывает всё подряд без уточнения критериев выбора.", rec: "Спросите: «Что именно вам понравилось в этом кольце? Стиль, камень, размер? Я подберу похожие варианты»." },
-                { speaker: "client", text: "Клиентка растерянно смотрит на множество колец." },
-                { speaker: "seller", text: "Может быть, вот это? Или вот это? А ещё есть вон то!", error: true, explanation: "Продавец продолжает хаотично показывать товар, увеличивая растерянность клиента.", rec: "Сузьте выбор: «Давайте посмотрим 2-3 модели, которые ближе всего к вашему вкусу»." }
-            ],
-            correctErrors: [1, 3]
-        },
-        {
-            title: "Беру",
-            dialogue: [
-                { speaker: "client", text: "Клиентка: «Всё, беру это кольцо!»" },
-                { speaker: "seller", text: "Отлично! Сейчас оформлю.", error: true, explanation: "Продавец не предлагает сопутствующие товары (футляр, средство для чистки, серьги из той же коллекции).", rec: "Скажите: «Отличный выбор! Давайте подберём к кольцу футляр и средство для ухода, чтобы оно всегда выглядело безупречно. Или может быть, серьги из той же коллекции?»" },
-                { speaker: "client", text: "Клиентка: «Нет, только кольцо»." },
-                { speaker: "seller", text: "Хорошо, пробиваем чек.", error: false, explanation: "Клиент отказался — продавец корректно завершает сделку." }
-            ],
-            correctErrors: [1]
-        }
-    ];
-
-    // ========== 🎮 СОСТОЯНИЕ ИГРЫ ==========
-    let currentScenario = 0;
-    let selectedErrors = [];
-    let gameResults = [];
-    let currentUserName = '';
-    let currentUserCity = '';
-
-    // ========== 🚀 ЗАПУСК ИГРЫ ==========
-    document.getElementById('startGameBtn').onclick = () => {
-        const name = document.getElementById('userName').value.trim();
-        const city = document.getElementById('userCity').value;
-        if (!name) return alert('Введите имя');
-        if (!city) return alert('Выберите город');
-        
-        currentUserName = name;
-        currentUserCity = city;
-        currentScenario = 0;
-        gameResults = [];
-        
-        document.getElementById('registerForm').style.display = 'none';
-        document.getElementById('gameContainer').style.display = 'block';
-        document.getElementById('totalScenarios').textContent = SCENARIOS.length;
-        
-        renderScenario();
-    };
-
-    // ========== 📖 РЕНДЕР СЦЕНАРИЯ ==========
-    function renderScenario() {
-        const scenario = SCENARIOS[currentScenario];
-        document.getElementById('scenarioNum').textContent = currentScenario + 1;
-        selectedErrors = [];
-        
-        const dialogueArea = document.getElementById('dialogueArea');
-        dialogueArea.innerHTML = '';
-        
-        scenario.dialogue.forEach((msg, idx) => {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${msg.speaker}`;
-            msgDiv.dataset.idx = idx;
-            
-            if (msg.speaker === 'seller' && msg.error !== undefined) {
-                msgDiv.onclick = () => toggleError(idx, msgDiv);
-            }
-            
-            msgDiv.innerHTML = `
-                <div class="speaker">${msg.speaker === 'client' ? '👤 Клиент' : '👨‍💼 Продавец'}</div>
-                <div>${msg.text}</div>
-            `;
-            
-            dialogueArea.appendChild(msgDiv);
-        });
-        
-        // Сброс кнопки в исходное состояние
-        const checkBtn = document.getElementById('checkBtn');
-        checkBtn.textContent = '✅ Проверить';
-        checkBtn.className = 'btn';
-        checkBtn.disabled = true;
-        checkBtn.onclick = checkScenario;
-        
-        document.getElementById('resultCard').style.display = 'none';
-        document.getElementById('saveStatus').textContent = '';
-    }
-
-    // ========== 🖱️ ВЫБОР ОШИБКИ ==========
-    function toggleError(idx, element) {
-        if (selectedErrors.includes(idx)) {
-            selectedErrors = selectedErrors.filter(i => i !== idx);
-            element.classList.remove('selected');
-        } else {
-            selectedErrors.push(idx);
-            element.classList.add('selected');
-        }
-        
-        document.getElementById('checkBtn').disabled = selectedErrors.length === 0;
-    }
-
-    // ========== ✅ ПРОВЕРКА СЦЕНАРИЯ ==========
-    function checkScenario() {
-        const scenario = SCENARIOS[currentScenario];
-        const correctErrors = scenario.correctErrors;
-        
-        // Подсвечиваем правильные и неправильные ответы
-        const messages = document.querySelectorAll('.message.seller');
-        messages.forEach((msg) => {
-            const globalIdx = parseInt(msg.dataset.idx);
-            if (correctErrors.includes(globalIdx)) {
-                msg.classList.add('correct');
-            }
-            if (selectedErrors.includes(globalIdx) && !correctErrors.includes(globalIdx)) {
-                msg.classList.add('wrong');
-            }
-        });
-        
-        // Считаем результат
-        const correctFound = selectedErrors.filter(e => correctErrors.includes(e)).length;
-        const wrongFound = selectedErrors.filter(e => !correctErrors.includes(e)).length;
-        
-        const score = Math.max(0, correctFound - wrongFound);
-        const maxScore = correctErrors.length;
-        const percent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 100;
-        
-        // Показываем результат
-        const resultCard = document.getElementById('resultCard');
-        resultCard.style.display = 'block';
-        resultCard.className = `result-card ${percent >= 70 ? 'success' : 'fail'}`;
-        
-        let html = `<h2>${percent >= 70 ? '✅ Отлично!' : '⚠️ Есть над чем поработать'}</h2>`;
-        html += `<p>Найдено ошибок: ${correctFound} из ${maxScore}</p>`;
-        html += `<p>Результат: ${percent}%</p>`;
-        
-        // Объяснения
-        html += '<div style="text-align: left; margin-top: 16px;">';
-        correctErrors.forEach(idx => {
-            const msg = scenario.dialogue[idx];
-            html += `
-                <div class="explanation">
-                    <div class="error-text">❌ Ошибка: "${msg.text}"</div>
-                    <div style="margin-top: 6px;">${msg.explanation}</div>
-                    <div class="rec">📌 ${msg.rec}</div>
-                </div>
-            `;
-        });
-        html += '</div>';
-        
-        resultCard.innerHTML = html;
-        
-        // Сохраняем результат сценария
-        gameResults.push({
-            scenario: scenario.title,
-            score: score,
-            maxScore: maxScore,
-            percent: percent,
-            selectedErrors: selectedErrors,
-            correctErrors: correctErrors
-        });
-        
-        // 🔥 ИЗМЕНЕНИЕ: Меняем кнопку на "Далее" или "Завершить" вместо автоперехода
-        const checkBtn = document.getElementById('checkBtn');
-        if (currentScenario < SCENARIOS.length - 1) {
-            checkBtn.textContent = '➡️ Следующий сценарий';
-            checkBtn.className = 'btn next-btn';
-            checkBtn.disabled = false;
-            checkBtn.onclick = () => {
-                currentScenario++;
-                renderScenario();
-            };
-        } else {
-            checkBtn.textContent = '🏁 Завершить игру и показать результаты';
-            checkBtn.className = 'btn finish-btn';
-            checkBtn.disabled = false;
-            checkBtn.onclick = () => {
-                finishGame();
-            };
-        }
-    }
-
-    // ========== 🏁 ЗАВЕРШЕНИЕ ИГРЫ ==========
-    async function finishGame() {
-        const totalScore = gameResults.reduce((sum, r) => sum + r.score, 0);
-        const maxTotal = gameResults.reduce((sum, r) => sum + r.maxScore, 0);
-        const avgPercent = maxTotal > 0 ? Math.round((totalScore / maxTotal) * 100) : 0;
-        
-        const resultData = {
-            id: Date.now(),
-            type: 'errorfinder',
-            user_name: currentUserName,
-            city: currentUserCity,
-            score: totalScore,
-            total: maxTotal,
-            percent: avgPercent,
-            passed: avgPercent >= 70,
-            scenarios: gameResults,
-            date: new Date().toISOString(),
-            timestamp: new Date().toLocaleString('ru-RU')
-        };
-        
-        // Сохранение в Firebase
-        const statusDiv = document.getElementById('saveStatus');
-        statusDiv.textContent = '⏳ Сохранение...';
-        statusDiv.style.color = '#f59e0b';
-        
-        try {
-            const localBackup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
-            localBackup.push(resultData);
-            localStorage.setItem('errorfinder_backup', JSON.stringify(localBackup));
-            
-            const newRef = db.ref('results/errorfinder').push();
-            await newRef.set(resultData);
-            
-            const backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
-            const filtered = backup.filter(r => r.id !== resultData.id);
-            localStorage.setItem('errorfinder_backup', JSON.stringify(filtered));
-            
-            statusDiv.textContent = '✅ Результат сохранён!';
-            statusDiv.style.color = '#16a34a';
-        } catch(e) {
-            statusDiv.textContent = '⚠️ Сохранено локально';
-            statusDiv.style.color = '#f59e0b';
-        }
-        
-        // Финальный экран
-        const dialogueArea = document.getElementById('dialogueArea');
-        dialogueArea.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <h2>🎉 Игра завершена!</h2>
-                <p style="font-size: 18px;">Ваш результат: <strong>${avgPercent}%</strong></p>
-                <p>Найдено ошибок: ${totalScore} из ${maxTotal}</p>
-                <p style="margin-top: 16px;">${avgPercent >= 70 ? '✅ Отличный результат! Вы хорошо знаете алгоритм продаж.' : '⚠️ Рекомендуем повторить тренажёр и изучить алгоритм продаж.'}</p>
-                <button class="btn" onclick="location.reload()" style="margin-top: 20px; max-width: 300px;">🔄 Пройти ещё раз</button>
-            </div>
-        `;
-        
-        document.getElementById('checkBtn').style.display = 'none';
-    }
-</script>
-
-</body>
-</html>
+                { speaker: "seller", text: "Конечно, это важное решение. А что именно вызывает сомнения? Может быть, размер или дизайн?", error: false },
+                { speaker: "client", text: "Кли
