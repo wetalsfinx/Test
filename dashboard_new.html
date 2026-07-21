@@ -394,6 +394,7 @@
                 <option value="trainer">🎯 Тренировка</option>
                 <option value="crosssell">💰 Допродажи</option>
                 <option value="errorfinder">🔍 Найди ошибку</option>
+                <option value="clienttype">🎭 Адаптация</option>
             </select>
         </div>
         <div class="filter-group">
@@ -442,6 +443,7 @@
             <div class="status-card purple"><div class="label">🎯 Тренировок</div><div class="value" id="sTrainer">0</div></div>
             <div class="status-card gold"><div class="label">💰 Допродаж</div><div class="value" id="sCrosssell">0</div></div>
             <div class="status-card teal"><div class="label">🔍 Найди ошибку</div><div class="value" id="sErrorfinder">0</div></div>
+            <div class="status-card purple"><div class="label">🎭 Адаптация</div><div class="value" id="sClienttype">0</div></div>
             <div class="status-card green"><div class="label">🏆 Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
             <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="sAvg">0%</div></div>
             <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
@@ -628,7 +630,8 @@
                 db.ref('results/test').remove(),
                 db.ref('results/dialog').remove(),
                 db.ref('results/crosssell').remove(),
-                db.ref('results/errorfinder').remove()
+                db.ref('results/errorfinder').remove(),
+                db.ref('results/clienttype').remove()
             ]);
             alert('✅ Все данные удалены!');
             location.reload();
@@ -660,11 +663,12 @@
             const savedPercent = document.getElementById('percentFilter').value;
             const savedSearch = document.getElementById('searchInput').value;
             
-            const [testSnap, dialogSnap, crossSnap, errorSnap] = await Promise.all([
+            const [testSnap, dialogSnap, crossSnap, errorSnap, clientSnap] = await Promise.all([
                 db.ref('results/test').get(),
                 db.ref('results/dialog').get(),
                 db.ref('results/crosssell').get(),
-                db.ref('results/errorfinder').get()
+                db.ref('results/errorfinder').get(),
+                db.ref('results/clienttype').get()
             ]);
             
             let allResults = [];
@@ -692,6 +696,12 @@
                 Object.values(errorData).forEach(item => { item.type = 'errorfinder'; allResults.push(item); });
                 console.log('🔍 Загружено игр "Найди ошибку":', Object.values(errorData).length);
             }
+
+            const clientData = clientSnap.val();
+            if (clientData) {
+                Object.values(clientData).forEach(item => { item.type = 'clienttype'; allResults.push(item); });
+                console.log('🎭 Загружено адаптаций:', Object.values(clientData).length);
+            }
             
             if (!allResults.length) {
                 document.getElementById('status').textContent = 'Нет результатов';
@@ -705,8 +715,8 @@
                 user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
                 score: r.score || 0,
-                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' ? 7 : 11)),
-                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' ? 7 : 11)))) * 100),
+                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' || r.type === 'clienttype' ? 7 : 11)),
+                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' || r.type === 'clienttype' ? 7 : 11)))) * 100),
                 answers: r.answers || [],
                 rules_applied: r.rules_applied || [],
                 scenarios: r.scenarios || [],
@@ -904,7 +914,8 @@
         const fTrainer = filteredData.filter(r => r.type === 'trainer').length;
         const fCrosssell = filteredData.filter(r => r.type === 'crosssell').length;
         const fErrorfinder = filteredData.filter(r => r.type === 'errorfinder').length;
-        document.getElementById('status').textContent = `✅ Показано: ${filteredData.length} (тест: ${fTest}, тренировка: ${fTrainer}, допродажи: ${fCrosssell}, найди ошибку: ${fErrorfinder})`;
+        const fClienttype = filteredData.filter(r => r.type === 'clienttype').length;
+        document.getElementById('status').textContent = `✅ Показано: ${filteredData.length} (тест: ${fTest}, тренировка: ${fTrainer}, допродажи: ${fCrosssell}, найди ошибку: ${fErrorfinder}, адаптация: ${fClienttype})`;
 
         renderDashboard();
         renderAlerts();
@@ -930,7 +941,7 @@
         if (!filteredData.length) {
             document.getElementById('mainTotal').textContent = '0';
             document.getElementById('mainAvg').textContent = '0%';
-            ['sTest','sTrainer','sCrosssell','sErrorfinder','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
+            ['sTest','sTrainer','sCrosssell','sErrorfinder','sClienttype','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
                 document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
             });
             document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
@@ -952,6 +963,7 @@
         const trainerCount = filteredData.filter(r => r.type === 'trainer').length;
         const crosssellCount = filteredData.filter(r => r.type === 'crosssell').length;
         const errorfinderCount = filteredData.filter(r => r.type === 'errorfinder').length;
+        const clienttypeCount = filteredData.filter(r => r.type === 'clienttype').length;
         const low = filteredData.filter(r => r.percent < 70).length;
         const medium = total - success - low;
 
@@ -962,6 +974,7 @@
         document.getElementById('sTrainer').textContent = trainerCount;
         document.getElementById('sCrosssell').textContent = crosssellCount;
         document.getElementById('sErrorfinder').textContent = errorfinderCount;
+        document.getElementById('sClienttype').textContent = clienttypeCount;
         document.getElementById('sSuccess').textContent = success;
         document.getElementById('sAvg').textContent = avg + '%';
         document.getElementById('sLow').textContent = low;
@@ -997,6 +1010,7 @@
             if (r.type === 'trainer') badgeClass = 'badge-purple';
             else if (r.type === 'crosssell') badgeClass = 'badge-gold';
             else if (r.type === 'errorfinder') badgeClass = 'badge-blue';
+            else if (r.type === 'clienttype') badgeClass = 'badge-purple';
             return `
             <div class="employee-item" onclick="showDetails(${r.id})">
                 <span><b>${i+1}.</b> ${r.user_name} (${r.city})</span>
@@ -1072,6 +1086,7 @@
             if (r.type === 'trainer') badgeClass = 'badge-purple';
             else if (r.type === 'crosssell') badgeClass = 'badge-gold';
             else if (r.type === 'errorfinder') badgeClass = 'badge-blue';
+            else if (r.type === 'clienttype') badgeClass = 'badge-purple';
             else if (r.percent < 70) badgeClass = 'badge-red';
             else if (r.percent < 85) badgeClass = 'badge-yellow';
             
@@ -1109,6 +1124,7 @@
             else if (record.type === 'trainer') path = 'results/dialog';
             else if (record.type === 'crosssell') path = 'results/crosssell';
             else if (record.type === 'errorfinder') path = 'results/errorfinder';
+            else if (record.type === 'clienttype') path = 'results/clienttype';
             
             if (path) {
                 const snapshot = await db.ref(path).get();
@@ -1145,6 +1161,7 @@
         if (emp.type === 'trainer') typeLabel = '🎯 Тренировка';
         else if (emp.type === 'crosssell') typeLabel = '💰 Допродажи';
         else if (emp.type === 'errorfinder') typeLabel = '🔍 Найди ошибку';
+        else if (emp.type === 'clienttype') typeLabel = '🎭 Адаптация';
         
         document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}% [${typeLabel}]`;
         let html = `<div class="modal-summary">✅ Результат: ${emp.score} из ${emp.total} (${emp.percent}%)</div>`;
@@ -1174,6 +1191,16 @@
                     html += `<div class="rule-item ${s.percent >= 70 ? '' : 'failed'}">
                         <div class="rule-name">${idx + 1}. ${s.scenario}</div>
                         <div class="rule-status">Найдено ошибок: ${s.score}/${s.maxScore} (Результат: ${s.percent}%)</div>
+                    </div>`;
+                });
+            }
+        } else if (emp.type === 'clienttype') {
+            html += `<h4 style="margin:12px 0 8px;">Результаты по сценариям:</h4>`;
+            if (emp.scenarios && emp.scenarios.length) {
+                emp.scenarios.forEach((s, idx) => {
+                    html += `<div class="rule-item ${s.isCorrect ? '' : 'failed'}">
+                        <div class="rule-name">${idx + 1}. ${s.scenario}</div>
+                        <div class="rule-status">${s.isCorrect ? '✅ Верно' : '❌ Неверно'}</div>
                     </div>`;
                 });
             }
@@ -1555,6 +1582,7 @@ ${content}
             if (r.type === 'trainer') typeLabel = 'Тренировка';
             else if (r.type === 'crosssell') typeLabel = 'Допродажи';
             else if (r.type === 'errorfinder') typeLabel = 'Найди ошибку';
+            else if (r.type === 'clienttype') typeLabel = 'Адаптация';
             csv += `"${typeLabel}","${r.user_name}","${r.city}",${r.score},${r.total},${r.percent}%\n`;
         });
         const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
