@@ -109,8 +109,15 @@
             font-weight: bold;
             cursor: pointer;
             width: 100%;
+            transition: 0.2s;
         }
+        .btn:hover { background: #a0162e; }
         .btn:disabled { background: #e8a0b4; cursor: not-allowed; }
+        .btn.next-btn { background: #3b82f6; }
+        .btn.next-btn:hover { background: #2563eb; }
+        .btn.finish-btn { background: #16a34a; }
+        .btn.finish-btn:hover { background: #15803d; }
+        
         .result-card {
             padding: 18px;
             margin: 16px 18px;
@@ -160,7 +167,7 @@
                 <div class="progress">Сценарий <span id="scenarioNum">1</span> из <span id="totalScenarios">7</span></div>
                 <div class="dialogue-area" id="dialogueArea"></div>
                 <div class="controls">
-                    <button class="btn" id="checkBtn" disabled>Проверить</button>
+                    <button class="btn" id="checkBtn" disabled>✅ Проверить</button>
                 </div>
                 <div id="resultCard" class="result-card" style="display: none;"></div>
                 <div id="saveStatus" class="save-status"></div>
@@ -275,14 +282,14 @@
         }
     ];
 
-    // ==========  СОСТОЯНИЕ ИГРЫ ==========
+    // ========== 🎮 СОСТОЯНИЕ ИГРЫ ==========
     let currentScenario = 0;
     let selectedErrors = [];
     let gameResults = [];
     let currentUserName = '';
     let currentUserCity = '';
 
-    // ==========  ЗАПУСК ИГРЫ ==========
+    // ========== 🚀 ЗАПУСК ИГРЫ ==========
     document.getElementById('startGameBtn').onclick = () => {
         const name = document.getElementById('userName').value.trim();
         const city = document.getElementById('userCity').value;
@@ -320,19 +327,25 @@
             }
             
             msgDiv.innerHTML = `
-                <div class="speaker">${msg.speaker === 'client' ? '👤 Клиент' : ' Продавец'}</div>
+                <div class="speaker">${msg.speaker === 'client' ? '👤 Клиент' : '👨‍💼 Продавец'}</div>
                 <div>${msg.text}</div>
             `;
             
             dialogueArea.appendChild(msgDiv);
         });
         
-        document.getElementById('checkBtn').disabled = true;
+        // Сброс кнопки в исходное состояние
+        const checkBtn = document.getElementById('checkBtn');
+        checkBtn.textContent = '✅ Проверить';
+        checkBtn.className = 'btn';
+        checkBtn.disabled = true;
+        checkBtn.onclick = checkScenario;
+        
         document.getElementById('resultCard').style.display = 'none';
         document.getElementById('saveStatus').textContent = '';
     }
 
-    // ==========  ВЫБОР ОШИБКИ ==========
+    // ========== 🖱️ ВЫБОР ОШИБКИ ==========
     function toggleError(idx, element) {
         if (selectedErrors.includes(idx)) {
             selectedErrors = selectedErrors.filter(i => i !== idx);
@@ -345,14 +358,14 @@
         document.getElementById('checkBtn').disabled = selectedErrors.length === 0;
     }
 
-    // ========== ✅ ПРОВЕРКА ==========
-    document.getElementById('checkBtn').onclick = async () => {
+    // ========== ✅ ПРОВЕРКА СЦЕНАРИЯ ==========
+    function checkScenario() {
         const scenario = SCENARIOS[currentScenario];
         const correctErrors = scenario.correctErrors;
         
         // Подсвечиваем правильные и неправильные ответы
         const messages = document.querySelectorAll('.message.seller');
-        messages.forEach((msg, idx) => {
+        messages.forEach((msg) => {
             const globalIdx = parseInt(msg.dataset.idx);
             if (correctErrors.includes(globalIdx)) {
                 msg.classList.add('correct');
@@ -365,11 +378,10 @@
         // Считаем результат
         const correctFound = selectedErrors.filter(e => correctErrors.includes(e)).length;
         const wrongFound = selectedErrors.filter(e => !correctErrors.includes(e)).length;
-        const missedErrors = correctErrors.filter(e => !selectedErrors.includes(e)).length;
         
         const score = Math.max(0, correctFound - wrongFound);
         const maxScore = correctErrors.length;
-        const percent = Math.round((score / maxScore) * 100);
+        const percent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 100;
         
         // Показываем результат
         const resultCard = document.getElementById('resultCard');
@@ -386,7 +398,7 @@
             const msg = scenario.dialogue[idx];
             html += `
                 <div class="explanation">
-                    <div class="error-text">❌ Ошибка: ${msg.text}</div>
+                    <div class="error-text">❌ Ошибка: "${msg.text}"</div>
                     <div style="margin-top: 6px;">${msg.explanation}</div>
                     <div class="rec">📌 ${msg.rec}</div>
                 </div>
@@ -396,7 +408,7 @@
         
         resultCard.innerHTML = html;
         
-        // Сохраняем результат
+        // Сохраняем результат сценария
         gameResults.push({
             scenario: scenario.title,
             score: score,
@@ -406,22 +418,31 @@
             correctErrors: correctErrors
         });
         
-        // Переход к следующему сценарию или завершение
-        setTimeout(() => {
-            if (currentScenario < SCENARIOS.length - 1) {
+        // 🔥 ИЗМЕНЕНИЕ: Меняем кнопку на "Далее" или "Завершить" вместо автоперехода
+        const checkBtn = document.getElementById('checkBtn');
+        if (currentScenario < SCENARIOS.length - 1) {
+            checkBtn.textContent = '➡️ Следующий сценарий';
+            checkBtn.className = 'btn next-btn';
+            checkBtn.disabled = false;
+            checkBtn.onclick = () => {
                 currentScenario++;
                 renderScenario();
-            } else {
+            };
+        } else {
+            checkBtn.textContent = '🏁 Завершить игру и показать результаты';
+            checkBtn.className = 'btn finish-btn';
+            checkBtn.disabled = false;
+            checkBtn.onclick = () => {
                 finishGame();
-            }
-        }, 5000);
-    };
+            };
+        }
+    }
 
     // ========== 🏁 ЗАВЕРШЕНИЕ ИГРЫ ==========
     async function finishGame() {
         const totalScore = gameResults.reduce((sum, r) => sum + r.score, 0);
         const maxTotal = gameResults.reduce((sum, r) => sum + r.maxScore, 0);
-        const avgPercent = Math.round((totalScore / maxTotal) * 100);
+        const avgPercent = maxTotal > 0 ? Math.round((totalScore / maxTotal) * 100) : 0;
         
         const resultData = {
             id: Date.now(),
