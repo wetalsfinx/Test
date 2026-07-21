@@ -125,7 +125,7 @@
 
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 12px;
             margin-bottom: 20px;
         }
@@ -393,6 +393,7 @@
                 <option value="test">📝 Тест</option>
                 <option value="trainer">🎯 Тренировка</option>
                 <option value="crosssell">💰 Допродажи</option>
+                <option value="errorfinder">🔍 Найди ошибку</option>
             </select>
         </div>
         <div class="filter-group">
@@ -440,6 +441,7 @@
             <div class="status-card blue"><div class="label">📝 Тестов</div><div class="value" id="sTest">0</div></div>
             <div class="status-card purple"><div class="label">🎯 Тренировок</div><div class="value" id="sTrainer">0</div></div>
             <div class="status-card gold"><div class="label">💰 Допродаж</div><div class="value" id="sCrosssell">0</div></div>
+            <div class="status-card teal"><div class="label">🔍 Найди ошибку</div><div class="value" id="sErrorfinder">0</div></div>
             <div class="status-card green"><div class="label">🏆 Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
             <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="sAvg">0%</div></div>
             <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
@@ -625,7 +627,8 @@
             await Promise.all([
                 db.ref('results/test').remove(),
                 db.ref('results/dialog').remove(),
-                db.ref('results/crosssell').remove()
+                db.ref('results/crosssell').remove(),
+                db.ref('results/errorfinder').remove()
             ]);
             alert('✅ Все данные удалены!');
             location.reload();
@@ -657,10 +660,11 @@
             const savedPercent = document.getElementById('percentFilter').value;
             const savedSearch = document.getElementById('searchInput').value;
             
-            const [testSnap, dialogSnap, crossSnap] = await Promise.all([
+            const [testSnap, dialogSnap, crossSnap, errorSnap] = await Promise.all([
                 db.ref('results/test').get(),
                 db.ref('results/dialog').get(),
-                db.ref('results/crosssell').get()
+                db.ref('results/crosssell').get(),
+                db.ref('results/errorfinder').get()
             ]);
             
             let allResults = [];
@@ -682,6 +686,12 @@
                 Object.values(crossData).forEach(item => { item.type = 'crosssell'; allResults.push(item); });
                 console.log('💰 Загружено допродаж:', Object.values(crossData).length);
             }
+
+            const errorData = errorSnap.val();
+            if (errorData) {
+                Object.values(errorData).forEach(item => { item.type = 'errorfinder'; allResults.push(item); });
+                console.log('🔍 Загружено игр "Найди ошибку":', Object.values(errorData).length);
+            }
             
             if (!allResults.length) {
                 document.getElementById('status').textContent = 'Нет результатов';
@@ -695,10 +705,11 @@
                 user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
                 score: r.score || 0,
-                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : 11),
-                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : 11))) * 100),
+                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' ? 7 : 11)),
+                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' ? 7 : 11)))) * 100),
                 answers: r.answers || [],
                 rules_applied: r.rules_applied || [],
+                scenarios: r.scenarios || [],
                 date: r.date || new Date().toISOString()
             }));
             
@@ -727,8 +738,6 @@
 
     function renderTrendChart() {
         const map = new Map();
-        
-        // 🔥 ИСПРАВЛЕНО: используем filteredData вместо allData
         filteredData.forEach(r => {
             const d = new Date(r.date).toLocaleDateString('ru-RU');
             if (!map.has(d)) map.set(d, { sum: 0, count: 0 });
@@ -737,7 +746,6 @@
             v.count++;
         });
         
-        // 🔥 ИСПРАВЛЕНО: правильная сортировка дат
         const dates = [...map.keys()].sort((a, b) => {
             const [da, ma, ya] = a.split('.').map(Number);
             const [db, mb, yb] = b.split('.').map(Number);
@@ -808,7 +816,6 @@
 
     function renderCityStats() {
         const map = new Map();
-        // 🔥 ИСПРАВЛЕНО: используем filteredData, чтобы таблица городов тоже уважала фильтры
         filteredData.forEach(r => {
             if (!map.has(r.city)) {
                 map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0, testQe: new Array(11).fill(0), trainerRules: {}, crosssellRules: {} });
@@ -879,31 +886,31 @@
     }
 
     function applyFilters() {
-    let filtered = [...allData];
-    const type = document.getElementById('typeFilter').value;
-    if (type !== 'all') filtered = filtered.filter(r => r.type === type);
-    const city = document.getElementById('cityFilter').value;
-    if (city !== 'all') filtered = filtered.filter(r => r.city === city);
-    const percent = document.getElementById('percentFilter').value;
-    if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
-    else if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
-    else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
-    const search = document.getElementById('searchInput').value.toLowerCase().trim();
-    if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
-    
-    filteredData = filtered;
-    
-    // Обновляем текст статуса
-    const fTest = filteredData.filter(r => r.type === 'test').length;
-    const fTrainer = filteredData.filter(r => r.type === 'trainer').length;
-    const fCrosssell = filteredData.filter(r => r.type === 'crosssell').length;
-    document.getElementById('status').textContent = `✅ Показано: ${filteredData.length} (тест: ${fTest}, тренировка: ${fTrainer}, допродажи: ${fCrosssell})`;
+        let filtered = [...allData];
+        const type = document.getElementById('typeFilter').value;
+        if (type !== 'all') filtered = filtered.filter(r => r.type === type);
+        const city = document.getElementById('cityFilter').value;
+        if (city !== 'all') filtered = filtered.filter(r => r.city === city);
+        const percent = document.getElementById('percentFilter').value;
+        if (percent === '85') filtered = filtered.filter(r => r.percent >= 85);
+        else if (percent === '70') filtered = filtered.filter(r => r.percent >= 70);
+        else if (percent === '50') filtered = filtered.filter(r => r.percent < 50);
+        const search = document.getElementById('searchInput').value.toLowerCase().trim();
+        if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
+        
+        filteredData = filtered;
+        
+        const fTest = filteredData.filter(r => r.type === 'test').length;
+        const fTrainer = filteredData.filter(r => r.type === 'trainer').length;
+        const fCrosssell = filteredData.filter(r => r.type === 'crosssell').length;
+        const fErrorfinder = filteredData.filter(r => r.type === 'errorfinder').length;
+        document.getElementById('status').textContent = `✅ Показано: ${filteredData.length} (тест: ${fTest}, тренировка: ${fTrainer}, допродажи: ${fCrosssell}, найди ошибку: ${fErrorfinder})`;
 
-    renderDashboard();
-    renderAlerts();
-    renderTrendChart();
-    renderCityStats(); // 🔥 ТЕПЕРЬ ТАБЛИЦА ГОРОДОВ ТОЖЕ ОБНОВЛЯЕТСЯ!
-}
+        renderDashboard();
+        renderAlerts();
+        renderTrendChart();
+        renderCityStats();
+    }
 
     function renderAlerts() {
         const container = document.getElementById('alertContainer');
@@ -919,178 +926,173 @@
         }
     }
 
- function renderDashboard() {
-    // 1. ЕСЛИ ДАННЫХ НЕТ — УНИЧТОЖАЕМ ВСЕ ГРАФИКИ И ОЧИЩАЕМ ЭКРАН
-    if (!filteredData.length) {
-        document.getElementById('mainTotal').textContent = '0';
-        document.getElementById('mainAvg').textContent = '0%';
-        ['sTest','sTrainer','sCrosssell','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
-            document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
-        });
-        document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
-        document.getElementById('employeeList').innerHTML = '<div class="empty">Нет данных</div>';
-        document.getElementById('empCount').textContent = '0';
-        
-        // Уничтожаем графики, чтобы не показывали старые закэшированные данные
-        if (pieChart) { pieChart.destroy(); pieChart = null; }
-        if (cityBarChart) { cityBarChart.destroy(); cityBarChart = null; }
-        if (scoreBarChart) { scoreBarChart.destroy(); scoreBarChart = null; }
-        
-        return;
-    }
+    function renderDashboard() {
+        if (!filteredData.length) {
+            document.getElementById('mainTotal').textContent = '0';
+            document.getElementById('mainAvg').textContent = '0%';
+            ['sTest','sTrainer','sCrosssell','sErrorfinder','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
+                document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
+            });
+            document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
+            document.getElementById('employeeList').innerHTML = '<div class="empty">Нет данных</div>';
+            document.getElementById('empCount').textContent = '0';
+            
+            if (pieChart) { pieChart.destroy(); pieChart = null; }
+            if (cityBarChart) { cityBarChart.destroy(); cityBarChart = null; }
+            if (scoreBarChart) { scoreBarChart.destroy(); scoreBarChart = null; }
+            
+            return;
+        }
 
-    // 2. РАСЧЁТ СТАТИСТИКИ
-    const total = filteredData.length;
-    const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
-    const success = filteredData.filter(r => r.percent >= 85).length;
-    const errors = filteredData.reduce((s,r) => s + (r.total - r.score), 0);
-    const testCount = filteredData.filter(r => r.type === 'test').length;
-    const trainerCount = filteredData.filter(r => r.type === 'trainer').length;
-    const crosssellCount = filteredData.filter(r => r.type === 'crosssell').length;
-    const low = filteredData.filter(r => r.percent < 70).length;
-    const medium = total - success - low;
+        const total = filteredData.length;
+        const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
+        const success = filteredData.filter(r => r.percent >= 85).length;
+        const errors = filteredData.reduce((s,r) => s + (r.total - r.score), 0);
+        const testCount = filteredData.filter(r => r.type === 'test').length;
+        const trainerCount = filteredData.filter(r => r.type === 'trainer').length;
+        const crosssellCount = filteredData.filter(r => r.type === 'crosssell').length;
+        const errorfinderCount = filteredData.filter(r => r.type === 'errorfinder').length;
+        const low = filteredData.filter(r => r.percent < 70).length;
+        const medium = total - success - low;
 
-    document.getElementById('mainTotal').textContent = total;
-    document.getElementById('mainAvg').textContent = avg + '%';
-    document.getElementById('mainAvg').style.color = avg >= 85 ? '#16a34a' : avg >= 70 ? '#f59e0b' : '#dc2626';
-    document.getElementById('sTest').textContent = testCount;
-    document.getElementById('sTrainer').textContent = trainerCount;
-    document.getElementById('sCrosssell').textContent = crosssellCount;
-    document.getElementById('sSuccess').textContent = success;
-    document.getElementById('sAvg').textContent = avg + '%';
-    document.getElementById('sLow').textContent = low;
-    document.getElementById('sErrors').textContent = errors;
+        document.getElementById('mainTotal').textContent = total;
+        document.getElementById('mainAvg').textContent = avg + '%';
+        document.getElementById('mainAvg').style.color = avg >= 85 ? '#16a34a' : avg >= 70 ? '#f59e0b' : '#dc2626';
+        document.getElementById('sTest').textContent = testCount;
+        document.getElementById('sTrainer').textContent = trainerCount;
+        document.getElementById('sCrosssell').textContent = crosssellCount;
+        document.getElementById('sErrorfinder').textContent = errorfinderCount;
+        document.getElementById('sSuccess').textContent = success;
+        document.getElementById('sAvg').textContent = avg + '%';
+        document.getElementById('sLow').textContent = low;
+        document.getElementById('sErrors').textContent = errors;
 
-    // 3. ГРАФИК: СООТНОШЕНИЕ РЕЗУЛЬТАТОВ (Pie Chart)
-    if (pieChart) pieChart.destroy();
-    const pieCtx = document.getElementById('pieChart').getContext('2d');
-    if (total > 0) {
-        pieChart = new Chart(pieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['✅ Успешно (≥85%)', '⚠️ Средне (70-84%)', '❌ Низкий (<70%)'],
-                datasets: [{
-                    data: [success, medium, low],
-                    backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'],
-                    borderColor: ['white', 'white', 'white'],
-                    borderWidth: 2,
-                    hoverOffset: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                cutout: '60%',
-                plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11, weight: '500' }, usePointStyle: true } } }
-            }
-        });
-    }
-
-    // 4. СПИСОК: ТОП СОТРУДНИКОВ
-    const top5 = [...filteredData].filter(r => r.percent >= 85).sort((a,b) => b.percent - a.percent).slice(0,5);
-    document.getElementById('topList').innerHTML = top5.length ? top5.map((r,i) => {
-        let badgeClass = 'badge-green';
-        if (r.type === 'trainer') badgeClass = 'badge-purple';
-        else if (r.type === 'crosssell') badgeClass = 'badge-gold';
-        return `
-        <div class="employee-item" onclick="showDetails(${r.id})">
-            <span><b>${i+1}.</b> ${r.user_name} (${r.city})</span>
-            <span class="badge ${badgeClass}">${r.percent}%</span>
-        </div>
-    `;}).join('') : '<div class="empty">Нет данных</div>';
-
-    // 5. ГРАФИК: РЕЙТИНГ ГОРОДОВ (Bar Chart)
-    const cityMap = new Map();
-    filteredData.forEach(r => {
-        if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
-        const c = cityMap.get(r.city);
-        c.sum += r.percent; c.count++;
-    });
-    const cityRating = [...cityMap.entries()].map(([city, d]) => ({ city, avg: Math.round(d.sum/d.count), count: d.count })).sort((a,b) => b.avg - a.avg);
-
-    if (cityBarChart) cityBarChart.destroy();
-    const cityCtx = document.getElementById('cityBarChart').getContext('2d');
-    if (cityCtx && cityRating.length > 0) {
-        cityBarChart = new Chart(cityCtx, {
-            type: 'bar',
-            data: {
-                labels: cityRating.map(c => c.city),
-                datasets: [{
-                    label: 'Средний балл (%)',
-                    data: cityRating.map(c => c.avg),
-                    backgroundColor: cityRating.map(c => c.avg >= 85 ? '#16a34a' : c.avg >= 70 ? '#f59e0b' : '#dc2626'),
-                    borderRadius: 4,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
-                    y: { grid: { display: false } }
+        if (pieChart) pieChart.destroy();
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        if (total > 0) {
+            pieChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['✅ Успешно (≥85%)', '⚠️ Средне (70-84%)', '❌ Низкий (<70%)'],
+                    datasets: [{
+                        data: [success, medium, low],
+                        backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'],
+                        borderColor: ['white', 'white', 'white'],
+                        borderWidth: 2,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11, weight: '500' }, usePointStyle: true } } }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // 6. ГРАФИК: РАСПРЕДЕЛЕНИЕ БАЛЛОВ (Score Bar Chart)
-    const bins = [0,0,0,0,0];
-    filteredData.forEach(r => {
-        if (r.percent <= 20) bins[0]++;
-        else if (r.percent <= 40) bins[1]++;
-        else if (r.percent <= 60) bins[2]++;
-        else if (r.percent <= 80) bins[3]++;
-        else bins[4]++;
-    });
-    if (scoreBarChart) scoreBarChart.destroy();
-    const scoreCtx = document.getElementById('scoreBarChart').getContext('2d');
-    if (scoreCtx) {
-        scoreBarChart = new Chart(scoreCtx, {
-            type: 'bar',
-            data: {
-                labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
-                datasets: [{ data: bins, backgroundColor: '#c41e3a', borderRadius: 4, borderSkipped: false }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
-            }
-        });
-    }
-
-    // 7. СПИСОК: ВСЕ СОТРУДНИКИ (С ДОБАВЛЕНИЕМ ДАТЫ!)
-    document.getElementById('empCount').textContent = filteredData.length;
-    document.getElementById('employeeList').innerHTML = filteredData.map(r => {
-        let badgeClass = 'badge-green';
-        if (r.type === 'trainer') badgeClass = 'badge-purple';
-        else if (r.type === 'crosssell') badgeClass = 'badge-gold';
-        else if (r.percent < 70) badgeClass = 'badge-red';
-        else if (r.percent < 85) badgeClass = 'badge-yellow';
-        
-        // 🔥 ФОРМАТИРОВАНИЕ ДАТЫ (ДД.ММ.ГГГГ)
-        const dateStr = new Date(r.date).toLocaleDateString('ru-RU', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-        
-        return `
-        <div class="employee-item" onclick="showDetails(${r.id})">
-            <div style="flex:1;cursor:pointer;">
-                <b>${r.user_name}</b> (${r.city}) 
-                <span style="color:#666; font-size:12px; margin: 0 8px;">${dateStr}</span>
+        const top5 = [...filteredData].filter(r => r.percent >= 85).sort((a,b) => b.percent - a.percent).slice(0,5);
+        document.getElementById('topList').innerHTML = top5.length ? top5.map((r,i) => {
+            let badgeClass = 'badge-green';
+            if (r.type === 'trainer') badgeClass = 'badge-purple';
+            else if (r.type === 'crosssell') badgeClass = 'badge-gold';
+            else if (r.type === 'errorfinder') badgeClass = 'badge-blue';
+            return `
+            <div class="employee-item" onclick="showDetails(${r.id})">
+                <span><b>${i+1}.</b> ${r.user_name} (${r.city})</span>
                 <span class="badge ${badgeClass}">${r.percent}%</span>
             </div>
-            <button class="btn" style="padding:0 10px;background:transparent;color:#dc2626;border:1px solid #fecaca;border-radius:4px;cursor:pointer;" onclick="event.stopPropagation(); deleteRow(${r.id})">✕</button>
-        </div>
-        `;
-    }).join('');
-}
+        `;}).join('') : '<div class="empty">Нет данных</div>';
+
+        const cityMap = new Map();
+        filteredData.forEach(r => {
+            if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
+            const c = cityMap.get(r.city);
+            c.sum += r.percent; c.count++;
+        });
+        const cityRating = [...cityMap.entries()].map(([city, d]) => ({ city, avg: Math.round(d.sum/d.count), count: d.count })).sort((a,b) => b.avg - a.avg);
+
+        if (cityBarChart) cityBarChart.destroy();
+        const cityCtx = document.getElementById('cityBarChart').getContext('2d');
+        if (cityCtx && cityRating.length > 0) {
+            cityBarChart = new Chart(cityCtx, {
+                type: 'bar',
+                data: {
+                    labels: cityRating.map(c => c.city),
+                    datasets: [{
+                        label: 'Средний балл (%)',
+                        data: cityRating.map(c => c.avg),
+                        backgroundColor: cityRating.map(c => c.avg >= 85 ? '#16a34a' : c.avg >= 70 ? '#f59e0b' : '#dc2626'),
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        const bins = [0,0,0,0,0];
+        filteredData.forEach(r => {
+            if (r.percent <= 20) bins[0]++;
+            else if (r.percent <= 40) bins[1]++;
+            else if (r.percent <= 60) bins[2]++;
+            else if (r.percent <= 80) bins[3]++;
+            else bins[4]++;
+        });
+        if (scoreBarChart) scoreBarChart.destroy();
+        const scoreCtx = document.getElementById('scoreBarChart').getContext('2d');
+        if (scoreCtx) {
+            scoreBarChart = new Chart(scoreCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+                    datasets: [{ data: bins, backgroundColor: '#c41e3a', borderRadius: 4, borderSkipped: false }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        document.getElementById('empCount').textContent = filteredData.length;
+        document.getElementById('employeeList').innerHTML = filteredData.map(r => {
+            let badgeClass = 'badge-green';
+            if (r.type === 'trainer') badgeClass = 'badge-purple';
+            else if (r.type === 'crosssell') badgeClass = 'badge-gold';
+            else if (r.type === 'errorfinder') badgeClass = 'badge-blue';
+            else if (r.percent < 70) badgeClass = 'badge-red';
+            else if (r.percent < 85) badgeClass = 'badge-yellow';
+            
+            const dateStr = new Date(r.date).toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+            
+            return `
+            <div class="employee-item" onclick="showDetails(${r.id})">
+                <div style="flex:1;cursor:pointer;">
+                    <b>${r.user_name}</b> (${r.city}) 
+                    <span style="color:#666; font-size:12px; margin: 0 8px;">${dateStr}</span>
+                    <span class="badge ${badgeClass}">${r.percent}%</span>
+                </div>
+                <button class="btn" style="padding:0 10px;background:transparent;color:#dc2626;border:1px solid #fecaca;border-radius:4px;cursor:pointer;" onclick="event.stopPropagation(); deleteRow(${r.id})">✕</button>
+            </div>
+            `;
+        }).join('');
+    }
 
     async function deleteRow(id) {
         if (!confirm('Удалить этот результат навсегда?')) return;
@@ -1106,6 +1108,7 @@
             if (record.type === 'test') path = 'results/test';
             else if (record.type === 'trainer') path = 'results/dialog';
             else if (record.type === 'crosssell') path = 'results/crosssell';
+            else if (record.type === 'errorfinder') path = 'results/errorfinder';
             
             if (path) {
                 const snapshot = await db.ref(path).get();
@@ -1141,9 +1144,10 @@
         let typeLabel = '📝 Тест';
         if (emp.type === 'trainer') typeLabel = '🎯 Тренировка';
         else if (emp.type === 'crosssell') typeLabel = '💰 Допродажи';
+        else if (emp.type === 'errorfinder') typeLabel = '🔍 Найди ошибку';
         
         document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}% [${typeLabel}]`;
-        let html = `<div class="modal-summary">✅ Правильных: ${emp.score} из ${emp.total}</div>`;
+        let html = `<div class="modal-summary">✅ Результат: ${emp.score} из ${emp.total} (${emp.percent}%)</div>`;
         
         if (emp.type === 'trainer') {
             html += `<h4 style="margin:12px 0 8px;">Применённые правила:</h4>`;
@@ -1163,6 +1167,16 @@
                     ${!applied ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:4px;">📌 ${rule.rec}</div>` : ''}
                 </div>`;
             });
+        } else if (emp.type === 'errorfinder') {
+            html += `<h4 style="margin:12px 0 8px;">Результаты по сценариям:</h4>`;
+            if (emp.scenarios && emp.scenarios.length) {
+                emp.scenarios.forEach((s, idx) => {
+                    html += `<div class="rule-item ${s.percent >= 70 ? '' : 'failed'}">
+                        <div class="rule-name">${idx + 1}. ${s.scenario}</div>
+                        <div class="rule-status">Найдено ошибок: ${s.score}/${s.maxScore} (Результат: ${s.percent}%)</div>
+                    </div>`;
+                });
+            }
         } else {
             if (emp.answers && emp.answers.length) {
                 emp.answers.forEach((a) => {
@@ -1540,6 +1554,7 @@ ${content}
             let typeLabel = 'Тест';
             if (r.type === 'trainer') typeLabel = 'Тренировка';
             else if (r.type === 'crosssell') typeLabel = 'Допродажи';
+            else if (r.type === 'errorfinder') typeLabel = 'Найди ошибку';
             csv += `"${typeLabel}","${r.user_name}","${r.city}",${r.score},${r.total},${r.percent}%\n`;
         });
         const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
@@ -1551,7 +1566,6 @@ ${content}
 
     function exportCityCSV() {
         const map = new Map();
-        // 🔥 ИСПРАВЛЕНО: используем filteredData для экспорта
         filteredData.forEach(r => {
             if (!map.has(r.city)) map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0 });
             const c = map.get(r.city);
@@ -1585,7 +1599,6 @@ ${content}
     document.getElementById('exportCityBtn').onclick = exportCityCSV;
     document.getElementById('generateFeedbackBtn').onclick = generateFeedback;
 
-    // Автообновление каждые 30 секунд
     setInterval(() => {
         console.log('🔄 Автообновление дашборда...');
         loadResults();
