@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>585GOLD | Найди ошибку в диалоге</title>
     
-    <!-- 🔥 FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
@@ -158,7 +157,7 @@
                 <option value="Калининград">Калининград</option>
                 <option value="Нижний Тагил">Нижний Тагил</option>
             </select>
-           <button onclick="startGame()">Начать игру</button>
+            <button onclick="startGame()">Начать игру</button>
         </div>
 
         <div id="gameContainer" style="display: none;">
@@ -189,6 +188,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // ========== 🎮 СОСТОЯНИЕ ИГРЫ ==========
+    let currentScenario = 0;
+    let selectedErrors = [];
+    let gameResults = [];
+    let currentUserName = '';
+    let currentUserCity = '';
+
+    // ========== 🚀 ФУНКЦИЯ ЗАПУСКА ИГРЫ ==========
+    function startGame() {
+        console.log(' Кнопка нажата!');
+        const name = document.getElementById('userName').value.trim();
+        const city = document.getElementById('userCity').value;
+        
+        console.log('Имя:', name, 'Город:', city);
+        
+        if (!name) {
+            alert('Введите имя');
+            return;
+        }
+        if (!city) {
+            alert('Выберите город');
+            return;
+        }
+        
+        currentUserName = name;
+        currentUserCity = city;
+        currentScenario = 0;
+        gameResults = [];
+        
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('gameContainer').style.display = 'block';
+        document.getElementById('totalScenarios').textContent = SCENARIOS.length;
+        
+        renderScenario();
+    }
+
     // ========== 🔄 АВТОДОЗАГРУЗКА ==========
     window.addEventListener('load', async () => {
         const backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
@@ -207,7 +242,7 @@
         }
     });
 
-    // ========== 📚 СЦЕНАРИИ (СМЕШАННЫЕ: ПРАВИЛЬНЫЕ + ОШИБОЧНЫЕ) ==========
+    // ========== 📚 СЦЕНАРИИ ==========
     const SCENARIOS = [
         {
             title: "Холодный клиент",
@@ -257,4 +292,213 @@
             dialogue: [
                 { speaker: "client", text: "Клиент посмотрел несколько колец и говорит: «Мне нужно подумать, я позже зайду»." },
                 { speaker: "seller", text: "Конечно, это важное решение. А что именно вызывает сомнения? Может быть, размер или дизайн?", error: false },
-                { speaker: "client", text: "Кли
+                { speaker: "client", text: "Клиент: «Да нет, всё нормально, просто нужно время»." },
+                { speaker: "seller", text: "Хорошо, будем ждать вас! Вот моя визитка.", error: true, explanation: "Продавец пассивно отпускает клиента, не предлагая конкретного следующего шага (бронь, замер размера, каталог).", rec: "Предложите действие: «Давайте я запишу ваш размер, и мы сможем быстро оформить покупку, когда вы вернётесь. Или могу отправить каталог в WhatsApp»." }
+            ],
+            correctErrors: [3]
+        },
+        {
+            title: "А что есть ещё?",
+            dialogue: [
+                { speaker: "client", text: "Клиентка: «Мне нравится это кольцо, но покажу-ка я ещё что-нибудь»." },
+                { speaker: "seller", text: "С удовольствием! А что именно вам понравилось в этой модели: камень, форма шинки или плетение?", error: false },
+                { speaker: "client", text: "Клиентка: «Ну, мне нравится, что оно не слишком широкое и легкое»." },
+                { speaker: "seller", text: "Понял! Вот ещё 10 массивных колец из этой витрины, посмотрите все, вдруг что-то приглянется.", error: true, explanation: "Продавец полностью проигнорировал критерий клиента («не слишком широкое») и показывает всё подряд.", rec: "Сузьте выбор на основе критериев: «Тогда давайте посмотрим эти 2-3 изящные модели, они как раз легкие и аккуратные»." }
+            ],
+            correctErrors: [3]
+        },
+        {
+            title: "Беру",
+            dialogue: [
+                { speaker: "client", text: "Клиентка: «Всё, беру это кольцо!»" },
+                { speaker: "seller", text: "Отлично! Сейчас пробьем чек.", error: true, explanation: "Продавец упустил золотую возможность для допродажи (футляр, средство для ухода, серьги из той же коллекции).", rec: "Скажите: «Отличный выбор! Давайте подберём к кольцу футляр и средство для ухода, чтобы оно всегда сияло. Или, может быть, серьги из этой же коллекции?»" },
+                { speaker: "client", text: "Клиентка: «Нет, спасибо, только кольцо»." },
+                { speaker: "seller", text: "Хорошо, тогда пройдем к кассе. Вам упаковать в фирменный пакет?", error: false }
+            ],
+            correctErrors: [1]
+        }
+    ];
+
+    // ========== 📖 РЕНДЕР СЦЕНАРИЯ ==========
+    function renderScenario() {
+        const scenario = SCENARIOS[currentScenario];
+        document.getElementById('scenarioNum').textContent = currentScenario + 1;
+        selectedErrors = [];
+        
+        const dialogueArea = document.getElementById('dialogueArea');
+        dialogueArea.innerHTML = '';
+        
+        scenario.dialogue.forEach((msg, idx) => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${msg.speaker}`;
+            msgDiv.dataset.idx = idx;
+            
+            if (msg.speaker === 'seller' && msg.error !== undefined) {
+                msgDiv.onclick = () => toggleError(idx, msgDiv);
+            }
+            
+            msgDiv.innerHTML = `
+                <div class="speaker">${msg.speaker === 'client' ? '👤 Клиент' : '👨‍💼 Продавец'}</div>
+                <div>${msg.text}</div>
+            `;
+            
+            dialogueArea.appendChild(msgDiv);
+        });
+        
+        const checkBtn = document.getElementById('checkBtn');
+        checkBtn.textContent = '✅ Проверить';
+        checkBtn.className = 'btn';
+        checkBtn.disabled = true;
+        checkBtn.onclick = checkScenario;
+        
+        document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('saveStatus').textContent = '';
+    }
+
+    // ========== ️ ВЫБОР ОШИБКИ ==========
+    function toggleError(idx, element) {
+        if (selectedErrors.includes(idx)) {
+            selectedErrors = selectedErrors.filter(i => i !== idx);
+            element.classList.remove('selected');
+        } else {
+            selectedErrors.push(idx);
+            element.classList.add('selected');
+        }
+        
+        document.getElementById('checkBtn').disabled = selectedErrors.length === 0;
+    }
+
+    // ========== ✅ ПРОВЕРКА СЦЕНАРИЯ ==========
+    function checkScenario() {
+        const scenario = SCENARIOS[currentScenario];
+        const correctErrors = scenario.correctErrors;
+        
+        const messages = document.querySelectorAll('.message.seller');
+        messages.forEach((msg) => {
+            const globalIdx = parseInt(msg.dataset.idx);
+            if (correctErrors.includes(globalIdx)) {
+                msg.classList.add('correct');
+            }
+            if (selectedErrors.includes(globalIdx) && !correctErrors.includes(globalIdx)) {
+                msg.classList.add('wrong');
+            }
+        });
+        
+        const correctFound = selectedErrors.filter(e => correctErrors.includes(e)).length;
+        const wrongFound = selectedErrors.filter(e => !correctErrors.includes(e)).length;
+        
+        const score = Math.max(0, correctFound - wrongFound);
+        const maxScore = correctErrors.length;
+        const percent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 100;
+        
+        const resultCard = document.getElementById('resultCard');
+        resultCard.style.display = 'block';
+        resultCard.className = `result-card ${percent >= 70 ? 'success' : 'fail'}`;
+        
+        let html = `<h2>${percent >= 70 ? '✅ Отлично!' : '⚠️ Есть над чем поработать'}</h2>`;
+        html += `<p>Найдено ошибок: ${correctFound} из ${maxScore}</p>`;
+        html += `<p>Результат: ${percent}%</p>`;
+        
+        html += '<div style="text-align: left; margin-top: 16px;">';
+        correctErrors.forEach(idx => {
+            const msg = scenario.dialogue[idx];
+            html += `
+                <div class="explanation">
+                    <div class="error-text">❌ Ошибка: "${msg.text}"</div>
+                    <div style="margin-top: 6px;">${msg.explanation}</div>
+                    <div class="rec">📌 ${msg.rec}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        resultCard.innerHTML = html;
+        
+        gameResults.push({
+            scenario: scenario.title,
+            score: score,
+            maxScore: maxScore,
+            percent: percent,
+            selectedErrors: selectedErrors,
+            correctErrors: correctErrors
+        });
+        
+        const checkBtn = document.getElementById('checkBtn');
+        if (currentScenario < SCENARIOS.length - 1) {
+            checkBtn.textContent = '➡️ Следующий сценарий';
+            checkBtn.className = 'btn next-btn';
+            checkBtn.disabled = false;
+            checkBtn.onclick = () => {
+                currentScenario++;
+                renderScenario();
+            };
+        } else {
+            checkBtn.textContent = '🏁 Завершить игру и показать результаты';
+            checkBtn.className = 'btn finish-btn';
+            checkBtn.disabled = false;
+            checkBtn.onclick = () => {
+                finishGame();
+            };
+        }
+    }
+
+    // ========== 🏁 ЗАВЕРШЕНИЕ ИГРЫ ==========
+    async function finishGame() {
+        const totalScore = gameResults.reduce((sum, r) => sum + r.score, 0);
+        const maxTotal = gameResults.reduce((sum, r) => sum + r.maxScore, 0);
+        const avgPercent = maxTotal > 0 ? Math.round((totalScore / maxTotal) * 100) : 0;
+        
+        const resultData = {
+            id: Date.now(),
+            type: 'errorfinder',
+            user_name: currentUserName,
+            city: currentUserCity,
+            score: totalScore,
+            total: maxTotal,
+            percent: avgPercent,
+            passed: avgPercent >= 70,
+            scenarios: gameResults,
+            date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
+        };
+        
+        const statusDiv = document.getElementById('saveStatus');
+        statusDiv.textContent = '⏳ Сохранение...';
+        statusDiv.style.color = '#f59e0b';
+        
+        try {
+            const localBackup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('errorfinder_backup', JSON.stringify(localBackup));
+            
+            const newRef = db.ref('results/errorfinder').push();
+            await newRef.set(resultData);
+            
+            const backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
+            const filtered = backup.filter(r => r.id !== resultData.id);
+            localStorage.setItem('errorfinder_backup', JSON.stringify(filtered));
+            
+            statusDiv.textContent = '✅ Результат сохранён!';
+            statusDiv.style.color = '#16a34a';
+        } catch(e) {
+            statusDiv.textContent = '⚠️ Сохранено локально';
+            statusDiv.style.color = '#f59e0b';
+        }
+        
+        const dialogueArea = document.getElementById('dialogueArea');
+        dialogueArea.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <h2>🎉 Игра завершена!</h2>
+                <p style="font-size: 18px;">Ваш результат: <strong>${avgPercent}%</strong></p>
+                <p>Найдено ошибок: ${totalScore} из ${maxTotal}</p>
+                <p style="margin-top: 16px;">${avgPercent >= 70 ? '✅ Отличный результат! Вы хорошо знаете алгоритм продаж.' : '⚠️ Рекомендуем повторить тренажёр и изучить алгоритм продаж.'}</p>
+                <button class="btn" onclick="location.reload()" style="margin-top: 20px; max-width: 300px;">🔄 Пройти ещё раз</button>
+            </div>
+        `;
+        
+        document.getElementById('checkBtn').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
