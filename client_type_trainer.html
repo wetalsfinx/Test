@@ -10,136 +10,413 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
         * { box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: #fff0f0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             margin: 0;
-            padding: 12px;
+            padding: 20px;
             min-height: 100vh;
         }
-        .main-container { max-width: 800px; margin: 0 auto; }
+        .main-container { max-width: 900px; margin: 0 auto; }
+        
+        /* HEADER */
         .employee-view {
             background: white;
-            border-radius: 28px;
-            padding: 24px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            border: 1px solid #e8a0b4;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.5s ease;
         }
-        .employee-view h1 {
-            color: #c41e3a;
-            margin-top: 0;
-            font-size: 26px;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
             text-align: center;
+            margin-bottom: 32px;
         }
-        .register-form { display: flex; flex-direction: column; gap: 12px; }
-        .register-form input, .register-form select {
-            padding: 14px 16px;
-            border-radius: 30px;
-            border: 1px solid #e8a0b4;
+        .header h1 {
+            background: linear-gradient(135deg, #c41e3a 0%, #e8a0b4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 8px 0;
+            font-size: 32px;
+            font-weight: 800;
+        }
+        .header p {
+            color: #6b7280;
             font-size: 16px;
-            width: 100%;
-            background: white;
+            margin: 0;
         }
-        .register-form button {
-            background: #c41e3a;
-            color: white;
-            border: none;
-            padding: 14px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .game-container {
-            background: white;
-            border-radius: 28px;
-            overflow: hidden;
-            margin-top: 16px;
-            border: 1px solid #e8a0b4;
-        }
-        .scenario-area { padding: 20px; background: #fff0f3; }
-        .client-type { 
-            background: #f8f4f0; 
-            border-radius: 16px; 
-            padding: 12px 16px; 
-            margin-bottom: 16px; 
-            border-left: 4px solid #3b82f6;
-        }
-        .client-phrase {
-            background: white;
+        
+        /* CLIENT TYPE BADGE */
+        .client-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
             border-radius: 16px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            border-left: 4px solid #c41e3a;
-            font-style: italic;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            animation: pulse 2s infinite;
         }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .client-type-badge.expert { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; }
+        .client-type-badge.lost { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .client-type-badge.emotional { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); color: white; }
+        .client-type-badge.skeptic { background: linear-gradient(135deg, #6b7280 0%, #374151 100%); color: white; }
+        .client-type-badge.quiet { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+        .client-type-badge.hurry { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+        .client-type-badge.regular { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; }
+        
+        .client-type-badge .icon { font-size: 28px; }
+        
+        /* DIALOGUE AREA */
+        .dialogue-container {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .client-description {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .client-description strong {
+            color: #1f2937;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .client-description p {
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .message {
+            margin-bottom: 16px;
+            padding: 16px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.client {
+            background: white;
+            border-left: 4px solid #c41e3a;
+            margin-right: 40px;
+        }
+        .message.client .speaker {
+            color: #c41e3a;
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .message.seller {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+            margin-left: 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .message.seller:hover {
+            transform: translateX(8px);
+            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+        }
+        .message.seller.selected {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220,38,38,0.2);
+            transform: scale(1.02);
+        }
+        .message.seller .speaker {
+            color: #d97706;
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* OPTIONS */
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
         .option {
             background: white;
+            border: 2px solid #e5e7eb;
             border-radius: 16px;
-            padding: 14px;
-            margin: 8px 0;
-            border: 1px solid #e2e8f0;
+            padding: 20px;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.3s;
+            font-size: 15px;
+            line-height: 1.5;
+            position: relative;
+            overflow: hidden;
         }
-        .option:hover { background: #f8fafc; border-color: #c5c5c5; }
-        .option.selected {
-            background: #e8f0fe;
+        .option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .option:hover {
             border-color: #3b82f6;
-            box-shadow: 0 0 0 2px #3b82f6;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.15);
         }
-        .option.correct { border-color: #16a34a; }
-        .option.wrong { border-color: #dc2626; }
-        .controls { padding: 16px 18px; background: white; }
-        .btn {
-            background: #c41e3a;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 14px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: 0.2s;
+        .option:hover::before { opacity: 1; }
+        .option.selected {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            box-shadow: 0 4px 16px rgba(59,130,246,0.2);
         }
-        .btn:hover { background: #a0162e; }
-        .btn:disabled { background: #e8a0b4; cursor: not-allowed; }
-        .btn.next-btn { background: #3b82f6; }
-        .btn.next-btn:hover { background: #2563eb; }
-        .btn.finish-btn { background: #16a34a; }
-        .btn.finish-btn:hover { background: #15803d; }
+        .option.selected::before { opacity: 1; }
+        .option.correct {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            box-shadow: 0 4px 16px rgba(16,185,129,0.2);
+        }
+        .option.wrong {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            opacity: 0.7;
+        }
         
+        .option-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            font-weight: 700;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+        
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 18px 32px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+        .btn:active { transform: translateY(0); }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
+            color: white;
+        }
+        .btn-next {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+        .btn-finish {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        .btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* PROGRESS BAR */
+        .progress-bar {
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+            border-radius: 12px;
+            height: 8px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #c41e3a 0%, #e8a0b4 100%);
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(196,30,58,0.3);
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        /* RESULT CARD */
         .result-card {
-            padding: 18px;
-            margin: 16px 18px;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
             border-radius: 20px;
+            padding: 28px;
+            margin-top: 24px;
+            border: 2px solid #e5e7eb;
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-card.success {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-color: #10b981;
+        }
+        .result-card.fail {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-color: #ef4444;
+        }
+        
+        .result-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 12px;
             text-align: center;
         }
-        .result-card.success { background: #e8f0e8; border-left: 8px solid #16a34a; }
-        .result-card.fail { background: #ffe0e0; border-left: 8px solid #c41e3a; }
+        .result-card.success .result-title { color: #065f46; }
+        .result-card.fail .result-title { color: #991b1b; }
+        
         .explanation {
-            background: #f8f4f0;
-            border-radius: 16px;
-            padding: 12px 14px;
-            margin: 10px 0;
-            border-left: 4px solid #c41e3a;
-            text-align: left;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            border-left: 4px solid #3b82f6;
         }
-        .explanation .error-text { color: #dc2626; font-weight: 600; }
-        .explanation .correct-text { color: #16a34a; font-weight: 600; }
-        .explanation .rec { background: #fff8e0; padding: 6px 12px; border-radius: 8px; margin-top: 6px; color: #854d0e; border-left: 3px solid #f59e0b; }
-        .progress { text-align: center; color: #666; margin-bottom: 16px; font-size: 13px; }
-        .save-status { font-size: 14px; font-weight: 600; margin-top: 10px; text-align: center; }
+        .explanation.correct { border-left-color: #10b981; }
+        .explanation.wrong { border-left-color: #ef4444; }
+        
+        .explanation strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+        .explanation p {
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        /* FINAL SCREEN */
+        .final-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .final-screen h2 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #c41e3a 0%, #e8a0b4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .final-screen .result-big {
+            font-size: 72px;
+            font-weight: 800;
+            margin: 24px 0;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .final-screen p {
+            font-size: 18px;
+            color: #6b7280;
+            margin: 12px 0;
+        }
+        
+        /* REGISTER FORM */
+        .register-form {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .register-form input,
+        .register-form select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        .register-form input:focus,
+        .register-form select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+        }
+        
+        @media (max-width: 600px) {
+            .employee-view { padding: 20px; }
+            .header h1 { font-size: 24px; }
+            .message.client { margin-right: 0; }
+            .message.seller { margin-left: 0; }
+            .controls { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 
 <div class="main-container">
     <div class="employee-view">
-        <h1>🎭 585GOLD | Адаптация под тип клиента</h1>
-        <p style="text-align: center; color: #666; font-size: 14px;">Выберите правильный ответ, который подходит под тип клиента</p>
+        <div class="header">
+            <h1>🎭 585GOLD | Адаптация под тип клиента</h1>
+            <p>Выберите правильный ответ, который подходит под тип клиента</p>
+        </div>
         
         <div class="register-form" id="registerForm">
             <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
@@ -152,19 +429,22 @@
                 <option value="Калининград">Калининград</option>
                 <option value="Нижний Тагил">Нижний Тагил</option>
             </select>
-            <button onclick="startGame()">Начать игру</button>
+            <button class="btn btn-primary" onclick="startGame()">🚀 Начать игру</button>
         </div>
 
         <div id="gameContainer" style="display: none;">
-            <div class="game-container">
-                <div class="progress">Сценарий <span id="scenarioNum">1</span> из <span id="totalScenarios">7</span></div>
-                <div class="scenario-area" id="scenarioArea"></div>
-                <div class="controls">
-                    <button class="btn" id="checkBtn" disabled>✅ Проверить</button>
-                </div>
-                <div id="resultCard" class="result-card" style="display: none;"></div>
-                <div id="saveStatus" class="save-status"></div>
+            <div class="progress-text">Сценарий <span id="scenarioNum">1</span> из <span id="totalScenarios">7</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
             </div>
+            
+            <div id="scenarioArea"></div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="checkBtn" disabled>✅ Проверить ответ</button>
+            </div>
+            
+            <div id="resultCard" style="display: none;"></div>
         </div>
     </div>
 </div>
@@ -238,173 +518,95 @@
     const SCENARIOS = [
         {
             title: "Холодный клиент",
-            clientType: "Эксперт",
+            clientType: "expert",
+            clientIcon: "👨‍",
+            clientName: "Эксперт",
             clientDescription: "Мужчина 40-50 лет, внимательно изучает бирки, читает состав. Говорит уверенно, использует термины.",
             clientPhrase: "«А какой здесь вес и чистота камня? И огранка какая — круглая или принцесса?»",
             options: [
-                { 
-                    text: "«Ой, это просто сказка! Это кольцо подарит вашей даме море эмоций и заставит её сердце биться чаще!»", 
-                    correct: false, 
-                    explanation: "Слишком эмоционально для эксперта. Он воспримет это как попытку «впарить» без аргументов." 
-                },
-                { 
-                    text: "«Вес изделия 3.2 грамма, золото 585 пробы. Камень — фианит огранки «круглая», 57 граней, что даёт отличное светопреломление. Давайте примерим, чтобы оценить посадку?»", 
-                    correct: true, 
-                    explanation: "Эксперт хочет фактов и конкретики. Чёткие технические характеристики + предложение примерить = идеальный баланс." 
-                },
-                { 
-                    text: "«Честно говоря, я не очень разбираюсь в этих деталях, но кольцо красивое. Могу показать другие модели?»", 
-                    correct: false, 
-                    explanation: "Показывает некомпетентность. Эксперт сразу потеряет доверие к продавцу." 
-                }
+                { text: "«Ой, это просто сказка! Это кольцо подарит вашей даме море эмоций и заставит её сердце биться чаще!»", correct: false, explanation: "Слишком эмоционально для эксперта. Он воспримет это как попытку «впарить» без аргументов." },
+                { text: "«Вес изделия 3.2 грамма, золото 585 пробы. Камень — фианит огранки «круглая», 57 граней, что даёт отличное светопреломление. Давайте примерим, чтобы оценить посадку?»", correct: true, explanation: "Эксперт хочет фактов и конкретики. Чёткие технические характеристики + предложение примерить = идеальный баланс." },
+                { text: "«Честно говоря, я не очень разбираюсь в этих деталях, но кольцо красивое. Могу показать другие модели?»", correct: false, explanation: "Показывает некомпетентность. Эксперт сразу потеряет доверие к продавцу." }
             ]
         },
         {
             title: "Растерянный мужчина (подарок)",
-            clientType: "Растерянный",
+            clientType: "lost",
+            clientIcon: "😅",
+            clientName: "Растерянный",
             clientDescription: "Мужчина 30-45 лет, стоит у витрины, выглядит растерянным. Покупает подарок жене. Не разбирается в украшениях.",
             clientPhrase: "«Мне нужно что-то на годовщину, бюджет 30 тысяч, но я вообще не разбираюсь в этом. Помогите выбрать»",
             options: [
-                { 
-                    text: "«У нас огромный выбор! Вот посмотрите эту витрину, а ещё у нас есть электронный каталог. Давайте я покажу!»", 
-                    correct: false, 
-                    explanation: "Слишком много выбора вызовет панику и ступор." 
-                },
-                { 
-                    text: "«Понимаю, это важный подарок. Давайте я покажу вам 2-3 наших хита продаж в этом бюджете, которые гарантированно нравятся женщинам».", 
-                    correct: true, 
-                    explanation: "Растерянный клиент боится ошибиться. Ему нужно готовое решение и уверенность. «Хиты продаж» + «беспроигрышные» = снимает тревогу." 
-                },
-                { 
-                    text: "«Ну, если не разбираетесь, возьмите самое дорогое в бюджете — точно не прогадаете».", 
-                    correct: false, 
-                    explanation: "Звучит как попытка продать подороже, а не помочь." 
-                },
-                { 
-                    text: "«А может, подарочный сертификат? Так она сама выберет, что хочет».", 
-                    correct: false, 
-                    explanation: "Сертификат — это последнее средство. Сначала нужно попробовать помочь с выбором." 
-                }
+                { text: "«У нас огромный выбор! Вот посмотрите эту витрину, а ещё у нас есть электронный каталог. Давайте я покажу!»", correct: false, explanation: "Слишком много выбора вызовет панику и ступор." },
+                { text: "«Понимаю, это важный подарок. Давайте я покажу вам 2-3 наших хита продаж в этом бюджете, которые гарантированно нравятся женщинам».", correct: true, explanation: "Растерянный клиент боится ошибиться. Ему нужно готовое решение и уверенность. «Хиты продаж» + «беспроигрышные» = снимает тревогу." },
+                { text: "«Ну, если не разбираетесь, возьмите самое дорогое в бюджете — точно не прогадаете».", correct: false, explanation: "Звучит как попытка продать подороже, а не помочь." },
+                { text: "«А может, подарочный сертификат? Так она сама выберет, что хочет».", correct: false, explanation: "Сертификат — это последнее средство. Сначала нужно попробовать помочь с выбором." }
             ]
         },
         {
             title: "Эмоциональная девушка",
-            clientType: "Эмоциональная",
+            clientType: "emotional",
+            clientIcon: "✨",
+            clientName: "Эмоциональная",
             clientDescription: "Девушка 20-35 лет, меряет украшение, улыбается, смотрит в зеркало. Важны эмоции и ощущения.",
             clientPhrase: "«Ой, мне так нравится, как оно переливается... Но дороговато для меня»",
             options: [
-                { 
-                    text: "«Да, это все таки 2 грамма, сделаем скидку по карте. Можем оформить в рассрочку».", 
-                    correct: false, 
-                    explanation: "Слишком сухо и технично. Убивает эмоцию покупки." 
-                },
-                { 
-                    text: "«Вам очень идёт! Это кольцо действительно создано, чтобы притягивать взгляды. Представляете, как красиво оно будет смотреться на вашей руке на важном мероприятии? Можем посмотреть варианты в другом бюджете с похожим эффектом».", 
-                    correct: true, 
-                    explanation: "Эмоциональный клиент покупает чувства. Нужно усилить эмоцию («притягивать взгляды») + показать заботу о бюджете («варианты в другом бюджете»)." 
-                },
-                { 
-                    text: "«Ну, качество требует вложений. Зато это золото, а не бижутерия».", 
-                    correct: false, 
-                    explanation: "Звучит как поучение. Клиентка почувствует себя неловко." 
-                }
+                { text: "«Да, это все таки 2 грамма, сделаем скидку по карте. Можем оформить в рассрочку».", correct: false, explanation: "Слишком сухо и технично. Убивает эмоцию покупки." },
+                { text: "«Вам очень идёт! Это кольцо действительно создано, чтобы притягивать взгляды. Представляете, как красиво оно будет смотреться на вашей руке на важном мероприятии? Можем посмотреть варианты в другом бюджете с похожим эффектом».", correct: true, explanation: "Эмоциональный клиент покупает чувства. Нужно усилить эмоцию («притягивать взгляды») + показать заботу о бюджете («варианты в другом бюджете»)." },
+                { text: "«Ну, качество требует вложений. Зато это золото, а не бижутерия».", correct: false, explanation: "Звучит как поучение. Клиентка почувствует себя неловко." }
             ]
         },
         {
             title: "Рациональный скептик",
-            clientType: "Скептик",
+            clientType: "skeptic",
+            clientIcon: "🤔",
+            clientName: "Скептик",
             clientDescription: "Клиент долго сравнивает цены, хмурится, задаёт каверзные вопросы. Ищет выгоду и аргументы.",
             clientPhrase: "«А почему это кольцо дороже того, что на соседней витрине? Выглядит почти так же»",
             options: [
-                { 
-                    text: "«Потому что это более престижная коллекция, вы же не хотите сэкономить на качестве?»", 
-                    correct: false, 
-                    explanation: "Звучит как давление и манипуляция («вы же не хотите...»)." 
-                },
-                { 
-                    text: "«Отличный вопрос. Здесь используется более сложное плетение, которое не цепляет одежду, и камни закреплены так, что не выпадут при ежедневной носке. Это инвестиция в долговечность».", 
-                    correct: true, 
-                    explanation: "Скептик хочет логики и аргументов. Конкретные преимущества (плетение, закрепка) + выгода («долговечность») = убеждает рационально." 
-                },
-                { 
-                    text: "«Ну, цены разные бывают. Могу показать подешевле, если хотите».", 
-                    correct: false, 
-                    explanation: "Показывает неуверенность. Скептик решит, что разница в цене необоснованна." 
-                }
+                { text: "«Потому что это более престижная коллекция, вы же не хотите сэкономить на качестве?»", correct: false, explanation: "Звучит как давление и манипуляция («вы же не хотите...»)." },
+                { text: "«Отличный вопрос. Здесь используется более сложное плетение, которое не цепляет одежду, и камни закреплены так, что не выпадут при ежедневной носке. Это инвестиция в долговечность».", correct: true, explanation: "Скептик хочет логики и аргументов. Конкретные преимущества (плетение, закрепка) + выгода («долговечность») = убеждает рационально." },
+                { text: "«Ну, цены разные бывают. Могу показать подешевле, если хотите».", correct: false, explanation: "Показывает неуверенность. Скептик решит, что разница в цене необоснованна." }
             ]
         },
         {
             title: "Молчаливый наблюдатель",
-            clientType: "Молчаливый",
+            clientType: "quiet",
+            clientIcon: "👀",
+            clientName: "Молчаливый",
             clientDescription: "Клиент зашёл, молча ходит вдоль витрин, не смотрит на продавца. Нужно аккуратно начать диалог.",
             clientPhrase: "(молчит, просто смотрит)",
             options: [
-                { 
-                    text: "«Добрый день! Чем могу помочь? Что вас интересует?»", 
-                    correct: false, 
-                    explanation: "Слишком общий вопрос «чем помочь» — клиент ответит «просто смотрю» и закроется." 
-                },
-                { 
-                    text: "«Добрый день! У нас сегодня акция - скидка 15% на все кольца. Какое изделие выбираете — для себя или в подарок?»", 
-                    correct: true, 
-                    explanation: "Молчаливому клиенту нужно дать «крючок» для разговора. Конкретика (скидка) + открытый вопрос (для себя или в подарок) = мягко вовлекает в диалог." 
-                },
-                { 
-                    text: "(Молча наблюдает, не подходит)", 
-                    correct: false, 
-                    explanation: "Клиент может уйти, так и не получив помощи." 
-                },
-                { 
-                    text: "«Здравствуйте! Если нужна будет помощь — обращайтесь, я рядом».", 
-                    correct: false, 
-                    explanation: "Пассивная позиция. Клиент не обратится сам." 
-                }
+                { text: "«Добрый день! Чем могу помочь? Что вас интересует?»", correct: false, explanation: "Слишком общий вопрос «чем помочь» — клиент ответит «просто смотрю» и закроется." },
+                { text: "«Добрый день! У нас сегодня акция - скидка 15% на все кольца. Какое изделие выбираете — для себя или в подарок?»", correct: true, explanation: "Молчаливому клиенту нужно дать «крючок» для разговора. Конкретика (скидка) + открытый вопрос (для себя или в подарок) = мягко вовлекает в диалог." },
+                { text: "(Молча наблюдает, не подходит)", correct: false, explanation: "Клиент может уйти, так и не получив помощи." },
+                { text: "«Здравствуйте! Если нужна будет помощь — обращайтесь, я рядом».", correct: false, explanation: "Пассивная позиция. Клиент не обратится сам." }
             ]
         },
         {
             title: "Торопливый",
-            clientType: "Торопливый",
+            clientType: "hurry",
+            clientIcon: "⏱️",
+            clientName: "Торопливый",
             clientDescription: "Клиент зашёл на минуту, смотрит на часы, говорит быстро. Нужно быстро понять потребность и предложить решение.",
             clientPhrase: "«Мне нужно быстро выбрать серьги в подарок, бюджет 20 тысяч, через час встреча»",
             options: [
-                { 
-                    text: "«Ой, у нас такой большой выбор! Давайте я покажу вам все наши коллекции, у нас есть классика, модерн, винтаж...»", 
-                    correct: false, 
-                    explanation: "Слишком долго. Клиент уйдёт, не дождавшись." 
-                },
-                { 
-                    text: "«Понял, времени мало. Давайте сразу к делу — вот 3 наших бестселлера в этом бюджете. Они точно понравятся. Выбирайте!»", 
-                    correct: true, 
-                    explanation: "Торопливый клиент ценит скорость. «Понял, времени мало» = эмпатия. «3 бестселлера» = готовое решение без лишнего выбора." 
-                },
-                { 
-                    text: "«За час мы точно успеем! Давайте начнём с того, какой стиль она предпочитает — золото или серебро?»", 
-                    correct: false, 
-                    explanation: "Хотя вопрос уместен, он замедляет процесс. Сначала нужно показать конкретные варианты." 
-                }
+                { text: "«Ой, у нас такой большой выбор! Давайте я покажу вам все наши коллекции, у нас есть классика, модерн, винтаж...»", correct: false, explanation: "Слишком долго. Клиент уйдёт, не дождавшись." },
+                { text: "«Понял, времени мало. Давайте сразу к делу — вот 3 наших бестселлера в этом бюджете. Они точно понравятся. Выбирайте!»", correct: true, explanation: "Торопливый клиент ценит скорость. «Понял, времени мало» = эмпатия. «3 бестселлера» = готовое решение без лишнего выбора." },
+                { text: "«За час мы точно успеем! Давайте начнём с того, какой стиль она предпочитает — золото или серебро?»", correct: false, explanation: "Хотя вопрос уместен, он замедляет процесс. Сначала нужно показать конкретные варианты." }
             ]
         },
         {
             title: "Постоянный клиент",
-            clientType: "Постоянный",
+            clientType: "regular",
+            clientIcon: "💎",
+            clientName: "Постоянный",
             clientDescription: "Клиент уже покупал в этом магазине, узнаёт продавца. Важно показать, что его помнят и ценят.",
             clientPhrase: "«Здравствуйте! Я у вас месяц назад покупала кольцо, помните? Хочу посмотреть, что нового»",
             options: [
-                { 
-                    text: "«Здравствуйте! Да, конечно. Вот наша новая коллекция, посмотрите всё».", 
-                    correct: false, 
-                    explanation: "Формально. Не показывает, что клиента запомнили." 
-                },
-                { 
-                    text: "«Здравствуйте! Конечно помню, вы брали кольцо с фианитами. Как оно, носите с удовольствием? У нас как раз новое поступление — давайте покажу, что может дополнить вашу коллекцию».", 
-                    correct: true, 
-                    explanation: "Постоянный клиент хочет чувствовать себя особенным. «Помню, что вы брали» + «как оно?» = забота и персонализация. Предложение «дополнить коллекцию» = мягкая допродажа." 
-                },
-                { 
-                    text: "«Здравствуйте! Рады вас видеть. Что подбираете сегодня?»", 
-                    correct: false, 
-                    explanation: "Стандартное приветствие. Не использует возможность укрепить лояльность." 
-                }
+                { text: "«Здравствуйте! Да, конечно. Вот наша новая коллекция, посмотрите всё».", correct: false, explanation: "Формально. Не показывает, что клиента запомнили." },
+                { text: "«Здравствуйте! Конечно помню, вы брали кольцо с фианитами. Как оно, носите с удовольствием? У нас как раз новое поступление — давайте покажу, что может дополнить вашу коллекцию».", correct: true, explanation: "Постоянный клиент хочет чувствовать себя особенным. «Помню, что вы брали» + «как оно?» = забота и персонализация. Предложение «дополнить коллекцию» = мягкая допродажа." },
+                { text: "«Здравствуйте! Рады вас видеть. Что подбираете сегодня?»", correct: false, explanation: "Стандартное приветствие. Не использует возможность укрепить лояльность." }
             ]
         }
     ];
@@ -413,36 +615,63 @@
     function renderScenario() {
         const scenario = SCENARIOS[currentScenario];
         document.getElementById('scenarioNum').textContent = currentScenario + 1;
+        
+        // Update progress bar
+        const progress = ((currentScenario) / SCENARIOS.length) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+        
         selectedOption = null;
         
         const scenarioArea = document.getElementById('scenarioArea');
-        scenarioArea.innerHTML = `
-            <div class="client-type">
-                <strong>Тип клиента:</strong> ${scenario.clientType}
-                <div style="margin-top: 8px; color: #666;">${scenario.clientDescription}</div>
-            </div>
-            <div class="client-phrase">
-                <strong>Клиент говорит:</strong> ${scenario.clientPhrase}
+        
+        // Client type badge
+        const typeClass = scenario.clientType;
+        const typeHtml = `
+            <div class="client-type-badge ${typeClass}">
+                <span class="icon">${scenario.clientIcon}</span>
+                <span>Тип клиента: ${scenario.clientName}</span>
             </div>
         `;
         
-        scenario.options.forEach((option, idx) => {
-            const optionDiv = document.createElement('div');
-            optionDiv.className = 'option';
-            optionDiv.dataset.idx = idx;
-            optionDiv.innerHTML = option.text;
-            optionDiv.onclick = () => selectOption(idx, optionDiv);
-            scenarioArea.appendChild(optionDiv);
-        });
+        // Client description
+        const descHtml = `
+            <div class="client-description">
+                <strong> Описание:</strong>
+                <p>${scenario.clientDescription}</p>
+            </div>
+        `;
         
+        // Client phrase
+        const phraseHtml = `
+            <div class="message client">
+                <div class="speaker">👤 Клиент говорит:</div>
+                <div>${scenario.clientPhrase}</div>
+            </div>
+        `;
+        
+        // Options
+        let optionsHtml = '<div class="options-container">';
+        scenario.options.forEach((option, idx) => {
+            const letter = String.fromCharCode(65 + idx); // A, B, C...
+            optionsHtml += `
+                <div class="option" data-idx="${idx}" onclick="selectOption(${idx}, this)">
+                    <span class="option-label">${letter}</span>
+                    ${option.text}
+                </div>
+            `;
+        });
+        optionsHtml += '</div>';
+        
+        scenarioArea.innerHTML = typeHtml + descHtml + phraseHtml + optionsHtml;
+        
+        // Reset button
         const checkBtn = document.getElementById('checkBtn');
-        checkBtn.textContent = '✅ Проверить';
-        checkBtn.className = 'btn';
+        checkBtn.textContent = '✅ Проверить ответ';
+        checkBtn.className = 'btn btn-primary';
         checkBtn.disabled = true;
         checkBtn.onclick = checkScenario;
         
         document.getElementById('resultCard').style.display = 'none';
-        document.getElementById('saveStatus').textContent = '';
     }
 
     // ========== 🖱️ ВЫБОР ОПЦИИ ==========
@@ -477,27 +706,22 @@
         resultCard.style.display = 'block';
         resultCard.className = `result-card ${isCorrect ? 'success' : 'fail'}`;
         
-        let html = `<h2>${isCorrect ? '✅ Отлично!' : '⚠️ Есть над чем поработать'}</h2>`;
-        html += `<p>Ваш выбор: ${scenario.options[selectedOption].text}</p>`;
-        html += `<p>Результат: ${percent}%</p>`;
+        let html = `<div class="result-title">${isCorrect ? '🎉 Отлично!' : '⚠️ Есть над чем поработать'}</div>`;
+        html += `<p style="text-align: center; font-size: 18px; margin-bottom: 20px;">${isCorrect ? 'Вы выбрали правильный ответ!' : 'Этот ответ не совсем подходит'}</p>`;
         
         // Объяснение
-        html += '<div style="text-align: left; margin-top: 16px;">';
+        html += '<div class="explanation ' + (isCorrect ? 'correct' : 'wrong') + '">';
         if (isCorrect) {
-            html += `<div class="explanation">
-                <div class="correct-text">✅ Правильно!</div>
-                <div style="margin-top: 6px;">${scenario.options[selectedOption].explanation}</div>
-            </div>`;
+            html += `<strong>✅ Правильно!</strong>
+                <p>${scenario.options[selectedOption].explanation}</p>`;
         } else {
-            html += `<div class="explanation">
-                <div class="error-text">❌ Неправильно!</div>
-                <div style="margin-top: 6px;">${scenario.options[selectedOption].explanation}</div>
-                <div class="explanation">
-                    <div class="correct-text" style="margin-top: 12px;">✅ Правильный ответ:</div>
-                    <div style="margin-top: 6px;">${scenario.options[correctOption].text}</div>
-                    <div style="margin-top: 6px;">${scenario.options[correctOption].explanation}</div>
-                </div>
-            </div>`;
+            html += `<strong>❌ Почему это неправильно:</strong>
+                <p>${scenario.options[selectedOption].explanation}</p>
+                <div class="explanation correct" style="margin-top: 12px;">
+                    <strong>✅ Правильный ответ:</strong>
+                    <p>${scenario.options[correctOption].text}</p>
+                    <p style="margin-top: 8px;">${scenario.options[correctOption].explanation}</p>
+                </div>`;
         }
         html += '</div>';
         
@@ -516,15 +740,15 @@
         const checkBtn = document.getElementById('checkBtn');
         if (currentScenario < SCENARIOS.length - 1) {
             checkBtn.textContent = '➡️ Следующий сценарий';
-            checkBtn.className = 'btn next-btn';
+            checkBtn.className = 'btn btn-next';
             checkBtn.disabled = false;
             checkBtn.onclick = () => {
                 currentScenario++;
                 renderScenario();
             };
         } else {
-            checkBtn.textContent = '🏁 Завершить игру и показать результаты';
-            checkBtn.className = 'btn finish-btn';
+            checkBtn.textContent = '🏁 Завершить игру';
+            checkBtn.className = 'btn btn-finish';
             checkBtn.disabled = false;
             checkBtn.onclick = () => {
                 finishGame();
@@ -532,7 +756,7 @@
         }
     }
 
-    // ========== 🏁 ЗАВЕРШЕНИЕ ИГРЫ ==========
+    // ==========  ЗАВЕРШЕНИЕ ИГРЫ ==========
     async function finishGame() {
         const totalScore = gameResults.reduce((sum, r) => sum + r.percent, 0);
         const avgPercent = Math.round(totalScore / SCENARIOS.length);
@@ -551,10 +775,22 @@
             timestamp: new Date().toLocaleString('ru-RU')
         };
         
-        const statusDiv = document.getElementById('saveStatus');
-        statusDiv.textContent = '⏳ Сохранение...';
-        statusDiv.style.color = '#f59e0b';
+        const scenarioArea = document.getElementById('scenarioArea');
+        scenarioArea.innerHTML = `
+            <div class="final-screen">
+                <h2> Игра завершена!</h2>
+                <div class="result-big">${avgPercent}%</div>
+                <p>Правильных ответов: <strong>${gameResults.filter(r => r.isCorrect).length} из ${SCENARIOS.length}</strong></p>
+                <p style="margin-top: 24px; font-size: 20px;">${avgPercent >= 70 ? '✅ Отличный результат! Вы отлично адаптируете ответы под тип клиента.' : '⚠️ Рекомендуем повторить тренажёр и изучить типы клиентов.'}</p>
+                <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 32px; max-width: 300px;">🔄 Пройти ещё раз</button>
+            </div>
+        `;
         
+        document.getElementById('progressFill').style.width = '100%';
+        document.getElementById('checkBtn').style.display = 'none';
+        document.getElementById('resultCard').style.display = 'none';
+        
+        // Сохранение в Firebase
         try {
             const localBackup = JSON.parse(localStorage.getItem('clienttype_backup') || '[]');
             localBackup.push(resultData);
@@ -567,25 +803,10 @@
             const filtered = backup.filter(r => r.id !== resultData.id);
             localStorage.setItem('clienttype_backup', JSON.stringify(filtered));
             
-            statusDiv.textContent = '✅ Результат сохранён!';
-            statusDiv.style.color = '#16a34a';
+            console.log('✅ Результат сохранён!');
         } catch(e) {
-            statusDiv.textContent = '⚠️ Сохранено локально';
-            statusDiv.style.color = '#f59e0b';
+            console.error('❌ Ошибка сохранения:', e);
         }
-        
-        const scenarioArea = document.getElementById('scenarioArea');
-        scenarioArea.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <h2>🎉 Игра завершена!</h2>
-                <p style="font-size: 18px;">Ваш результат: <strong>${avgPercent}%</strong></p>
-                <p>Правильных ответов: ${gameResults.filter(r => r.isCorrect).length} из ${SCENARIOS.length}</p>
-                <p style="margin-top: 16px;">${avgPercent >= 70 ? '✅ Отличный результат! Вы отлично адаптируете ответы под тип клиента.' : '⚠️ Рекомендуем повторить тренажёр и изучить типы клиентов.'}</p>
-                <button class="btn" onclick="location.reload()" style="margin-top: 20px; max-width: 300px;">🔄 Пройти ещё раз</button>
-            </div>
-        `;
-        
-        document.getElementById('checkBtn').style.display = 'none';
     }
 </script>
 
