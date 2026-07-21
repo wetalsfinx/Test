@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>585GOLD | Адаптация под тип клиента</title>
+    
+    <!-- 🔥 FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #fff0f0;
+            margin: 0;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .main-container { max-width: 800px; margin: 0 auto; }
+        .employee-view {
+            background: white;
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 1px solid #e8a0b4;
+        }
+        .employee-view h1 {
+            color: #c41e3a;
+            margin-top: 0;
+            font-size: 26px;
+            text-align: center;
+        }
+        .register-form { display: flex; flex-direction: column; gap: 12px; }
+        .register-form input, .register-form select {
+            padding: 14px 16px;
+            border-radius: 30px;
+            border: 1px solid #e8a0b4;
+            font-size: 16px;
+            width: 100%;
+            background: white;
+        }
+        .register-form button {
+            background: #c41e3a;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .game-container {
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            margin-top: 16px;
+            border: 1px solid #e8a0b4;
+        }
+        .scenario-area { padding: 20px; background: #fff0f3; }
+        .client-type { 
+            background: #f8f4f0; 
+            border-radius: 16px; 
+            padding: 12px 16px; 
+            margin-bottom: 16px; 
+            border-left: 4px solid #3b82f6;
+        }
+        .client-phrase {
+            background: white;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-left: 4px solid #c41e3a;
+            font-style: italic;
+        }
+        .option {
+            background: white;
+            border-radius: 16px;
+            padding: 14px;
+            margin: 8px 0;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .option:hover { background: #f8fafc; border-color: #c5c5c5; }
+        .option.selected {
+            background: #e8f0fe;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+        .option.correct { border-color: #16a34a; }
+        .option.wrong { border-color: #dc2626; }
+        .controls { padding: 16px 18px; background: white; }
+        .btn {
+            background: #c41e3a;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn:hover { background: #a0162e; }
+        .btn:disabled { background: #e8a0b4; cursor: not-allowed; }
+        .btn.next-btn { background: #3b82f6; }
+        .btn.next-btn:hover { background: #2563eb; }
+        .btn.finish-btn { background: #16a34a; }
+        .btn.finish-btn:hover { background: #15803d; }
+        
+        .result-card {
+            padding: 18px;
+            margin: 16px 18px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .result-card.success { background: #e8f0e8; border-left: 8px solid #16a34a; }
+        .result-card.fail { background: #ffe0e0; border-left: 8px solid #c41e3a; }
+        .explanation {
+            background: #f8f4f0;
+            border-radius: 16px;
+            padding: 12px 14px;
+            margin: 10px 0;
+            border-left: 4px solid #c41e3a;
+            text-align: left;
+        }
+        .explanation .error-text { color: #dc2626; font-weight: 600; }
+        .explanation .correct-text { color: #16a34a; font-weight: 600; }
+        .explanation .rec { background: #fff8e0; padding: 6px 12px; border-radius: 8px; margin-top: 6px; color: #854d0e; border-left: 3px solid #f59e0b; }
+        .progress { text-align: center; color: #666; margin-bottom: 16px; font-size: 13px; }
+        .save-status { font-size: 14px; font-weight: 600; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="employee-view">
+        <h1>🎭 585GOLD | Адаптация под тип клиента</h1>
+        <p style="text-align: center; color: #666; font-size: 14px;">Выберите правильный ответ, который подходит под тип клиента</p>
+        
+        <div class="register-form" id="registerForm">
+            <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
+            <select id="userCity">
+                <option value="">Выберите город</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
+                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
+                <option value="Калининград">Калининград</option>
+                <option value="Нижний Тагил">Нижний Тагил</option>
+            </select>
+            <button onclick="startGame()">Начать игру</button>
+        </div>
+
+        <div id="gameContainer" style="display: none;">
+            <div class="game-container">
+                <div class="progress">Сценарий <span id="scenarioNum">1</span> из <span id="totalScenarios">7</span></div>
+                <div class="scenario-area" id="scenarioArea"></div>
+                <div class="controls">
+                    <button class="btn" id="checkBtn" disabled>✅ Проверить</button>
+                </div>
+                <div id="resultCard" class="result-card" style="display: none;"></div>
+                <div id="saveStatus" class="save-status"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== 🔥 FIREBASE ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+        authDomain: "gold-8105a.firebaseapp.com",
+        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gold-8105a",
+        storageBucket: "gold-8105a.firebasestorage.app",
+        messagingSenderId: "195469188947",
+        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ========== 🎮 СОСТОЯНИЕ ИГРЫ ==========
+    let currentScenario = 0;
+    let selectedOption = null;
+    let gameResults = [];
+    let currentUserName = '';
+    let currentUserCity = '';
+
+    // ========== 🚀 ФУНКЦИЯ ЗАПУСКА ИГРЫ ==========
+    function startGame() {
+        const name = document.getElementById('userName').value.trim();
+        const city = document.getElementById('userCity').value;
+        
+        if (!name) {
+            alert('Введите имя');
+            return;
+        }
+        if (!city) {
+            alert('Выберите город');
+            return;
+        }
+        
+        currentUserName = name;
+        currentUserCity = city;
+        currentScenario = 0;
+        gameResults = [];
+        
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('gameContainer').style.display = 'block';
+        document.getElementById('totalScenarios').textContent = SCENARIOS.length;
+        
+        renderScenario();
+    }
+
+    // ========== 🔄 АВТОДОЗАГРУЗКА ==========
+    window.addEventListener('load', async () => {
+        const backup = JSON.parse(localStorage.getItem('clienttype_backup') || '[]');
+        if (backup.length > 0) {
+            console.log(`🔄 Найдено ${backup.length} несохранённых результатов. Отправляем...`);
+            for (let result of backup) {
+                try {
+                    const newRef = db.ref('results/clienttype').push();
+                    await newRef.set(result);
+                    console.log('✅ Отправлено:', result.user_name);
+                } catch(e) {
+                    console.error('❌ Ошибка:', e.message);
+                }
+            }
+            localStorage.removeItem('clienttype_backup');
+        }
+    });
+
+    // ========== 📚 СЦЕНАРИИ ==========
+    const SCENARIOS = [
+        {
+            title: "Холодный клиент",
+            clientType: "Эксперт",
+            clientDescription: "Мужчина 40-50 лет, внимательно изучает бирки, читает состав. Говорит уверенно, использует термины.",
+            clientPhrase: "«А какой здесь вес и чистота камня? И огранка какая — круглая или принцесса?»",
+            options: [
+                { 
+                    text: "«Ой, это просто сказка! Это кольцо подарит вашей даме море эмоций и заставит её сердце биться чаще!»", 
+                    correct: false, 
+                    explanation: "Слишком эмоционально для эксперта. Он воспримет это как попытку «впарить» без аргументов." 
+                },
+                { 
+                    text: "«Вес изделия 3.2 грамма, золото 585 пробы. Камень — фианит огранки «круглая», 57 граней, что даёт отличное светопреломление. Давайте примерим, чтобы оценить посадку?»", 
+                    correct: true, 
+                    explanation: "Эксперт хочет фактов и конкретики. Чёткие технические характеристики + предложение примерить = идеальный баланс." 
+                },
+                { 
+                    text: "«Честно говоря, я не очень разбираюсь в этих деталях, но кольцо красивое. Могу показать другие модели?»", 
+                    correct: false, 
+                    explanation: "Показывает некомпетентность. Эксперт сразу потеряет доверие к продавцу." 
+                }
+            ]
+        },
+        {
+            title: "Растерянный мужчина (подарок)",
+            clientType: "Растерянный",
+            clientDescription: "Мужчина 30-45 лет, стоит у витрины, выглядит растерянным. Покупает подарок жене. Не разбирается в украшениях.",
+            clientPhrase: "«Мне нужно что-то на годовщину, бюджет 30 тысяч, но я вообще не разбираюсь в этом. Помогите выбрать»",
+            options: [
+                { 
+                    text: "«У нас огромный выбор! Вот посмотрите эту витрину, а ещё у нас есть электронный каталог. Давайте я покажу!»", 
+                    correct: false, 
+                    explanation: "Слишком много выбора вызовет панику и ступор." 
+                },
+                { 
+                    text: "«Понимаю, это важный подарок. Давайте я покажу вам 2-3 наших хита продаж в этом бюджете, которые гарантированно нравятся женщинам».", 
+                    correct: true, 
+                    explanation: "Растерянный клиент боится ошибиться. Ему нужно готовое решение и уверенность. «Хиты продаж» + «беспроигрышные» = снимает тревогу." 
+                },
+                { 
+                    text: "«Ну, если не разбираетесь, возьмите самое дорогое в бюджете — точно не прогадаете».", 
+                    correct: false, 
+                    explanation: "Звучит как попытка продать подороже, а не помочь." 
+                },
+                { 
+                    text: "«А может, подарочный сертификат? Так она сама выберет, что хочет».", 
+                    correct: false, 
+                    explanation: "Сертификат — это последнее средство. Сначала нужно попробовать помочь с выбором." 
+                }
+            ]
+        },
+        {
+            title: "Эмоциональная девушка",
+            clientType: "Эмоциональная",
+            clientDescription: "Девушка 20-35 лет, меряет украшение, улыбается, смотрит в зеркало. Важны эмоции и ощущения.",
+            clientPhrase: "«Ой, мне так нравится, как оно переливается... Но дороговато для меня»",
+            options: [
+                { 
+                    text: "«Да, это все таки 2 грамма, сделаем скидку по карте. Можем оформить в рассрочку».", 
+                    correct: false, 
+                    explanation: "Слишком сухо и технично. Убивает эмоцию покупки." 
+                },
+                { 
+                    text: "«Вам очень идёт! Это кольцо действительно создано, чтобы притягивать взгляды. Представляете, как красиво оно будет смотреться на вашей руке на важном мероприятии? Можем посмотреть варианты в другом бюджете с похожим эффектом».", 
+                    correct: true, 
+                    explanation: "Эмоциональный клиент покупает чувства. Нужно усилить эмоцию («притягивать взгляды») + показать заботу о бюджете («варианты в другом бюджете»)." 
+                },
+                { 
+                    text: "«Ну, качество требует вложений. Зато это золото, а не бижутерия».", 
+                    correct: false, 
+                    explanation: "Звучит как поучение. Клиентка почувствует себя неловко." 
+                }
+            ]
+        },
+        {
+            title: "Рациональный скептик",
+            clientType: "Скептик",
+            clientDescription: "Клиент долго сравнивает цены, хмурится, задаёт каверзные вопросы. Ищет выгоду и аргументы.",
+            clientPhrase: "«А почему это кольцо дороже того, что на соседней витрине? Выглядит почти так же»",
+            options: [
+                { 
+                    text: "«Потому что это более престижная коллекция, вы же не хотите сэкономить на качестве?»", 
+                    correct: false, 
+                    explanation: "Звучит как давление и манипуляция («вы же не хотите...»)." 
+                },
+                { 
+                    text: "«Отличный вопрос. Здесь используется более сложное плетение, которое не цепляет одежду, и камни закреплены так, что не выпадут при ежедневной носке. Это инвестиция в долговечность».", 
+                    correct: true, 
+                    explanation: "Скептик хочет логики и аргументов. Конкретные преимущества (плетение, закрепка) + выгода («долговечность») = убеждает рационально." 
+                },
+                { 
+                    text: "«Ну, цены разные бывают. Могу показать подешевле, если хотите».", 
+                    correct: false, 
+                    explanation: "Показывает неуверенность. Скептик решит, что разница в цене необоснованна." 
+                }
+            ]
+        },
+        {
+            title: "Молчаливый наблюдатель",
+            clientType: "Молчаливый",
+            clientDescription: "Клиент зашёл, молча ходит вдоль витрин, не смотрит на продавца. Нужно аккуратно начать диалог.",
+            clientPhrase: "(молчит, просто смотрит)",
+            options: [
+                { 
+                    text: "«Добрый день! Чем могу помочь? Что вас интересует?»", 
+                    correct: false, 
+                    explanation: "Слишком общий вопрос «чем помочь» — клиент ответит «просто смотрю» и закроется." 
+                },
+                { 
+                    text: "«Добрый день! У нас сегодня акция - скидка 15% на все кольца. Какое изделие выбираете — для себя или в подарок?»", 
+                    correct: true, 
+                    explanation: "Молчаливому клиенту нужно дать «крючок» для разговора. Конкретика (скидка) + открытый вопрос (для себя или в подарок) = мягко вовлекает в диалог." 
+                },
+                { 
+                    text: "(Молча наблюдает, не подходит)", 
+                    correct: false, 
+                    explanation: "Клиент может уйти, так и не получив помощи." 
+                },
+                { 
+                    text: "«Здравствуйте! Если нужна будет помощь — обращайтесь, я рядом».", 
+                    correct: false, 
+                    explanation: "Пассивная позиция. Клиент не обратится сам." 
+                }
+            ]
+        },
+        {
+            title: "Торопливый",
+            clientType: "Торопливый",
+            clientDescription: "Клиент зашёл на минуту, смотрит на часы, говорит быстро. Нужно быстро понять потребность и предложить решение.",
+            clientPhrase: "«Мне нужно быстро выбрать серьги в подарок, бюджет 20 тысяч, через час встреча»",
+            options: [
+                { 
+                    text: "«Ой, у нас такой большой выбор! Давайте я покажу вам все наши коллекции, у нас есть классика, модерн, винтаж...»", 
+                    correct: false, 
+                    explanation: "Слишком долго. Клиент уйдёт, не дождавшись." 
+                },
+                { 
+                    text: "«Понял, времени мало. Давайте сразу к делу — вот 3 наших бестселлера в этом бюджете. Они точно понравятся. Выбирайте!»", 
+                    correct: true, 
+                    explanation: "Торопливый клиент ценит скорость. «Понял, времени мало» = эмпатия. «3 бестселлера» = готовое решение без лишнего выбора." 
+                },
+                { 
+                    text: "«За час мы точно успеем! Давайте начнём с того, какой стиль она предпочитает — золото или серебро?»", 
+                    correct: false, 
+                    explanation: "Хотя вопрос уместен, он замедляет процесс. Сначала нужно показать конкретные варианты." 
+                }
+            ]
+        },
+        {
+            title: "Постоянный клиент",
+            clientType: "Постоянный",
+            clientDescription: "Клиент уже покупал в этом магазине, узнаёт продавца. Важно показать, что его помнят и ценят.",
+            clientPhrase: "«Здравствуйте! Я у вас месяц назад покупала кольцо, помните? Хочу посмотреть, что нового»",
+            options: [
+                { 
+                    text: "«Здравствуйте! Да, конечно. Вот наша новая коллекция, посмотрите всё».", 
+                    correct: false, 
+                    explanation: "Формально. Не показывает, что клиента запомнили." 
+                },
+                { 
+                    text: "«Здравствуйте! Конечно помню, вы брали кольцо с фианитами. Как оно, носите с удовольствием? У нас как раз новое поступление — давайте покажу, что может дополнить вашу коллекцию».", 
+                    correct: true, 
+                    explanation: "Постоянный клиент хочет чувствовать себя особенным. «Помню, что вы брали» + «как оно?» = забота и персонализация. Предложение «дополнить коллекцию» = мягкая допродажа." 
+                },
+                { 
+                    text: "«Здравствуйте! Рады вас видеть. Что подбираете сегодня?»", 
+                    correct: false, 
+                    explanation: "Стандартное приветствие. Не использует возможность укрепить лояльность." 
+                }
+            ]
+        }
+    ];
+
+    // ========== 📖 РЕНДЕР СЦЕНАРИЯ ==========
+    function renderScenario() {
+        const scenario = SCENARIOS[currentScenario];
+        document.getElementById('scenarioNum').textContent = currentScenario + 1;
+        selectedOption = null;
+        
+        const scenarioArea = document.getElementById('scenarioArea');
+        scenarioArea.innerHTML = `
+            <div class="client-type">
+                <strong>Тип клиента:</strong> ${scenario.clientType}
+                <div style="margin-top: 8px; color: #666;">${scenario.clientDescription}</div>
+            </div>
+            <div class="client-phrase">
+                <strong>Клиент говорит:</strong> ${scenario.clientPhrase}
+            </div>
+        `;
+        
+        scenario.options.forEach((option, idx) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'option';
+            optionDiv.dataset.idx = idx;
+            optionDiv.innerHTML = option.text;
+            optionDiv.onclick = () => selectOption(idx, optionDiv);
+            scenarioArea.appendChild(optionDiv);
+        });
+        
+        const checkBtn = document.getElementById('checkBtn');
+        checkBtn.textContent = '✅ Проверить';
+        checkBtn.className = 'btn';
+        checkBtn.disabled = true;
+        checkBtn.onclick = checkScenario;
+        
+        document.getElementById('resultCard').style.display = 'none';
+        document.getElementById('saveStatus').textContent = '';
+    }
+
+    // ========== 🖱️ ВЫБОР ОПЦИИ ==========
+    function selectOption(idx, element) {
+        const options = document.querySelectorAll('.option');
+        options.forEach(opt => opt.classList.remove('selected'));
+        
+        element.classList.add('selected');
+        selectedOption = idx;
+        
+        document.getElementById('checkBtn').disabled = false;
+    }
+
+    // ========== ✅ ПРОВЕРКА СЦЕНАРИЯ ==========
+    function checkScenario() {
+        const scenario = SCENARIOS[currentScenario];
+        const correctOption = scenario.options.findIndex(opt => opt.correct);
+        
+        // Подсвечиваем правильный и неправильные ответы
+        const options = document.querySelectorAll('.option');
+        options.forEach((opt, idx) => {
+            if (idx === correctOption) opt.classList.add('correct');
+            if (idx === selectedOption && idx !== correctOption) opt.classList.add('wrong');
+        });
+        
+        // Считаем результат
+        const isCorrect = selectedOption === correctOption;
+        const percent = isCorrect ? 100 : 0;
+        
+        // Показываем результат
+        const resultCard = document.getElementById('resultCard');
+        resultCard.style.display = 'block';
+        resultCard.className = `result-card ${isCorrect ? 'success' : 'fail'}`;
+        
+        let html = `<h2>${isCorrect ? '✅ Отлично!' : '⚠️ Есть над чем поработать'}</h2>`;
+        html += `<p>Ваш выбор: ${scenario.options[selectedOption].text}</p>`;
+        html += `<p>Результат: ${percent}%</p>`;
+        
+        // Объяснение
+        html += '<div style="text-align: left; margin-top: 16px;">';
+        if (isCorrect) {
+            html += `<div class="explanation">
+                <div class="correct-text">✅ Правильно!</div>
+                <div style="margin-top: 6px;">${scenario.options[selectedOption].explanation}</div>
+            </div>`;
+        } else {
+            html += `<div class="explanation">
+                <div class="error-text">❌ Неправильно!</div>
+                <div style="margin-top: 6px;">${scenario.options[selectedOption].explanation}</div>
+                <div class="explanation">
+                    <div class="correct-text" style="margin-top: 12px;">✅ Правильный ответ:</div>
+                    <div style="margin-top: 6px;">${scenario.options[correctOption].text}</div>
+                    <div style="margin-top: 6px;">${scenario.options[correctOption].explanation}</div>
+                </div>
+            </div>`;
+        }
+        html += '</div>';
+        
+        resultCard.innerHTML = html;
+        
+        // Сохраняем результат
+        gameResults.push({
+            scenario: scenario.title,
+            selectedOption: selectedOption,
+            correctOption: correctOption,
+            isCorrect: isCorrect,
+            percent: percent
+        });
+        
+        // Меняем кнопку
+        const checkBtn = document.getElementById('checkBtn');
+        if (currentScenario < SCENARIOS.length - 1) {
+            checkBtn.textContent = '➡️ Следующий сценарий';
+            checkBtn.className = 'btn next-btn';
+            checkBtn.disabled = false;
+            checkBtn.onclick = () => {
+                currentScenario++;
+                renderScenario();
+            };
+        } else {
+            checkBtn.textContent = '🏁 Завершить игру и показать результаты';
+            checkBtn.className = 'btn finish-btn';
+            checkBtn.disabled = false;
+            checkBtn.onclick = () => {
+                finishGame();
+            };
+        }
+    }
+
+    // ========== 🏁 ЗАВЕРШЕНИЕ ИГРЫ ==========
+    async function finishGame() {
+        const totalScore = gameResults.reduce((sum, r) => sum + r.percent, 0);
+        const avgPercent = Math.round(totalScore / SCENARIOS.length);
+        
+        const resultData = {
+            id: Date.now(),
+            type: 'clienttype',
+            user_name: currentUserName,
+            city: currentUserCity,
+            score: totalScore,
+            total: SCENARIOS.length * 100,
+            percent: avgPercent,
+            passed: avgPercent >= 70,
+            scenarios: gameResults,
+            date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
+        };
+        
+        const statusDiv = document.getElementById('saveStatus');
+        statusDiv.textContent = '⏳ Сохранение...';
+        statusDiv.style.color = '#f59e0b';
+        
+        try {
+            const localBackup = JSON.parse(localStorage.getItem('clienttype_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('clienttype_backup', JSON.stringify(localBackup));
+            
+            const newRef = db.ref('results/clienttype').push();
+            await newRef.set(resultData);
+            
+            const backup = JSON.parse(localStorage.getItem('clienttype_backup') || '[]');
+            const filtered = backup.filter(r => r.id !== resultData.id);
+            localStorage.setItem('clienttype_backup', JSON.stringify(filtered));
+            
+            statusDiv.textContent = '✅ Результат сохранён!';
+            statusDiv.style.color = '#16a34a';
+        } catch(e) {
+            statusDiv.textContent = '⚠️ Сохранено локально';
+            statusDiv.style.color = '#f59e0b';
+        }
+        
+        const scenarioArea = document.getElementById('scenarioArea');
+        scenarioArea.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <h2>🎉 Игра завершена!</h2>
+                <p style="font-size: 18px;">Ваш результат: <strong>${avgPercent}%</strong></p>
+                <p>Правильных ответов: ${gameResults.filter(r => r.isCorrect).length} из ${SCENARIOS.length}</p>
+                <p style="margin-top: 16px;">${avgPercent >= 70 ? '✅ Отличный результат! Вы отлично адаптируете ответы под тип клиента.' : '⚠️ Рекомендуем повторить тренажёр и изучить типы клиентов.'}</p>
+                <button class="btn" onclick="location.reload()" style="margin-top: 20px; max-width: 300px;">🔄 Пройти ещё раз</button>
+            </div>
+        `;
+        
+        document.getElementById('checkBtn').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
