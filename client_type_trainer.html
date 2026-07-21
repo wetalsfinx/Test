@@ -15,7 +15,7 @@
         * { box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #c41e3a 0%, #e8a0b4 50%, #d97706 100%);
+            background: #f5f5f5;
             margin: 0;
             padding: 20px;
             min-height: 100vh;
@@ -27,7 +27,7 @@
             background: white;
             border-radius: 24px;
             padding: 32px;
-            box-shadow: 0 20px 60px rgba(196,30,58,0.3);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             animation: slideIn 0.5s ease;
         }
         @keyframes slideIn {
@@ -40,9 +40,7 @@
             margin-bottom: 32px;
         }
         .header h1 {
-            background: linear-gradient(135deg, #c41e3a 0%, #d97706 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #c41e3a;
             margin: 0 0 8px 0;
             font-size: 32px;
             font-weight: 800;
@@ -63,39 +61,26 @@
             font-weight: 700;
             font-size: 18px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .client-type-badge.expert { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: white; }
-        .client-type-badge.lost { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
-        .client-type-badge.emotional { background: linear-gradient(135deg, #e8a0b4 0%, #c41e3a 100%); color: white; }
-        .client-type-badge.skeptic { background: linear-gradient(135deg, #6b7280 0%, #374151 100%); color: white; }
-        .client-type-badge.quiet { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
-        .client-type-badge.hurry { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
-        .client-type-badge.regular { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; }
+        .client-type-badge.expert { background: #fef3c7; color: #92400e; }
+        .client-type-badge.lost { background: #fde68a; color: #92400e; }
+        .client-type-badge.emotional { background: #fce7f3; color: #be185d; }
+        .client-type-badge.skeptic { background: #f3f4f6; color: #374151; }
+        .client-type-badge.quiet { background: #d1fae5; color: #065f46; }
+        .client-type-badge.hurry { background: #fee2e2; color: #991b1b; }
+        .client-type-badge.regular { background: #ffe4e6; color: #be123c; }
         
         .client-type-badge .icon { font-size: 28px; }
         
         /* DIALOGUE AREA */
-        .dialogue-container {
-            background: linear-gradient(135deg, #fff0f3 0%, #ffe4e8 100%);
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-        
         .client-description {
-            background: white;
+            background: #f9fafb;
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 20px;
             border-left: 4px solid #d97706;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .client-description strong {
             color: #1f2937;
@@ -115,7 +100,6 @@
             font-size: 16px;
             line-height: 1.5;
             animation: fadeIn 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -123,7 +107,7 @@
         }
         
         .message.client {
-            background: white;
+            background: #f9fafb;
             border-left: 4px solid #c41e3a;
             margin-right: 40px;
         }
@@ -138,7 +122,7 @@
         }
         
         .message.seller {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            background: #fef3c7;
             border-left: 4px solid #d97706;
             margin-left: 40px;
             cursor: pointer;
@@ -146,13 +130,12 @@
         }
         .message.seller:hover {
             transform: translateX(8px);
-            box-shadow: 0 4px 12px rgba(217,119,6,0.3);
+            box-shadow: 0 4px 12px rgba(217,119,6,0.15);
         }
         .message.seller.selected {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            background: #fee2e2;
             border-left-color: #c41e3a;
-            box-shadow: 0 0 0 3px rgba(196,30,58,0.2);
-            transform: scale(1.02);
+            box-shadow: 0 0 0 3px rgba(196,30,58,0.15);
         }
         .message.seller .speaker {
             color: #b45309;
@@ -190,30 +173,30 @@
             left: 0;
             width: 4px;
             height: 100%;
-            background: linear-gradient(180deg, #c41e3a 0%, #d97706 100%);
+            background: #c41e3a;
             opacity: 0;
             transition: opacity 0.3s;
         }
         .option:hover {
             border-color: #c41e3a;
             transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(196,30,58,0.15);
+            box-shadow: 0 4px 12px rgba(196,30,58,0.1);
         }
         .option:hover::before { opacity: 1; }
         .option.selected {
             border-color: #c41e3a;
-            background: linear-gradient(135deg, #fff0f3 0%, #ffe4e8 100%);
-            box-shadow: 0 4px 16px rgba(196,30,58,0.2);
+            background: #fff1f2;
+            box-shadow: 0 4px 16px rgba(196,30,58,0.15);
         }
         .option.selected::before { opacity: 1; }
         .option.correct {
             border-color: #10b981;
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            box-shadow: 0 4px 16px rgba(16,185,129,0.2);
+            background: #d1fae5;
+            box-shadow: 0 4px 16px rgba(16,185,129,0.15);
         }
         .option.wrong {
             border-color: #ef4444;
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            background: #fee2e2;
             opacity: 0.7;
         }
         
@@ -224,7 +207,7 @@
             width: 32px;
             height: 32px;
             border-radius: 8px;
-            background: linear-gradient(135deg, #c41e3a 0%, #d97706 100%);
+            background: #c41e3a;
             color: white;
             font-weight: 700;
             margin-right: 12px;
@@ -247,23 +230,26 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
         .btn:active { transform: translateY(0); }
         
         .btn-primary {
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
+            background: #c41e3a;
             color: white;
         }
+        .btn-primary:hover { background: #a0162e; }
         .btn-next {
-            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            background: #d97706;
             color: white;
         }
+        .btn-next:hover { background: #b45309; }
         .btn-finish {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: #10b981;
             color: white;
         }
+        .btn-finish:hover { background: #059669; }
         .btn:disabled {
             background: #d1d5db;
             cursor: not-allowed;
@@ -273,18 +259,17 @@
         
         /* PROGRESS BAR */
         .progress-bar {
-            background: linear-gradient(135deg, #ffe4e8 0%, #ffd1d9 100%);
+            background: #e5e7eb;
             border-radius: 12px;
             height: 8px;
             margin-bottom: 24px;
             overflow: hidden;
         }
         .progress-fill {
-            background: linear-gradient(90deg, #c41e3a 0%, #d97706 100%);
+            background: #c41e3a;
             height: 100%;
             border-radius: 12px;
             transition: width 0.5s ease;
-            box-shadow: 0 0 10px rgba(196,30,58,0.3);
         }
         
         .progress-text {
@@ -297,11 +282,11 @@
         
         /* RESULT CARD */
         .result-card {
-            background: linear-gradient(135deg, #fff0f3 0%, #ffe4e8 100%);
+            background: #f9fafb;
             border-radius: 20px;
             padding: 28px;
             margin-top: 24px;
-            border: 2px solid #e8a0b4;
+            border: 2px solid #e5e7eb;
             animation: slideUp 0.5s ease;
         }
         @keyframes slideUp {
@@ -310,11 +295,11 @@
         }
         
         .result-card.success {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            background: #d1fae5;
             border-color: #10b981;
         }
         .result-card.fail {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            background: #fee2e2;
             border-color: #ef4444;
         }
         
@@ -357,17 +342,13 @@
             font-size: 36px;
             font-weight: 800;
             margin-bottom: 16px;
-            background: linear-gradient(135deg, #c41e3a 0%, #d97706 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #c41e3a;
         }
         .final-screen .result-big {
             font-size: 72px;
             font-weight: 800;
             margin: 24px 0;
-            background: linear-gradient(135deg, #c41e3a 0%, #d97706 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #c41e3a;
         }
         .final-screen p {
             font-size: 18px;
@@ -377,7 +358,7 @@
         
         /* REGISTER FORM */
         .register-form {
-            background: linear-gradient(135deg, #fff0f3 0%, #ffe4e8 100%);
+            background: #f9fafb;
             border-radius: 20px;
             padding: 32px;
             margin-bottom: 24px;
@@ -386,7 +367,7 @@
         .register-form select {
             width: 100%;
             padding: 16px 20px;
-            border: 2px solid #e8a0b4;
+            border: 2px solid #e5e7eb;
             border-radius: 12px;
             font-size: 16px;
             margin-bottom: 16px;
@@ -450,7 +431,7 @@
 </div>
 
 <script>
-    // ========== 🔥 FIREBASE ==========
+    // ==========  FIREBASE ==========
     const firebaseConfig = {
         apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
         authDomain: "gold-8105a.firebaseapp.com",
@@ -514,12 +495,12 @@
         }
     });
 
-    // ========== 📚 СЦЕНАРИИ ==========
+    // ==========  СЦЕНАРИИ ==========
     const SCENARIOS = [
         {
             title: "Холодный клиент",
             clientType: "expert",
-            clientIcon: "‍",
+            clientIcon: "👨💼",
             clientName: "Эксперт",
             clientDescription: "Мужчина 40-50 лет, внимательно изучает бирки, читает состав. Говорит уверенно, использует термины.",
             clientPhrase: "«А какой здесь вес и чистота камня? И огранка какая — круглая или принцесса?»",
@@ -559,7 +540,7 @@
         {
             title: "Рациональный скептик",
             clientType: "skeptic",
-            clientIcon: "",
+            clientIcon: "🤔",
             clientName: "Скептик",
             clientDescription: "Клиент долго сравнивает цены, хмурится, задаёт каверзные вопросы. Ищет выгоду и аргументы.",
             clientPhrase: "«А почему это кольцо дороже того, что на соседней витрине? Выглядит почти так же»",
@@ -586,7 +567,7 @@
         {
             title: "Торопливый",
             clientType: "hurry",
-            clientIcon: "⏱️",
+            clientIcon: "️",
             clientName: "Торопливый",
             clientDescription: "Клиент зашёл на минуту, смотрит на часы, говорит быстро. Нужно быстро понять потребность и предложить решение.",
             clientPhrase: "«Мне нужно быстро выбрать серьги в подарок, бюджет 20 тысяч, через час встреча»",
@@ -756,7 +737,7 @@
         }
     }
 
-    // ========== 🏁 ЗАВЕРШЕНИЕ ИГРЫ ==========
+    // ==========  ЗАВЕРШЕНИЕ ИГРЫ ==========
     async function finishGame() {
         const totalScore = gameResults.reduce((sum, r) => sum + r.percent, 0);
         const avgPercent = Math.round(totalScore / SCENARIOS.length);
@@ -778,10 +759,10 @@
         const scenarioArea = document.getElementById('scenarioArea');
         scenarioArea.innerHTML = `
             <div class="final-screen">
-                <h2>🎉 Игра завершена!</h2>
+                <h2> Игра завершена!</h2>
                 <div class="result-big">${avgPercent}%</div>
                 <p>Правильных ответов: <strong>${gameResults.filter(r => r.isCorrect).length} из ${SCENARIOS.length}</strong></p>
-                <p style="margin-top: 24px; font-size: 20px;">${avgPercent >= 70 ? '✅ Отличный результат! Вы отлично адаптируете ответы под тип клиента.' : '⚠️ Рекомендуем повторить тренажёр и изучить типы клиентов.'}</p>
+                <p style="margin-top: 24px; font-size: 20px;">${avgPercent >= 70 ? '✅ Отличный результат! Вы отлично адаптируете ответы под тип клиента.' : '️ Рекомендуем повторить тренажёр и изучить типы клиентов.'}</p>
                 <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 32px; max-width: 300px;">🔄 Пройти ещё раз</button>
             </div>
         `;
