@@ -78,26 +78,19 @@
         .filter-group input { width: 150px; }
         
               /* КРАСИВЫЕ КНОПКИ-ФИЛЬТРЫ */
-        .filter-chip {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 50px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #64748b;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+      .filter-chips { 
+    display: flex; 
+    gap: 8px; 
+    flex-wrap: nowrap; /* Запрещаем перенос */
+    overflow-x: auto; /* Горизонтальная прокрутка если не помещаются */
+    width: 100%;
+    padding-bottom: 4px;
 }
 
-.filter-chip:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+.filter-chip {
+    white-space: nowrap; /* Текст не переносится */
+    flex-shrink: 0; /* Кнопки не сжимаются */
+    /* остальные стили остаются */
 }
 
 .filter-chip.active {
