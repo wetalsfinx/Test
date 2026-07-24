@@ -76,6 +76,23 @@
             color: #1e2a3a;
         }
         .filter-group input { width: 150px; }
+        
+        /* НОВЫЕ СТИЛИ ДЛЯ КНОПОК-ФИЛЬТРОВ */
+        .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-chip {
+            padding: 6px 14px;
+            border: 1px solid #d0d7dd;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: #1e2a3a;
+        }
+        .filter-chip:hover { background: #f0f3f6; border-color: #c41e3a; }
+        .filter-chip.active { background: #c41e3a; color: white; border-color: #c41e3a; }
+
         .status-text {
             margin-left: auto;
             font-size: 13px;
@@ -386,9 +403,19 @@
     </div>
 
     <div class="filter-bar">
-        <div class="filter-group">
+        <!-- ОБНОВЛЕННЫЙ ФИЛЬТР ТИПА С КНОПКАМИ -->
+        <div class="filter-group" style="flex-direction: column; align-items: flex-start; gap: 8px;">
             <label>Тип</label>
-            <select id="typeFilter">
+            <div class="filter-chips">
+                <button class="filter-chip active" data-value="all" onclick="setTypeFilter('all')">Все</button>
+                <button class="filter-chip" data-value="test" onclick="setTypeFilter('test')">📝 Тест</button>
+                <button class="filter-chip" data-value="trainer" onclick="setTypeFilter('trainer')">🎯 Тренировка</button>
+                <button class="filter-chip" data-value="crosssell" onclick="setTypeFilter('crosssell')">💰 Допродажи</button>
+                <button class="filter-chip" data-value="errorfinder" onclick="setTypeFilter('errorfinder')">🔍 Найди ошибку</button>
+                <button class="filter-chip" data-value="clienttype" onclick="setTypeFilter('clienttype')">🎭 Адаптация</button>
+            </div>
+            <!-- Скрытый select для совместимости со старой логикой -->
+            <select id="typeFilter" style="display: none;">
                 <option value="all">Все</option>
                 <option value="test">📝 Тест</option>
                 <option value="trainer">🎯 Тренировка</option>
@@ -397,6 +424,7 @@
                 <option value="clienttype">🎭 Адаптация</option>
             </select>
         </div>
+
         <div class="filter-group">
             <label>Город</label>
             <select id="cityFilter">
@@ -620,6 +648,50 @@
     let allData = [], filteredData = [];
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null;
 
+    // ========== 💾 УПРАВЛЕНИЕ ФИЛЬТРАМИ И ЗАПОМИНАНИЕ ==========
+    function saveFilters() {
+        const filters = {
+            type: document.getElementById('typeFilter').value,
+            city: document.getElementById('cityFilter').value,
+            percent: document.getElementById('percentFilter').value,
+            search: document.getElementById('searchInput').value
+        };
+        localStorage.setItem('dashboard_filters', JSON.stringify(filters));
+    }
+
+    function loadFilters() {
+        const saved = localStorage.getItem('dashboard_filters');
+        if (saved) {
+            const filters = JSON.parse(saved);
+            document.getElementById('typeFilter').value = filters.type || 'all';
+            document.getElementById('cityFilter').value = filters.city || 'all';
+            document.getElementById('percentFilter').value = filters.percent || 'all';
+            document.getElementById('searchInput').value = filters.search || '';
+            
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.value === filters.type);
+            });
+        }
+    }
+
+    function setTypeFilter(value) {
+        document.getElementById('typeFilter').value = value;
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.classList.toggle('active', chip.dataset.value === value);
+        });
+        saveFilters();
+        applyFilters();
+    }
+
+    function resetFilters() {
+        document.getElementById('typeFilter').value = 'all';
+        document.getElementById('cityFilter').value = 'all';
+        document.getElementById('percentFilter').value = 'all';
+        document.getElementById('searchInput').value = '';
+        localStorage.removeItem('dashboard_filters');
+        setTypeFilter('all');
+    }
+
     // 🔥 ОБНОВЛЕННАЯ ФУНКЦИЯ СБРОСА (FIREBASE)
     document.getElementById('clearAllBtn').onclick = async () => {
         if (!confirm('⚠️ Удалить ВСЕ результаты из Firebase?')) return;
@@ -658,6 +730,9 @@
         document.getElementById('status').textContent = 'Загрузка...';
         
         try {
+            // Загружаем сохраненные фильтры из памяти
+            loadFilters();
+            
             const savedType = document.getElementById('typeFilter').value;
             const savedCity = document.getElementById('cityFilter').value;
             const savedPercent = document.getElementById('percentFilter').value;
@@ -959,17 +1034,14 @@
         const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
         const success = filteredData.filter(r => r.percent >= 85).length;
         const errors = filteredData.reduce((s,r) => {
-    if (r.type === 'clienttype') {
-        // Для адаптации считаем количество неправильных ответов
-        return s + (r.scenarios ? r.scenarios.filter(sc => !sc.isCorrect).length : 0);
-    } else if (r.type === 'errorfinder') {
-        // Для "Найди ошибку" считаем пропущенные ошибки
-        return s + (r.total - r.score);
-    } else {
-        // Для остальных (тест, тренировка, допродажи)
-        return s + (r.total - r.score);
-    }
-}, 0);
+            if (r.type === 'clienttype') {
+                return s + (r.scenarios ? r.scenarios.filter(sc => !sc.isCorrect).length : 0);
+            } else if (r.type === 'errorfinder') {
+                return s + (r.total - r.score);
+            } else {
+                return s + (r.total - r.score);
+            }
+        }, 0);
         const testCount = filteredData.filter(r => r.type === 'test').length;
         const trainerCount = filteredData.filter(r => r.type === 'trainer').length;
         const crosssellCount = filteredData.filter(r => r.type === 'crosssell').length;
@@ -1620,20 +1692,15 @@ ${content}
         a.click();
     }
 
-    function resetFilters() {
-        document.getElementById('typeFilter').value = 'all';
-        document.getElementById('cityFilter').value = 'all';
-        document.getElementById('percentFilter').value = 'all';
-        document.getElementById('searchInput').value = '';
-        applyFilters();
-    }
-
+    // ========== ПРИВЯЗКА СОБЫТИЙ ==========
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('resetFiltersBtn').onclick = resetFilters;
-    document.getElementById('typeFilter').onchange = applyFilters;
-    document.getElementById('cityFilter').onchange = applyFilters;
-    document.getElementById('percentFilter').onchange = applyFilters;
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    
+    // При изменении любого фильтра сохраняем его в память и применяем
+    document.getElementById('cityFilter').onchange = () => { saveFilters(); applyFilters(); };
+    document.getElementById('percentFilter').onchange = () => { saveFilters(); applyFilters(); };
+    document.getElementById('searchInput').addEventListener('input', () => { saveFilters(); applyFilters(); });
+    
     document.getElementById('exportBtn').onclick = exportCSV;
     document.getElementById('exportCityBtn').onclick = exportCityCSV;
     document.getElementById('generateFeedbackBtn').onclick = generateFeedback;
