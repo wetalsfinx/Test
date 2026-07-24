@@ -77,21 +77,41 @@
         }
         .filter-group input { width: 150px; }
         
-        /* НОВЫЕ СТИЛИ ДЛЯ КНОПОК-ФИЛЬТРОВ */
-        .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+              /* КРАСИВЫЕ КНОПКИ-ФИЛЬТРЫ */
+        .filter-chips { 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+        }
         .filter-chip {
-            padding: 6px 14px;
-            border: 1px solid #d0d7dd;
-            border-radius: 20px;
-            background: white;
+            padding: 8px 16px;
+            border: 1px solid transparent;
+            border-radius: 50px;
+            background: #f1f5f9;
+            color: #475569;
             cursor: pointer;
             font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-            color: #1e2a3a;
+            font-weight: 600;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .filter-chip:hover { background: #f0f3f6; border-color: #c41e3a; }
-        .filter-chip.active { background: #c41e3a; color: white; border-color: #c41e3a; }
+        .filter-chip:hover { 
+            background: #e2e8f0;
+            color: #1e293b;
+            transform: translateY(-1px);
+        }
+        .filter-chip.active { 
+            background: #c41e3a;
+            color: white; 
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+            transform: translateY(-1px);
+        }
+        .filter-chip.active:hover {
+            background: #a0162e;
+            box-shadow: 0 6px 16px rgba(196, 30, 58, 0.4);
+        }
 
         .status-text {
             margin-left: auto;
