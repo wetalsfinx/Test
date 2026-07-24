@@ -78,41 +78,50 @@
         .filter-group input { width: 150px; }
         
               /* КРАСИВЫЕ КНОПКИ-ФИЛЬТРЫ */
-        .filter-chips { 
-            display: flex; 
-            gap: 8px; 
-            flex-wrap: wrap; 
-        }
         .filter-chip {
-            padding: 8px 16px;
-            border: 1px solid transparent;
-            border-radius: 50px;
-            background: #f1f5f9;
-            color: #475569;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .filter-chip:hover { 
-            background: #e2e8f0;
-            color: #1e293b;
-            transform: translateY(-1px);
-        }
-        .filter-chip.active { 
-            background: #c41e3a;
-            color: white; 
-            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
-            transform: translateY(-1px);
-        }
-        .filter-chip.active:hover {
-            background: #a0162e;
-            box-shadow: 0 6px 16px rgba(196, 30, 58, 0.4);
-        }
+    padding: 10px 20px;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #64748b;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
+.filter-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.filter-chip.active {
+    background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(196, 30, 58, 0.35);
+    transform: translateY(-1px);
+}
+
+.filter-chip.active:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(196, 30, 58, 0.4);
+}
+
+/* Анимация иконок */
+.filter-chip:hover .emoji {
+    transform: scale(1.2) rotate(5deg);
+    transition: transform 0.3s;
+}
+
+/* Эффект нажатия */
+.filter-chip:active {
+    transform: scale(0.96);
+}
         .status-text {
             margin-left: auto;
             font-size: 13px;
