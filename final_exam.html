@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>585GOLD | Итоговая аттестация</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap');
+        
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            margin: 0; padding: 20px; min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .main-container { max-width: 700px; width: 100%; margin: 0 auto; }
+        
+        .view {
+            background: white; border-radius: 24px; padding: 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            animation: slideIn 0.5s ease;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .header { text-align: center; margin-bottom: 28px; }
+        .header h1 { color: #c41e3a; margin: 0 0 8px 0; font-size: 28px; font-weight: 800; }
+        .header .subtitle { color: #6b7280; font-size: 14px; line-height: 1.5; }
+        .header .badge {
+            display: inline-block; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e; padding: 6px 16px; border-radius: 20px; font-size: 12px;
+            font-weight: 700; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        
+        .register-form { background: #f9fafb; border-radius: 20px; padding: 24px; margin-bottom: 20px; }
+        .register-form input, .register-form select {
+            width: 100%; padding: 14px 18px; border: 2px solid #e5e7eb; border-radius: 12px;
+            font-size: 15px; margin-bottom: 12px; transition: all 0.3s; font-family: 'Inter', sans-serif;
+        }
+        .register-form input:focus, .register-form select:focus {
+            outline: none; border-color: #c41e3a; box-shadow: 0 0 0 4px rgba(196,30,58,0.1);
+        }
+        
+        .btn-primary {
+            width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px;
+            font-weight: 700; cursor: pointer; transition: all 0.3s; background: #c41e3a; color: white;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-primary:hover { background: #a0162e; transform: translateY(-2px); }
+        .btn-primary:disabled { background: #d1d5db; cursor: not-allowed; transform: none; }
+        
+        .progress-bar {
+            background: #e5e7eb; border-radius: 10px; height: 8px; margin-bottom: 20px; overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #c41e3a 0%, #8b1a2c 100%);
+            height: 100%; border-radius: 10px; transition: width 0.5s ease;
+        }
+        
+        .progress-text { text-align: center; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+        
+        .situation-card {
+            background: #fffbeb; border-left: 4px solid #d97706; border-radius: 12px;
+            padding: 20px; margin-bottom: 20px;
+        }
+        .situation-label { font-size: 11px; font-weight: 700; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .situation-text { color: #1f2937; font-size: 15px; line-height: 1.6; font-style: italic; }
+        
+        .principle-tag {
+            display: inline-block; background: #fff1f2; color: #c41e3a; padding: 4px 12px;
+            border-radius: 16px; font-size: 11px; font-weight: 700; margin-bottom: 16px;
+        }
+        
+        .answer-area { margin-bottom: 20px; }
+        .answer-label { font-size: 13px; font-weight: 600; color: #4b5563; margin-bottom: 8px; display: block; }
+        .answer-textarea {
+            width: 100%; min-height: 100px; padding: 14px; border: 2px solid #e5e7eb;
+            border-radius: 12px; font-size: 14px; font-family: 'Inter', sans-serif;
+            resize: vertical; transition: all 0.3s; line-height: 1.5;
+        }
+        .answer-textarea:focus {
+            outline: none; border-color: #c41e3a; box-shadow: 0 0 0 4px rgba(196,30,58,0.1);
+        }
+        
+        .btn-show {
+            width: 100%; padding: 14px; border: 2px solid #c41e3a; border-radius: 12px;
+            background: white; color: #c41e3a; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif;
+        }
+        .btn-show:hover { background: #c41e3a; color: white; }
+        
+        .etalon-box {
+            display: none; background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px;
+            padding: 18px; margin-top: 16px; animation: slideUp 0.4s ease;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .etalon-label { font-size: 11px; font-weight: 700; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .etalon-text { color: #064e3b; font-size: 14px; line-height: 1.6; font-style: italic; }
+        
+        .self-eval { display: none; margin-top: 16px; animation: slideUp 0.4s ease; }
+        .self-eval-label { font-size: 13px; font-weight: 600; color: #4b5563; margin-bottom: 10px; text-align: center; }
+        .self-eval-buttons { display: flex; gap: 10px; }
+        .eval-btn {
+            flex: 1; padding: 14px 10px; border: 2px solid #e5e7eb; border-radius: 12px;
+            background: white; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif;
+            font-size: 13px; font-weight: 600; text-align: center;
+        }
+        .eval-btn:hover { transform: translateY(-2px); }
+        .eval-btn.perfect { color: #059669; }
+        .eval-btn.perfect:hover, .eval-btn.perfect.selected { background: #d1fae5; border-color: #10b981; }
+        .eval-btn.partial { color: #d97706; }
+        .eval-btn.partial:hover, .eval-btn.partial.selected { background: #fef3c7; border-color: #f59e0b; }
+        .eval-btn.miss { color: #dc2626; }
+        .eval-btn.miss:hover, .eval-btn.miss.selected { background: #fee2e2; border-color: #ef4444; }
+        
+        .btn-next {
+            display: none; width: 100%; padding: 16px; border: none; border-radius: 14px;
+            font-size: 16px; font-weight: 700; cursor: pointer; background: #d97706; color: white;
+            margin-top: 16px; transition: all 0.3s; font-family: 'Inter', sans-serif;
+        }
+        .btn-next:hover { background: #b45309; }
+        
+        /* СЕРТИФИКАТ */
+        .certificate-wrapper { display: none; }
+        .certificate {
+            background: linear-gradient(135deg, #fef9ef 0%, #fdf4d8 100%);
+            border: 3px solid #d4a017; border-radius: 16px; padding: 40px 30px;
+            text-align: center; position: relative; margin: 20px 0;
+            box-shadow: 0 10px 40px rgba(212, 160, 23, 0.2);
+        }
+        .certificate::before {
+            content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 1px solid #d4a017; border-radius: 10px; pointer-events: none;
+        }
+        .cert-logo { font-size: 32px; margin-bottom: 10px; }
+        .cert-brand { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900; color: #c41e3a; margin-bottom: 20px; letter-spacing: 2px; }
+        .cert-title { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 900; color: #1f2937; margin: 10px 0; letter-spacing: 3px; }
+        .cert-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 24px; font-style: italic; }
+        .cert-name {
+            font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700;
+            color: #1f2937; margin: 20px 0; padding: 10px 0;
+            border-top: 1px solid #d4a017; border-bottom: 1px solid #d4a017;
+        }
+        .cert-level {
+            display: inline-block; padding: 8px 24px; border-radius: 30px;
+            font-size: 16px; font-weight: 700; margin: 16px 0;
+        }
+        .cert-level.gold { background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%); color: #78350f; }
+        .cert-level.silver { background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%); color: #1f2937; }
+        .cert-level.bronze { background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%); color: #7c2d12; }
+        .cert-score { font-size: 48px; font-weight: 800; color: #c41e3a; margin: 16px 0; }
+        .cert-date { font-size: 13px; color: #6b7280; margin-top: 20px; }
+        .cert-signature {
+            margin-top: 24px; padding-top: 16px; border-top: 1px dashed #d4a017;
+            font-size: 12px; color: #6b7280; font-style: italic;
+        }
+        
+        .cert-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .cert-actions .btn-primary { flex: 1; min-width: 150px; }
+        .btn-secondary {
+            flex: 1; min-width: 150px; padding: 14px; border: 2px solid #e5e7eb; border-radius: 14px;
+            background: white; color: #4b5563; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif;
+        }
+        .btn-secondary:hover { background: #f9fafb; border-color: #c41e3a; }
+        
+        .no-cert {
+            background: #fef2f2; border: 2px solid #fecaca; border-radius: 16px;
+            padding: 30px; text-align: center; margin: 20px 0;
+        }
+        .no-cert h2 { color: #991b1b; font-size: 24px; margin-bottom: 12px; }
+        .no-cert p { color: #7f1d1d; font-size: 14px; line-height: 1.6; }
+        
+        .save-status { font-size: 13px; font-weight: 600; margin-top: 16px; text-align: center; }
+        
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .view { padding: 20px; }
+            .header h1 { font-size: 22px; }
+            .cert-title { font-size: 26px; }
+            .cert-name { font-size: 24px; }
+            .cert-score { font-size: 36px; }
+            .self-eval-buttons { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="view">
+        <div class="header">
+            <h1>🎓 Итоговая аттестация</h1>
+            <div class="subtitle">Мастер продаж 585GOLD</div>
+            <div class="badge">Финальный экзамен</div>
+        </div>
+        
+        <div id="registerForm" class="register-form">
+            <p style="color: #4b5563; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+                <strong>Как это работает:</strong><br>
+                1️⃣ Вы увидите 7 реальных ситуаций из магазина<br>
+                2️ Напишите, <strong>как бы вы ответили клиенту</strong><br>
+                3️⃣ Сравните свой ответ с эталоном<br>
+                4️⃣ Оцените себя честно<br>
+                5️ Получите персональный сертификат
+            </p>
+            <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
+            <select id="userCity">
+                <option value="">Выберите город</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
+                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
+                <option value="Калининград">Калининград</option>
+                <option value="Нижний Тагил">Нижний Тагил</option>
+            </select>
+            <button class="btn-primary" onclick="startExam()">🚀 Начать аттестацию</button>
+        </div>
+
+        <div id="examContainer" style="display: none;">
+            <div class="progress-text">Ситуация <span id="sitNum">1</span> из 7</div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 14%"></div></div>
+            
+            <div class="principle-tag" id="principleTag">Принцип</div>
+            
+            <div class="situation-card">
+                <div class="situation-label">🎬 Ситуация</div>
+                <div class="situation-text" id="situationText"></div>
+            </div>
+            
+            <div class="answer-area">
+                <label class="answer-label">💬 Как вы ответите клиенту?</label>
+                <textarea class="answer-textarea" id="answerInput" placeholder="Напишите вашу фразу здесь..."></textarea>
+            </div>
+            
+            <button class="btn-show" id="showBtn" onclick="showEtalon()">✨ Показать эталонный ответ</button>
+            
+            <div class="etalon-box" id="etalonBox">
+                <div class="etalon-label">✅ Эталонный ответ</div>
+                <div class="etalon-text" id="etalonText"></div>
+            </div>
+            
+            <div class="self-eval" id="selfEval">
+                <div class="self-eval-label">🎯 Насколько вы попали в суть?</div>
+                <div class="self-eval-buttons">
+                    <button class="eval-btn perfect" onclick="selfEvaluate('perfect')">✅ Попал в суть</button>
+                    <button class="eval-btn partial" onclick="selfEvaluate('partial')">🟡 Частично</button>
+                    <button class="eval-btn miss" onclick="selfEvaluate('miss')">❌ Мимо</button>
+                </div>
+            </div>
+            
+            <button class="btn-next" id="nextBtn" onclick="nextSituation()">Далее ➡️</button>
+        </div>
+
+        <div class="certificate-wrapper" id="certificateWrapper">
+            <div id="certificateContent"></div>
+            <div id="saveStatus" class="save-status"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+        authDomain: "gold-8105a.firebaseapp.com",
+        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gold-8105a",
+        storageBucket: "gold-8105a.firebasestorage.app",
+        messagingSenderId: "195469188947",
+        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ========== 📚 7 СИТУАЦИЙ ==========
+    const SITUATIONS = [
+        {
+            principle: "Искренний интерес",
+            situation: "Клиентка выбирает серьги для дочери на выпускной. Вы спрашиваете: «Что для вас важно в украшении?». Она начинает отвечать: «Ну, чтобы не слишком дорого и...» — и в этот момент вы перебиваете её.",
+            etalon: "«Понял-понял, значит, смотрим бюджетные варианты. Вот у нас есть отличная коллекция до 15 тысяч...» — это ошибка. Правильно: дать клиентке закончить мысль, выслушать до конца, и только потом реагировать. Возможно, для неё важнее дизайн, а не цена."
+        },
+        {
+            principle: "Эмпатия",
+            situation: "Клиентка выбирает подарок свекрови на юбилей. Нервничает: «Вдруг ей не понравится? Она такая привередливая... Я уже второй раз прихожу и всё не могу решиться». Что вы скажете?",
+            etalon: "«Я вас понимаю, угодить близким бывает сложнее всего. Давайте сделаем так: я оформлю вам подарочный сертификат на эту сумму. Вы подарите его свекрови, и она сама выберет то, что ей действительно по душе. Так вы будете уверены, что подарок точно её порадует»."
+        },
+        {
+            principle: "Честность",
+            situation: "Клиентка спрашивает про кольцо с фианитами: «Это надолго?». Что вы ответите?",
+            etalon: "«Честно говоря, фианиты со временем мутнеют — это не алмаз. Если планируете носить каждый день, через год-два будете разочарованы. Я бы на вашем месте либо взяла что-то с цирконием, либо копила на бриллиант. А это... ну, на пару сезонов хватит, если не часто носить»."
+        },
+        {
+            principle: "Маленькие жесты",
+            situation: "Клиентка меряет кольцо и говорит вскользь: «Устала после работы». Что вы сделаете?",
+            etalon: "Предложить присесть, принести воды, дать время отдохнуть. Не навязывать покупки. Спросить: «Может, передохнём? Я принесу воды, а вы спокойно посмотрите». Маленький жест внимания важнее любой скидки."
+        },
+        {
+            principle: "Гибкость",
+            situation: "Клиент торопится, смотрит на часы. Стандарт требует выявить потребности и показать 3-4 варианта. Ваши действия?",
+            etalon: "«Вижу, вы торопитесь — давайте я быстро покажу один лучший вариант в вашем бюджете, и если подойдёт, сразу оформим». Показать одно кольцо. Клиент уйдёт довольный и сэкономит время."
+        },
+        {
+            principle: "Проактивность",
+            situation: "Клиентка меряет серьги, смотрит в зеркало, хмурится. Что вы сделаете?",
+            etalon: "«Вижу, вы сомневаетесь. Давайте я сниму их — возможно, они тяжеловаты. Или хотите попробовать модель полегче?» — предложить помощь до того, как клиентка попросила."
+        },
+        {
+            principle: "Завершение контакта",
+            situation: "Клиент уходит без покупки, потратив 30 минут на примерку. Что вы скажете на прощание?",
+            etalon: "«Спасибо, что зашли! Даже если сегодня не выбрали — я рада, что вы увидели наши новинки. Заходите, будем рады». Фокус на отношениях, а не на транзакции."
+        }
+    ];
+
+    let currentIndex = 0;
+    let answers = [];
+    let currentUserName = '';
+    let currentUserCity = '';
+
+    function startExam() {
+        const name = document.getElementById('userName').value.trim();
+        const city = document.getElementById('userCity').value;
+        if (!name) { alert('Введите имя'); return; }
+        if (!city) { alert('Выберите город'); return; }
+        
+        currentUserName = name;
+        currentUserCity = city;
+        currentIndex = 0;
+        answers = [];
+        
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('examContainer').style.display = 'block';
+        
+        renderSituation();
+    }
+
+    function renderSituation() {
+        const sit = SITUATIONS[currentIndex];
+        document.getElementById('sitNum').textContent = currentIndex + 1;
+        document.getElementById('progressFill').style.width = ((currentIndex + 1) / SITUATIONS.length * 100) + '%';
+        document.getElementById('principleTag').textContent = sit.principle;
+        document.getElementById('situationText').textContent = sit.situation;
+        document.getElementById('answerInput').value = '';
+        document.getElementById('etalonBox').style.display = 'none';
+        document.getElementById('selfEval').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('showBtn').style.display = 'block';
+        document.getElementById('answerInput').disabled = false;
+    }
+
+    function showEtalon() {
+        const userAnswer = document.getElementById('answerInput').value.trim();
+        if (!userAnswer) { alert('Сначала напишите ваш ответ'); return; }
+        
+        const sit = SITUATIONS[currentIndex];
+        document.getElementById('etalonText').textContent = sit.etalon;
+        document.getElementById('etalonBox').style.display = 'block';
+        document.getElementById('selfEval').style.display = 'block';
+        document.getElementById('showBtn').style.display = 'none';
+        document.getElementById('answerInput').disabled = true;
+    }
+
+    function selfEvaluate(level) {
+        document.querySelectorAll('.eval-btn').forEach(b => b.classList.remove('selected'));
+        event.target.classList.add('selected');
+        
+        answers.push({
+            situation: currentIndex,
+            principle: SITUATIONS[currentIndex].principle,
+            userAnswer: document.getElementById('answerInput').value.trim(),
+            etalon: SITUATIONS[currentIndex].etalon,
+            selfEval: level
+        });
+        
+        document.getElementById('nextBtn').style.display = 'block';
+    }
+
+    function nextSituation() {
+        currentIndex++;
+        if (currentIndex < SITUATIONS.length) {
+            renderSituation();
+        } else {
+            finishExam();
+        }
+    }
+
+    function finishExam() {
+        document.getElementById('examContainer').style.display = 'none';
+        document.getElementById('certificateWrapper').style.display = 'block';
+        
+        // Подсчёт: perfect = 3 балла, partial = 2, miss = 1
+        const maxScore = SITUATIONS.length * 3;
+        const score = answers.reduce((sum, a) => {
+            if (a.selfEval === 'perfect') return sum + 3;
+            if (a.selfEval === 'partial') return sum + 2;
+            return sum + 1;
+        }, 0);
+        
+        const percent = Math.round((score / maxScore) * 100);
+        const passed = percent >= 70;
+        
+        let level, levelClass, certTitle;
+        if (percent >= 90) { level = 'Мастер продаж 585GOLD'; levelClass = 'gold'; certTitle = '🏆'; }
+        else if (percent >= 70) { level = 'Специалист по сервису'; levelClass = 'silver'; certTitle = '🥈'; }
+        else if (percent >= 50) { level = 'Продавец-консультант'; levelClass = 'bronze'; certTitle = ''; }
+        else { level = null; }
+        
+        const dateStr = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+        
+        let html = '';
+        if (level) {
+            html = `
+                <div class="certificate" id="certificate">
+                    <div class="cert-logo">${certTitle}</div>
+                    <div class="cert-brand">585GOLD</div>
+                    <div class="cert-title">СЕРТИФИКАТ</div>
+                    <div class="cert-subtitle">подтверждает успешное прохождение итоговой аттестации</div>
+                    <div class="cert-name">${currentUserName}</div>
+                    <div class="cert-level ${levelClass}">${level}</div>
+                    <div class="cert-score">${percent}%</div>
+                    <div style="color: #6b7280; font-size: 13px;">Результат: ${score} из ${maxScore} баллов</div>
+                    <div class="cert-date"> ${dateStr} | 🏙️ ${currentUserCity}</div>
+                    <div class="cert-signature">«Клиент не помнит, что вы сказали. Он помнит, как вы заставили его себя чувствовать.»</div>
+                </div>
+                <div class="cert-actions">
+                    <button class="btn-primary" onclick="downloadCertificate()"> Скачать сертификат</button>
+                    <button class="btn-secondary" onclick="window.print()">️ Распечатать</button>
+                </div>
+            `;
+        } else {
+            html = `
+                <div class="no-cert">
+                    <h2>⚠️ Аттестация не пройдена</h2>
+                    <p>Ваш результат: <strong>${percent}%</strong> (необходимо минимум 50%)<br><br>
+                    Рекомендуем пройти тренажёры ещё раз и вернуться к аттестации.</p>
+                </div>
+                <button class="btn-primary" onclick="location.reload()" style="margin-top: 16px;">🔄 Пройти заново</button>
+            `;
+        }
+        
+        document.getElementById('certificateContent').innerHTML = html;
+        
+        // Сохранение
+        const statusDiv = document.getElementById('saveStatus');
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = '⏳ Сохранение...';
+        statusDiv.style.color = '#d97706';
+        
+        const resultData = {
+            id: Date.now(), type: 'final_exam', user_name: currentUserName, city: currentUserCity,
+            score: score, total: maxScore, percent: percent, passed: passed,
+            level: level, answers: answers, date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
+        };
+        
+        try {
+            const localBackup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('exam_backup', JSON.stringify(localBackup));
+            
+            const newRef = db.ref('results/final_exam').push();
+            await newRef.set(resultData);
+            
+            const backup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
+            localStorage.setItem('exam_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
+            
+            statusDiv.textContent = '✅ Результат сохранён!';
+            statusDiv.style.color = '#10b981';
+        } catch(e) {
+            statusDiv.textContent = '⚠️ Сохранено локально';
+            statusDiv.style.color = '#ef4444';
+        }
+    }
+
+    async function downloadCertificate() {
+        const cert = document.getElementById('certificate');
+        if (!cert) return;
+        
+        try {
+            const canvas = await html2canvas(cert, { scale: 2, backgroundColor: null });
+            const link = document.createElement('a');
+            link.download = `Сертификат_${currentUserName.replace(/\s+/g, '_')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch(e) {
+            alert('Ошибка при сохранении. Попробуйте распечатать (Ctrl+P)');
+        }
+    }
+
+    // Автодозагрузка
+    window.addEventListener('load', async () => {
+        const backup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
+        if (backup.length > 0) {
+            for (let result of backup) {
+                try {
+                    const newRef = db.ref('results/final_exam').push();
+                    await newRef.set(result);
+                } catch(e) {}
+            }
+            localStorage.removeItem('exam_backup');
+        }
+    });
+</script>
+
+</body>
+</html>
