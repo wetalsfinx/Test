@@ -385,94 +385,93 @@
         }
     }
 
-    function finishExam() {
-        document.getElementById('examContainer').style.display = 'none';
-        document.getElementById('certificateWrapper').style.display = 'block';
-        
-        // Подсчёт: perfect = 3 балла, partial = 2, miss = 1
-        const maxScore = SITUATIONS.length * 3;
-        const score = answers.reduce((sum, a) => {
-            if (a.selfEval === 'perfect') return sum + 3;
-            if (a.selfEval === 'partial') return sum + 2;
-            return sum + 1;
-        }, 0);
-        
-        const percent = Math.round((score / maxScore) * 100);
-        const passed = percent >= 70;
-        
-        let level, levelClass, certTitle;
-        if (percent >= 90) { level = 'Мастер продаж 585GOLD'; levelClass = 'gold'; certTitle = '🏆'; }
-        else if (percent >= 70) { level = 'Специалист по сервису'; levelClass = 'silver'; certTitle = '🥈'; }
-        else if (percent >= 50) { level = 'Продавец-консультант'; levelClass = 'bronze'; certTitle = ''; }
-        else { level = null; }
-        
-        const dateStr = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
-        
-        let html = '';
-        if (level) {
-            html = `
-                <div class="certificate" id="certificate">
-                    <div class="cert-logo">${certTitle}</div>
-                    <div class="cert-brand">585GOLD</div>
-                    <div class="cert-title">СЕРТИФИКАТ</div>
-                    <div class="cert-subtitle">подтверждает успешное прохождение итоговой аттестации</div>
-                    <div class="cert-name">${currentUserName}</div>
-                    <div class="cert-level ${levelClass}">${level}</div>
-                    <div class="cert-score">${percent}%</div>
-                    <div style="color: #6b7280; font-size: 13px;">Результат: ${score} из ${maxScore} баллов</div>
-                    <div class="cert-date"> ${dateStr} | 🏙️ ${currentUserCity}</div>
-                    <div class="cert-signature">«Клиент не помнит, что вы сказали. Он помнит, как вы заставили его себя чувствовать.»</div>
-                </div>
-                <div class="cert-actions">
-                    <button class="btn-primary" onclick="downloadCertificate()"> Скачать сертификат</button>
-                    <button class="btn-secondary" onclick="window.print()">️ Распечатать</button>
-                </div>
-            `;
-        } else {
-            html = `
-                <div class="no-cert">
-                    <h2>⚠️ Аттестация не пройдена</h2>
-                    <p>Ваш результат: <strong>${percent}%</strong> (необходимо минимум 50%)<br><br>
-                    Рекомендуем пройти тренажёры ещё раз и вернуться к аттестации.</p>
-                </div>
-                <button class="btn-primary" onclick="location.reload()" style="margin-top: 16px;">🔄 Пройти заново</button>
-            `;
-        }
-        
-        document.getElementById('certificateContent').innerHTML = html;
-        
-        // Сохранение
-        const statusDiv = document.getElementById('saveStatus');
-        statusDiv.style.display = 'block';
-        statusDiv.textContent = '⏳ Сохранение...';
-        statusDiv.style.color = '#d97706';
-        
-        const resultData = {
-            id: Date.now(), type: 'final_exam', user_name: currentUserName, city: currentUserCity,
-            score: score, total: maxScore, percent: percent, passed: passed,
-            level: level, answers: answers, date: new Date().toISOString(),
-            timestamp: new Date().toLocaleString('ru-RU')
-        };
-        
-        try {
-            const localBackup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
-            localBackup.push(resultData);
-            localStorage.setItem('exam_backup', JSON.stringify(localBackup));
-            
-            const newRef = db.ref('results/final_exam').push();
-            await newRef.set(resultData);
-            
-            const backup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
-            localStorage.setItem('exam_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
-            
-            statusDiv.textContent = '✅ Результат сохранён!';
-            statusDiv.style.color = '#10b981';
-        } catch(e) {
-            statusDiv.textContent = '⚠️ Сохранено локально';
-            statusDiv.style.color = '#ef4444';
-        }
+  async function finishExam() {
+    document.getElementById('examContainer').style.display = 'none';
+    document.getElementById('certificateWrapper').style.display = 'block';
+    
+    // Подсчёт: perfect = 3 балла, partial = 2, miss = 1
+    const maxScore = SITUATIONS.length * 3;
+    const score = answers.reduce((sum, a) => {
+        if (a.selfEval === 'perfect') return sum + 3;
+        if (a.selfEval === 'partial') return sum + 2;
+        return sum + 1;
+    }, 0);
+    
+    const percent = Math.round((score / maxScore) * 100);
+    const passed = percent >= 70;
+    
+    let level, levelClass, certTitle;
+    if (percent >= 90) { level = 'Мастер продаж 585GOLD'; levelClass = 'gold'; certTitle = '🏆'; }
+    else if (percent >= 70) { level = 'Специалист по сервису'; levelClass = 'silver'; certTitle = '🥈'; }
+    else if (percent >= 50) { level = 'Продавец-консультант'; levelClass = 'bronze'; certTitle = ''; }
+    else { level = null; }
+    
+    const dateStr = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+    
+    let html = '';
+    if (level) {
+        html = `
+            <div class="certificate" id="certificate">
+                <div class="cert-logo">${certTitle}</div>
+                <div class="cert-brand">585GOLD</div>
+                <div class="cert-title">СЕРТИФИКАТ</div>
+                <div class="cert-subtitle">подтверждает успешное прохождение итоговой аттестации</div>
+                <div class="cert-name">${currentUserName}</div>
+                <div class="cert-level ${levelClass}">${level}</div>
+                <div class="cert-score">${percent}%</div>
+                <div style="color: #6b7280; font-size: 13px;">Результат: ${score} из ${maxScore} баллов</div>
+                <div class="cert-date"> ${dateStr} | 🏙️ ${currentUserCity}</div>
+                <div class="cert-signature">«Клиент не помнит, что вы сказали. Он помнит, как вы заставили его себя чувствовать.»</div>
+            </div>
+            <div class="cert-actions">
+                <button class="btn-primary" onclick="downloadCertificate()"> Скачать сертификат</button>
+                <button class="btn-secondary" onclick="window.print()">🖨️ Распечатать</button>
+            </div>
+        `;
+    } else {
+        html = `
+            <div class="no-cert">
+                <h2>⚠️ Аттестация не пройдена</h2>
+                <p>Ваш результат: <strong>${percent}%</strong> (необходимо минимум 50%)<br><br>
+                Рекомендуем пройти тренажёры ещё раз и вернуться к аттестации.</p>
+            </div>
+            <button class="btn-primary" onclick="location.reload()" style="margin-top: 16px;">🔄 Пройти заново</button>
+        `;
     }
-
+    
+    document.getElementById('certificateContent').innerHTML = html;
+    
+    // Сохранение
+    const statusDiv = document.getElementById('saveStatus');
+    statusDiv.style.display = 'block';
+    statusDiv.textContent = '⏳ Сохранение...';
+    statusDiv.style.color = '#d97706';
+    
+    const resultData = {
+        id: Date.now(), type: 'final_exam', user_name: currentUserName, city: currentUserCity,
+        score: score, total: maxScore, percent: percent, passed: passed,
+        level: level, answers: answers, date: new Date().toISOString(),
+        timestamp: new Date().toLocaleString('ru-RU')
+    };
+    
+    try {
+        const localBackup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
+        localBackup.push(resultData);
+        localStorage.setItem('exam_backup', JSON.stringify(localBackup));
+        
+        const newRef = db.ref('results/final_exam').push();
+        await newRef.set(resultData);
+        
+        const backup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
+        localStorage.setItem('exam_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
+        
+        statusDiv.textContent = '✅ Результат сохранён!';
+        statusDiv.style.color = '#10b981';
+    } catch(e) {
+        statusDiv.textContent = '⚠️ Сохранено локально';
+        statusDiv.style.color = '#ef4444';
+    }
+}
     async function downloadCertificate() {
         const cert = document.getElementById('certificate');
         if (!cert) return;
