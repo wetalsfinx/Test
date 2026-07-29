@@ -77,103 +77,54 @@
         }
         .filter-group input { width: 150px; }
         
-/* КРАСИВЫЕ КНОПКИ-ФИЛЬТРЫ С ЧЁТКИМ АКТИВНЫМ СОСТОЯНИЕМ */
-.filter-chips { 
-    display: flex; 
-    gap: 8px; 
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    width: 100%;
-    padding-bottom: 4px;
-}
+        /* КРАСИВЫЕ КНОПКИ-ФИЛЬТРЫ С ЧЁТКИМ АКТИВНЫМ СОСТОЯНИЕМ */
+        .filter-chips { 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 4px;
+        }
+        .filter-chip {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #64748b;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .filter-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+        .filter-chip.active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            color: white;
+        }
+        .filter-chip.active:hover {
+            transform: translateY(-2px);
+        }
+        .filter-chip.active[data-value="all"] { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); box-shadow: 0 4px 12px rgba(196, 30, 58, 0.35); }
+        .filter-chip.active[data-value="test"] { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35); }
+        .filter-chip.active[data-value="trainer"] { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35); }
+        .filter-chip.active[data-value="crosssell"] { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35); }
+        .filter-chip.active[data-value="errorfinder"] { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); }
+        .filter-chip.active[data-value="clienttype"] { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35); }
+        .filter-chip.active[data-value="service"] { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35); }
+        .filter-chip:active { transform: scale(0.96); }
 
-.filter-chip {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 50px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #64748b;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.filter-chip:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-}
-
-/* АКТИВНАЯ КНОПКА — ЯРКАЯ И ЦВЕТНАЯ */
-.filter-chip.active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-    color: white;
-}
-
-.filter-chip.active:hover {
-    transform: translateY(-2px);
-}
-
-/* Индивидуальные цвета ТОЛЬКО для активных кнопок */
-.filter-chip.active[data-value="all"] {
-    background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-    box-shadow: 0 4px 12px rgba(196, 30, 58, 0.35);
-}
-
-.filter-chip.active[data-value="test"] {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
-}
-
-.filter-chip.active[data-value="trainer"] {
-    background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
-    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
-}
-
-.filter-chip.active[data-value="crosssell"] {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
-}
-
-.filter-chip.active[data-value="errorfinder"] {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
-}
-
-.filter-chip.active[data-value="clienttype"] {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
-}
-
-.filter-chip:active {
-    transform: scale(0.96);
-}
-
-/* Активная кнопка (любая) */
-.filter-chip.active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-}
-
-.filter-chip.active:hover {
-    transform: translateY(-2px);
-}
-
-.filter-chip:active {
-    transform: scale(0.96);
-}
-/* Эффект нажатия */
-.filter-chip:active {
-    transform: scale(0.96);
-}
         .status-text {
             margin-left: auto;
             font-size: 13px;
@@ -246,6 +197,7 @@
         .status-card.purple { border-left-color: #8b5cf6; }
         .status-card.teal { border-left-color: #14b8a6; }
         .status-card.gold { border-left-color: #d97706; }
+        .status-card.sky { border-left-color: #0ea5e9; }
 
         .alert-box {
             background: #fef2f2;
@@ -289,6 +241,7 @@
         .badge-purple { background: #f3e8ff; color: #6b21a8; }
         .badge-blue { background: #dbeafe; color: #1e40af; }
         .badge-gold { background: #fef3c7; color: #92400e; }
+        .badge-sky { background: #e0f2fe; color: #0369a1; }
         .empty { color: #94a3b8; text-align: center; padding: 16px 0; font-size: 14px; }
 
         .table-wrap { overflow-x: auto; }
@@ -484,7 +437,6 @@
     </div>
 
     <div class="filter-bar">
-        <!-- ОБНОВЛЕННЫЙ ФИЛЬТР ТИПА С КНОПКАМИ -->
         <div class="filter-group" style="flex-direction: column; align-items: flex-start; gap: 8px;">
             <label>Тип</label>
             <div class="filter-chips">
@@ -494,8 +446,8 @@
                 <button class="filter-chip" data-value="crosssell" onclick="setTypeFilter('crosssell')">💰 Допродажи</button>
                 <button class="filter-chip" data-value="errorfinder" onclick="setTypeFilter('errorfinder')">🔍 Найди ошибку</button>
                 <button class="filter-chip" data-value="clienttype" onclick="setTypeFilter('clienttype')">🎭 Адаптация</button>
+                <button class="filter-chip" data-value="service" onclick="setTypeFilter('service')">🤝 Сервис</button>
             </div>
-            <!-- Скрытый select для совместимости со старой логикой -->
             <select id="typeFilter" style="display: none;">
                 <option value="all">Все</option>
                 <option value="test">📝 Тест</option>
@@ -503,6 +455,7 @@
                 <option value="crosssell">💰 Допродажи</option>
                 <option value="errorfinder">🔍 Найди ошибку</option>
                 <option value="clienttype">🎭 Адаптация</option>
+                <option value="service">🤝 Сервис</option>
             </select>
         </div>
 
@@ -553,6 +506,7 @@
             <div class="status-card gold"><div class="label">💰 Допродаж</div><div class="value" id="sCrosssell">0</div></div>
             <div class="status-card teal"><div class="label">🔍 Найди ошибку</div><div class="value" id="sErrorfinder">0</div></div>
             <div class="status-card purple"><div class="label">🎭 Адаптация</div><div class="value" id="sClienttype">0</div></div>
+            <div class="status-card sky"><div class="label">🤝 Сервис</div><div class="value" id="sService">0</div></div>
             <div class="status-card green"><div class="label">🏆 Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
             <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="sAvg">0%</div></div>
             <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
@@ -784,7 +738,8 @@
                 db.ref('results/dialog').remove(),
                 db.ref('results/crosssell').remove(),
                 db.ref('results/errorfinder').remove(),
-                db.ref('results/clienttype').remove()
+                db.ref('results/clienttype').remove(),
+                db.ref('results/service').remove()
             ]);
             alert('✅ Все данные удалены!');
             location.reload();
@@ -811,7 +766,6 @@
         document.getElementById('status').textContent = 'Загрузка...';
         
         try {
-            // Загружаем сохраненные фильтры из памяти
             loadFilters();
             
             const savedType = document.getElementById('typeFilter').value;
@@ -819,45 +773,34 @@
             const savedPercent = document.getElementById('percentFilter').value;
             const savedSearch = document.getElementById('searchInput').value;
             
-            const [testSnap, dialogSnap, crossSnap, errorSnap, clientSnap] = await Promise.all([
+            const [testSnap, dialogSnap, crossSnap, errorSnap, clientSnap, serviceSnap] = await Promise.all([
                 db.ref('results/test').get(),
                 db.ref('results/dialog').get(),
                 db.ref('results/crosssell').get(),
                 db.ref('results/errorfinder').get(),
-                db.ref('results/clienttype').get()
+                db.ref('results/clienttype').get(),
+                db.ref('results/service').get()
             ]);
             
             let allResults = [];
             
             const testData = testSnap.val();
-            if (testData) {
-                Object.values(testData).forEach(item => { item.type = 'test'; allResults.push(item); });
-                console.log('📦 Загружено тестов:', Object.values(testData).length);
-            }
+            if (testData) { Object.values(testData).forEach(item => { item.type = 'test'; allResults.push(item); }); console.log('📦 Загружено тестов:', Object.values(testData).length); }
             
             const dialogData = dialogSnap.val();
-            if (dialogData) {
-                Object.values(dialogData).forEach(item => { item.type = 'trainer'; allResults.push(item); });
-                console.log('📦 Загружено диалогов:', Object.values(dialogData).length);
-            }
+            if (dialogData) { Object.values(dialogData).forEach(item => { item.type = 'trainer'; allResults.push(item); }); console.log('📦 Загружено диалогов:', Object.values(dialogData).length); }
             
             const crossData = crossSnap.val();
-            if (crossData) {
-                Object.values(crossData).forEach(item => { item.type = 'crosssell'; allResults.push(item); });
-                console.log('💰 Загружено допродаж:', Object.values(crossData).length);
-            }
+            if (crossData) { Object.values(crossData).forEach(item => { item.type = 'crosssell'; allResults.push(item); }); console.log('💰 Загружено допродаж:', Object.values(crossData).length); }
 
             const errorData = errorSnap.val();
-            if (errorData) {
-                Object.values(errorData).forEach(item => { item.type = 'errorfinder'; allResults.push(item); });
-                console.log('🔍 Загружено игр "Найди ошибку":', Object.values(errorData).length);
-            }
+            if (errorData) { Object.values(errorData).forEach(item => { item.type = 'errorfinder'; allResults.push(item); }); console.log('🔍 Загружено игр "Найди ошибку":', Object.values(errorData).length); }
 
             const clientData = clientSnap.val();
-            if (clientData) {
-                Object.values(clientData).forEach(item => { item.type = 'clienttype'; allResults.push(item); });
-                console.log('🎭 Загружено адаптаций:', Object.values(clientData).length);
-            }
+            if (clientData) { Object.values(clientData).forEach(item => { item.type = 'clienttype'; allResults.push(item); }); console.log('🎭 Загружено адаптаций:', Object.values(clientData).length); }
+
+            const serviceData = serviceSnap.val();
+            if (serviceData) { Object.values(serviceData).forEach(item => { item.type = 'service'; allResults.push(item); }); console.log('🤝 Загружено сервисов:', Object.values(serviceData).length); }
             
             if (!allResults.length) {
                 document.getElementById('status').textContent = 'Нет результатов';
@@ -871,8 +814,8 @@
                 user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
                 score: r.score || 0,
-                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' || r.type === 'clienttype' ? 7 : 11)),
-                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' || r.type === 'clienttype' ? 7 : 11)))) * 100),
+                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' || r.type === 'clienttype' ? 7 : (r.type === 'service' ? 16 : 11))),
+                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' || r.type === 'clienttype' ? 7 : (r.type === 'service' ? 16 : 11))))) * 100),
                 answers: r.answers || [],
                 rules_applied: r.rules_applied || [],
                 scenarios: r.scenarios || [],
@@ -961,21 +904,9 @@
                 maintainAspectRatio: true,
                 plugins: { 
                     legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Средний балл: ' + context.parsed.y + '%';
-                            }
-                        }
-                    }
+                    tooltip: { callbacks: { label: function(context) { return 'Средний балл: ' + context.parsed.y + '%'; } } }
                 },
-                scales: { 
-                    y: { 
-                        beginAtZero: true, 
-                        max: 100, 
-                        ticks: { callback: v => v + '%' } 
-                    } 
-                }
+                scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }
             }
         });
     }
@@ -998,15 +929,11 @@
                 });
             } else if (r.type === 'trainer' && r.rules_applied) {
                 TRAINER_RULES.forEach(rule => {
-                    if (!r.rules_applied.includes(rule.name)) {
-                        c.trainerRules[rule.name] = (c.trainerRules[rule.name] || 0) + 1;
-                    }
+                    if (!r.rules_applied.includes(rule.name)) c.trainerRules[rule.name] = (c.trainerRules[rule.name] || 0) + 1;
                 });
             } else if (r.type === 'crosssell' && r.rules_applied) {
                 CROSSSELL_RULES.forEach(rule => {
-                    if (!r.rules_applied.includes(rule.name)) {
-                        c.crosssellRules[rule.name] = (c.crosssellRules[rule.name] || 0) + 1;
-                    }
+                    if (!r.rules_applied.includes(rule.name)) c.crosssellRules[rule.name] = (c.crosssellRules[rule.name] || 0) + 1;
                 });
             }
         });
@@ -1018,22 +945,13 @@
             let maxErrors = 0;
             
             const testMaxIdx = d.testQe.reduce((a,b,i,arr) => b > arr[a] ? i : a, 0);
-            if (d.testQe[testMaxIdx] > maxErrors) {
-                maxErrors = d.testQe[testMaxIdx];
-                weakPoint = `📝 ${testQTexts[testMaxIdx] || '—'}`;
-            }
+            if (d.testQe[testMaxIdx] > maxErrors) { maxErrors = d.testQe[testMaxIdx]; weakPoint = `📝 ${testQTexts[testMaxIdx] || '—'}`; }
             
             const trainerMaxRule = Object.entries(d.trainerRules).sort((a,b) => b[1] - a[1])[0];
-            if (trainerMaxRule && trainerMaxRule[1] > maxErrors) {
-                maxErrors = trainerMaxRule[1];
-                weakPoint = `🎯 ${trainerMaxRule[0]}`;
-            }
+            if (trainerMaxRule && trainerMaxRule[1] > maxErrors) { maxErrors = trainerMaxRule[1]; weakPoint = `🎯 ${trainerMaxRule[0]}`; }
             
             const crosssellMaxRule = Object.entries(d.crosssellRules).sort((a,b) => b[1] - a[1])[0];
-            if (crosssellMaxRule && crosssellMaxRule[1] > maxErrors) {
-                maxErrors = crosssellMaxRule[1];
-                weakPoint = `💰 ${crosssellMaxRule[0]}`;
-            }
+            if (crosssellMaxRule && crosssellMaxRule[1] > maxErrors) { maxErrors = crosssellMaxRule[1]; weakPoint = `💰 ${crosssellMaxRule[0]}`; }
             
             return { city, count: d.count, avg: Math.round(d.sum/d.count), success: d.success, errors: d.errors, weakPoint };
         }).sort((a,b) => b.avg - a.avg);
@@ -1071,7 +989,9 @@
         const fCrosssell = filteredData.filter(r => r.type === 'crosssell').length;
         const fErrorfinder = filteredData.filter(r => r.type === 'errorfinder').length;
         const fClienttype = filteredData.filter(r => r.type === 'clienttype').length;
-        document.getElementById('status').textContent = `✅ Показано: ${filteredData.length} (тест: ${fTest}, тренировка: ${fTrainer}, допродажи: ${fCrosssell}, найди ошибку: ${fErrorfinder}, адаптация: ${fClienttype})`;
+        const fService = filteredData.filter(r => r.type === 'service').length;
+        
+        document.getElementById('status').textContent = `✅ Показано: ${filteredData.length} (тест: ${fTest}, тренировка: ${fTrainer}, допродажи: ${fCrosssell}, найди ошибку: ${fErrorfinder}, адаптация: ${fClienttype}, сервис: ${fService})`;
 
         renderDashboard();
         renderAlerts();
@@ -1097,7 +1017,7 @@
         if (!filteredData.length) {
             document.getElementById('mainTotal').textContent = '0';
             document.getElementById('mainAvg').textContent = '0%';
-            ['sTest','sTrainer','sCrosssell','sErrorfinder','sClienttype','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
+            ['sTest','sTrainer','sCrosssell','sErrorfinder','sClienttype','sService','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
                 document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
             });
             document.getElementById('topList').innerHTML = '<div class="empty">Нет данных</div>';
@@ -1107,7 +1027,6 @@
             if (pieChart) { pieChart.destroy(); pieChart = null; }
             if (cityBarChart) { cityBarChart.destroy(); cityBarChart = null; }
             if (scoreBarChart) { scoreBarChart.destroy(); scoreBarChart = null; }
-            
             return;
         }
 
@@ -1115,19 +1034,17 @@
         const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
         const success = filteredData.filter(r => r.percent >= 85).length;
         const errors = filteredData.reduce((s,r) => {
-            if (r.type === 'clienttype') {
-                return s + (r.scenarios ? r.scenarios.filter(sc => !sc.isCorrect).length : 0);
-            } else if (r.type === 'errorfinder') {
-                return s + (r.total - r.score);
-            } else {
-                return s + (r.total - r.score);
-            }
+            if (r.type === 'clienttype' || r.type === 'service') return s + (r.scenarios ? r.scenarios.filter(sc => !sc.isCorrect).length : 0);
+            else if (r.type === 'errorfinder') return s + (r.total - r.score);
+            else return s + (r.total - r.score);
         }, 0);
+        
         const testCount = filteredData.filter(r => r.type === 'test').length;
         const trainerCount = filteredData.filter(r => r.type === 'trainer').length;
         const crosssellCount = filteredData.filter(r => r.type === 'crosssell').length;
         const errorfinderCount = filteredData.filter(r => r.type === 'errorfinder').length;
         const clienttypeCount = filteredData.filter(r => r.type === 'clienttype').length;
+        const serviceCount = filteredData.filter(r => r.type === 'service').length;
         const low = filteredData.filter(r => r.percent < 70).length;
         const medium = total - success - low;
 
@@ -1139,6 +1056,7 @@
         document.getElementById('sCrosssell').textContent = crosssellCount;
         document.getElementById('sErrorfinder').textContent = errorfinderCount;
         document.getElementById('sClienttype').textContent = clienttypeCount;
+        document.getElementById('sService').textContent = serviceCount;
         document.getElementById('sSuccess').textContent = success;
         document.getElementById('sAvg').textContent = avg + '%';
         document.getElementById('sLow').textContent = low;
@@ -1151,20 +1069,9 @@
                 type: 'doughnut',
                 data: {
                     labels: ['✅ Успешно (≥85%)', '⚠️ Средне (70-84%)', '❌ Низкий (<70%)'],
-                    datasets: [{
-                        data: [success, medium, low],
-                        backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'],
-                        borderColor: ['white', 'white', 'white'],
-                        borderWidth: 2,
-                        hoverOffset: 8
-                    }]
+                    datasets: [{ data: [success, medium, low], backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'], borderColor: ['white', 'white', 'white'], borderWidth: 2, hoverOffset: 8 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    cutout: '60%',
-                    plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11, weight: '500' }, usePointStyle: true } } }
-                }
+                options: { responsive: true, maintainAspectRatio: true, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11, weight: '500' }, usePointStyle: true } } } }
             });
         }
 
@@ -1175,18 +1082,14 @@
             else if (r.type === 'crosssell') badgeClass = 'badge-gold';
             else if (r.type === 'errorfinder') badgeClass = 'badge-blue';
             else if (r.type === 'clienttype') badgeClass = 'badge-purple';
-            return `
-            <div class="employee-item" onclick="showDetails(${r.id})">
-                <span><b>${i+1}.</b> ${r.user_name} (${r.city})</span>
-                <span class="badge ${badgeClass}">${r.percent}%</span>
-            </div>
-        `;}).join('') : '<div class="empty">Нет данных</div>';
+            else if (r.type === 'service') badgeClass = 'badge-sky';
+            return `<div class="employee-item" onclick="showDetails(${r.id})"><span><b>${i+1}.</b> ${r.user_name} (${r.city})</span><span class="badge ${badgeClass}">${r.percent}%</span></div>`;
+        }).join('') : '<div class="empty">Нет данных</div>';
 
         const cityMap = new Map();
         filteredData.forEach(r => {
             if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
-            const c = cityMap.get(r.city);
-            c.sum += r.percent; c.count++;
+            const c = cityMap.get(r.city); c.sum += r.percent; c.count++;
         });
         const cityRating = [...cityMap.entries()].map(([city, d]) => ({ city, avg: Math.round(d.sum/d.count), count: d.count })).sort((a,b) => b.avg - a.avg);
 
@@ -1195,26 +1098,8 @@
         if (cityCtx && cityRating.length > 0) {
             cityBarChart = new Chart(cityCtx, {
                 type: 'bar',
-                data: {
-                    labels: cityRating.map(c => c.city),
-                    datasets: [{
-                        label: 'Средний балл (%)',
-                        data: cityRating.map(c => c.avg),
-                        backgroundColor: cityRating.map(c => c.avg >= 85 ? '#16a34a' : c.avg >= 70 ? '#f59e0b' : '#dc2626'),
-                        borderRadius: 4,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
-                        y: { grid: { display: false } }
-                    }
-                }
+                data: { labels: cityRating.map(c => c.city), datasets: [{ label: 'Средний балл (%)', data: cityRating.map(c => c.avg), backgroundColor: cityRating.map(c => c.avg >= 85 ? '#16a34a' : c.avg >= 70 ? '#f59e0b' : '#dc2626'), borderRadius: 4, borderSkipped: false }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }, y: { grid: { display: false } } } }
             });
         }
 
@@ -1231,16 +1116,8 @@
         if (scoreCtx) {
             scoreBarChart = new Chart(scoreCtx, {
                 type: 'bar',
-                data: {
-                    labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
-                    datasets: [{ data: bins, backgroundColor: '#c41e3a', borderRadius: 4, borderSkipped: false }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
-                }
+                data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: '#c41e3a', borderRadius: 4, borderSkipped: false }] },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
             });
         }
 
@@ -1251,37 +1128,24 @@
             else if (r.type === 'crosssell') badgeClass = 'badge-gold';
             else if (r.type === 'errorfinder') badgeClass = 'badge-blue';
             else if (r.type === 'clienttype') badgeClass = 'badge-purple';
+            else if (r.type === 'service') badgeClass = 'badge-sky';
             else if (r.percent < 70) badgeClass = 'badge-red';
             else if (r.percent < 85) badgeClass = 'badge-yellow';
             
-            const dateStr = new Date(r.date).toLocaleDateString('ru-RU', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
+            const dateStr = new Date(r.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
             
-            return `
-            <div class="employee-item" onclick="showDetails(${r.id})">
-                <div style="flex:1;cursor:pointer;">
-                    <b>${r.user_name}</b> (${r.city}) 
-                    <span style="color:#666; font-size:12px; margin: 0 8px;">${dateStr}</span>
-                    <span class="badge ${badgeClass}">${r.percent}%</span>
-                </div>
+            return `<div class="employee-item" onclick="showDetails(${r.id})">
+                <div style="flex:1;cursor:pointer;"><b>${r.user_name}</b> (${r.city}) <span style="color:#666; font-size:12px; margin: 0 8px;">${dateStr}</span><span class="badge ${badgeClass}">${r.percent}%</span></div>
                 <button class="btn" style="padding:0 10px;background:transparent;color:#dc2626;border:1px solid #fecaca;border-radius:4px;cursor:pointer;" onclick="event.stopPropagation(); deleteRow(${r.id})">✕</button>
-            </div>
-            `;
+            </div>`;
         }).join('');
     }
 
     async function deleteRow(id) {
         if (!confirm('Удалить этот результат навсегда?')) return;
-        
         try {
             const record = allData.find(r => r.id === id);
-            if (!record) {
-                alert('Запись не найдена');
-                return;
-            }
+            if (!record) { alert('Запись не найдена'); return; }
             
             let path = '';
             if (record.type === 'test') path = 'results/test';
@@ -1289,17 +1153,15 @@
             else if (record.type === 'crosssell') path = 'results/crosssell';
             else if (record.type === 'errorfinder') path = 'results/errorfinder';
             else if (record.type === 'clienttype') path = 'results/clienttype';
+            else if (record.type === 'service') path = 'results/service';
             
             if (path) {
                 const snapshot = await db.ref(path).get();
                 const data = snapshot.val();
-                
                 if (data) {
                     for (let key in data) {
                         const item = data[key];
-                        if (item.user_name === record.user_name && 
-                            item.date === record.date &&
-                            item.percent === record.percent) {
+                        if (item.user_name === record.user_name && item.date === record.date && item.percent === record.percent) {
                             await db.ref(`${path}/${key}`).remove();
                             console.log('✅ Удалено из Firebase:', key);
                             break;
@@ -1307,15 +1169,10 @@
                     }
                 }
             }
-            
             allData = allData.filter(r => r.id !== id);
             applyFilters();
             renderCityStats();
-            
-        } catch (e) {
-            console.error('Ошибка:', e);
-            alert('Ошибка: ' + e.message);
-        }
+        } catch (e) { console.error('Ошибка:', e); alert('Ошибка: ' + e.message); }
     }
 
     function showDetails(id) {
@@ -1326,6 +1183,7 @@
         else if (emp.type === 'crosssell') typeLabel = '💰 Допродажи';
         else if (emp.type === 'errorfinder') typeLabel = '🔍 Найди ошибку';
         else if (emp.type === 'clienttype') typeLabel = '🎭 Адаптация';
+        else if (emp.type === 'service') typeLabel = '🤝 Сервис';
         
         document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}% [${typeLabel}]`;
         let html = `<div class="modal-summary">✅ Результат: ${emp.score} из ${emp.total} (${emp.percent}%)</div>`;
@@ -1334,59 +1192,49 @@
             html += `<h4 style="margin:12px 0 8px;">Применённые правила:</h4>`;
             TRAINER_RULES.forEach(rule => {
                 const applied = emp.rules_applied && emp.rules_applied.includes(rule.name);
-                html += `<div class="rule-item ${applied ? '' : 'failed'}">
-                    <div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>
-                    ${!applied ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:4px;">📌 ${rule.rec}</div>` : ''}
-                </div>`;
+                html += `<div class="rule-item ${applied ? '' : 'failed'}"><div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>${!applied ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:4px;">📌 ${rule.rec}</div>` : ''}</div>`;
             });
         } else if (emp.type === 'crosssell') {
             html += `<h4 style="margin:12px 0 8px;">Применённые правила допродаж:</h4>`;
             CROSSSELL_RULES.forEach(rule => {
                 const applied = emp.rules_applied && emp.rules_applied.includes(rule.name);
-                html += `<div class="rule-item ${applied ? '' : 'failed'}">
-                    <div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>
-                    ${!applied ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:4px;">📌 ${rule.rec}</div>` : ''}
-                </div>`;
+                html += `<div class="rule-item ${applied ? '' : 'failed'}"><div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>${!applied ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:4px;">📌 ${rule.rec}</div>` : ''}</div>`;
             });
         } else if (emp.type === 'errorfinder') {
             html += `<h4 style="margin:12px 0 8px;">Результаты по сценариям:</h4>`;
             if (emp.scenarios && emp.scenarios.length) {
                 emp.scenarios.forEach((s, idx) => {
-                    html += `<div class="rule-item ${s.percent >= 70 ? '' : 'failed'}">
-                        <div class="rule-name">${idx + 1}. ${s.scenario}</div>
-                        <div class="rule-status">Найдено ошибок: ${s.score}/${s.maxScore} (Результат: ${s.percent}%)</div>
-                    </div>`;
+                    html += `<div class="rule-item ${s.percent >= 70 ? '' : 'failed'}"><div class="rule-name">${idx + 1}. ${s.scenario}</div><div class="rule-status">Найдено ошибок: ${s.score}/${s.maxScore} (Результат: ${s.percent}%)</div></div>`;
                 });
             }
         } else if (emp.type === 'clienttype') {
             html += `<h4 style="margin:12px 0 8px;">Результаты по сценариям:</h4>`;
             if (emp.scenarios && emp.scenarios.length) {
                 emp.scenarios.forEach((s, idx) => {
-                    html += `<div class="rule-item ${s.isCorrect ? '' : 'failed'}">
-                        <div class="rule-name">${idx + 1}. ${s.scenario}</div>
-                        <div class="rule-status">${s.isCorrect ? '✅ Верно' : '❌ Неверно'}</div>
-                    </div>`;
+                    html += `<div class="rule-item ${s.isCorrect ? '' : 'failed'}"><div class="rule-name">${idx + 1}. ${s.scenario}</div><div class="rule-status">${s.isCorrect ? '✅ Верно' : '❌ Неверно'}</div></div>`;
                 });
+            }
+        } else if (emp.type === 'service') {
+            html += `<h4 style="margin:12px 0 8px;">Результаты по принципам сервиса:</h4>`;
+            if (emp.answers && emp.answers.length) {
+                const principlesMap = {};
+                emp.answers.forEach(a => {
+                    if (!principlesMap[a.principle]) principlesMap[a.principle] = { correct: 0, total: 0 };
+                    principlesMap[a.principle].total++;
+                    if (a.isCorrect) principlesMap[a.principle].correct++;
+                });
+                for (const [name, data] of Object.entries(principlesMap)) {
+                    const isStrong = data.correct === data.total;
+                    html += `<div class="rule-item ${isStrong ? '' : 'failed'}"><div class="rule-name">${isStrong ? '✅' : '❌'} ${name} (${data.correct}/${data.total})</div>${!isStrong ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:4px;">Рекомендуем повторить этот принцип сервиса.</div>` : ''}</div>`;
+                }
             }
         } else {
             if (emp.answers && emp.answers.length) {
                 emp.answers.forEach((a) => {
                     const recIndex = (a.originalIndex !== undefined) ? a.originalIndex : ((a.questionNum || 1) - 1);
                     const rec = TEST_GENERAL_RECS[recIndex] || 'Изучите правильный ответ.';
-                    
-                    const correctAnswerHtml = a.correct ? '' : 
-                        `<div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>`;
-                    
-                    html += `<div class="answer-item">
-                        <div class="q">Вопрос ${a.questionNum || '?'}: ${a.questionText}</div>
-                        <div class="user-answer" style="color: ${a.correct ? '#16a34a' : '#dc2626'}">
-                            ${a.correct ? '✅' : '❌'} Ваш ответ: ${a.selectedText}
-                        </div>
-                        ${correctAnswerHtml}
-                        <div class="${a.correct ? 'rec' : 'rec-wrong'}">
-                            ${a.correct ? '✅ Верно!' : '📌 ' + rec}
-                        </div>
-                    </div>`;
+                    const correctAnswerHtml = a.correct ? '' : `<div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>`;
+                    html += `<div class="answer-item"><div class="q">Вопрос ${a.questionNum || '?'}: ${a.questionText}</div><div class="user-answer" style="color: ${a.correct ? '#16a34a' : '#dc2626'}">${a.correct ? '✅' : '❌'} Ваш ответ: ${a.selectedText}</div>${correctAnswerHtml}<div class="${a.correct ? 'rec' : 'rec-wrong'}">${a.correct ? '✅ Верно!' : '📌 ' + rec}</div></div>`;
                 });
             }
         }
@@ -1406,10 +1254,7 @@
             testData.forEach(r => {
                 if (r.answers) {
                     const answer = r.answers.find(a => a.originalIndex === i);
-                    if (answer) {
-                        total++;
-                        if (answer.correct) correct++;
-                    }
+                    if (answer) { total++; if (answer.correct) correct++; }
                 }
             });
             return { type: 'test', index: i, name: topic, correct, total, percent: total > 0 ? Math.round((correct/total)*100) : 0, rec: TEST_GENERAL_RECS[i] };
@@ -1418,12 +1263,7 @@
         const trainerTopicStats = TRAINER_RULES.map((rule) => {
             let applied = 0, totalAttempts = 0;
             trainerData.forEach(r => {
-                if (r.rules_applied) {
-                    totalAttempts++;
-                    if (r.rules_applied.includes(rule.name)) {
-                        applied++;
-                    }
-                }
+                if (r.rules_applied) { totalAttempts++; if (r.rules_applied.includes(rule.name)) applied++; }
             });
             return { type: 'trainer', name: rule.name, correct: applied, total: totalAttempts, percent: totalAttempts > 0 ? Math.round((applied/totalAttempts)*100) : 0, rec: TRAINER_GENERAL_RECS[rule.id] };
         });
@@ -1431,12 +1271,7 @@
         const crosssellTopicStats = CROSSSELL_RULES.map((rule) => {
             let applied = 0, totalAttempts = 0;
             crosssellData.forEach(r => {
-                if (r.rules_applied) {
-                    totalAttempts++;
-                    if (r.rules_applied.includes(rule.name)) {
-                        applied++;
-                    }
-                }
+                if (r.rules_applied) { totalAttempts++; if (r.rules_applied.includes(rule.name)) applied++; }
             });
             return { type: 'crosssell', name: rule.name, correct: applied, total: totalAttempts, percent: totalAttempts > 0 ? Math.round((applied/totalAttempts)*100) : 0, rec: CROSSSELL_GENERAL_RECS[rule.id] };
         });
@@ -1468,87 +1303,37 @@
         const topStrong = sorted.slice(0, 5);
         const topWeak = sorted.slice(-4).reverse();
         
-        let html = `
-            <div class="feedback-wrapper">
-                <div class="feedback-header">
-                    <div>
-                        <h3>🏙️ ${city}</h3>
-                        <p>Детальный анализ сильных и слабых сторон</p>
-                    </div>
-                    <div class="feedback-stats">
-                        <div class="feedback-stat-pill">👥 ${total} прохождений</div>
-                        <div class="feedback-stat-pill">📈 ${avg}% средний балл</div>
-                        <div class="feedback-stat-pill">🏆 ${success}/${total} успешно</div>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
-                    <span class="badge badge-blue">📝 Тестов: ${testCount}</span>
-                    <span class="badge badge-purple">🎯 Тренировок: ${trainerCount}</span>
-                    <span class="badge badge-gold">💰 Допродаж: ${crosssellCount}</span>
-                    ${failed > 0 ? `<span class="badge badge-red">🔴 Требуют внимания: ${failed}</span>` : ''}
-                </div>
-        `;
+        let html = `<div class="feedback-wrapper"><div class="feedback-header"><div><h3>🏙️ ${city}</h3><p>Детальный анализ сильных и слабых сторон</p></div><div class="feedback-stats"><div class="feedback-stat-pill">👥 ${total} прохождений</div><div class="feedback-stat-pill">📈 ${avg}% средний балл</div><div class="feedback-stat-pill">🏆 ${success}/${total} успешно</div></div></div>
+        <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+            <span class="badge badge-blue">📝 Тестов: ${testCount}</span>
+            <span class="badge badge-purple">🎯 Тренировок: ${trainerCount}</span>
+            <span class="badge badge-gold">💰 Допродаж: ${crosssellCount}</span>
+            ${failed > 0 ? `<span class="badge badge-red">🔴 Требуют внимания: ${failed}</span>` : ''}
+        </div>`;
         
         if (topStrong.length > 0) {
-            html += `<div class="feedback-section">
-                <div class="feedback-section-title">
-                    <div class="icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534;">✅</div>
-                    Сильные стороны — темы, где продавцы отвечают правильно
-                </div>
-                <div class="topics-grid">`;
+            html += `<div class="feedback-section"><div class="feedback-section-title"><div class="icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534;">✅</div>Сильные стороны — темы, где продавцы отвечают правильно</div><div class="topics-grid">`;
             topStrong.forEach((topic, i) => {
-                let icon = '📝';
-                if (topic.type === 'trainer') icon = '🎯';
-                else if (topic.type === 'crosssell') icon = '💰';
-                html += `<div class="topic-card strong">
-                    <div class="topic-rank">${i+1}</div>
-                    <div class="topic-name">${icon} ${topic.name}</div>
-                    <div class="topic-percent">${topic.percent}%</div>
-                    <div class="topic-bar"><div class="topic-bar-fill" style="width: ${topic.percent}%"></div></div>
-                    <div class="topic-details">Правильных ответов: ${topic.correct} из ${topic.total}</div>
-                </div>`;
+                let icon = '📝'; if (topic.type === 'trainer') icon = '🎯'; else if (topic.type === 'crosssell') icon = '💰';
+                html += `<div class="topic-card strong"><div class="topic-rank">${i+1}</div><div class="topic-name">${icon} ${topic.name}</div><div class="topic-percent">${topic.percent}%</div><div class="topic-bar"><div class="topic-bar-fill" style="width: ${topic.percent}%"></div></div><div class="topic-details">Правильных ответов: ${topic.correct} из ${topic.total}</div></div>`;
             });
             html += `</div></div>`;
         }
         
         if (topWeak.length > 0) {
-            html += `<div class="feedback-section">
-                <div class="feedback-section-title">
-                    <div class="icon" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b;">⚠️</div>
-                    Зоны развития — темы, где чаще всего ошибаются
-                </div>
-                <div class="topics-grid">`;
+            html += `<div class="feedback-section"><div class="feedback-section-title"><div class="icon" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b;">⚠️</div>Зоны развития — темы, где чаще всего ошибаются</div><div class="topics-grid">`;
             topWeak.forEach((topic, i) => {
-                let icon = '📝';
-                if (topic.type === 'trainer') icon = '🎯';
-                else if (topic.type === 'crosssell') icon = '💰';
-                html += `<div class="topic-card weak">
-                    <div class="topic-rank">${i+1}</div>
-                    <div class="topic-name">${icon} ${topic.name}</div>
-                    <div class="topic-percent">${topic.percent}%</div>
-                    <div class="topic-bar"><div class="topic-bar-fill" style="width: ${topic.percent}%"></div></div>
-                    <div class="topic-details">Правильных ответов: ${topic.correct} из ${topic.total} (${100-topic.percent}% ошибок)</div>
-                </div>`;
+                let icon = '📝'; if (topic.type === 'trainer') icon = '🎯'; else if (topic.type === 'crosssell') icon = '💰';
+                html += `<div class="topic-card weak"><div class="topic-rank">${i+1}</div><div class="topic-name">${icon} ${topic.name}</div><div class="topic-percent">${topic.percent}%</div><div class="topic-bar"><div class="topic-bar-fill" style="width: ${topic.percent}%"></div></div><div class="topic-details">Правильных ответов: ${topic.correct} из ${topic.total} (${100-topic.percent}% ошибок)</div></div>`;
             });
             html += `</div></div>`;
         }
         
         if (topWeak.length > 0) {
-            html += `<div class="feedback-section">
-                <div class="feedback-section-title">
-                    <div class="icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af;">💡</div>
-                    Общие рекомендации по зонам развития
-                </div>
-                <div class="recommendations-list">`;
-            topWeak.forEach((topic, i) => {
-                html += `<div class="rec-card">
-                    <div class="rec-card-title">📌 ${i+1}. ${topic.name}</div>
-                    <div class="rec-card-text">${topic.rec}</div>
-                </div>`;
-            });
+            html += `<div class="feedback-section"><div class="feedback-section-title"><div class="icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af;">💡</div>Общие рекомендации по зонам развития</div><div class="recommendations-list">`;
+            topWeak.forEach((topic, i) => { html += `<div class="rec-card"><div class="rec-card-title">📌 ${i+1}. ${topic.name}</div><div class="rec-card-text">${topic.rec}</div></div>`; });
             html += `</div></div>`;
         }
-        
         html += `</div>`;
         
         document.getElementById('feedbackResult').innerHTML = html;
@@ -1558,7 +1343,6 @@
     function copyFeedbackText() {
         const city = document.getElementById('feedbackCitySelect').value;
         if (!city) { alert('Сначала сгенерируйте фидбек'); return; }
-        
         const cityData = allData.filter(r => r.city === city);
         if (!cityData.length) { alert('Нет данных'); return; }
         
@@ -1574,168 +1358,55 @@
         const topStrong = sorted.slice(0, 5);
         const topWeak = sorted.slice(-4).reverse();
         
-        let text = `═══════════════════════════════════════\n`;
-        text += `📊 ФИДБЕК ПО РЕЗУЛЬТАТАМ ОБУЧЕНИЯ\n`;
-        text += `🏙️ ${city}\n`;
-        text += `📅 ${new Date().toLocaleDateString('ru-RU')}\n`;
-        text += `═══════════════════════════════════════\n\n`;
-        
-        text += `📈 ОБЩАЯ СТАТИСТИКА\n`;
-        text += `• Всего прохождений: ${total}\n`;
-        text += `• Средний балл: ${avg}%\n`;
-        text += `• Успешно (≥85%): ${success} из ${total}\n`;
-        text += `• Тестов: ${testData.length} | Тренировок: ${trainerData.length} | Допродаж: ${crosssellData.length}\n\n`;
+        let text = `═══════════════════════════════════════\n📊 ФИДБЕК ПО РЕЗУЛЬТАТАМ ОБУЧЕНИЯ\n🏙️ ${city}\n📅 ${new Date().toLocaleDateString('ru-RU')}\n═══════════════════════════════════════\n\n`;
+        text += `📈 ОБЩАЯ СТАТИСТИКА\n• Всего прохождений: ${total}\n• Средний балл: ${avg}%\n• Успешно (≥85%): ${success} из ${total}\n• Тестов: ${testData.length} | Тренировок: ${trainerData.length} | Допродаж: ${crosssellData.length}\n\n`;
         
         if (topStrong.length > 0) {
-            text += `✅ СИЛЬНЫЕ СТОРОНЫ\n`;
-            text += `───────────────────────────────────────\n`;
+            text += `✅ СИЛЬНЫЕ СТОРОНЫ\n───────────────────────────────────────\n`;
             topStrong.forEach((t, i) => {
-                let icon = '📝';
-                if (t.type === 'trainer') icon = '🎯';
-                else if (t.type === 'crosssell') icon = '💰';
+                let icon = '📝'; if (t.type === 'trainer') icon = '🎯'; else if (t.type === 'crosssell') icon = '💰';
                 text += `${i+1}. ${icon} ${t.name} — ${t.percent}% (${t.correct} из ${t.total})\n`;
             });
             text += `\n`;
         }
         
         if (topWeak.length > 0) {
-            text += `⚠️ ЗОНЫ РАЗВИТИЯ\n`;
-            text += `───────────────────────────────────────\n`;
+            text += `⚠️ ЗОНЫ РАЗВИТИЯ\n───────────────────────────────────────\n`;
             topWeak.forEach((t, i) => {
-                let icon = '📝';
-                if (t.type === 'trainer') icon = '🎯';
-                else if (t.type === 'crosssell') icon = '💰';
+                let icon = '📝'; if (t.type === 'trainer') icon = '🎯'; else if (t.type === 'crosssell') icon = '💰';
                 text += `${i+1}. ${icon} ${t.name} — ${t.percent}% (${100-t.percent}% ошибок)\n`;
             });
-            text += `\n`;
-            
-            text += `💡 РЕКОМЕНДАЦИИ\n`;
-            text += `───────────────────────────────────────\n`;
-            topWeak.forEach((t, i) => {
-                text += `\n📌 ${i+1}. ${t.name}\n`;
-                text += `${t.rec}\n`;
-            });
+            text += `\n💡 РЕКОМЕНДАЦИИ\n───────────────────────────────────────\n`;
+            topWeak.forEach((t, i) => { text += `\n📌 ${i+1}. ${t.name}\n${t.rec}\n`; });
         }
+        text += `\n═══════════════════════════════════════\n585GOLD | Система обучения продавцов\n`;
         
-        text += `\n═══════════════════════════════════════\n`;
-        text += `585GOLD | Система обучения продавцов\n`;
-        
-        navigator.clipboard.writeText(text).then(() => {
-            alert('✅ Фидбек скопирован!\n\nТеперь вставьте его в WhatsApp, Telegram или email (Ctrl+V).');
-        }).catch(() => {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            alert('✅ Фидбек скопирован!');
+        navigator.clipboard.writeText(text).then(() => { alert('✅ Фидбек скопирован!\n\nТеперь вставьте его в WhatsApp, Telegram или email (Ctrl+V).'); })
+        .catch(() => {
+            const textarea = document.createElement('textarea'); textarea.value = text; document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea); alert('✅ Фидбек скопирован!');
         });
     }
 
     function printFeedback() {
         const content = document.getElementById('feedbackResult').innerHTML;
         if (!content) { alert('Сначала сгенерируйте фидбек'); return; }
-        
         const city = document.getElementById('feedbackCitySelect').value;
         const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Фидбек — ${city}</title>
-                <style>
-                    body { font-family: 'Segoe UI', sans-serif; padding: 20px; color: #1e2a3a; }
-                    .feedback-wrapper { max-width: 800px; margin: 0 auto; }
-                    .feedback-header { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-                    .feedback-header h3 { font-size: 22px; margin-bottom: 4px; }
-                    .feedback-stats { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
-                    .feedback-stat-pill { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; }
-                    .feedback-section { margin-bottom: 24px; }
-                    .feedback-section-title { font-size: 16px; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; margin-bottom: 12px; }
-                    .topics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-                    .topic-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px; }
-                    .topic-card.strong { border-left: 4px solid #16a34a; background: #f0fdf4; }
-                    .topic-card.weak { border-left: 4px solid #dc2626; background: #fef2f2; }
-                    .topic-name { font-weight: 600; margin-bottom: 6px; }
-                    .topic-percent { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-                    .topic-card.strong .topic-percent { color: #16a34a; }
-                    .topic-card.weak .topic-percent { color: #dc2626; }
-                    .topic-details { font-size: 12px; color: #64748b; }
-                    .rec-card { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 10px; }
-                    .rec-card-title { font-weight: 700; color: #1e40af; margin-bottom: 4px; }
-                    .rec-card-text { color: #1e3a8a; font-size: 13px; }
-                    .topic-rank, .topic-bar { display: none; }
-                    @media print { body { padding: 0; } .no-print { display: none !important; } }
-                </style>
-            </head>
-            <body>
-                <div class="no-print" style="margin-bottom: 20px; text-align: center;">
-                    <button onclick="window.print()" style="padding: 10px 24px; background: #c41e3a; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; margin: 0 4px;">🖨️ Печать / PDF</button>
-                    <button onclick="window.close()" style="padding: 10px 24px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; margin: 0 4px;">Закрыть</button>
-                </div>
-                ${content}
-                <div style="margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-                    585GOLD | ${new Date().toLocaleDateString('ru-RU')}
-                </div>
-            </body>
-            </html>
-        `);
+        printWindow.document.write(`<!DOCTYPE html><html><head><title>Фидбек — ${city}</title><style>body { font-family: 'Segoe UI', sans-serif; padding: 20px; color: #1e2a3a; }.feedback-wrapper { max-width: 800px; margin: 0 auto; }.feedback-header { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }.feedback-header h3 { font-size: 22px; margin-bottom: 4px; }.feedback-stats { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }.feedback-stat-pill { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; }.feedback-section { margin-bottom: 24px; }.feedback-section-title { font-size: 16px; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; margin-bottom: 12px; }.topics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }.topic-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px; }.topic-card.strong { border-left: 4px solid #16a34a; background: #f0fdf4; }.topic-card.weak { border-left: 4px solid #dc2626; background: #fef2f2; }.topic-name { font-weight: 600; margin-bottom: 6px; }.topic-percent { font-size: 22px; font-weight: 700; margin-bottom: 6px; }.topic-card.strong .topic-percent { color: #16a34a; }.topic-card.weak .topic-percent { color: #dc2626; }.topic-details { font-size: 12px; color: #64748b; }.rec-card { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 10px; }.rec-card-title { font-weight: 700; color: #1e40af; margin-bottom: 4px; }.rec-card-text { color: #1e3a8a; font-size: 13px; }.topic-rank, .topic-bar { display: none; }@media print { body { padding: 0; } .no-print { display: none !important; } }</style></head><body><div class="no-print" style="margin-bottom: 20px; text-align: center;"><button onclick="window.print()" style="padding: 10px 24px; background: #c41e3a; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; margin: 0 4px;">🖨️ Печать / PDF</button><button onclick="window.close()" style="padding: 10px 24px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; margin: 0 4px;">Закрыть</button></div>${content}<div style="margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; padding-top: 16px;">585GOLD | ${new Date().toLocaleDateString('ru-RU')}</div></body></html>`);
         printWindow.document.close();
     }
 
     function downloadFeedbackHTML() {
         const content = document.getElementById('feedbackResult').innerHTML;
         if (!content) { alert('Сначала сгенерируйте фидбек'); return; }
-        
         const city = document.getElementById('feedbackCitySelect').value;
-        const html = `<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<title>Фидбек — ${city}</title>
-<style>
-body { font-family: 'Segoe UI', sans-serif; padding: 24px; background: #f5f7fa; color: #1e2a3a; }
-.feedback-wrapper { max-width: 900px; margin: 0 auto; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-.feedback-header { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-.feedback-header h3 { font-size: 22px; margin-bottom: 4px; }
-.feedback-stats { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
-.feedback-stat-pill { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; }
-.feedback-section { margin-bottom: 24px; }
-.feedback-section-title { font-size: 16px; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-.topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
-.topic-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px; position: relative; }
-.topic-card.strong { border-left: 4px solid #16a34a; background: #f0fdf4; }
-.topic-card.weak { border-left: 4px solid #dc2626; background: #fef2f2; }
-.topic-rank { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
-.topic-card.strong .topic-rank { background: #16a34a; }
-.topic-card.weak .topic-rank { background: #dc2626; }
-.topic-name { font-weight: 600; margin-bottom: 6px; padding-right: 30px; }
-.topic-percent { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-.topic-card.strong .topic-percent { color: #16a34a; }
-.topic-card.weak .topic-percent { color: #dc2626; }
-.topic-details { font-size: 12px; color: #64748b; }
-.rec-card { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 10px; }
-.rec-card-title { font-weight: 700; color: #1e40af; margin-bottom: 4px; }
-.rec-card-text { color: #1e3a8a; font-size: 13px; }
-</style>
-</head>
-<body>
-${content}
-<div style="margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px;">
-585GOLD | ${new Date().toLocaleDateString('ru-RU')}
-</div>
-</body>
-</html>`;
-        
+        const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Фидбек — ${city}</title><style>body { font-family: 'Segoe UI', sans-serif; padding: 24px; background: #f5f7fa; color: #1e2a3a; }.feedback-wrapper { max-width: 900px; margin: 0 auto; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }.feedback-header { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }.feedback-header h3 { font-size: 22px; margin-bottom: 4px; }.feedback-stats { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }.feedback-stat-pill { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; }.feedback-section { margin-bottom: 24px; }.feedback-section-title { font-size: 16px; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }.topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }.topic-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px; position: relative; }.topic-card.strong { border-left: 4px solid #16a34a; background: #f0fdf4; }.topic-card.weak { border-left: 4px solid #dc2626; background: #fef2f2; }.topic-rank { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }.topic-card.strong .topic-rank { background: #16a34a; }.topic-card.weak .topic-rank { background: #dc2626; }.topic-name { font-weight: 600; margin-bottom: 6px; padding-right: 30px; }.topic-percent { font-size: 22px; font-weight: 700; margin-bottom: 6px; }.topic-card.strong .topic-percent { color: #16a34a; }.topic-card.weak .topic-percent { color: #dc2626; }.topic-details { font-size: 12px; color: #64748b; }.rec-card { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 10px; }.rec-card-title { font-weight: 700; color: #1e40af; margin-bottom: 4px; }.rec-card-text { color: #1e3a8a; font-size: 13px; }</style></head><body>${content}<div style="margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px;">585GOLD | ${new Date().toLocaleDateString('ru-RU')}</div></body></html>`;
         const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
+        const a = document.createElement('a'); a.href = url;
         const safeName = city.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_');
         a.download = `feedback_${safeName}_${new Date().toISOString().slice(0,10)}.html`;
-        a.click();
-        URL.revokeObjectURL(url);
+        a.click(); URL.revokeObjectURL(url);
     }
 
     function exportCSV() {
@@ -1747,50 +1418,37 @@ ${content}
             else if (r.type === 'crosssell') typeLabel = 'Допродажи';
             else if (r.type === 'errorfinder') typeLabel = 'Найди ошибку';
             else if (r.type === 'clienttype') typeLabel = 'Адаптация';
+            else if (r.type === 'service') typeLabel = 'Сервис';
             csv += `"${typeLabel}","${r.user_name}","${r.city}",${r.score},${r.total},${r.percent}%\n`;
         });
         const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'results.csv';
-        a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'results.csv'; a.click();
     }
 
     function exportCityCSV() {
         const map = new Map();
         filteredData.forEach(r => {
             if (!map.has(r.city)) map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0 });
-            const c = map.get(r.city);
-            c.count++; c.sum += r.percent; if (r.percent >= 85) c.success++; c.errors += (r.total - r.score);
+            const c = map.get(r.city); c.count++; c.sum += r.percent; if (r.percent >= 85) c.success++; c.errors += (r.total - r.score);
         });
         const stats = [...map.entries()].map(([city, d]) => ({ city, count: d.count, avg: Math.round(d.sum/d.count), success: d.success, errors: d.errors })).sort((a,b) => b.avg - a.avg);
         let csv = "Город,Сотрудников,Средний балл,Успешно,Ошибок\n";
         stats.forEach(c => csv += `"${c.city}",${c.count},${c.avg}%,${c.success}/${c.count},${c.errors}\n`);
         const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'city_stats.csv';
-        a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'city_stats.csv'; a.click();
     }
 
     // ========== ПРИВЯЗКА СОБЫТИЙ ==========
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('resetFiltersBtn').onclick = resetFilters;
-    
-    // При изменении любого фильтра сохраняем его в память и применяем
     document.getElementById('cityFilter').onchange = () => { saveFilters(); applyFilters(); };
     document.getElementById('percentFilter').onchange = () => { saveFilters(); applyFilters(); };
     document.getElementById('searchInput').addEventListener('input', () => { saveFilters(); applyFilters(); });
-    
     document.getElementById('exportBtn').onclick = exportCSV;
     document.getElementById('exportCityBtn').onclick = exportCityCSV;
     document.getElementById('generateFeedbackBtn').onclick = generateFeedback;
 
-    setInterval(() => {
-        console.log('🔄 Автообновление дашборда...');
-        loadResults();
-    }, 30000);
-
+    setInterval(() => { console.log('🔄 Автообновление дашборда...'); loadResults(); }, 30000);
     loadResults();
 </script>
 </body>
