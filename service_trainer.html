@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>585GOLD | Сервис с человеческим лицом</title>
+    
+    <!-- 🔥 FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .main-container { max-width: 600px; width: 100%; margin: 0 auto; }
+        
+        .employee-view {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            animation: slideIn 0.5s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header { text-align: center; margin-bottom: 32px; }
+        .header h1 { color: #c41e3a; margin: 0 0 8px 0; font-size: 28px; font-weight: 800; }
+        .header p { color: #6b7280; font-size: 15px; margin: 0; line-height: 1.5; }
+        
+        .register-form { background: #f9fafb; border-radius: 20px; padding: 24px; margin-bottom: 24px; }
+        .register-form input, .register-form select {
+            width: 100%; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px;
+            font-size: 16px; margin-bottom: 16px; transition: all 0.3s; font-family: 'Inter', sans-serif;
+        }
+        .register-form input:focus, .register-form select:focus {
+            outline: none; border-color: #c41e3a; box-shadow: 0 0 0 4px rgba(196,30,58,0.1);
+        }
+        
+        .btn-primary {
+            width: 100%; padding: 18px 32px; border: none; border-radius: 16px; font-size: 16px;
+            font-weight: 700; cursor: pointer; transition: all 0.3s; background: #c41e3a; color: white;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-primary:hover { background: #a0162e; transform: translateY(-2px); }
+        .btn-primary:disabled { background: #d1d5db; cursor: not-allowed; transform: none; }
+        
+        /* ИГРОВАЯ ЗОНА */
+        .game-area { position: relative; min-height: 450px; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .progress-text { text-align: center; color: #6b7280; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+        
+        .card-container {
+            flex: 1; display: flex; justify-content: center; align-items: center;
+            perspective: 1000px; margin-bottom: 24px; position: relative;
+        }
+        
+        .card {
+            background: white; border-radius: 24px; padding: 28px; width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
+            position: absolute;
+        }
+        .card.fly-right { transform: translateX(150%) rotate(15deg); opacity: 0; }
+        .card.fly-left { transform: translateX(-150%) rotate(-15deg); opacity: 0; }
+        
+        .card-principle {
+            display: inline-block; background: #fff1f2; color: #c41e3a; padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 16px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .card-situation { color: #6b7280; font-size: 14px; margin-bottom: 16px; line-height: 1.5; font-style: italic; }
+        .card-situation strong { color: #4b5563; font-style: normal; display: block; margin-bottom: 4px; }
+        .card-action { color: #1f2937; font-size: 16px; line-height: 1.6; font-weight: 500; border-left: 4px solid #d97706; padding-left: 16px; background: #fffbeb; padding: 16px; border-radius: 0 12px 12px 0; }
+        
+        /* КНОПКИ СВАЙПА */
+        .swipe-buttons { display: flex; gap: 16px; margin-top: 20px; }
+        .swipe-btn {
+            flex: 1; padding: 20px; border: none; border-radius: 16px; font-size: 18px;
+            font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex;
+            align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', sans-serif;
+        }
+        .btn-bad { background: #fee2e2; color: #dc2626; }
+        .btn-bad:hover { background: #fecaca; transform: translateY(-2px); }
+        .btn-good { background: #d1fae5; color: #059669; }
+        .btn-good:hover { background: #a7f3d0; transform: translateY(-2px); }
+        .swipe-btn:active { transform: scale(0.95); }
+        
+        /* ОБЪЯСНЕНИЕ */
+        .explanation-box {
+            display: none; background: #f9fafb; border-radius: 20px; padding: 24px;
+            border: 2px solid #e5e7eb; animation: slideUp 0.4s ease; text-align: center;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .explanation-box.success { border-color: #10b981; background: #f0fdf4; }
+        .explanation-box.error { border-color: #ef4444; background: #fef2f2; }
+        .explanation-title { font-size: 20px; font-weight: 800; margin-bottom: 12px; }
+        .explanation-box.success .explanation-title { color: #065f46; }
+        .explanation-box.error .explanation-title { color: #991b1b; }
+        .explanation-text { color: #4b5563; font-size: 15px; line-height: 1.6; margin-bottom: 20px; text-align: left; }
+        
+        .btn-next {
+            width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px;
+            font-weight: 700; cursor: pointer; background: #d97706; color: white;
+            transition: all 0.3s; font-family: 'Inter', sans-serif;
+        }
+        .btn-next:hover { background: #b45309; }
+        
+        /* ФИНАЛЬНЫЙ ЭКРАН */
+        .final-screen { text-align: center; padding: 20px 0; }
+        .final-screen h2 { font-size: 28px; font-weight: 800; color: #c41e3a; margin-bottom: 8px; }
+        .result-big { font-size: 64px; font-weight: 800; color: #c41e3a; margin: 16px 0; }
+        .result-sub { font-size: 18px; color: #6b7280; margin-bottom: 24px; }
+        
+        .principles-breakdown { text-align: left; margin-top: 24px; }
+        .principles-breakdown h3 { font-size: 16px; font-weight: 700; color: #1f2937; margin: 20px 0 12px 0; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
+        .principle-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; background: #f9fafb; border-radius: 12px; margin-bottom: 8px;
+            font-size: 14px; font-weight: 500;
+        }
+        .principle-item.strong { border-left: 4px solid #10b981; background: #f0fdf4; }
+        .principle-item.weak { border-left: 4px solid #ef4444; background: #fef2f2; }
+        .principle-score { font-weight: 700; }
+        
+        .save-status { font-size: 14px; font-weight: 600; margin-top: 16px; text-align: center; }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .employee-view { padding: 20px; }
+            .header h1 { font-size: 22px; }
+            .card { padding: 20px; }
+            .card-action { font-size: 15px; }
+            .swipe-btn { font-size: 16px; padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="employee-view">
+        <div class="header">
+            <h1>🤝 Сервис с человеческим лицом</h1>
+            <p>Оцените действие продавницы: хороший это сервис или плохой?</p>
+        </div>
+        
+        <div class="register-form" id="registerForm">
+            <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
+            <select id="userCity">
+                <option value="">Выберите город</option>
+                <option value="Уфа">Уфа</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
+                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
+                <option value="Калининград">Калининград</option>
+                <option value="Нижний Тагил">Нижний Тагил</option>
+            </select>
+            <button class="btn-primary" onclick="startGame()">🚀 Начать тренировку</button>
+        </div>
+
+        <div id="gameContainer" style="display: none;">
+            <div class="game-area">
+                <div class="progress-text">Карточка <span id="cardNum">1</span> из <span id="totalCards">16</span></div>
+                
+                <div class="card-container" id="cardContainer">
+                    <div class="card" id="gameCard">
+                        <div class="card-principle" id="cardPrinciple">Принцип</div>
+                        <div class="card-situation"><strong> Ситуация:</strong><span id="cardSituation"></span></div>
+                        <div class="card-action"><strong>💬 Действие продавницы:</strong><br><span id="cardAction"></span></div>
+                    </div>
+                </div>
+
+                <div class="swipe-buttons" id="swipeButtons">
+                    <button class="swipe-btn btn-bad" onclick="handleChoice('bad')">👎 ПЛОХО</button>
+                    <button class="swipe-btn btn-good" onclick="handleChoice('good')">👍 ХОРОШО</button>
+                </div>
+
+                <div class="explanation-box" id="explanationBox">
+                    <div class="explanation-title" id="explTitle"></div>
+                    <div class="explanation-text" id="explText"></div>
+                    <button class="btn-next" onclick="nextCard()">Далее ➡️</button>
+                </div>
+            </div>
+            <div id="saveStatus" class="save-status"></div>
+        </div>
+
+        <div id="finalContainer" style="display: none;"></div>
+    </div>
+</div>
+
+<script>
+    // ========== 🔥 FIREBASE ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+        authDomain: "gold-8105a.firebaseapp.com",
+        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "gold-8105a",
+        storageBucket: "gold-8105a.firebasestorage.app",
+        messagingSenderId: "195469188947",
+        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ========== 🔄 АВТОДОЗАГРУЗКА ==========
+    window.addEventListener('load', async () => {
+        const backup = JSON.parse(localStorage.getItem('service_backup') || '[]');
+        if (backup.length > 0) {
+            console.log(`🔄 Найдено ${backup.length} несохранённых результатов. Отправляем...`);
+            for (let result of backup) {
+                try {
+                    const newRef = db.ref('results/service').push();
+                    await newRef.set(result);
+                } catch(e) { console.error('❌ Ошибка:', e.message); }
+            }
+            localStorage.removeItem('service_backup');
+        }
+    });
+
+    // ========== 📚 16 СЦЕНАРИЕВ ==========
+    const SCENARIOS = [
+        { principle: "Искренний интерес", situation: "Клиентка выбирает серьги для дочери на выпускной.", action: "«Что для вас важно в украшении?» → Клиентка начинает отвечать: «Ну, чтобы не слишком дорого и...» → Продавница перебивает: «Понял-понял, значит, смотрим бюджетные варианты. Вот у нас есть отличная коллекция до 15 тысяч...»", correct: "bad", explanation: "Продавница задала открытый вопрос, но не дала клиентке закончить мысль. Она услышала только «не слишком дорого» и сразу перешла к бюджетным вариантам, упустив возможность узнать, что для клиентки действительно важно (возможно, для неё важнее дизайн, а не цена). Это не диалог, а имитация диалога." },
+        { principle: "Искренний интерес", situation: "Мужчина выбирает кольцо, молча рассматривает витрину.", action: "Продавница не задаёт вопросов, а наблюдает и комментирует: «Вижу, вы долго смотрите на эту модель. Она действительно необычная — минималистичный дизайн без камней. Многие мужчины выбирают её для повседневной носки, потому что она не цепляется за одежду».", correct: "good", explanation: "Продавница не допрашивает, а делится наблюдением и информацией. Это даёт клиенту возможность либо согласиться, либо уточнить, либо продолжить молча смотреть. Нет давления, но есть вовлечение." },
+        { principle: "Эмпатия", situation: "Клиентка расстроена — кольцо, которое она заказала по фото с сайта, вживую выглядит не так, как на картинке. Камень кажется меньше.", action: "«Ой, я вас так понимаю! Я сама недавно заказывала платье по фото — прислали вообще не то, цвет вообще другой! Столько нервов потратила, пока возвращала. Понимаю ваши чувства полностью! Давайте посмотрим, что можно сделать...»", correct: "bad", explanation: "Продавница вроде бы проявляет эмпатию, но на самом деле смещает фокус на себя. Клиентка пришла со своей проблемой, а теперь должна ещё и сочувствовать продавнице и слушать её историю про платье. Настоящая эмпатия — это когда ты полностью присутствуешь в ситуации клиента, а не перетягиваешь одеяло на себя." },
+        { principle: "Эмпатия", situation: "Клиентка выбирает подарок свекрови на юбилей. Нервничает: «Вдруг ей не понравится? Она такая привередливая... Я уже второй раз прихожу и всё не могу решиться».", action: "Продавница не говорит шаблонное «Да не волнуйтесь, ей точно понравится!». Вместо этого она спокойно отвечает: «Я вас понимаю, угодить близким бывает сложнее всего. Давайте сделаем так: я оформлю вам подарочный сертификат на эту сумму. Вы подарите его свекрови, и она сама выберет то, что ей действительно по душе. Так вы будете уверены, что подарок точно её порадует».", correct: "good", explanation: "Это эмпатия действием. Продавница услышала реальный страх клиентки (ошибиться с выбором для привередливого человека) и предложила решение, которое полностью снимает эту тревогу. Подарочный сертификат — это не «отговорка», а проявление заботы." },
+        { principle: "Честность", situation: "Клиентка спрашивает про кольцо с фианитами: «Это надолго?»", action: "«Честно говоря, фианиты со временем мутнеют — это не алмаз. Если планируете носить каждый день, через год-два будете разочарованы. Я бы на вашем месте либо взяла что-то с цирконием, либо копила на бриллиант. А это... ну, на пару сезонов хватит, если не часто носить».", correct: "good", explanation: "На первый взгляд кажется, что продавница «отговаривает от покупки». Но она честна до конца: говорит правду о недостатке, объясняет последствия, предлагает альтернативы. Клиентка может обидеться, но потом вернётся — потому что знает: здесь не обманут." },
+        { principle: "Честность", situation: "Клиент выбирает цепочку. Продавница видит, что застёжка хлипкая, но клиент не спрашивает про качество.", action: "Продавница молча продаёт цепочку, не упоминая о застёжке. Клиент сам не спросил — значит, не её дело.", correct: "bad", explanation: "Это не ложь, но и не полная честность. Продавница увидела потенциальную проблему и промолчала. Через неделю клиент вернётся с претензией: «Застёжка сломалась!». Честность — это не только отвечать на вопросы, но и предупреждать о проблемах, которые клиент может не заметить." },
+        { principle: "Маленькие жесты", situation: "Клиентка меряет кольцо.", action: "«У вас такие красивые руки! Это кольцо вам очень идёт. Вы, наверное, модель?»", correct: "bad", explanation: "Комплимент звучит фальшиво и неуместно. «Вы, наверное, модель?» — это явное преувеличение, клиентка не поверит. Комплимент должен быть искренним и конкретным («к кольцу подходит ваш маникюр»), а не общим и лестным." },
+        { principle: "Маленькие жесты", situation: "Клиентка меряет серьги, явно устала после работы (сказала об этом вскользь).", action: "Продавница начинает слишком активно помогать: снимает серьги сама, поправляет клиентке волосы, говорит: «Вам бы ещё причёску сделать другую, с распущенными волосами серьги лучше смотрятся. И макияж чуть поярче — тогда вообще идеально будет».", correct: "bad", explanation: "На первый взгляд — забота и внимание. Но продавница перешла личные границы: трогала волосы клиентки без спроса, давала непрошеные советы по внешности. Клиентка чувствует себя неловко и оцениваемо. Маленький жест внимания превратился в нарушение личного пространства." },
+        { principle: "Гибкость", situation: "Клиент торопится, смотрит на часы. Стандарт требует выявить потребности и показать 3-4 варианта.", action: "Продавница видит, что клиент спешит, и говорит: «Вижу, вы торопитесь — давайте я быстро покажу один лучший вариант в вашем бюджете, и если подойдёт, сразу оформим». Показывает одно кольцо, клиент берёт его.", correct: "good", explanation: "Продавница нарушила стандарт (показать 3-4 варианта), но сделала это осознанно, ради клиента. Она всё равно выполнила ключевую часть — выявила бюджет и потребность, просто сжала процесс. Клиент ушёл довольный и сэкономил время." },
+        { principle: "Гибкость", situation: "Клиент торопится, но продавница следует стандарту и предлагает посмотреть ещё три модели.", action: "«У нас есть ещё три модели в этом бюджете, давайте я быстро покажу, вдруг что-то понравится больше».", correct: "bad", explanation: "Формально продавница следует стандарту (показать альтернативы), но игнорирует контекст (клиент торопится). Гибкость — это не нарушение стандартов, а их адаптация под ситуацию." },
+        { principle: "Завершение контакта", situation: "Клиентка покупает кольцо себе после повышения на работе. Она рассказала об этом в процессе выбора, видно, что гордится.", action: "«Поздравляю с повышением! Вы ещё директором станете, вот увидите! Я вот тоже когда-то мечтала о карьере, а теперь работаю здесь и счастлива. Главное — верить в себя! Заходите ещё, будете начальником — приведёте весь офис за корпоративными подарками!»", correct: "bad", explanation: "Продавница персонализировала прощание, но перешла границы. Она начала давать жизненные советы, рассказывать о себе и строить планы за клиента. Клиентка пришла за кольцом в честь своего достижения, а не за коучем. Персонализация хороша в меру — поздравить можно, но лезть в карьерные прогнозы нельзя." },
+        { principle: "Завершение контакта", situation: "Клиент уходит после покупки.", action: "«Спасибо за покупку! Хорошего дня!»", correct: "bad", explanation: "Это шаблонное прощание, которое могла сказать любая продавница в любом магазине. Нет персонализации, нет «якоря» для возвращения. Клиент не чувствует, что его запомнили." },
+        { principle: "Проактивность", situation: "Клиентка меряет серьги, смотрит в зеркало, хмурится.", action: "«Вижу, вы сомневаетесь. Давайте я сниму их — возможно, они тяжеловаты. Или хотите попробовать модель полегче?»", correct: "good", explanation: "Продавница заметила невербальный сигнал (хмурится) и предложила помощь до того, как клиентка попросила. Это проактивность, основанная на наблюдении, а не на навязывании." },
+        { principle: "Проактивность", situation: "Клиент смотрит на ценники, сравнивает.", action: "Продавница не подходит, потому что боится показаться навязчивой. Ждёт, пока клиент сам обратится.", correct: "bad", explanation: "Это не осторожность, а пассивность. Клиент явно ищет информацию (сравнивает цены), и продавница могла бы помочь: «Вижу, вы сравниваете модели. Могу рассказать, в чём разница между ними». Проактивная помощь — это не навязывание, а предложение помощи в нужный момент." },
+        { principle: "Не просто покупатель", situation: "Клиент потратил 150 тысяч рублей.", action: "«Спасибо за такую крупную покупку! Вы наш VIP-клиент, будем рады видеть вас снова!»", correct: "bad", explanation: "Акцент на сумме покупки («крупная», «VIP») делает отношения транзакционными. Клиент чувствует, что его ценят за деньги, а не как человека. Лучше сказать: «Спасибо, что выбрали нас! Было приятно помочь вам найти идеальное украшение»." },
+        { principle: "Не просто покупатель", situation: "Клиент уходит без покупки, потратив 30 минут на примерку.", action: "«Спасибо, что зашли! Даже если сегодня не выбрали — я рада, что вы увидели наши новинки. Заходите, будем рады».", correct: "good", explanation: "Продавница показывает, что ценит время клиента, независимо от покупки. Это смещает фокус с транзакции на отношения. Клиент чувствует, что его не «отработали», а действительно хотели помочь." }
+    ];
+
+    // ==========  СОСТОЯНИЕ ==========
+    let currentIndex = 0;
+    let score = 0;
+    let answers = [];
+    let currentUserName = '';
+    let currentUserCity = '';
+    let isAnimating = false;
+
+    // ==========  ЗАПУСК ==========
+    function startGame() {
+        const name = document.getElementById('userName').value.trim();
+        const city = document.getElementById('userCity').value;
+        if (!name) { alert('Введите имя'); return; }
+        if (!city) { alert('Выберите город'); return; }
+        
+        currentUserName = name;
+        currentUserCity = city;
+        currentIndex = 0;
+        score = 0;
+        answers = [];
+        
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('gameContainer').style.display = 'block';
+        document.getElementById('totalCards').textContent = SCENARIOS.length;
+        
+        renderCard();
+    }
+
+    // ========== 📖 РЕНДЕР КАРТОЧКИ ==========
+    function renderCard() {
+        const scenario = SCENARIOS[currentIndex];
+        document.getElementById('cardNum').textContent = currentIndex + 1;
+        document.getElementById('cardPrinciple').textContent = scenario.principle;
+        document.getElementById('cardSituation').textContent = scenario.situation;
+        document.getElementById('cardAction').textContent = scenario.action;
+        
+        const card = document.getElementById('gameCard');
+        card.className = 'card'; // Сброс классов анимации
+        card.style.display = 'block';
+        
+        document.getElementById('swipeButtons').style.display = 'flex';
+        document.getElementById('explanationBox').style.display = 'none';
+        isAnimating = false;
+    }
+
+    // ========== 🖱️ ВЫБОР И АНИМАЦИЯ ==========
+    function handleChoice(choice) {
+        if (isAnimating) return;
+        isAnimating = true;
+        
+        const scenario = SCENARIOS[currentIndex];
+        const isCorrect = choice === scenario.correct;
+        if (isCorrect) score++;
+        
+        answers.push({
+            principle: scenario.principle,
+            selected: choice,
+            correct: scenario.correct,
+            isCorrect: isCorrect
+        });
+        
+        // Анимация улёта карточки
+        const card = document.getElementById('gameCard');
+        card.classList.add(choice === 'good' ? 'fly-right' : 'fly-left');
+        
+        // Скрываем кнопки, показываем объяснение
+        document.getElementById('swipeButtons').style.display = 'none';
+        
+        setTimeout(() => {
+            card.style.display = 'none';
+            showExplanation(isCorrect, scenario.explanation);
+        }, 400);
+    }
+
+    function showExplanation(isCorrect, text) {
+        const box = document.getElementById('explanationBox');
+        const title = document.getElementById('explTitle');
+        const explText = document.getElementById('explText');
+        
+        box.className = `explanation-box ${isCorrect ? 'success' : 'error'}`;
+        title.textContent = isCorrect ? '✅ ВЕРНО!' : '❌ ОШИБКА!';
+        explText.textContent = text;
+        
+        box.style.display = 'block';
+    }
+
+    function nextCard() {
+        currentIndex++;
+        if (currentIndex < SCENARIOS.length) {
+            renderCard();
+        } else {
+            finishGame();
+        }
+    }
+
+    // ==========  ЗАВЕРШЕНИЕ ==========
+    async function finishGame() {
+        document.getElementById('gameContainer').style.display = 'none';
+        const finalContainer = document.getElementById('finalContainer');
+        finalContainer.style.display = 'block';
+        
+        const percent = Math.round((score / SCENARIOS.length) * 100);
+        const passed = percent >= 80;
+        
+        // Подсчет по принципам
+        const principlesMap = {};
+        answers.forEach(a => {
+            if (!principlesMap[a.principle]) principlesMap[a.principle] = { correct: 0, total: 0 };
+            principlesMap[a.principle].total++;
+            if (a.isCorrect) principlesMap[a.principle].correct++;
+        });
+        
+        const sortedPrinciples = Object.entries(principlesMap)
+            .map(([name, data]) => ({ name, percent: Math.round((data.correct / data.total) * 100) }))
+            .sort((a, b) => b.percent - a.percent);
+            
+        const strong = sortedPrinciples.filter(p => p.percent === 100);
+        const weak = sortedPrinciples.filter(p => p.percent < 100);
+
+        let html = `
+            <div class="final-screen">
+                <h2>${passed ? '🏆 Отличный результат!' : '⚠️ Есть над чем поработать'}</h2>
+                <div class="result-big">${percent}%</div>
+                <div class="result-sub">Правильных ответов: <strong>${score} из ${SCENARIOS.length}</strong></div>
+                <p style="font-size: 16px; color: #4b5563;">${passed ? 'Вы прекрасно чувствуете сервис с человеческим лицом!' : 'Рекомендуем перечитать памятку «9 принципов сервиса» и пройти тренажёр ещё раз.'}</p>
+                
+                <div class="principles-breakdown">
+                    ${strong.length > 0 ? `<h3>✅ Сильные стороны</h3>` + strong.map(p => `<div class="principle-item strong"><span>${p.name}</span><span class="principle-score">${p.percent}%</span></div>`).join('') : ''}
+                    ${weak.length > 0 ? `<h3>⚠️ Зоны роста</h3>` + weak.map(p => `<div class="principle-item weak"><span>${p.name}</span><span class="principle-score">${p.percent}%</span></div>`).join('') : ''}
+                </div>
+                
+                <button class="btn-primary" onclick="location.reload()" style="margin-top: 32px;">🔄 Пройти ещё раз</button>
+            </div>
+        `;
+        
+        finalContainer.innerHTML = html;
+        
+        // Сохранение
+        const statusDiv = document.getElementById('saveStatus');
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = '⏳ Сохранение...';
+        statusDiv.style.color = '#d97706';
+        
+        const resultData = {
+            id: Date.now(), type: 'service', user_name: currentUserName, city: currentUserCity,
+            score: score, total: SCENARIOS.length, percent: percent, passed: passed,
+            answers: answers, date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
+        };
+        
+        try {
+            const localBackup = JSON.parse(localStorage.getItem('service_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('service_backup', JSON.stringify(localBackup));
+            
+            const newRef = db.ref('results/service').push();
+            await newRef.set(resultData);
+            
+            const backup = JSON.parse(localStorage.getItem('service_backup') || '[]');
+            localStorage.setItem('service_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
+            
+            statusDiv.textContent = '✅ Результат сохранён!';
+            statusDiv.style.color = '#10b981';
+        } catch(e) {
+            statusDiv.textContent = '⚠️ Сохранено локально';
+            statusDiv.style.color = '#ef4444';
+        }
+    }
+</script>
+</body>
+</html>
