@@ -17,18 +17,18 @@
             font-family: 'Inter', sans-serif;
             background: #f5f5f5;
             margin: 0;
-            padding: 20px;
+            padding: 16px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .main-container { max-width: 600px; width: 100%; margin: 0 auto; }
+        .main-container { max-width: 500px; width: 100%; margin: 0 auto; }
         
         .employee-view {
             background: white;
-            border-radius: 24px;
-            padding: 32px;
+            border-radius: 20px;
+            padding: 24px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             animation: slideIn 0.5s ease;
         }
@@ -37,61 +37,60 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .header { text-align: center; margin-bottom: 32px; }
-        .header h1 { color: #c41e3a; margin: 0 0 8px 0; font-size: 28px; font-weight: 800; }
-        .header p { color: #6b7280; font-size: 15px; margin: 0; line-height: 1.5; }
+        .header { text-align: center; margin-bottom: 24px; }
+        .header h1 { color: #c41e3a; margin: 0 0 6px 0; font-size: 22px; font-weight: 800; }
+        .header p { color: #6b7280; font-size: 13px; margin: 0; line-height: 1.4; }
         
-        .register-form { background: #f9fafb; border-radius: 20px; padding: 24px; margin-bottom: 24px; }
+        .register-form { background: #f9fafb; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
         .register-form input, .register-form select {
-            width: 100%; padding: 16px 20px; border: 2px solid #e5e7eb; border-radius: 12px;
-            font-size: 16px; margin-bottom: 16px; transition: all 0.3s; font-family: 'Inter', sans-serif;
+            width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px;
+            font-size: 15px; margin-bottom: 12px; transition: all 0.3s; font-family: 'Inter', sans-serif;
         }
         .register-form input:focus, .register-form select:focus {
-            outline: none; border-color: #c41e3a; box-shadow: 0 0 0 4px rgba(196,30,58,0.1);
+            outline: none; border-color: #c41e3a; box-shadow: 0 0 0 3px rgba(196,30,58,0.1);
         }
         
         .btn-primary {
-            width: 100%; padding: 18px 32px; border: none; border-radius: 16px; font-size: 16px;
+            width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 15px;
             font-weight: 700; cursor: pointer; transition: all 0.3s; background: #c41e3a; color: white;
             font-family: 'Inter', sans-serif;
         }
         .btn-primary:hover { background: #a0162e; transform: translateY(-2px); }
-        .btn-primary:disabled { background: #d1d5db; cursor: not-allowed; transform: none; }
         
         /* ИГРОВАЯ ЗОНА */
-        .game-area { position: relative; min-height: 450px; display: flex; flex-direction: column; justify-content: space-between; }
+        .game-area { position: relative; display: flex; flex-direction: column; height: 520px; }
         
-        .progress-text { text-align: center; color: #6b7280; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+        .progress-text { text-align: center; color: #6b7280; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
         
         .card-container {
             flex: 1; display: flex; justify-content: center; align-items: center;
-            perspective: 1000px; margin-bottom: 24px; position: relative;
+            perspective: 1000px; margin-bottom: 16px; position: relative;
         }
         
         .card {
-            background: white; border-radius: 24px; padding: 28px; width: 100%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;
+            background: white; border-radius: 16px; padding: 18px; width: 100%;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;
             transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
-            position: absolute;
+            position: absolute; max-height: 380px; overflow-y: auto;
         }
         .card.fly-right { transform: translateX(150%) rotate(15deg); opacity: 0; }
         .card.fly-left { transform: translateX(-150%) rotate(-15deg); opacity: 0; }
         
         .card-principle {
-            display: inline-block; background: #fff1f2; color: #c41e3a; padding: 6px 14px;
-            border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 16px;
+            display: inline-block; background: #fff1f2; color: #c41e3a; padding: 4px 10px;
+            border-radius: 16px; font-size: 11px; font-weight: 700; margin-bottom: 10px;
             text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .card-situation { color: #6b7280; font-size: 14px; margin-bottom: 16px; line-height: 1.5; font-style: italic; }
-        .card-situation strong { color: #4b5563; font-style: normal; display: block; margin-bottom: 4px; }
-        .card-action { color: #1f2937; font-size: 16px; line-height: 1.6; font-weight: 500; border-left: 4px solid #d97706; padding-left: 16px; background: #fffbeb; padding: 16px; border-radius: 0 12px 12px 0; }
+        .card-situation { color: #6b7280; font-size: 12px; margin-bottom: 10px; line-height: 1.4; font-style: italic; }
+        .card-situation strong { color: #4b5563; font-style: normal; display: block; margin-bottom: 3px; font-size: 11px; }
+        .card-action { color: #1f2937; font-size: 13px; line-height: 1.5; font-weight: 500; border-left: 3px solid #d97706; padding: 10px; border-radius: 0 8px 8px 0; background: #fffbeb; }
         
         /* КНОПКИ СВАЙПА */
-        .swipe-buttons { display: flex; gap: 16px; margin-top: 20px; }
+        .swipe-buttons { display: flex; gap: 12px; margin-top: auto; }
         .swipe-btn {
-            flex: 1; padding: 20px; border: none; border-radius: 16px; font-size: 18px;
+            flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 15px;
             font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex;
-            align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', sans-serif;
+            align-items: center; justify-content: center; gap: 6px; font-family: 'Inter', sans-serif;
         }
         .btn-bad { background: #fee2e2; color: #dc2626; }
         .btn-bad:hover { background: #fecaca; transform: translateY(-2px); }
@@ -101,50 +100,52 @@
         
         /* ОБЪЯСНЕНИЕ */
         .explanation-box {
-            display: none; background: #f9fafb; border-radius: 20px; padding: 24px;
+            display: none; background: #f9fafb; border-radius: 16px; padding: 18px;
             border: 2px solid #e5e7eb; animation: slideUp 0.4s ease; text-align: center;
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 10;
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .explanation-box.success { border-color: #10b981; background: #f0fdf4; }
         .explanation-box.error { border-color: #ef4444; background: #fef2f2; }
-        .explanation-title { font-size: 20px; font-weight: 800; margin-bottom: 12px; }
+        .explanation-title { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
         .explanation-box.success .explanation-title { color: #065f46; }
         .explanation-box.error .explanation-title { color: #991b1b; }
-        .explanation-text { color: #4b5563; font-size: 15px; line-height: 1.6; margin-bottom: 20px; text-align: left; }
+        .explanation-text { color: #4b5563; font-size: 13px; line-height: 1.5; margin-bottom: 16px; text-align: left; max-height: 280px; overflow-y: auto; }
         
         .btn-next {
-            width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px;
+            width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 15px;
             font-weight: 700; cursor: pointer; background: #d97706; color: white;
             transition: all 0.3s; font-family: 'Inter', sans-serif;
         }
         .btn-next:hover { background: #b45309; }
         
         /* ФИНАЛЬНЫЙ ЭКРАН */
-        .final-screen { text-align: center; padding: 20px 0; }
-        .final-screen h2 { font-size: 28px; font-weight: 800; color: #c41e3a; margin-bottom: 8px; }
-        .result-big { font-size: 64px; font-weight: 800; color: #c41e3a; margin: 16px 0; }
-        .result-sub { font-size: 18px; color: #6b7280; margin-bottom: 24px; }
+        .final-screen { text-align: center; padding: 16px 0; }
+        .final-screen h2 { font-size: 22px; font-weight: 800; color: #c41e3a; margin-bottom: 6px; }
+        .result-big { font-size: 48px; font-weight: 800; color: #c41e3a; margin: 12px 0; }
+        .result-sub { font-size: 15px; color: #6b7280; margin-bottom: 18px; }
         
-        .principles-breakdown { text-align: left; margin-top: 24px; }
-        .principles-breakdown h3 { font-size: 16px; font-weight: 700; color: #1f2937; margin: 20px 0 12px 0; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; }
+        .principles-breakdown { text-align: left; margin-top: 18px; max-height: 300px; overflow-y: auto; }
+        .principles-breakdown h3 { font-size: 14px; font-weight: 700; color: #1f2937; margin: 16px 0 8px 0; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
         .principle-item {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 16px; background: #f9fafb; border-radius: 12px; margin-bottom: 8px;
-            font-size: 14px; font-weight: 500;
+            padding: 10px 12px; background: #f9fafb; border-radius: 10px; margin-bottom: 6px;
+            font-size: 13px; font-weight: 500;
         }
-        .principle-item.strong { border-left: 4px solid #10b981; background: #f0fdf4; }
-        .principle-item.weak { border-left: 4px solid #ef4444; background: #fef2f2; }
+        .principle-item.strong { border-left: 3px solid #10b981; background: #f0fdf4; }
+        .principle-item.weak { border-left: 3px solid #ef4444; background: #fef2f2; }
         .principle-score { font-weight: 700; }
         
-        .save-status { font-size: 14px; font-weight: 600; margin-top: 16px; text-align: center; }
+        .save-status { font-size: 13px; font-weight: 600; margin-top: 12px; text-align: center; }
 
         @media (max-width: 600px) {
             body { padding: 12px; }
-            .employee-view { padding: 20px; }
-            .header h1 { font-size: 22px; }
-            .card { padding: 20px; }
-            .card-action { font-size: 15px; }
-            .swipe-btn { font-size: 16px; padding: 16px; }
+            .employee-view { padding: 18px; }
+            .header h1 { font-size: 20px; }
+            .card { padding: 14px; }
+            .card-action { font-size: 12px; padding: 8px; }
+            .swipe-btn { font-size: 14px; padding: 12px; }
+            .game-area { height: 480px; }
         }
     </style>
 </head>
@@ -179,13 +180,13 @@
                     <div class="card" id="gameCard">
                         <div class="card-principle" id="cardPrinciple">Принцип</div>
                         <div class="card-situation"><strong>🎬 Ситуация:</strong><span id="cardSituation"></span></div>
-                        <div class="card-action"><strong>💬 Действие продавца:</strong><br><span id="cardAction"></span></div>
+                        <div class="card-action"><strong> Действие продавца:</strong><br><span id="cardAction"></span></div>
                     </div>
                 </div>
 
                 <div class="swipe-buttons" id="swipeButtons">
                     <button class="swipe-btn btn-bad" onclick="handleChoice('bad')">👎 ПЛОХО</button>
-                    <button class="swipe-btn btn-good" onclick="handleChoice('good')"> ХОРОШО</button>
+                    <button class="swipe-btn btn-good" onclick="handleChoice('good')">👍 ХОРОШО</button>
                 </div>
 
                 <div class="explanation-box" id="explanationBox">
@@ -224,7 +225,7 @@
                 try {
                     const newRef = db.ref('results/service').push();
                     await newRef.set(result);
-                } catch(e) { console.error('❌ Ошибка:', e.message); }
+                } catch(e) { console.error(' Ошибка:', e.message); }
             }
             localStorage.removeItem('service_backup');
         }
@@ -236,15 +237,15 @@
         { principle: "Искренний интерес", situation: "Мужчина выбирает кольцо, молча рассматривает витрину.", action: "Продавец не задаёт вопросов, а наблюдает и комментирует: «Вижу, вы долго смотрите на эту модель. Она действительно необычная — минималистичный дизайн без камней. Многие мужчины выбирают её для повседневной носки, потому что она не цепляется за одежду».", correct: "good", explanation: "Продавец не допрашивает, а делится наблюдением и информацией. Это даёт клиенту возможность либо согласиться, либо уточнить, либо продолжить молча смотреть. Нет давления, но есть вовлечение." },
         { principle: "Эмпатия", situation: "Клиентка расстроена — кольцо, которое она заказала по фото с сайта, вживую выглядит не так, как на картинке. Камень кажется меньше.", action: "«Ой, я вас так понимаю! Я сама недавно заказывала платье по фото — прислали вообще не то, цвет вообще другой! Столько нервов потратила, пока возвращала. Понимаю ваши чувства полностью! Давайте посмотрим, что можно сделать...»", correct: "bad", explanation: "Продавец вроде бы проявляет эмпатию, но на самом деле смещает фокус на себя. Клиентка пришла со своей проблемой, а теперь должна ещё и сочувствовать продавцу и слушать её историю про платье. Настоящая эмпатия — это когда ты полностью присутствуешь в ситуации клиента, а не перетягиваешь одеяло на себя." },
         { principle: "Эмпатия", situation: "Клиентка выбирает подарок свекрови на юбилей. Нервничает: «Вдруг ей не понравится? Она такая привередливая... Я уже второй раз прихожу и всё не могу решиться».", action: "Продавец не говорит шаблонное «Да не волнуйтесь, ей точно понравится!». Вместо этого она спокойно отвечает: «Я вас понимаю, угодить близким бывает сложнее всего. Давайте сделаем так: я оформлю вам подарочный сертификат на эту сумму. Вы подарите его свекрови, и она сама выберет то, что ей действительно по душе. Так вы будете уверены, что подарок точно её порадует».", correct: "good", explanation: "Это эмпатия действием. Продавец услышала реальный страх клиентки (ошибиться с выбором для привередливого человека) и предложила решение, которое полностью снимает эту тревогу. Подарочный сертификат — это не «отговорка», а проявление заботы." },
-        { principle: "Честность", situation: "Клиентка спрашивает про кольцо с фианитами: «Это надолго?»", action: "«Честно говоря, фианиты со временем мутнеют — это не алмаз. Если планируете носить каждый день, через год-два будете разочарованы. Давйте веберем с бриллиантом или цирконием. А это... ну, на пару сезонов хватит, если не часто носить».", correct: "good", explanation: "На первый взгляд кажется, что продавец «отговаривает от покупки». Но она честна до конца: говорит правду о недостатке, объясняет последствия, предлагает альтернативы. Клиентка может обидеться, но потом вернётся — потому что знает: здесь не обманут." },
+        { principle: "Честность", situation: "Клиентка спрашивает про кольцо с фианитами: «Это надолго?»", action: "«Честно говоря, фианиты со временем мутнеют — это не алмаз. Если планируете носить каждый день, через год-два будете разочарованы. Я бы на вашем месте либо взяла что-то с цирконием, либо копила на бриллиант. А это... ну, на пару сезонов хватит, если не часто носить».", correct: "good", explanation: "На первый взгляд кажется, что продавец «отговаривает от покупки». Но она честна до конца: говорит правду о недостатке, объясняет последствия, предлагает альтернативы. Клиентка может обидеться, но потом вернётся — потому что знает: здесь не обманут." },
         { principle: "Честность", situation: "Клиент выбирает цепочку. Продавец видит, что застёжка хлипкая, но клиент не спрашивает про качество.", action: "Продавец молча продаёт цепочку, не упоминая о застёжке. Клиент сам не спросил — значит, не её дело.", correct: "bad", explanation: "Это не ложь, но и не полная честность. Продавец увидела потенциальную проблему и промолчала. Через неделю клиент вернётся с претензией: «Застёжка сломалась!». Честность — это не только отвечать на вопросы, но и предупреждать о проблемах, которые клиент может не заметить." },
         { principle: "Маленькие жесты", situation: "Клиентка меряет кольцо.", action: "«У вас такие красивые руки! Это кольцо вам очень идёт. Вы, наверное, модель?»", correct: "bad", explanation: "Комплимент звучит фальшиво и неуместно. «Вы, наверное, модель?» — это явное преувеличение, клиентка не поверит. Комплимент должен быть искренним и конкретным («к кольцу подходит ваш маникюр»), а не общим и лестным." },
-        { principle: "Маленькие жесты", situation: "Клиентка меряет серьги, явно устала после работы (сказала об этом вскользь).", action: "Продавец начинает слишком активно помогать: снимает серьги сама, говорит: «Вам бы ещё причёску сделать другую, с распущенными волосами серьги лучше смотрятся. И макияж чуть поярче — тогда вообще идеально будет».", correct: "bad", explanation: "На первый взгляд — забота и внимание. Но продавец перешла личные границы: давала непрошеные советы по внешности. Клиентка чувствует себя неловко и оцениваемо. Маленький жест внимания превратился в нарушение личного пространства." },
+        { principle: "Маленькие жесты", situation: "Клиентка меряет серьги, явно устала после работы (сказала об этом вскользь).", action: "Продавец начинает слишком активно помогать: снимает серьги сама, поправляет клиентке волосы, говорит: «Вам бы ещё причёску сделать другую, с распущенными волосами серьги лучше смотрятся. И макияж чуть поярче — тогда вообще идеально будет».", correct: "bad", explanation: "На первый взгляд — забота и внимание. Но продавец перешла личные границы: трогала волосы клиентки без спроса, давала непрошеные советы по внешности. Клиентка чувствует себя неловко и оцениваемо. Маленький жест внимания превратился в нарушение личного пространства." },
         { principle: "Гибкость", situation: "Клиент торопится, смотрит на часы. Стандарт требует выявить потребности и показать 3-4 варианта.", action: "Продавец видит, что клиент спешит, и говорит: «Вижу, вы торопитесь — давайте я быстро покажу один лучший вариант в вашем бюджете, и если подойдёт, сразу оформим». Показывает одно кольцо, клиент берёт его.", correct: "good", explanation: "Продавец нарушила стандарт (показать 3-4 варианта), но сделала это осознанно, ради клиента. Она всё равно выполнила ключевую часть — выявила бюджет и потребность, просто сжала процесс. Клиент ушёл довольный и сэкономил время." },
         { principle: "Гибкость", situation: "Клиент торопится, но продавец следует стандарту и предлагает посмотреть ещё три модели.", action: "«У нас есть ещё три модели в этом бюджете, давайте я быстро покажу, вдруг что-то понравится больше».", correct: "bad", explanation: "Формально продавец следует стандарту (показать альтернативы), но игнорирует контекст (клиент торопится). Гибкость — это не нарушение стандартов, а их адаптация под ситуацию." },
-        { principle: "Завершение контакта", situation: "Клиентка покупает кольцо себе после повышения на работе. Она рассказала об этом в процессе выбора, видно, что гордится.", action: "«Поздравляю с повышением! Вы ещё директором станете, вот увидите! Я вот тоже когда-то мечтала о карьере, а теперь работаю здесь и счастлива. Главное — верить в себя! Приходите за корпоративными подарками!»", correct: "bad", explanation: "Продавец персонализировала прощание, но перешла границы. Она начала давать жизненные советы, рассказывать о себе и строить планы за клиента. Клиентка пришла за кольцом в честь своего достижения, а не за коучем. Персонализация хороша в меру — поздравить можно, но лезть в карьерные прогнозы нельзя." },
+        { principle: "Завершение контакта", situation: "Клиентка покупает кольцо себе после повышения на работе. Она рассказала об этом в процессе выбора, видно, что гордится.", action: "«Поздравляю с повышением! Вы ещё директором станете, вот увидите! Я вот тоже когда-то мечтала о карьере, а теперь работаю здесь и счастлива. Главное — верить в себя! Заходите ещё, будете начальником — приведёте весь офис за корпоративными подарками!»", correct: "bad", explanation: "Продавец персонализировала прощание, но перешла границы. Она начала давать жизненные советы, рассказывать о себе и строить планы за клиента. Клиентка пришла за кольцом в честь своего достижения, а не за коучем. Персонализация хороша в меру — поздравить можно, но лезть в карьерные прогнозы нельзя." },
         { principle: "Завершение контакта", situation: "Клиент уходит после покупки.", action: "«Спасибо за покупку! Хорошего дня!»", correct: "bad", explanation: "Это шаблонное прощание, которое мог сказать любой продавец в любом магазине. Нет персонализации, нет «якоря» для возвращения. Клиент не чувствует, что его запомнили." },
-        { principle: "Проактивность", situation: "Клиентка меряет серьги, смотрит в зеркало, хмурится.", action: "«Вижу, вы сомневаетесь. Давайте я сниму их — возможно, они тяжеловаты. Хотите попробовать модель полегче?»", correct: "good", explanation: "Продавец заметила невербальный сигнал (хмурится) и предложила помощь до того, как клиентка попросила. Это проактивность, основанная на наблюдении, а не на навязывании." },
+        { principle: "Проактивность", situation: "Клиентка меряет серьги, смотрит в зеркало, хмурится.", action: "«Вижу, вы сомневаетесь. Давайте я сниму их — возможно, они тяжеловаты. Или хотите попробовать модель полегче?»", correct: "good", explanation: "Продавец заметила невербальный сигнал (хмурится) и предложила помощь до того, как клиентка попросила. Это проактивность, основанная на наблюдении, а не на навязывании." },
         { principle: "Проактивность", situation: "Клиент смотрит на ценники, сравнивает.", action: "Продавец не подходит, потому что боится показаться навязчивой. Ждёт, пока клиент сам обратится.", correct: "bad", explanation: "Это не осторожность, а пассивность. Клиент явно ищет информацию (сравнивает цены), и продавец могла бы помочь: «Вижу, вы сравниваете модели. Могу рассказать, в чём разница между ними». Проактивная помощь — это не навязывание, а предложение помощи в нужный момент." },
         { principle: "Не просто покупатель", situation: "Клиент потратил 150 тысяч рублей.", action: "«Спасибо за такую крупную покупку! Вы наш VIP-клиент, будем рады видеть вас снова!»", correct: "bad", explanation: "Акцент на сумме покупки («крупная», «VIP») делает отношения транзакционными. Клиент чувствует, что его ценят за деньги, а не как человека. Лучше сказать: «Спасибо, что выбрали нас! Было приятно помочь вам найти идеальное украшение»." },
         { principle: "Не просто покупатель", situation: "Клиент уходит без покупки, потратив 30 минут на примерку.", action: "«Спасибо, что зашли! Даже если сегодня не выбрали — я рада, что вы увидели наши новинки. Заходите, будем рады».", correct: "good", explanation: "Продавец показывает, что ценит время клиента, независимо от покупки. Это смещает фокус с транзакции на отношения. Клиент чувствует, что его не «отработали», а действительно хотели помочь." }
@@ -258,7 +259,7 @@
     let currentUserCity = '';
     let isAnimating = false;
 
-    // ========== 🚀 ЗАПУСК ==========
+    // ==========  ЗАПУСК ==========
     function startGame() {
         const name = document.getElementById('userName').value.trim();
         const city = document.getElementById('userCity').value;
@@ -287,7 +288,7 @@
         document.getElementById('cardAction').textContent = scenario.action;
         
         const card = document.getElementById('gameCard');
-        card.className = 'card'; // Сброс классов анимации
+        card.className = 'card';
         card.style.display = 'block';
         
         document.getElementById('swipeButtons').style.display = 'flex';
@@ -295,7 +296,7 @@
         isAnimating = false;
     }
 
-    // ========== 🖱️ ВЫБОР И АНИМАЦИЯ ==========
+    // ========== ️ ВЫБОР И АНИМАЦИЯ ==========
     function handleChoice(choice) {
         if (isAnimating) return;
         isAnimating = true;
@@ -311,11 +312,9 @@
             isCorrect: isCorrect
         });
         
-        // Анимация улёта карточки
         const card = document.getElementById('gameCard');
         card.classList.add(choice === 'good' ? 'fly-right' : 'fly-left');
         
-        // Скрываем кнопки, показываем объяснение
         document.getElementById('swipeButtons').style.display = 'none';
         
         setTimeout(() => {
@@ -345,7 +344,7 @@
         }
     }
 
-    // ========== 🏁 ЗАВЕРШЕНИЕ ==========
+    // ==========  ЗАВЕРШЕНИЕ ==========
     async function finishGame() {
         document.getElementById('gameContainer').style.display = 'none';
         const finalContainer = document.getElementById('finalContainer');
@@ -354,7 +353,6 @@
         const percent = Math.round((score / SCENARIOS.length) * 100);
         const passed = percent >= 80;
         
-        // Подсчет по принципам
         const principlesMap = {};
         answers.forEach(a => {
             if (!principlesMap[a.principle]) principlesMap[a.principle] = { correct: 0, total: 0 };
@@ -374,20 +372,19 @@
                 <h2>${passed ? '🏆 Отличный результат!' : '⚠️ Есть над чем поработать'}</h2>
                 <div class="result-big">${percent}%</div>
                 <div class="result-sub">Правильных ответов: <strong>${score} из ${SCENARIOS.length}</strong></div>
-                <p style="font-size: 16px; color: #4b5563;">${passed ? 'Вы прекрасно чувствуете сервис с человеческим лицом!' : 'Рекомендуем перечитать памятку «9 принципов сервиса» и пройти тренажёр ещё раз.'}</p>
+                <p style="font-size: 15px; color: #4b5563;">${passed ? 'Вы прекрасно чувствуете сервис с человеческим лицом!' : 'Рекомендуем перечитать памятку «9 принципов сервиса» и пройти тренажёр ещё раз.'}</p>
                 
                 <div class="principles-breakdown">
                     ${strong.length > 0 ? `<h3>✅ Сильные стороны</h3>` + strong.map(p => `<div class="principle-item strong"><span>${p.name}</span><span class="principle-score">${p.percent}%</span></div>`).join('') : ''}
                     ${weak.length > 0 ? `<h3>⚠️ Зоны роста</h3>` + weak.map(p => `<div class="principle-item weak"><span>${p.name}</span><span class="principle-score">${p.percent}%</span></div>`).join('') : ''}
                 </div>
                 
-                <button class="btn-primary" onclick="location.reload()" style="margin-top: 32px;">🔄 Пройти ещё раз</button>
+                <button class="btn-primary" onclick="location.reload()" style="margin-top: 24px;">🔄 Пройти ещё раз</button>
             </div>
         `;
         
         finalContainer.innerHTML = html;
         
-        // Сохранение
         const statusDiv = document.getElementById('saveStatus');
         statusDiv.style.display = 'block';
         statusDiv.textContent = '⏳ Сохранение...';
