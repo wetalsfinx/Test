@@ -35,6 +35,30 @@
             font-weight: 700; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px;
         }
         
+        /* НОВЫЙ БЛОК "КАК ЭТО РАБОТАЕТ" */
+        .how-it-works {
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            border-radius: 16px; padding: 24px; margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+        }
+        .how-title {
+            font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 16px;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .how-list { list-style: none; padding: 0; margin: 0; }
+        .how-list li {
+            padding: 10px 0; border-bottom: 1px solid #e5e7eb;
+            font-size: 14px; color: #4b5563; line-height: 1.5;
+            display: flex; align-items: flex-start; gap: 12px;
+        }
+        .how-list li:last-child { border-bottom: none; }
+        .how-num {
+            flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+            background: #c41e3a; color: white; font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; margin-top: 2px;
+        }
+        .how-list li strong { color: #1f2937; }
+        
         .register-form { background: #f9fafb; border-radius: 20px; padding: 24px; margin-bottom: 20px; }
         .register-form input, .register-form select {
             width: 100%; padding: 14px 18px; border: 2px solid #e5e7eb; border-radius: 12px;
@@ -198,14 +222,16 @@
         </div>
         
         <div id="registerForm" class="register-form">
-            <p style="color: #4b5563; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
-                <strong>Как это работает:</strong><br>
-                1️⃣ Вы увидите 7 реальных ситуаций из магазина<br>
-                2️ Напишите, <strong>как бы вы ответили клиенту</strong><br>
-                3️⃣ Сравните свой ответ с эталоном<br>
-                4️⃣ Оцените себя честно<br>
-                5️ Получите персональный сертификат
-            </p>
+            <div class="how-it-works">
+                <div class="how-title">Как это работает</div>
+                <ul class="how-list">
+                    <li><span class="how-num">1</span><span>Вы увидите <strong>7 реальных ситуаций</strong> из магазина</span></li>
+                    <li><span class="how-num">2</span><span>Напишите, <strong>как бы вы ответили клиенту</strong></span></li>
+                    <li><span class="how-num">3</span><span>Сравните свой ответ с <strong>эталонным</strong></span></li>
+                    <li><span class="how-num">4</span><span>Оцените себя <strong>честно</strong></span></li>
+                    <li><span class="how-num">5</span><span>Получите <strong>персональный сертификат</strong></span></li>
+                </ul>
+            </div>
             <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
             <select id="userCity">
                 <option value="">Выберите город</option>
@@ -216,7 +242,7 @@
                 <option value="Калининград">Калининград</option>
                 <option value="Нижний Тагил">Нижний Тагил</option>
             </select>
-            <button class="btn-primary" onclick="startExam()">🚀 Начать аттестацию</button>
+            <button class="btn-primary" onclick="startExam()">Начать аттестацию</button>
         </div>
 
         <div id="examContainer" style="display: none;">
@@ -226,32 +252,32 @@
             <div class="principle-tag" id="principleTag">Принцип</div>
             
             <div class="situation-card">
-                <div class="situation-label">🎬 Ситуация</div>
+                <div class="situation-label">Ситуация</div>
                 <div class="situation-text" id="situationText"></div>
             </div>
             
             <div class="answer-area">
-                <label class="answer-label">💬 Как вы ответите клиенту?</label>
+                <label class="answer-label">Как вы ответите клиенту?</label>
                 <textarea class="answer-textarea" id="answerInput" placeholder="Напишите вашу фразу здесь..."></textarea>
             </div>
             
-            <button class="btn-show" id="showBtn" onclick="showEtalon()">✨ Показать эталонный ответ</button>
+            <button class="btn-show" id="showBtn" onclick="showEtalon()">Показать эталонный ответ</button>
             
             <div class="etalon-box" id="etalonBox">
-                <div class="etalon-label">✅ Эталонный ответ</div>
+                <div class="etalon-label">Эталонный ответ</div>
                 <div class="etalon-text" id="etalonText"></div>
             </div>
             
             <div class="self-eval" id="selfEval">
-                <div class="self-eval-label">🎯 Насколько вы попали в суть?</div>
+                <div class="self-eval-label">Насколько вы попали в суть?</div>
                 <div class="self-eval-buttons">
-                    <button class="eval-btn perfect" onclick="selfEvaluate('perfect')">✅ Попал в суть</button>
-                    <button class="eval-btn partial" onclick="selfEvaluate('partial')">🟡 Частично</button>
-                    <button class="eval-btn miss" onclick="selfEvaluate('miss')">❌ Мимо</button>
+                    <button class="eval-btn perfect" onclick="selfEvaluate('perfect')">Попал в суть</button>
+                    <button class="eval-btn partial" onclick="selfEvaluate('partial')">Частично</button>
+                    <button class="eval-btn miss" onclick="selfEvaluate('miss')">Мимо</button>
                 </div>
             </div>
             
-            <button class="btn-next" id="nextBtn" onclick="nextSituation()">Далее ➡️</button>
+            <button class="btn-next" id="nextBtn" onclick="nextSituation()">Далее</button>
         </div>
 
         <div class="certificate-wrapper" id="certificateWrapper">
@@ -274,42 +300,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ========== 📚 7 СИТУАЦИЙ ==========
+    // ========== 7 НОВЫХ УНИКАЛЬНЫХ СИТУАЦИЙ ==========
     const SITUATIONS = [
         {
-            principle: "Искренний интерес",
-            situation: "Клиентка выбирает серьги для дочери на выпускной. Вы спрашиваете: «Что для вас важно в украшении?». Она начинает отвечать: «Ну, чтобы не слишком дорого и...» — и в этот момент вы перебиваете её.",
-            etalon: "«Понял-понял, значит, смотрим бюджетные варианты. Вот у нас есть отличная коллекция до 15 тысяч...» — это ошибка. Правильно: дать клиентке закончить мысль, выслушать до конца, и только потом реагировать. Возможно, для неё важнее дизайн, а не цена."
+            principle: "Работа с ценой",
+            situation: "Клиентка меряет кольцо, смотрит на ценник и тихо вздыхает. Вы видите, что украшение ей очень понравилось, но цена смущает. Она не говорит ничего, просто продолжает держать кольцо в руке.",
+            etalon: "«Вижу, кольцо вам приглянулось. Скажите, с чем вы сравниваете цену? Может быть, я покажу похожие варианты в другом бюджете, или расскажу про рассрочку — многие наши клиенты выбирают именно так, и это совсем не бьёт по карману»."
         },
         {
-            principle: "Эмпатия",
-            situation: "Клиентка выбирает подарок свекрови на юбилей. Нервничает: «Вдруг ей не понравится? Она такая привередливая... Я уже второй раз прихожу и всё не могу решиться». Что вы скажете?",
-            etalon: "«Я вас понимаю, угодить близким бывает сложнее всего. Давайте сделаем так: я оформлю вам подарочный сертификат на эту сумму. Вы подарите его свекрови, и она сама выберет то, что ей действительно по душе. Так вы будете уверены, что подарок точно её порадует»."
+            principle: "Выявление потребностей",
+            situation: "Мужчина заходит в магазин и говорит: «Мне нужно что-нибудь для жены. Я вообще не разбираюсь в украшениях, выберите мне сами». Он явно растерян и хочет поскорее уйти.",
+            etalon: "«Понимаю, выбрать подарок без подготовки непросто. Давайте я задам пару вопросов, чтобы попасть точно в цель. Жена больше любит классические украшения или современные? Есть ли у неё любимые камни или металлы? И какой повод — день рождения, годовщина, или просто так?»."
         },
         {
-            principle: "Честность",
-            situation: "Клиентка спрашивает про кольцо с фианитами: «Это надолго?». Что вы ответите?",
-            etalon: "«Честно говоря, фианиты со временем мутнеют — это не алмаз. Если планируете носить каждый день, через год-два будете разочарованы. Я бы на вашем месте либо взяла что-то с цирконием, либо копила на бриллиант. А это... ну, на пару сезонов хватит, если не часто носить»."
+            principle: "Удержание клиента",
+            situation: "Клиентка говорит: «Я подумаю и вернусь». Вы видите, что украшение ей очень понравилось, она долго его меряла, улыбалась. Но сейчас уходит.",
+            etalon: "«Конечно, решение важное. Скажите, что именно вас смущает — цена, модель, или хотите сравнить с другими магазинами? Если дело в цене — у нас есть рассрочка без процентов. А если хотите сравнить — я могу отложить это кольцо на день, чтобы оно точно вас дождалось»."
         },
         {
-            principle: "Маленькие жесты",
-            situation: "Клиентка меряет кольцо и говорит вскользь: «Устала после работы». Что вы сделаете?",
-            etalon: "Предложить присесть, принести воды, дать время отдохнуть. Не навязывать покупки. Спросить: «Может, передохнём? Я принесу воды, а вы спокойно посмотрите». Маленький жест внимания важнее любой скидки."
+            principle: "Работа с детьми",
+            situation: "В магазин зашла покупательница с ребёнком лет трёх. Ребёнок бегает между витринами, трогает экспонаты. Мама смущённо извиняется: «Простите, он сегодня неугомонный...».",
+            etalon: "«Ничего страшного, дети есть дети! Давайте я покажу ему вот эту яркую коробочку — там безопасные образцы, можно потрогать. А вы спокойно посмотрите украшения. Если нужно — я помогу вам с выбором, пока он играет»."
         },
         {
-            principle: "Гибкость",
-            situation: "Клиент торопится, смотрит на часы. Стандарт требует выявить потребности и показать 3-4 варианта. Ваши действия?",
-            etalon: "«Вижу, вы торопитесь — давайте я быстро покажу один лучший вариант в вашем бюджете, и если подойдёт, сразу оформим». Показать одно кольцо. Клиент уйдёт довольный и сэкономит время."
+            principle: "Работа с возражением",
+            situation: "Клиент спрашивает: «А у вас скидки бывают? Я в другом магазине видел дешевле». Вы знаете, что сейчас акций нет, но клиент явно настроен на торг.",
+            etalon: "«Понимаю, цена важна. Сейчас у нас нет акций, но я могу предложить рассрочку без переплат — это как скидка, только растянутая по времени. А если вы видели похожее дешевле — давайте сравним качество: вес золота, пробу, камни. Часто разница в цене объясняется именно этим»."
         },
         {
-            principle: "Проактивность",
-            situation: "Клиентка меряет серьги, смотрит в зеркало, хмурится. Что вы сделаете?",
-            etalon: "«Вижу, вы сомневаетесь. Давайте я сниму их — возможно, они тяжеловаты. Или хотите попробовать модель полегче?» — предложить помощь до того, как клиентка попросила."
+            principle: "Построение отношений",
+            situation: "Постоянная клиентка зашла в магазин. Она покупает у вас регулярно, но сегодня явно не планирует покупку — просто хочет поболтать, рассказать про жизнь.",
+            etalon: "Уделить ей внимание, выслушать, проявить искренний интерес. «Как дела? Как ваша дочь, поступила куда хотела?» Не торопить с покупкой. Если сама спросит про новинки — показать. Главное — она чувствует, что здесь её ждут не только как покупателя."
         },
         {
-            principle: "Завершение контакта",
-            situation: "Клиент уходит без покупки, потратив 30 минут на примерку. Что вы скажете на прощание?",
-            etalon: "«Спасибо, что зашли! Даже если сегодня не выбрали — я рада, что вы увидели наши новинки. Заходите, будем рады». Фокус на отношениях, а не на транзакции."
+            principle: "Помощь в выборе",
+            situation: "Клиентка выбирает между двумя кольцами одинаковой цены. Оба ей нравятся, она не может решиться. Уже 15 минут меряет то одно, то другое.",
+            etalon: "«Вижу, оба вам идут. Давайте я помогу определиться. Первое — более классическое, подойдёт под любой стиль. Второе — более современное, яркое. С чем вы чаще носите украшения — с деловыми костюмами или с повседневной одеждой? И какое чувство вам ближе — спокойная элегантность или заметный акцент?»."
         }
     ];
 
@@ -385,93 +411,91 @@
         }
     }
 
-  async function finishExam() {
-    document.getElementById('examContainer').style.display = 'none';
-    document.getElementById('certificateWrapper').style.display = 'block';
-    
-    // Подсчёт: perfect = 3 балла, partial = 2, miss = 1
-    const maxScore = SITUATIONS.length * 3;
-    const score = answers.reduce((sum, a) => {
-        if (a.selfEval === 'perfect') return sum + 3;
-        if (a.selfEval === 'partial') return sum + 2;
-        return sum + 1;
-    }, 0);
-    
-    const percent = Math.round((score / maxScore) * 100);
-    const passed = percent >= 70;
-    
-    let level, levelClass, certTitle;
-    if (percent >= 90) { level = 'Мастер продаж 585GOLD'; levelClass = 'gold'; certTitle = '🏆'; }
-    else if (percent >= 70) { level = 'Специалист по сервису'; levelClass = 'silver'; certTitle = '🥈'; }
-    else if (percent >= 50) { level = 'Продавец-консультант'; levelClass = 'bronze'; certTitle = ''; }
-    else { level = null; }
-    
-    const dateStr = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
-    
-    let html = '';
-    if (level) {
-        html = `
-            <div class="certificate" id="certificate">
-                <div class="cert-logo">${certTitle}</div>
-                <div class="cert-brand">585GOLD</div>
-                <div class="cert-title">СЕРТИФИКАТ</div>
-                <div class="cert-subtitle">подтверждает успешное прохождение итоговой аттестации</div>
-                <div class="cert-name">${currentUserName}</div>
-                <div class="cert-level ${levelClass}">${level}</div>
-                <div class="cert-score">${percent}%</div>
-                <div style="color: #6b7280; font-size: 13px;">Результат: ${score} из ${maxScore} баллов</div>
-                <div class="cert-date"> ${dateStr} | 🏙️ ${currentUserCity}</div>
-                <div class="cert-signature">«Клиент не помнит, что вы сказали. Он помнит, как вы заставили его себя чувствовать.»</div>
-            </div>
-            <div class="cert-actions">
-                <button class="btn-primary" onclick="downloadCertificate()"> Скачать сертификат</button>
-                <button class="btn-secondary" onclick="window.print()">🖨️ Распечатать</button>
-            </div>
-        `;
-    } else {
-        html = `
-            <div class="no-cert">
-                <h2>⚠️ Аттестация не пройдена</h2>
-                <p>Ваш результат: <strong>${percent}%</strong> (необходимо минимум 50%)<br><br>
-                Рекомендуем пройти тренажёры ещё раз и вернуться к аттестации.</p>
-            </div>
-            <button class="btn-primary" onclick="location.reload()" style="margin-top: 16px;">🔄 Пройти заново</button>
-        `;
+    async function finishExam() {
+        document.getElementById('examContainer').style.display = 'none';
+        document.getElementById('certificateWrapper').style.display = 'block';
+        
+        const maxScore = SITUATIONS.length * 3;
+        const score = answers.reduce((sum, a) => {
+            if (a.selfEval === 'perfect') return sum + 3;
+            if (a.selfEval === 'partial') return sum + 2;
+            return sum + 1;
+        }, 0);
+        
+        const percent = Math.round((score / maxScore) * 100);
+        
+        let level, levelClass, certTitle;
+        if (percent >= 90) { level = 'Мастер продаж 585GOLD'; levelClass = 'gold'; certTitle = ''; }
+        else if (percent >= 70) { level = 'Специалист по сервису'; levelClass = 'silver'; certTitle = ''; }
+        else if (percent >= 50) { level = 'Продавец-консультант'; levelClass = 'bronze'; certTitle = ''; }
+        else { level = null; }
+        
+        const dateStr = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+        
+        let html = '';
+        if (level) {
+            html = `
+                <div class="certificate" id="certificate">
+                    <div class="cert-logo">${certTitle}</div>
+                    <div class="cert-brand">585GOLD</div>
+                    <div class="cert-title">СЕРТИФИКАТ</div>
+                    <div class="cert-subtitle">подтверждает успешное прохождение итоговой аттестации</div>
+                    <div class="cert-name">${currentUserName}</div>
+                    <div class="cert-level ${levelClass}">${level}</div>
+                    <div class="cert-score">${percent}%</div>
+                    <div style="color: #6b7280; font-size: 13px;">Результат: ${score} из ${maxScore} баллов</div>
+                    <div class="cert-date">${dateStr} | ${currentUserCity}</div>
+                    <div class="cert-signature">«Клиент не помнит, что вы сказали. Он помнит, как вы заставили его себя чувствовать.»</div>
+                </div>
+                <div class="cert-actions">
+                    <button class="btn-primary" onclick="downloadCertificate()">Скачать сертификат</button>
+                    <button class="btn-secondary" onclick="window.print()">Распечатать</button>
+                </div>
+            `;
+        } else {
+            html = `
+                <div class="no-cert">
+                    <h2>Аттестация не пройдена</h2>
+                    <p>Ваш результат: <strong>${percent}%</strong> (необходимо минимум 50%)<br><br>
+                    Рекомендуем пройти тренажёры ещё раз и вернуться к аттестации.</p>
+                </div>
+                <button class="btn-primary" onclick="location.reload()" style="margin-top: 16px;">Пройти заново</button>
+            `;
+        }
+        
+        document.getElementById('certificateContent').innerHTML = html;
+        
+        const statusDiv = document.getElementById('saveStatus');
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = 'Сохранение...';
+        statusDiv.style.color = '#d97706';
+        
+        const resultData = {
+            id: Date.now(), type: 'final_exam', user_name: currentUserName, city: currentUserCity,
+            score: score, total: maxScore, percent: percent, passed: percent >= 50,
+            level: level, answers: answers, date: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('ru-RU')
+        };
+        
+        try {
+            const localBackup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
+            localBackup.push(resultData);
+            localStorage.setItem('exam_backup', JSON.stringify(localBackup));
+            
+            const newRef = db.ref('results/final_exam').push();
+            await newRef.set(resultData);
+            
+            const backup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
+            localStorage.setItem('exam_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
+            
+            statusDiv.textContent = 'Результат сохранён!';
+            statusDiv.style.color = '#10b981';
+        } catch(e) {
+            statusDiv.textContent = 'Сохранено локально';
+            statusDiv.style.color = '#ef4444';
+        }
     }
-    
-    document.getElementById('certificateContent').innerHTML = html;
-    
-    // Сохранение
-    const statusDiv = document.getElementById('saveStatus');
-    statusDiv.style.display = 'block';
-    statusDiv.textContent = '⏳ Сохранение...';
-    statusDiv.style.color = '#d97706';
-    
-    const resultData = {
-        id: Date.now(), type: 'final_exam', user_name: currentUserName, city: currentUserCity,
-        score: score, total: maxScore, percent: percent, passed: passed,
-        level: level, answers: answers, date: new Date().toISOString(),
-        timestamp: new Date().toLocaleString('ru-RU')
-    };
-    
-    try {
-        const localBackup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
-        localBackup.push(resultData);
-        localStorage.setItem('exam_backup', JSON.stringify(localBackup));
-        
-        const newRef = db.ref('results/final_exam').push();
-        await newRef.set(resultData);
-        
-        const backup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
-        localStorage.setItem('exam_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
-        
-        statusDiv.textContent = '✅ Результат сохранён!';
-        statusDiv.style.color = '#10b981';
-    } catch(e) {
-        statusDiv.textContent = '⚠️ Сохранено локально';
-        statusDiv.style.color = '#ef4444';
-    }
-}
+
     async function downloadCertificate() {
         const cert = document.getElementById('certificate');
         if (!cert) return;
@@ -487,7 +511,6 @@
         }
     }
 
-    // Автодозагрузка
     window.addEventListener('load', async () => {
         const backup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
         if (backup.length > 0) {
