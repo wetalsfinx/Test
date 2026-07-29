@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>585GOLD | Аналитика</title>
     
-    <!-- 🔥 ПОДКЛЮЧЕНИЕ FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -77,7 +76,6 @@
         }
         .filter-group input { width: 150px; }
         
-        /* КРАСИВЫЕ КНОПКИ-ФИЛЬТРЫ С ЧЁТКИМ АКТИВНЫМ СОСТОЯНИЕМ */
         .filter-chips { 
             display: flex; 
             gap: 8px; 
@@ -113,9 +111,7 @@
             box-shadow: 0 4px 16px rgba(0,0,0,0.2);
             color: white;
         }
-        .filter-chip.active:hover {
-            transform: translateY(-2px);
-        }
+        .filter-chip.active:hover { transform: translateY(-2px); }
         .filter-chip.active[data-value="all"] { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); box-shadow: 0 4px 12px rgba(196, 30, 58, 0.35); }
         .filter-chip.active[data-value="test"] { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35); }
         .filter-chip.active[data-value="trainer"] { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35); }
@@ -185,7 +181,6 @@
             padding: 14px 18px;
             border-left: 5px solid #c41e3a;
             border: 1px solid #e2e8f0;
-            border-left-width: 5px;
             transition: 0.15s;
         }
         .status-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); transform: translateY(-2px); }
@@ -287,7 +282,6 @@
         .modal-close { margin-top: 16px; padding: 10px; border: none; border-radius: 6px; background: #c41e3a; color: white; font-weight: 600; cursor: pointer; width: 100%; }
         .modal-close:hover { background: #a0162e; }
         
-        /* Стили для аттестации */
         .exam-answer { background: #f8fafc; padding: 14px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #8b5cf6; }
         .exam-answer h4 { font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
         .exam-situation { font-style: italic; color: #4b5563; font-size: 13px; margin-bottom: 10px; padding: 8px; background: #fffbeb; border-radius: 6px; border-left: 3px solid #f59e0b; }
@@ -457,7 +451,7 @@
                 <button class="filter-chip active" data-value="all" onclick="setTypeFilter('all')">Все</button>
                 <button class="filter-chip" data-value="test" onclick="setTypeFilter('test')">📝 Тест</button>
                 <button class="filter-chip" data-value="trainer" onclick="setTypeFilter('trainer')">🎯 Тренировка</button>
-                <button class="filter-chip" data-value="crosssell" onclick="setTypeFilter('crosssell')">💰 Допродажи</button>
+                <button class="filter-chip" data-value="crosssell" onclick="setTypeFilter('crosssell')"> Допродажи</button>
                 <button class="filter-chip" data-value="errorfinder" onclick="setTypeFilter('errorfinder')">🔍 Найди ошибку</button>
                 <button class="filter-chip" data-value="clienttype" onclick="setTypeFilter('clienttype')">🎭 Адаптация</button>
                 <button class="filter-chip" data-value="service" onclick="setTypeFilter('service')">🤝 Сервис</button>
@@ -465,13 +459,13 @@
             </div>
             <select id="typeFilter" style="display: none;">
                 <option value="all">Все</option>
-                <option value="test">📝 Тест</option>
-                <option value="trainer">🎯 Тренировка</option>
-                <option value="crosssell">💰 Допродажи</option>
-                <option value="errorfinder"> Найди ошибку</option>
-                <option value="clienttype">🎭 Адаптация</option>
-                <option value="service"> Сервис</option>
-                <option value="final_exam">🎓 Аттестация</option>
+                <option value="test">Тест</option>
+                <option value="trainer">Тренировка</option>
+                <option value="crosssell">Допродажи</option>
+                <option value="errorfinder">Найди ошибку</option>
+                <option value="clienttype">Адаптация</option>
+                <option value="service">Сервис</option>
+                <option value="final_exam">Аттестация</option>
             </select>
         </div>
 
@@ -522,9 +516,9 @@
             <div class="status-card gold"><div class="label">💰 Допродаж</div><div class="value" id="sCrosssell">0</div></div>
             <div class="status-card teal"><div class="label">🔍 Найди ошибку</div><div class="value" id="sErrorfinder">0</div></div>
             <div class="status-card purple"><div class="label">🎭 Адаптация</div><div class="value" id="sClienttype">0</div></div>
-            <div class="status-card sky"><div class="label"> Сервис</div><div class="value" id="sService">0</div></div>
+            <div class="status-card sky"><div class="label">🤝 Сервис</div><div class="value" id="sService">0</div></div>
             <div class="status-card violet"><div class="label">🎓 Аттестация</div><div class="value" id="sFinalExam">0</div></div>
-            <div class="status-card green"><div class="label">🏆 Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
+            <div class="status-card green"><div class="label"> Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
             <div class="status-card orange"><div class="label">📈 Средний балл</div><div class="value" id="sAvg">0%</div></div>
             <div class="status-card red"><div class="label">🔴 Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
             <div class="status-card teal"><div class="label">❌ Ошибок</div><div class="value" id="sErrors">0</div></div>
@@ -536,7 +530,7 @@
                 <div class="chart-box"><canvas id="pieChart"></canvas></div>
             </div>
             <div class="card">
-                <div class="card-title"> Динамика среднего балла</div>
+                <div class="card-title">📈 Динамика среднего балла</div>
                 <div id="trendContainer"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
                 <div id="trendFallback" class="empty" style="display:none;">Недостаточно данных</div>
             </div>
@@ -548,17 +542,17 @@
                 <div id="topList"><div class="empty">Нет данных</div></div>
             </div>
             <div class="card">
-                <div class="card-title">️ Рейтинг городов</div>
+                <div class="card-title">🏙️ Рейтинг городов</div>
                 <div class="chart-box"><canvas id="cityBarChart"></canvas></div>
             </div>
             <div class="card">
-                <div class="card-title">📊 Распределение баллов</div>
+                <div class="card-title"> Распределение баллов</div>
                 <div class="chart-box"><canvas id="scoreBarChart"></canvas></div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title"> Сотрудники (<span id="empCount">0</span>)</div>
+            <div class="card-title">👥 Сотрудники (<span id="empCount">0</span>)</div>
             <div class="employee-list" id="employeeList"><div class="empty">Нет данных</div></div>
         </div>
     </div>
@@ -589,12 +583,12 @@
                 <option value="Калининград">Калининград</option>
                 <option value="Нижний Тагил">Нижний Тагил</option>
             </select>
-            <button class="btn btn-primary" id="generateFeedbackBtn"> Сгенерировать фидбек</button>
+            <button class="btn btn-primary" id="generateFeedbackBtn">🔍 Сгенерировать фидбек</button>
             
             <div class="feedback-actions" id="feedbackActions">
-                <button class="btn btn-success" onclick="copyFeedbackText()">📋 Копировать текст</button>
-                <button class="btn" onclick="printFeedback()">🖨️ Печать / PDF</button>
-                <button class="btn" onclick="downloadFeedbackHTML()"> Скачать HTML</button>
+                <button class="btn btn-success" onclick="copyFeedbackText()"> Копировать текст</button>
+                <button class="btn" onclick="printFeedback()">️ Печать / PDF</button>
+                <button class="btn" onclick="downloadFeedbackHTML()">📥 Скачать HTML</button>
             </div>
             
             <div id="feedbackResult" style="margin-top:16px;"></div>
@@ -613,7 +607,6 @@
 </div>
 
 <script>
-    // ========== 🔥 ИНИЦИАЛИЗАЦИЯ FIREBASE ==========
     const firebaseConfig = {
         apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
         authDomain: "gold-8105a.firebaseapp.com",
@@ -626,81 +619,57 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const CITIES = [
-        'Уфа', 'Екатеринбург',
-        'Санкт-Петербург, Московский, 2',
-        'Санкт-Петербург, Новаторов, 112',
-        'Калининград', 'Нижний Тагил'
-    ];
+    const CITIES = ['Уфа', 'Екатеринбург', 'Санкт-Петербург, Московский, 2', 'Санкт-Петербург, Новаторов, 112', 'Калининград', 'Нижний Тагил'];
 
     const TEST_TOPICS = [
-        'Приветствие и установление контакта',
-        'Выявление бюджета',
-        'Предложение дополнительных товаров',
-        'Работа с выбором материала',
-        'Предложение сопутствующих товаров',
-        'Работа с возражением "дорого"',
-        'Предложение альтернативы при отсутствии размера',
-        'Эмоциональная презентация подарка',
-        'Предложение дополнительных моделей',
-        'Предложение рассрочки (Сплит)',
-        'Проявление инициативы при молчаливом клиенте'
+        'Приветствие и установление контакта', 'Выявление бюджета', 'Предложение дополнительных товаров',
+        'Работа с выбором материала', 'Предложение сопутствующих товаров', 'Работа с возражением "дорого"',
+        'Предложение альтернативы при отсутствии размера', 'Эмоциональная презентация подарка',
+        'Предложение дополнительных моделей', 'Предложение рассрочки (Сплит)', 'Проявление инициативы при молчаливом клиенте'
     ];
 
     const TEST_GENERAL_RECS = [
-        "Изучите стандарты приветствия в ювелирном магазине. Используйте готовые формулы с ценностью для клиента.",
-        "Отработайте навыки выявления бюджета через открытые вопросы. Собирайте информацию до показа товара.",
-        "Практикуйте навык предложения сопутствующих товаров через создание законченного образа.",
-        "Изучите техники мягкой переориентации клиента без критики его выбора.",
-        "Используйте готовые формулировки для предложения сопутствующих товаров.",
-        "Отработайте техники работы с ценовыми возражениями через уточняющие вопросы.",
-        "Изучите стандарты работы с отсутствием товара в наличии. Всегда предлагайте альтернативу.",
-        "Практикуйте эмоциональную презентацию через привязку к событиям и чувствам клиента.",
-        "Используйте технику «дополнительных вариантов» для расширения выбора клиента.",
-        "Изучите правильную последовательность предложения рассрочки — до озвучивания итоговой цены.",
-        "Отработайте стандарты проявления инициативы через 20-30 секунд после захода клиента."
+        "Изучите стандарты приветствия в ювелирном магазине.", "Отработайте навыки выявления бюджета через открытые вопросы.",
+        "Практикуйте навык предложения сопутствующих товаров.", "Изучите техники мягкой переориентации клиента.",
+        "Используйте готовые формулировки для предложения сопутствующих товаров.", "Отработайте техники работы с ценовыми возражениями.",
+        "Изучите стандарты работы с отсутствием товара.", "Практикуйте эмоциональную презентацию.",
+        "Используйте технику дополнительных вариантов.", "Изучите правильную последовательность предложения рассрочки.",
+        "Отработайте стандарты проявления инициативы."
     ];
 
     const TRAINER_RULES = [
-        { id: "initiative", name: "Проявляй инициативу", rec: "Через 20-30 секунд подойди и спроси: «Какое изделие выбираете? Для себя или в подарок?»" },
-        { id: "askBeforeShow", name: "Задавай вопросы ДО показа", rec: "Сначала спроси «для какого случая?», «кто получатель?». Только потом показывай украшения." },
-        { id: "emotionalHPW", name: "Презентуй с эмоцией (ХПВ)", rec: "Привязывай украшение к событию: «Это кольцо будет напоминать о вашей годовщине...»" },
-        { id: "fittingOffer", name: "Предлагай примерку через «Давайте»", rec: "Всегда предлагай примерку фразой «Давайте примерим»." },
-        { id: "alternative", name: "Не отпускай без альтернативы", rec: "Если нет размера — сразу покажи похожие варианты и каталог заказов." },
-        { id: "warmClosing", name: "Завершай с теплотой", rec: "«Спасибо, что зашли! Если будете выбирать подарки — заходите...»" }
+        { id: "initiative", name: "Проявляй инициативу", rec: "Через 20-30 секунд подойди и спроси о потребностях." },
+        { id: "askBeforeShow", name: "Задавай вопросы ДО показа", rec: "Сначала спроси о потребностях, потом показывай." },
+        { id: "emotionalHPW", name: "Презентуй с эмоцией", rec: "Привязывай украшение к событию." },
+        { id: "fittingOffer", name: "Предлагай примерку", rec: "Всегда предлагай примерку." },
+        { id: "alternative", name: "Не отпускай без альтернативы", rec: "Предлагай альтернативу." },
+        { id: "warmClosing", name: "Завершай с теплотой", rec: "Используй тёплые формулы прощания." }
     ];
 
     const TRAINER_GENERAL_RECS = {
-        "initiative": "Изучите стандарты проявления инициативы в работе с клиентами. Используйте готовые формулы подхода.",
-        "askBeforeShow": "Отработайте последовательность вопросов перед показом товара. Собирайте информацию о потребностях клиента.",
-        "emotionalHPW": "Практикуйте эмоциональную презентацию через привязку украшений к значимым событиям в жизни клиента.",
-        "fittingOffer": "Используйте стандартную формулировку «Давайте примерим» для предложения примерки. Это увеличивает конверсию.",
-        "alternative": "Изучите стандарты работы с отсутствием товара. Всегда предлагайте альтернативу или каталог на заказ.",
-        "warmClosing": "Отработайте техники тёплого завершения диалога. Используйте готовые формулы прощания."
+        "initiative": "Изучите стандарты проявления инициативы.", "askBeforeShow": "Отработайте последовательность вопросов.",
+        "emotionalHPW": "Практикуйте эмоциональную презентацию.", "fittingOffer": "Используйте формулировку «Давайте примерим».",
+        "alternative": "Изучите стандарты работы с отсутствием товара.", "warmClosing": "Отработайте техники тёплого завершения."
     };
 
     const CROSSSELL_RULES = [
-        { id: "set", name: "Предлагай комплекты", rec: "К кольцу всегда предлагай серьги из той же коллекции — это увеличивает чек на 40-60%" },
-        { id: "chain_pendant", name: "Цепочка + кулон", rec: "К цепочке обязательно предложи кулон или подвеску — они продаются вместе в 70% случаев" },
-        { id: "gift_wrapping", name: "Подарочная упаковка", rec: "При покупке подарка всегда предлагай футляр и подарочную упаковку — это забота о клиенте" },
-        { id: "care", name: "Средства ухода", rec: "К любой покупке предлагай чистящее средство и салфетку — это продлевает жизнь украшения" },
-        { id: "certificate", name: "Подарочный сертификат", rec: "Если клиент не знает, что хочет — предложи подарочный сертификат" },
-        { id: "active_question", name: "Активный вопрос", rec: "Молчаливому клиенту задай открытый вопрос о дополнениях к покупке" }
+        { id: "set", name: "Предлагай комплекты", rec: "К кольцу предлагай серьги из той же коллекции." },
+        { id: "chain_pendant", name: "Цепочка + кулон", rec: "К цепочке предложи кулон." },
+        { id: "gift_wrapping", name: "Подарочная упаковка", rec: "Предлагай футляр и упаковку." },
+        { id: "care", name: "Средства ухода", rec: "Предлагай чистящее средство." },
+        { id: "certificate", name: "Подарочный сертификат", rec: "Предложи сертификат." },
+        { id: "active_question", name: "Активный вопрос", rec: "Задай открытый вопрос о дополнениях." }
     ];
     
     const CROSSSELL_GENERAL_RECS = {
-        "set": "Отработайте навык предложения комплектов через создание законченного образа.",
-        "chain_pendant": "Изучите технику предложения кулона к цепочке через аргумент «законченности образа».",
-        "gift_wrapping": "Используйте готовые формулировки подарочной упаковки с эмоциональной подачей.",
-        "care": "Предлагайте средства ухода через заботу о долговечности украшения, а не через продажу.",
-        "certificate": "Позиционируйте сертификат как современный и беспроигрышный вариант подарка.",
-        "active_question": "Отработайте мягкие вопросы к молчаливым клиентам без давления."
+        "set": "Отработайте навык предложения комплектов.", "chain_pendant": "Изучите технику предложения кулона.",
+        "gift_wrapping": "Используйте формулировки подарочной упаковки.", "care": "Предлагайте средства ухода через заботу.",
+        "certificate": "Позиционируйте сертификат как вариант подарка.", "active_question": "Отработайте мягкие вопросы."
     };
     
     let allData = [], filteredData = [];
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null;
 
-    // ========== 💾 УПРАВЛЕНИЕ ФИЛЬТРАМИ И ЗАПОМИНАНИЕ ==========
     function saveFilters() {
         const filters = {
             type: document.getElementById('typeFilter').value,
@@ -744,7 +713,6 @@
         setTypeFilter('all');
     }
 
-    // 🔥 ОБНОВЛЕННАЯ ФУНКЦИЯ СБРОСА (FIREBASE)
     document.getElementById('clearAllBtn').onclick = async () => {
         if (!confirm('️ Удалить ВСЕ результаты из Firebase?')) return;
         if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
@@ -778,7 +746,6 @@
         });
     });
 
-    // 🔥 ОБНОВЛЕННАЯ ФУНКЦИЯ ЗАГРУЗКИ (FIREBASE)
     async function loadResults() {
         document.getElementById('loadingSkeleton').style.display = 'block';
         document.getElementById('status').textContent = 'Загрузка...';
@@ -804,25 +771,25 @@
             let allResults = [];
             
             const testData = testSnap.val();
-            if (testData) { Object.values(testData).forEach(item => { item.type = 'test'; allResults.push(item); }); console.log(' Загружено тестов:', Object.values(testData).length); }
+            if (testData) { Object.values(testData).forEach(item => { item.type = 'test'; allResults.push(item); }); }
             
             const dialogData = dialogSnap.val();
-            if (dialogData) { Object.values(dialogData).forEach(item => { item.type = 'trainer'; allResults.push(item); }); console.log('📦 Загружено диалогов:', Object.values(dialogData).length); }
+            if (dialogData) { Object.values(dialogData).forEach(item => { item.type = 'trainer'; allResults.push(item); }); }
             
             const crossData = crossSnap.val();
-            if (crossData) { Object.values(crossData).forEach(item => { item.type = 'crosssell'; allResults.push(item); }); console.log('💰 Загружено допродаж:', Object.values(crossData).length); }
+            if (crossData) { Object.values(crossData).forEach(item => { item.type = 'crosssell'; allResults.push(item); }); }
 
             const errorData = errorSnap.val();
-            if (errorData) { Object.values(errorData).forEach(item => { item.type = 'errorfinder'; allResults.push(item); }); console.log('🔍 Загружено игр "Найди ошибку":', Object.values(errorData).length); }
+            if (errorData) { Object.values(errorData).forEach(item => { item.type = 'errorfinder'; allResults.push(item); }); }
 
             const clientData = clientSnap.val();
-            if (clientData) { Object.values(clientData).forEach(item => { item.type = 'clienttype'; allResults.push(item); }); console.log(' Загружено адаптаций:', Object.values(clientData).length); }
+            if (clientData) { Object.values(clientData).forEach(item => { item.type = 'clienttype'; allResults.push(item); }); }
 
             const serviceData = serviceSnap.val();
-            if (serviceData) { Object.values(serviceData).forEach(item => { item.type = 'service'; allResults.push(item); }); console.log('🤝 Загружено сервисов:', Object.values(serviceData).length); }
+            if (serviceData) { Object.values(serviceData).forEach(item => { item.type = 'service'; allResults.push(item); }); }
 
             const examData = examSnap.val();
-            if (examData) { Object.values(examData).forEach(item => { item.type = 'final_exam'; allResults.push(item); }); console.log('🎓 Загружено аттестаций:', Object.values(examData).length); }
+            if (examData) { Object.values(examData).forEach(item => { item.type = 'final_exam'; allResults.push(item); }); }
             
             if (!allResults.length) {
                 document.getElementById('status').textContent = 'Нет результатов';
@@ -836,8 +803,8 @@
                 user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
                 score: r.score || 0,
-                total: r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' || r.type === 'clienttype' ? 7 : (r.type === 'service' ? 16 : (r.type === 'final_exam' ? 21 : 11)))),
-                percent: r.percent || Math.round((r.score / (r.total || (r.type === 'trainer' || r.type === 'crosssell' ? 6 : (r.type === 'errorfinder' || r.type === 'clienttype' ? 7 : (r.type === 'service' ? 16 : (r.type === 'final_exam' ? 21 : 11)))))) * 100),
+                total: r.total || 11,
+                percent: r.percent || 0,
                 answers: r.answers || [],
                 rules_applied: r.rules_applied || [],
                 scenarios: r.scenarios || [],
@@ -974,7 +941,7 @@
             if (trainerMaxRule && trainerMaxRule[1] > maxErrors) { maxErrors = trainerMaxRule[1]; weakPoint = `🎯 ${trainerMaxRule[0]}`; }
             
             const crosssellMaxRule = Object.entries(d.crosssellRules).sort((a,b) => b[1] - a[1])[0];
-            if (crosssellMaxRule && crosssellMaxRule[1] > maxErrors) { maxErrors = crosssellMaxRule[1]; weakPoint = `💰 ${crosssellMaxRule[0]}`; }
+            if (crosssellMaxRule && crosssellMaxRule[1] > maxErrors) { maxErrors = crosssellMaxRule[1]; weakPoint = ` ${crosssellMaxRule[0]}`; }
             
             return { city, count: d.count, avg: Math.round(d.sum/d.count), success: d.success, errors: d.errors, weakPoint };
         }).sort((a,b) => b.avg - a.avg);
@@ -1058,7 +1025,7 @@
         const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
         const success = filteredData.filter(r => r.percent >= 85).length;
         const errors = filteredData.reduce((s,r) => {
-            if (r.type === 'clienttype' || r.type === 'service' || r.type === 'final_exam') return s + (r.scenarios ? r.scenarios.filter(sc => !sc.isCorrect).length : 0);
+            if (r.type === 'clienttype' || r.type === 'service') return s + (r.scenarios ? r.scenarios.filter(sc => !sc.isCorrect).length : 0);
             else if (r.type === 'errorfinder') return s + (r.total - r.score);
             else return s + (r.total - r.score);
         }, 0);
@@ -1094,7 +1061,7 @@
             pieChart = new Chart(pieCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['✅ Успешно (≥85%)', '️ Средне (70-84%)', '❌ Низкий (<70%)'],
+                    labels: ['✅ Успешно (≥85%)', '⚠️ Средне (70-84%)', '❌ Низкий (<70%)'],
                     datasets: [{ data: [success, medium, low], backgroundColor: ['#16a34a', '#f59e0b', '#dc2626'], borderColor: ['white', 'white', 'white'], borderWidth: 2, hoverOffset: 8 }]
                 },
                 options: { responsive: true, maintainAspectRatio: true, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11, weight: '500' }, usePointStyle: true } } } }
@@ -1110,7 +1077,7 @@
             else if (r.type === 'clienttype') badgeClass = 'badge-purple';
             else if (r.type === 'service') badgeClass = 'badge-sky';
             else if (r.type === 'final_exam') badgeClass = 'badge-violet';
-            return `<div class="employee-item" onclick="showDetails(${r.id})"><span><b>${i+1}.</b> ${r.user_name} (${r.city})</span><span class="badge ${badgeClass}">${r.percent}%</span></div>`;
+            return `<div class="employee-item" onclick="showDetails('${String(r.id).replace(/[^a-zA-Z0-9_-]/g, '_')}')"><span><b>${i+1}.</b> ${r.user_name} (${r.city})</span><span class="badge ${badgeClass}">${r.percent}%</span></div>`;
         }).join('') : '<div class="empty">Нет данных</div>';
 
         const cityMap = new Map();
@@ -1161,10 +1128,11 @@
             else if (r.percent < 85) badgeClass = 'badge-yellow';
             
             const dateStr = new Date(r.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const safeId = String(r.id).replace(/[^a-zA-Z0-9_-]/g, '_');
             
-            return `<div class="employee-item" onclick="showDetails(${r.id})">
+            return `<div class="employee-item" onclick="showDetails('${safeId}')">
                 <div style="flex:1;cursor:pointer;"><b>${r.user_name}</b> (${r.city}) <span style="color:#666; font-size:12px; margin: 0 8px;">${dateStr}</span><span class="badge ${badgeClass}">${r.percent}%</span></div>
-                <button class="btn" style="padding:0 10px;background:transparent;color:#dc2626;border:1px solid #fecaca;border-radius:4px;cursor:pointer;" onclick="event.stopPropagation(); deleteRow(${r.id})">✕</button>
+                <button class="btn" style="padding:0 10px;background:transparent;color:#dc2626;border:1px solid #fecaca;border-radius:4px;cursor:pointer;" onclick="event.stopPropagation(); deleteRow('${safeId}')">✕</button>
             </div>`;
         }).join('');
     }
@@ -1172,7 +1140,7 @@
     async function deleteRow(id) {
         if (!confirm('Удалить этот результат навсегда?')) return;
         try {
-            const record = allData.find(r => r.id === id);
+            const record = allData.find(r => String(r.id) === String(id));
             if (!record) { alert('Запись не найдена'); return; }
             
             let path = '';
@@ -1198,21 +1166,25 @@
                     }
                 }
             }
-            allData = allData.filter(r => r.id !== id);
+            allData = allData.filter(r => String(r.id) !== String(id));
             applyFilters();
             renderCityStats();
         } catch (e) { console.error('Ошибка:', e); alert('Ошибка: ' + e.message); }
     }
 
     function showDetails(id) {
-        const emp = filteredData.find(r => r.id === id);
-        if (!emp) return;
+        const emp = filteredData.find(r => String(r.id) === String(id));
+        if (!emp) {
+            console.log('Сотрудник не найден, id:', id);
+            return;
+        }
+        
         let typeLabel = '📝 Тест';
         if (emp.type === 'trainer') typeLabel = '🎯 Тренировка';
         else if (emp.type === 'crosssell') typeLabel = '💰 Допродажи';
         else if (emp.type === 'errorfinder') typeLabel = '🔍 Найди ошибку';
-        else if (emp.type === 'clienttype') typeLabel = '🎭 Адаптация';
-        else if (emp.type === 'service') typeLabel = '🤝 Сервис';
+        else if (emp.type === 'clienttype') typeLabel = ' Адаптация';
+        else if (emp.type === 'service') typeLabel = ' Сервис';
         else if (emp.type === 'final_exam') typeLabel = '🎓 Аттестация';
         
         document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}% [${typeLabel}]`;
@@ -1258,28 +1230,27 @@
                     html += `<div class="rule-item ${isStrong ? '' : 'failed'}"><div class="rule-name">${isStrong ? '✅' : '❌'} ${name} (${data.correct}/${data.total})</div>${!isStrong ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:4px;">Рекомендуем повторить этот принцип сервиса.</div>` : ''}</div>`;
                 }
             }
-        }else if (emp.type === 'final_exam') {
-    html += `<h4 style="margin:12px 0 8px;">Ответы и самооценка:</h4>`;
-    if (emp.answers && emp.answers.length) {
-        emp.answers.forEach((a, idx) => {
-            let evalText = '';
-            let evalClass = '';
-            if (a.selfEval === 'perfect') { evalText = '✅ Попал в суть'; evalClass = 'perfect'; }
-            else if (a.selfEval === 'partial') { evalText = '🟡 Частично'; evalClass = 'partial'; }
-            else { evalText = '❌ Мимо'; evalClass = 'miss'; }
-            
-            html += `<div class="exam-answer">
-                <h4>${idx + 1}. ${a.principle}</h4>
-                <div class="exam-situation">${a.situation || 'Ситуация'}</div>
-                <div style="font-size:12px;color:#6b7280;margin-bottom:6px;"><strong>Ваш ответ:</strong></div>
-                <div class="exam-user-answer">${a.userAnswer}</div>
-                <div style="font-size:12px;color:#6b7280;margin:8px 0 6px;"><strong>Эталон:</strong></div>
-                <div class="exam-etalon">${a.etalon || 'Эталонный ответ'}</div>
-                <div class="exam-eval ${evalClass}">${evalText}</div>
-            </div>`;
-        });
-    }
-}
+        } else if (emp.type === 'final_exam') {
+            html += `<h4 style="margin:12px 0 8px;">Ответы и самооценка:</h4>`;
+            if (emp.answers && emp.answers.length) {
+                emp.answers.forEach((a, idx) => {
+                    let evalText = '';
+                    let evalClass = '';
+                    if (a.selfEval === 'perfect') { evalText = '✅ Попал в суть'; evalClass = 'perfect'; }
+                    else if (a.selfEval === 'partial') { evalText = '🟡 Частично'; evalClass = 'partial'; }
+                    else { evalText = '❌ Мимо'; evalClass = 'miss'; }
+                    
+                    html += `<div class="exam-answer">
+                        <h4>${idx + 1}. ${a.principle}</h4>
+                        <div class="exam-situation">${a.situation || 'Ситуация'}</div>
+                        <div style="font-size:12px;color:#6b7280;margin-bottom:6px;"><strong>Ваш ответ:</strong></div>
+                        <div class="exam-user-answer">${a.userAnswer || 'Не указан'}</div>
+                        <div style="font-size:12px;color:#6b7280;margin:8px 0 6px;"><strong>Эталон:</strong></div>
+                        <div class="exam-etalon">${a.etalon || 'Не указан'}</div>
+                        <div class="exam-eval ${evalClass}">${evalText}</div>
+                    </div>`;
+                });
+            }
         } else {
             if (emp.answers && emp.answers.length) {
                 emp.answers.forEach((a) => {
@@ -1355,10 +1326,10 @@
         const topStrong = sorted.slice(0, 5);
         const topWeak = sorted.slice(-4).reverse();
         
-        let html = `<div class="feedback-wrapper"><div class="feedback-header"><div><h3>️ ${city}</h3><p>Детальный анализ сильных и слабых сторон</p></div><div class="feedback-stats"><div class="feedback-stat-pill">👥 ${total} прохождений</div><div class="feedback-stat-pill">📈 ${avg}% средний балл</div><div class="feedback-stat-pill">🏆 ${success}/${total} успешно</div></div></div>
+        let html = `<div class="feedback-wrapper"><div class="feedback-header"><div><h3>🏙️ ${city}</h3><p>Детальный анализ сильных и слабых сторон</p></div><div class="feedback-stats"><div class="feedback-stat-pill">👥 ${total} прохождений</div><div class="feedback-stat-pill">📈 ${avg}% средний балл</div><div class="feedback-stat-pill">🏆 ${success}/${total} успешно</div></div></div>
         <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
-            <span class="badge badge-blue">📝 Тестов: ${testCount}</span>
-            <span class="badge badge-purple">🎯 Тренировок: ${trainerCount}</span>
+            <span class="badge badge-blue"> Тестов: ${testCount}</span>
+            <span class="badge badge-purple"> Тренировок: ${trainerCount}</span>
             <span class="badge badge-gold"> Допродаж: ${crosssellCount}</span>
             ${failed > 0 ? `<span class="badge badge-red">🔴 Требуют внимания: ${failed}</span>` : ''}
         </div>`;
@@ -1411,19 +1382,19 @@
         const topWeak = sorted.slice(-4).reverse();
         
         let text = `═══════════════════════════════════════\n📊 ФИДБЕК ПО РЕЗУЛЬТАТАМ ОБУЧЕНИЯ\n🏙️ ${city}\n📅 ${new Date().toLocaleDateString('ru-RU')}\n═══════════════════════════════════════\n\n`;
-        text += `📈 ОБЩАЯ СТАТИСТИКА\n• Всего прохождений: ${total}\n• Средний балл: ${avg}%\n• Успешно (≥85%): ${success} из ${total}\n• Тестов: ${testData.length} | Тренировок: ${trainerData.length} | Допродаж: ${crosssellData.length}\n\n`;
+        text += ` ОБЩАЯ СТАТИСТИКА\n• Всего прохождений: ${total}\n• Средний балл: ${avg}%\n• Успешно (≥85%): ${success} из ${total}\n• Тестов: ${testData.length} | Тренировок: ${trainerData.length} | Допродаж: ${crosssellData.length}\n\n`;
         
         if (topStrong.length > 0) {
             text += `✅ СИЛЬНЫЕ СТОРОНЫ\n───────────────────────────────────────\n`;
             topStrong.forEach((t, i) => {
-                let icon = ''; if (t.type === 'trainer') icon = '🎯'; else if (t.type === 'crosssell') icon = '💰';
+                let icon = '📝'; if (t.type === 'trainer') icon = ''; else if (t.type === 'crosssell') icon = '💰';
                 text += `${i+1}. ${icon} ${t.name} — ${t.percent}% (${t.correct} из ${t.total})\n`;
             });
             text += `\n`;
         }
         
         if (topWeak.length > 0) {
-            text += `⚠️ ЗОНЫ РАЗВИТИЯ\n───────────────────────────────────────\n`;
+            text += `️ ЗОНЫ РАЗВИТИЯ\n───────────────────────────────────────\n`;
             topWeak.forEach((t, i) => {
                 let icon = '📝'; if (t.type === 'trainer') icon = '🎯'; else if (t.type === 'crosssell') icon = '💰';
                 text += `${i+1}. ${icon} ${t.name} — ${t.percent}% (${100-t.percent}% ошибок)\n`;
@@ -1491,7 +1462,6 @@
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'city_stats.csv'; a.click();
     }
 
-    // ========== ПРИВЯЗКА СОБЫТИЙ ==========
     document.getElementById('loadBtn').onclick = loadResults;
     document.getElementById('resetFiltersBtn').onclick = resetFilters;
     document.getElementById('cityFilter').onchange = () => { saveFilters(); applyFilters(); };
@@ -1501,7 +1471,7 @@
     document.getElementById('exportCityBtn').onclick = exportCityCSV;
     document.getElementById('generateFeedbackBtn').onclick = generateFeedback;
 
-    setInterval(() => { console.log(' Автообновление дашборда...'); loadResults(); }, 30000);
+    setInterval(() => { console.log('🔄 Автообновление дашборда...'); loadResults(); }, 30000);
     loadResults();
 </script>
 </body>
