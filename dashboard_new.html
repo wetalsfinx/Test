@@ -1258,27 +1258,28 @@
                     html += `<div class="rule-item ${isStrong ? '' : 'failed'}"><div class="rule-name">${isStrong ? '✅' : '❌'} ${name} (${data.correct}/${data.total})</div>${!isStrong ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:4px;">Рекомендуем повторить этот принцип сервиса.</div>` : ''}</div>`;
                 }
             }
-        } else if (emp.type === 'final_exam') {
-            html += `<h4 style="margin:12px 0 8px;">Ответы и самооценка:</h4>`;
-            if (emp.answers && emp.answers.length) {
-                emp.answers.forEach((a, idx) => {
-                    let evalText = '';
-                    let evalClass = '';
-                    if (a.selfEval === 'perfect') { evalText = '✅ Попал в суть'; evalClass = 'perfect'; }
-                    else if (a.selfEval === 'partial') { evalText = '🟡 Частично'; evalClass = 'partial'; }
-                    else { evalText = '❌ Мимо'; evalClass = 'miss'; }
-                    
-                    html += `<div class="exam-answer">
-                        <h4>${idx + 1}. ${a.principle}</h4>
-                        <div class="exam-situation">${a.situation || SITUATIONS[a.situation]?.situation || 'Ситуация'}</div>
-                        <div style="font-size:12px;color:#6b7280;margin-bottom:6px;"><strong>Ваш ответ:</strong></div>
-                        <div class="exam-user-answer">${a.userAnswer}</div>
-                        <div style="font-size:12px;color:#6b7280;margin:8px 0 6px;"><strong>Эталон:</strong></div>
-                        <div class="exam-etalon">${a.etalon || SITUATIONS[a.situation]?.etalon || 'Эталонный ответ'}</div>
-                        <div class="exam-eval ${evalClass}">${evalText}</div>
-                    </div>`;
-                });
-            }
+        }else if (emp.type === 'final_exam') {
+    html += `<h4 style="margin:12px 0 8px;">Ответы и самооценка:</h4>`;
+    if (emp.answers && emp.answers.length) {
+        emp.answers.forEach((a, idx) => {
+            let evalText = '';
+            let evalClass = '';
+            if (a.selfEval === 'perfect') { evalText = '✅ Попал в суть'; evalClass = 'perfect'; }
+            else if (a.selfEval === 'partial') { evalText = '🟡 Частично'; evalClass = 'partial'; }
+            else { evalText = '❌ Мимо'; evalClass = 'miss'; }
+            
+            html += `<div class="exam-answer">
+                <h4>${idx + 1}. ${a.principle}</h4>
+                <div class="exam-situation">${a.situation || 'Ситуация'}</div>
+                <div style="font-size:12px;color:#6b7280;margin-bottom:6px;"><strong>Ваш ответ:</strong></div>
+                <div class="exam-user-answer">${a.userAnswer}</div>
+                <div style="font-size:12px;color:#6b7280;margin:8px 0 6px;"><strong>Эталон:</strong></div>
+                <div class="exam-etalon">${a.etalon || 'Эталонный ответ'}</div>
+                <div class="exam-eval ${evalClass}">${evalText}</div>
+            </div>`;
+        });
+    }
+}
         } else {
             if (emp.answers && emp.answers.length) {
                 emp.answers.forEach((a) => {
