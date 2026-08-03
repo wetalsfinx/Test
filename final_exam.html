@@ -450,10 +450,16 @@ const SITUATIONS = [
     }
 
     async function finishExam() {
+        // 🛡️ ЗАЩИТА: принудительно ограничиваем до 7 ситуаций
+const FIXED_SITUATIONS_COUNT = 7;
+if (SITUATIONS.length !== FIXED_SITUATIONS_COUNT) {
+    console.warn(`⚠️ Внимание! В массиве SITUATIONS ${SITUATIONS.length} элементов вместо ${FIXED_SITUATIONS_COUNT}. Используем только первые ${FIXED_SITUATIONS_COUNT}.`);
+}
+const maxScore = FIXED_SITUATIONS_COUNT * 3; // Жёстко 21 балл
         document.getElementById('examContainer').style.display = 'none';
         document.getElementById('certificateWrapper').style.display = 'block';
         
-        const maxScore = SITUATIONS.length * 3;
+        // maxScore уже определён выше как FIXED_SITUATIONS_COUNT * 3
         const score = answers.reduce((sum, a) => {
             if (a.selfEval === 'perfect') return sum + 3;
             if (a.selfEval === 'partial') return sum + 2;
