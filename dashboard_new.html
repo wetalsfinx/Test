@@ -472,14 +472,15 @@
         <div class="filter-group">
             <label>Город</label>
             <select id="cityFilter">
-                <option value="all">Все города</option>
-                <option value="Уфа">Уфа</option>
-                <option value="Екатеринбург">Екатеринбург</option>
-                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
-                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
-                <option value="Калининград">Калининград</option>
-                <option value="Нижний Тагил">Нижний Тагил</option>
-            </select>
+    <option value="all">Все города</option>
+    <option value="Тюмень">Тюмень</option>
+    <option value="Москва, Локомотивный, 4">Москва, Локомотивный, 4</option>
+    <option value="Москва, Новоясеневский, 2">Москва, Новоясеневский, 2</option>
+    <option value="Челябинск">Челябинск</option>
+    <option value="Архангельск">Архангельск</option>
+    <option value="Оренбург">Оренбург</option>
+    <option value="Псков">Псков</option>
+</select>
         </div>
         <div class="filter-group">
             <label>Балл</label>
@@ -574,15 +575,16 @@
         <div class="card">
             <div class="card-title">📝 Фидбек по городу / магазину</div>
             <p style="color: #64748b; font-size: 13px; margin-bottom: 16px;">Выберите город или магазин для получения детального анализа</p>
-            <select id="feedbackCitySelect" style="padding:8px 14px;border-radius:8px;border:1px solid #d0d7dd;width:100%;max-width:400px;margin-bottom:12px;font-size:14px;">
-                <option value="">-- Выберите город / магазин --</option>
-                <option value="Уфа">Уфа</option>
-                <option value="Екатеринбург">Екатеринбург</option>
-                <option value="Санкт-Петербург, Московский, 2">🏪 Санкт-Петербург, Московский, 2</option>
-                <option value="Санкт-Петербург, Новаторов, 112">🏪 Санкт-Петербург, Новаторов, 112</option>
-                <option value="Калининград">Калининград</option>
-                <option value="Нижний Тагил">Нижний Тагил</option>
-            </select>
+           <select id="feedbackCitySelect" style="padding:8px 14px;border-radius:8px;border:1px solid #d0d7dd;width:100%;max-width:400px;margin-bottom:12px;font-size:14px;">
+    <option value="">-- Выберите город / магазин --</option>
+    <option value="Тюмень">Тюмень</option>
+    <option value="Москва, Локомотивный, 4">Москва, Локомотивный, 4</option>
+    <option value="Москва, Новоясеневский, 2">Москва, Новоясеневский, 2</option>
+    <option value="Челябинск">Челябинск</option>
+    <option value="Архангельск">Архангельск</option>
+    <option value="Оренбург">Оренбург</option>
+    <option value="Псков">Псков</option>
+</select>
             <button class="btn btn-primary" id="generateFeedbackBtn">🔍 Сгенерировать фидбек</button>
             
             <div class="feedback-actions" id="feedbackActions">
@@ -619,7 +621,15 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const CITIES = ['Уфа', 'Екатеринбург', 'Санкт-Петербург, Московский, 2', 'Санкт-Петербург, Новаторов, 112', 'Калининград', 'Нижний Тагил'];
+    const CITIES = [
+    'Тюмень',
+    'Москва, Локомотивный, 4',
+    'Москва, Новоясеневский, 2',
+    'Челябинск',
+    'Архангельск',
+    'Оренбург',
+    'Псков'
+];
 
     const TEST_TOPICS = [
         'Приветствие и установление контакта', 'Выявление бюджета', 'Предложение дополнительных товаров',
