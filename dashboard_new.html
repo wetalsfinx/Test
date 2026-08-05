@@ -12,1185 +12,284 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
+        :root {
+            --bg-card: #ffffff; --bg-input: #f8fafc; --bg-soft: #f1f5f9;
+            --text-1: #1e2a3a; --text-2: #475569; --text-3: #64748b; --text-4: #94a3b8;
+            --border: #e2e8f0; --border-soft: #f1f5f9;
+        }
+        body.dark {
+            --bg-card: #1e293b; --bg-input: #0f172a; --bg-soft: #334155;
+            --text-1: #f1f5f9; --text-2: #cbd5e1; --text-3: #94a3b8; --text-4: #64748b;
+            --border: #334155; --border-soft: #334155;
+        }
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #fef9f0 100%);
-            padding: 24px;
-            color: #1e2a3a;
-            min-height: 100vh;
-            position: relative;
+            padding: 24px; color: var(--text-1); min-height: 100vh;
         }
+        body.dark { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
         
-        body::before {
-            content: '';
-            position: fixed;
-            top: -20%;
-            right: -10%;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(196, 30, 58, 0.05) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: 0;
-            animation: float 25s ease-in-out infinite;
-        }
-        
-        body::after {
-            content: '';
-            position: fixed;
-            bottom: -20%;
-            left: -10%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: 0;
-            animation: float 30s ease-in-out infinite reverse;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(20px, -20px); }
-        }
-        
-        .container { 
-            max-width: 1440px; 
-            margin: 0 auto; 
-            position: relative;
-            z-index: 1;
-        }
+        .container { max-width: 1440px; margin: 0 auto; }
 
-        /* HEADER */
         .header {
             background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-            border-radius: 24px;
-            padding: 28px 32px;
-            margin-bottom: 24px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
+            border-radius: 24px; padding: 28px 32px; margin-bottom: 24px;
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
             box-shadow: 0 16px 48px rgba(196, 30, 58, 0.25);
-            position: relative;
-            overflow: hidden;
-            animation: slideDown 0.6s ease;
+            position: relative; overflow: hidden; animation: slideDown 0.6s ease;
         }
+        .header::before { content: ''; position: absolute; top: -50%; right: -15%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%); border-radius: 50%; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -15%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.25) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-        
-        .header::after {
-            content: '';
-            position: absolute;
-            bottom: -40%;
-            left: -10%;
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .header h1 { 
-            font-size: 28px; 
-            font-weight: 900; 
-            color: white; 
-            position: relative;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .header h1 .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .header h1 .brand { 
-            background: linear-gradient(135deg, #ffffff 0%, #fde68a 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .header h1 .divider {
-            width: 2px;
-            height: 24px;
-            background: rgba(255, 255, 255, 0.3);
-            margin: 0 4px;
-        }
-        
-        .header-actions { 
-            display: flex; 
-            gap: 10px; 
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 1;
-        }
+        .header h1 { font-size: 28px; font-weight: 900; color: white; position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; }
+        .header h1 .logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid rgba(255,255,255,0.3); }
+        .header h1 .brand { background: linear-gradient(135deg, #ffffff 0%, #fde68a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header h1 .divider { width: 2px; height: 24px; background: rgba(255,255,255,0.3); }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
         
         .btn {
-            padding: 10px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            color: white;
-            transition: all 0.3s;
-            font-family: 'Inter', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            position: relative;
-            overflow: hidden;
+            padding: 10px 20px; border: 2px solid rgba(255,255,255,0.3); border-radius: 12px;
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+            font-size: 14px; font-weight: 600; cursor: pointer; color: white;
+            transition: all 0.3s; font-family: 'Inter', sans-serif;
+            display: inline-flex; align-items: center; gap: 6px;
         }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn:hover::before { left: 100%; }
-        .btn:hover { 
-            background: rgba(255, 255, 255, 0.25); 
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-2px);
-        }
-        
-        .btn-primary { 
-            background: white; 
-            color: #c41e3a; 
-            border-color: white; 
-        }
-        .btn-primary:hover { 
-            background: #f8fafc; 
-            color: #8b1a2c;
-        }
-        
-        .btn-success { background: #16a34a; border-color: #16a34a; }
-        .btn-success:hover { background: #15803d; border-color: #15803d; }
-        
-        .btn-danger { 
-            color: #fee2e2; 
-            border-color: rgba(254, 226, 226, 0.5); 
-            background: rgba(220, 38, 38, 0.2);
-        }
-        .btn-danger:hover { 
-            background: rgba(220, 38, 38, 0.4); 
-            border-color: #fecaca;
-        }
+        .btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+        .btn-primary { background: white; color: #c41e3a; border-color: white; }
+        .btn-primary:hover { background: #f8fafc; }
+        .btn-danger { color: #fee2e2; border-color: rgba(254,226,226,0.5); background: rgba(220,38,38,0.2); }
+        .btn-danger:hover { background: rgba(220,38,38,0.4); }
 
-        /* TABS */
-        .tabs-wrap {
-            display: flex;
-            gap: 6px;
-            background: white;
-            padding: 6px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        
-        .tab-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            background: transparent;
-            color: #64748b;
-            transition: all 0.3s;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            justify-content: center;
-        }
-        
-        .tab-btn.active { 
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); 
-            color: white;
-            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
-        }
-        
-        .tab-btn:hover:not(.active) { 
-            background: #f1f5f9; 
-            color: #c41e3a;
-        }
+        .tabs-wrap { display: flex; gap: 6px; background: var(--bg-card); padding: 6px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border); flex-wrap: wrap; }
+        .tab-btn { padding: 12px 24px; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-3); transition: all 0.3s; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; min-width: 120px; }
+        .tab-btn.active { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; box-shadow: 0 4px 12px rgba(196,30,58,0.3); }
+        .tab-btn:hover:not(.active) { background: var(--bg-soft); color: #c41e3a; }
 
-        /* FILTER BAR */
-        .filter-bar {
-            background: white;
-            border-radius: 20px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 16px 24px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-        }
-        
-        .filter-group { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-        }
-        
-        .filter-group label { 
-            font-size: 13px; 
-            font-weight: 600; 
-            color: #475569;
-            white-space: nowrap;
-        }
-        
-        .filter-group select, .filter-group input {
-            padding: 10px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 14px;
-            background: #f8fafc;
-            color: #1e2a3a;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        
-        .filter-group select:focus, .filter-group input:focus {
-            outline: none;
-            border-color: #c41e3a;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
-        }
-        
+        .filter-bar { background: var(--bg-card); border-radius: 20px; padding: 20px 24px; margin-bottom: 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; border: 1px solid var(--border); }
+        .filter-group { display: flex; align-items: center; gap: 8px; }
+        .filter-group label { font-size: 13px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+        .filter-group select, .filter-group input { padding: 10px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; background: var(--bg-input); color: var(--text-1); font-family: 'Inter', sans-serif; font-weight: 500; }
+        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: #c41e3a; box-shadow: 0 0 0 3px rgba(196,30,58,0.1); }
         .filter-group input { width: 180px; }
         
-        .filter-chips { 
-            display: flex; 
-            gap: 8px; 
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            width: 100%;
-            padding-bottom: 4px;
-            scrollbar-width: thin;
-        }
-        
-        .filter-chips::-webkit-scrollbar { height: 6px; }
-        .filter-chips::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
-        .filter-chips::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        
-        .filter-chip {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 50px;
-            background: #f1f5f9;
-            color: #64748b;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-            flex-shrink: 0;
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .filter-chip:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            background: #e2e8f0;
-        }
-        
-        .filter-chip.active {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            color: white;
-        }
-        
-        .filter-chip.active[data-value="all"] { 
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); 
-            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.35); 
-        }
-        .filter-chip.active[data-value="test"] { 
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); 
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35); 
-        }
-        .filter-chip.active[data-value="trainer"] { 
-            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); 
-            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35); 
-        }
-        .filter-chip.active[data-value="crosssell"] { 
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); 
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35); 
-        }
-        .filter-chip.active[data-value="errorfinder"] { 
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); 
-        }
-        .filter-chip.active[data-value="clienttype"] { 
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); 
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35); 
-        }
-        .filter-chip.active[data-value="service"] { 
-            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); 
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35); 
-        }
-        .filter-chip.active[data-value="final_exam"] { 
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); 
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35); 
-        }
-        
-        .filter-chip:active { transform: scale(0.96); }
+        .filter-chips { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 4px; }
+        .filter-chip { padding: 10px 18px; border: none; border-radius: 50px; background: var(--bg-soft); color: var(--text-3); cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; font-family: 'Inter', sans-serif; }
+        .filter-chip:hover { transform: translateY(-2px); background: var(--border); }
+        .filter-chip.active { color: white; transform: translateY(-1px); }
+        .filter-chip.active[data-value="all"] { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); }
+        .filter-chip.active[data-value="test"] { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .filter-chip.active[data-value="trainer"] { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); }
+        .filter-chip.active[data-value="crosssell"] { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .filter-chip.active[data-value="errorfinder"] { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .filter-chip.active[data-value="clienttype"] { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+        .filter-chip.active[data-value="service"] { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); }
+        .filter-chip.active[data-value="final_exam"] { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
 
-        .status-text {
-            margin-left: auto;
-            font-size: 13px;
-            color: white;
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.2);
-        }
+        .status-text { margin-left: auto; font-size: 13px; color: white; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); padding: 8px 16px; border-radius: 50px; font-weight: 600; }
 
-        /* MAIN NUMBER */
-        .main-number {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border-radius: 24px;
-            padding: 32px 40px;
-            margin-bottom: 24px;
-            border: 2px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .main-number::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 6px;
-            height: 100%;
-            background: linear-gradient(180deg, #c41e3a 0%, #d4af37 100%);
-        }
-        
-        .main-number .label { 
-            font-size: 14px; 
-            font-weight: 600; 
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        
-        .main-number .value { 
-            font-size: 56px; 
-            font-weight: 900; 
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1;
-        }
-        
-        .main-number .sub { 
-            font-size: 16px; 
-            color: #475569; 
-            font-weight: 600;
-        }
-        
-        .main-number .sub strong {
-            font-size: 28px;
-            font-weight: 800;
-            margin-left: 8px;
-        }
+        .main-number { background: var(--bg-card); border-radius: 24px; padding: 32px 40px; margin-bottom: 24px; border: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; position: relative; overflow: hidden; }
+        .main-number::before { content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: linear-gradient(180deg, #c41e3a 0%, #d4af37 100%); }
+        .main-number .label { font-size: 14px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .main-number .value { font-size: 56px; font-weight: 900; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+        .main-number .sub { font-size: 16px; color: var(--text-2); font-weight: 600; }
+        .main-number .sub strong { font-size: 28px; font-weight: 800; margin-left: 8px; }
 
-        /* STATUS GRID */
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .status-card {
-            background: white;
-            border-radius: 18px;
-            padding: 20px 24px;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        
-        .status-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #c41e3a 0%, #8b1a2c 100%);
-        }
-        
-        .status-card:hover { 
-            transform: translateY(-4px); 
-            box-shadow: 0 12px 32px rgba(0,0,0,0.1); 
-        }
-        
-        .status-card .icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            margin-bottom: 12px;
-        }
-        
-        .status-card .label { 
-            font-size: 12px; 
-            color: #64748b; 
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        
-        .status-card .value { 
-            font-size: 32px; 
-            font-weight: 900; 
-            line-height: 1;
-            margin-top: 4px;
-        }
-        
-        .status-card.blue { }
-        .status-card.blue::before { background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%); }
-        .status-card.blue .icon { background: #dbeafe; color: #1e40af; }
-        .status-card.blue .value { color: #1e40af; }
-        
-        .status-card.green { }
-        .status-card.green::before { background: linear-gradient(90deg, #10b981 0%, #059669 100%); }
-        .status-card.green .icon { background: #d1fae5; color: #065f46; }
-        .status-card.green .value { color: #065f46; }
-        
-        .status-card.orange { }
-        .status-card.orange::before { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%); }
-        .status-card.orange .icon { background: #fef3c7; color: #92400e; }
-        .status-card.orange .value { color: #92400e; }
-        
-        .status-card.red { }
-        .status-card.red::before { background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%); }
-        .status-card.red .icon { background: #fee2e2; color: #991b1b; }
-        .status-card.red .value { color: #991b1b; }
-        
-        .status-card.purple { }
-        .status-card.purple::before { background: linear-gradient(90deg, #a855f7 0%, #9333ea 100%); }
-        .status-card.purple .icon { background: #f3e8ff; color: #6b21a8; }
-        .status-card.purple .value { color: #6b21a8; }
-        
-        .status-card.teal { }
-        .status-card.teal::before { background: linear-gradient(90deg, #14b8a6 0%, #0d9488 100%); }
-        .status-card.teal .icon { background: #ccfbf1; color: #115e59; }
-        .status-card.teal .value { color: #115e59; }
-        
-        .status-card.gold { }
-        .status-card.gold::before { background: linear-gradient(90deg, #f59e0b 0%, #b45309 100%); }
-        .status-card.gold .icon { background: #fef3c7; color: #78350f; }
-        .status-card.gold .value { color: #78350f; }
-        
-        .status-card.sky { }
-        .status-card.sky::before { background: linear-gradient(90deg, #0ea5e9 0%, #0284c7 100%); }
-        .status-card.sky .icon { background: #e0f2fe; color: #0c4a6e; }
-        .status-card.sky .value { color: #0c4a6e; }
-        
-        .status-card.violet { }
-        .status-card.violet::before { background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%); }
-        .status-card.violet .icon { background: #ede9fe; color: #5b21b6; }
-        .status-card.violet .value { color: #5b21b6; }
+        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .status-card { background: var(--bg-card); border-radius: 18px; padding: 20px 24px; border: 1px solid var(--border); transition: all 0.3s; position: relative; overflow: hidden; }
+        .status-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #c41e3a 0%, #8b1a2c 100%); }
+        .status-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
+        .status-card .icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+        .status-card .label { font-size: 12px; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-card .value { font-size: 32px; font-weight: 900; line-height: 1; margin-top: 4px; }
+        .status-card.blue::before { background: linear-gradient(90deg, #3b82f6, #1d4ed8); } .status-card.blue .icon { background: #dbeafe; color: #1e40af; } .status-card.blue .value { color: #3b82f6; }
+        .status-card.green::before { background: linear-gradient(90deg, #10b981, #059669); } .status-card.green .icon { background: #d1fae5; color: #065f46; } .status-card.green .value { color: #10b981; }
+        .status-card.orange::before { background: linear-gradient(90deg, #f59e0b, #d97706); } .status-card.orange .icon { background: #fef3c7; color: #92400e; } .status-card.orange .value { color: #f59e0b; }
+        .status-card.red::before { background: linear-gradient(90deg, #ef4444, #dc2626); } .status-card.red .icon { background: #fee2e2; color: #991b1b; } .status-card.red .value { color: #ef4444; }
+        .status-card.purple::before { background: linear-gradient(90deg, #a855f7, #9333ea); } .status-card.purple .icon { background: #f3e8ff; color: #6b21a8; } .status-card.purple .value { color: #a855f7; }
+        .status-card.teal::before { background: linear-gradient(90deg, #14b8a6, #0d9488); } .status-card.teal .icon { background: #ccfbf1; color: #115e59; } .status-card.teal .value { color: #14b8a6; }
+        .status-card.gold::before { background: linear-gradient(90deg, #f59e0b, #b45309); } .status-card.gold .icon { background: #fef3c7; color: #78350f; } .status-card.gold .value { color: #d97706; }
+        .status-card.sky::before { background: linear-gradient(90deg, #0ea5e9, #0284c7); } .status-card.sky .icon { background: #e0f2fe; color: #0c4a6e; } .status-card.sky .value { color: #0ea5e9; }
+        .status-card.violet::before { background: linear-gradient(90deg, #8b5cf6, #7c3aed); } .status-card.violet .icon { background: #ede9fe; color: #5b21b6; } .status-card.violet .value { color: #8b5cf6; }
+        body.dark .status-card .icon { filter: brightness(0.7); }
 
-        /* ALERTS */
-        .alert-box {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border-left: 5px solid #dc2626;
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: none;
-            font-size: 14px;
-            color: #991b1b;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
-        }
-        
-        .alert-box.success { 
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
-            border-left-color: #16a34a; 
-            color: #166534; 
-            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1);
-        }
+        .alert-box { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-left: 5px solid #dc2626; padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; display: none; font-size: 14px; color: #991b1b; font-weight: 500; }
+        .alert-box.success { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left-color: #16a34a; color: #166534; }
+        body.dark .alert-box { background: rgba(220,38,38,0.15); color: #fca5a5; }
+        body.dark .alert-box.success { background: rgba(22,163,74,0.15); color: #86efac; }
 
-        /* CARDS */
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            transition: all 0.3s;
-        }
-        
-        .card:hover {
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-        }
-        
-        .card-title { 
-            font-size: 17px; 
-            font-weight: 700; 
-            color: #1e2a3a; 
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .card-title::before {
-            content: '';
-            width: 4px;
-            height: 24px;
-            background: linear-gradient(180deg, #c41e3a 0%, #d4af37 100%);
-            border-radius: 2px;
-        }
-        
+        .card { background: var(--bg-card); border-radius: 20px; padding: 24px; border: 1px solid var(--border); margin-bottom: 24px; transition: box-shadow 0.3s; }
+        .card-title { font-size: 17px; font-weight: 700; color: var(--text-1); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .card-title::before { content: ''; width: 4px; height: 24px; background: linear-gradient(180deg, #c41e3a 0%, #d4af37 100%); border-radius: 2px; }
         .chart-box { height: 220px; }
+        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .charts-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 24px; }
 
-        .charts-row { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
-            margin-bottom: 24px; 
-        }
+        .employee-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 12px; cursor: pointer; font-size: 14px; transition: all 0.2s; margin-bottom: 6px; background: var(--bg-input); border: 1px solid transparent; gap: 8px; }
+        .employee-item:hover { background: var(--bg-card); border-color: #c41e3a; transform: translateX(4px); }
+        .employee-item b { color: var(--text-1); font-weight: 700; }
+        .employee-list { max-height: 400px; overflow-y: auto; }
         
-        .charts-row-3 { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr 1fr; 
-            gap: 20px; 
-            margin-bottom: 24px; 
-        }
+        .badge { padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; }
+        .badge-yellow { background: linear-gradient(135deg, #fef9c3, #fde68a); color: #854d0e; }
+        .badge-red { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #991b1b; }
+        .badge-purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #6b21a8; }
+        .badge-blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; }
+        .badge-gold { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; }
+        .badge-sky { background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #0369a1; }
+        .badge-violet { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #5b21b6; }
+        body.dark .badge-green { background: rgba(22,163,74,0.2); color: #86efac; }
+        body.dark .badge-yellow { background: rgba(245,158,11,0.2); color: #fde68a; }
+        body.dark .badge-red { background: rgba(220,38,38,0.2); color: #fca5a5; }
+        body.dark .badge-purple, body.dark .badge-violet { background: rgba(139,92,246,0.2); color: #d8b4fe; }
+        body.dark .badge-blue { background: rgba(59,130,246,0.2); color: #93c5fd; }
+        body.dark .badge-gold { background: rgba(217,119,6,0.2); color: #fde68a; }
+        body.dark .badge-sky { background: rgba(14,165,233,0.2); color: #7dd3fc; }
+        
+        .empty { color: var(--text-4); text-align: center; padding: 24px 0; font-size: 14px; font-weight: 500; }
 
-        /* EMPLOYEE LIST */
-        .employee-list {
-            max-height: 400px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-        }
-        
-        .employee-list::-webkit-scrollbar { width: 8px; }
-        .employee-list::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        .employee-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .employee-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .employee-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-            margin-bottom: 6px;
-            background: #f8fafc;
-            border: 1px solid transparent;
-        }
-        
-        .employee-item:hover { 
-            background: #fff; 
-            border-color: #c41e3a;
-            transform: translateX(4px);
-            box-shadow: 0 2px 8px rgba(196, 30, 58, 0.1);
-        }
-        
-        .employee-item b { color: #1e2a3a; font-weight: 700; }
-        
-        .badge { 
-            padding: 4px 12px; 
-            border-radius: 50px; 
-            font-size: 12px; 
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .badge-green { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; }
-        .badge-yellow { background: linear-gradient(135deg, #fef9c3 0%, #fde68a 100%); color: #854d0e; }
-        .badge-red { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b; }
-        .badge-purple { background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #6b21a8; }
-        .badge-blue { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; }
-        .badge-gold { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e; }
-        .badge-sky { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); color: #0369a1; }
-        .badge-violet { background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); color: #5b21b6; }
-        
-        .empty { 
-            color: #94a3b8; 
-            text-align: center; 
-            padding: 24px 0; 
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        /* TABLE */
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { 
-            text-align: left; 
-            padding: 14px 12px; 
-            font-weight: 700; 
-            color: #475569; 
-            border-bottom: 2px solid #e2e8f0;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 0.5px;
-        }
-        td { 
-            padding: 14px 12px; 
-            border-bottom: 1px solid #f1f5f9; 
-        }
-        tr:hover { background: #f8fafc; }
+        th { text-align: left; padding: 14px 12px; font-weight: 700; color: var(--text-3); border-bottom: 2px solid var(--border); text-transform: uppercase; font-size: 12px; }
+        td { padding: 14px 12px; border-bottom: 1px solid var(--border-soft); color: var(--text-1); }
+        tr:hover td { background: var(--bg-input); }
 
-        /* MODAL */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        
-        .modal-content {
-            background: white;
-            max-width: 720px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
-            border-radius: 24px;
-            padding: 32px;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.2);
-            animation: modalIn 0.3s ease;
-        }
-        
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        .modal-content::-webkit-scrollbar { width: 8px; }
-        .modal-content::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        .modal-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        
-        .modal-title { 
-            font-size: 22px; 
-            font-weight: 800; 
-            margin-bottom: 20px; 
-            padding-bottom: 16px; 
-            border-bottom: 3px solid transparent;
-            background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%);
-            background-origin: border-box;
-            background-clip: padding-box, border-box;
-            color: #1e2a3a;
-        }
-        
-        .modal-summary { 
-            background: linear-gradient(135deg, #fef5f5 0%, #fff 100%); 
-            padding: 16px 20px; 
-            border-radius: 12px; 
-            margin-bottom: 20px; 
-            border-left: 5px solid #c41e3a;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-        
-        .answer-item { 
-            background: #f8fafc; 
-            padding: 16px 20px; 
-            border-radius: 12px; 
-            margin-bottom: 12px; 
-            border-left: 4px solid #c41e3a; 
-        }
-        .answer-item .q { font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #1e2a3a; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: var(--bg-card); max-width: 720px; width: 100%; max-height: 85vh; overflow-y: auto; border-radius: 24px; padding: 32px; box-shadow: 0 24px 64px rgba(0,0,0,0.3); animation: modalIn 0.3s ease; color: var(--text-1); }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 3px solid #c41e3a; }
+        .modal-summary { background: var(--bg-input); padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid #c41e3a; font-size: 15px; line-height: 1.6; }
+        .answer-item { background: var(--bg-input); padding: 16px 20px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid #c41e3a; }
+        .answer-item .q { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
         .answer-item .user-answer { font-size: 13px; margin: 6px 0; }
         .answer-item .correct-answer { color: #16a34a; font-size: 13px; margin: 6px 0; font-weight: 500; }
-        .answer-item .rec { 
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
-            padding: 10px 14px; 
-            border-radius: 8px; 
-            font-size: 13px; 
-            margin-top: 10px; 
-            color: #166534; 
-            border-left: 3px solid #16a34a; 
-        }
-        .answer-item .rec-wrong { 
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); 
-            padding: 10px 14px; 
-            border-radius: 8px; 
-            font-size: 13px; 
-            margin-top: 10px; 
-            color: #991b1b; 
-            border-left: 3px solid #dc2626; 
-        }
+        .answer-item .rec { background: rgba(22,163,74,0.1); padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 10px; color: #16a34a; border-left: 3px solid #16a34a; }
+        .answer-item .rec-wrong { background: rgba(220,38,38,0.1); padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 10px; color: #ef4444; border-left: 3px solid #dc2626; }
+        .rule-item { background: var(--bg-input); padding: 14px 18px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #16a34a; }
+        .rule-item.failed { border-left-color: #dc2626; background: rgba(220,38,38,0.08); }
+        .rule-item .rule-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+        .rule-item .rule-status { font-size: 13px; color: var(--text-3); line-height: 1.5; }
+        .modal-close { margin-top: 24px; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; font-weight: 700; cursor: pointer; width: 100%; font-size: 15px; font-family: 'Inter', sans-serif; }
         
-        .rule-item { 
-            background: #f8fafc; 
-            padding: 14px 18px; 
-            border-radius: 10px; 
-            margin-bottom: 10px; 
-            border-left: 4px solid #16a34a; 
-        }
-        .rule-item.failed { 
-            border-left-color: #dc2626; 
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); 
-        }
-        .rule-item .rule-name { 
-            font-weight: 700; 
-            font-size: 14px; 
-            margin-bottom: 4px; 
-            color: #1e2a3a;
-        }
-        .rule-item .rule-status { 
-            font-size: 13px; 
-            color: #475569;
-            line-height: 1.5;
-        }
-        
-        .modal-close { 
-            margin-top: 24px; 
-            padding: 14px; 
-            border: none; 
-            border-radius: 12px; 
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); 
-            color: white; 
-            font-weight: 700; 
-            cursor: pointer; 
-            width: 100%;
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s;
-            box-shadow: 0 4px 16px rgba(196, 30, 58, 0.3);
-        }
-        .modal-close:hover { 
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
-        }
-        
-        /* EXAM ANSWERS */
-        .exam-answer { 
-            background: #f8fafc; 
-            padding: 18px; 
-            border-radius: 12px; 
-            margin-bottom: 16px; 
-            border-left: 5px solid #8b5cf6; 
-        }
-        .exam-answer h4 { 
-            font-size: 14px; 
-            font-weight: 700; 
-            color: #1f2937; 
-            margin-bottom: 10px; 
-        }
-        .exam-situation { 
-            font-style: italic; 
-            color: #4b5563; 
-            font-size: 13px; 
-            margin-bottom: 12px; 
-            padding: 10px 14px; 
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); 
-            border-radius: 8px; 
-            border-left: 3px solid #f59e0b; 
-        }
-        .exam-user-answer { 
-            background: white; 
-            padding: 12px 14px; 
-            border-radius: 8px; 
-            margin: 8px 0; 
-            font-size: 13px; 
-            color: #1f2937; 
-            border: 1px solid #e5e7eb; 
-        }
-        .exam-etalon { 
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
-            padding: 12px 14px; 
-            border-radius: 8px; 
-            margin: 8px 0; 
-            font-size: 13px; 
-            color: #065f46; 
-            border: 1px solid #a7f3d0; 
-        }
-        .exam-eval { 
-            display: inline-block; 
-            padding: 4px 14px; 
-            border-radius: 50px; 
-            font-size: 12px; 
-            font-weight: 700; 
-            margin-top: 8px; 
-        }
-        .exam-eval.perfect { background: #d1fae5; color: #065f46; }
-        .exam-eval.partial { background: #fef3c7; color: #92400e; }
-        .exam-eval.miss { background: #fee2e2; color: #991b1b; }
+        .exam-answer { background: var(--bg-input); padding: 18px; border-radius: 12px; margin-bottom: 16px; border-left: 5px solid #8b5cf6; }
+        .exam-answer h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+        .exam-situation { font-style: italic; color: var(--text-2); font-size: 13px; margin-bottom: 12px; padding: 10px 14px; background: rgba(245,158,11,0.1); border-radius: 8px; border-left: 3px solid #f59e0b; }
+        .exam-user-answer { background: var(--bg-card); padding: 12px 14px; border-radius: 8px; margin: 8px 0; font-size: 13px; border: 1px solid var(--border); }
+        .exam-etalon { background: rgba(22,163,74,0.1); padding: 12px 14px; border-radius: 8px; margin: 8px 0; font-size: 13px; color: #16a34a; border: 1px solid rgba(22,163,74,0.3); }
+        .exam-eval { display: inline-block; padding: 4px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; margin-top: 8px; }
+        .exam-eval.perfect { background: rgba(16,185,129,0.2); color: #10b981; }
+        .exam-eval.partial { background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .exam-eval.miss { background: rgba(239,68,68,0.2); color: #ef4444; }
 
-        /* FEEDBACK */
-        .feedback-wrapper {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border-radius: 24px;
-            padding: 32px;
-            margin-top: 24px;
-            border: 2px solid #e2e8f0;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-        }
+        /* ===== HARD QUESTIONS ===== */
+        .hard-q-item { padding: 16px 18px; background: var(--bg-input); border-radius: 14px; margin-bottom: 12px; border-left: 5px solid #dc2626; transition: transform 0.2s; }
+        .hard-q-item:hover { transform: translateX(4px); }
+        .hard-q-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; align-items: flex-start; }
+        .hard-q-name { font-weight: 700; font-size: 14px; }
+        .hard-q-rate { font-weight: 900; font-size: 18px; color: #dc2626; white-space: nowrap; }
+        .hard-q-text { font-size: 13px; color: var(--text-3); margin-bottom: 8px; line-height: 1.5; font-style: italic; }
+        .hard-q-stats { font-size: 12px; color: var(--text-4); margin-bottom: 8px; font-weight: 600; }
+        .hard-q-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+        .hard-q-bar-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #dc2626); border-radius: 4px; transition: width 0.8s ease; }
+        .hard-q-rec { font-size: 13px; color: var(--text-2); background: rgba(245,158,11,0.12); padding: 10px 14px; border-radius: 10px; border-left: 3px solid #f59e0b; }
+
+        /* ===== SPARKLINES ===== */
+        .sparkline-box { display: flex; align-items: center; gap: 10px; margin-top: 12px; color: #c41e3a; }
+        .sparkline-label { font-size: 11px; color: var(--text-4); font-weight: 600; }
+
+        /* ===== EMPLOYEES / PROFILE ===== */
+        .profile-header { display: flex; align-items: center; gap: 16px; padding: 24px; background: linear-gradient(135deg, #fff5f5 0%, #fef9f0 100%); border-radius: 18px; margin-bottom: 16px; flex-wrap: wrap; }
+        body.dark .profile-header { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); }
+        .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 8px 20px rgba(196,30,58,0.3); flex-shrink: 0; }
+        .profile-name { font-size: 22px; font-weight: 800; }
+        .profile-meta { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+        .profile-score { margin-left: auto; font-size: 40px; font-weight: 900; }
+        .profile-score.good { color: #16a34a; } .profile-score.mid { color: #f59e0b; } .profile-score.bad { color: #dc2626; }
+        .profile-stats-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .profile-stat { flex: 1; min-width: 110px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+        .ps-value { font-size: 26px; font-weight: 900; }
+        .ps-label { font-size: 12px; color: var(--text-3); margin-top: 4px; font-weight: 600; }
+        .profile-chart-box { height: 240px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+        .attempt-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-input); border-radius: 10px; margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+        .attempt-date { margin-left: auto; color: var(--text-4); font-size: 12px; font-weight: 500; }
+        .aliases-note { margin-top: 16px; padding: 12px 16px; background: rgba(212,175,55,0.12); border-left: 4px solid #d4af37; border-radius: 8px; font-size: 13px; color: var(--text-2); }
         
-        .feedback-header {
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-            color: white;
-            padding: 28px 32px;
-            border-radius: 18px;
-            margin-bottom: 28px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            box-shadow: 0 8px 24px rgba(196, 30, 58, 0.25);
-        }
+        .name-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-input); border-radius: 12px; margin-bottom: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; border: 2px solid transparent; flex-wrap: wrap; }
+        .name-item:hover { border-color: #c41e3a; }
+        .name-item input { width: 18px; height: 18px; accent-color: #c41e3a; cursor: pointer; flex-shrink: 0; }
+        .name-text { font-weight: 600; }
+        .name-count { color: var(--text-4); font-size: 12px; font-weight: 500; }
+        .suggestions { margin-bottom: 20px; padding: 16px; background: rgba(212,175,55,0.08); border: 2px dashed #d4af37; border-radius: 14px; }
+        .suggestions-title { font-size: 13px; font-weight: 700; color: var(--text-2); margin-bottom: 10px; }
+        .suggestion-chip { padding: 8px 16px; border-radius: 50px; border: none; background: linear-gradient(135deg, #c41e3a, #8b1a2c); color: white; cursor: pointer; font-size: 13px; font-weight: 600; margin: 0 6px 6px 0; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .suggestion-chip:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(196,30,58,0.3); }
+        .groups-title { margin-top: 20px; font-size: 13px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+        .group-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-input); border-radius: 12px; margin-top: 8px; font-size: 13px; flex-wrap: wrap; }
+        .hint { color: var(--text-3); font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+        .section-subtitle { font-size: 15px; font-weight: 700; margin: 20px 0 12px; color: var(--text-1); }
         
-        .feedback-header h3 { 
-            font-size: 24px; 
-            font-weight: 800; 
-            margin-bottom: 4px; 
-        }
-        .feedback-header p { 
-            font-size: 14px; 
-            opacity: 0.9; 
-            font-weight: 500;
-        }
-        
-        .feedback-stats { 
-            display: flex; 
-            gap: 12px; 
-            flex-wrap: wrap; 
-        }
-        
-        .feedback-stat-pill {
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(10px);
-            padding: 8px 18px;
-            border-radius: 50px;
-            font-size: 13px;
-            font-weight: 700;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .feedback-section { 
-            margin-bottom: 32px; 
-        }
-        
-        .feedback-section-title {
-            font-size: 18px;
-            font-weight: 800;
-            color: #1e2a3a;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f1f5f9;
-        }
-        
-        .feedback-section-title .icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        
-        .topics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-        }
-        
-        .topic-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        
-        .topic-card:hover { 
-            transform: translateY(-4px); 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1); 
-        }
-        
-        .topic-card.strong { 
-            border-left: 5px solid #16a34a; 
-            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); 
-        }
-        .topic-card.weak { 
-            border-left: 5px solid #dc2626; 
-            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); 
-        }
-        
-        .topic-rank {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 14px;
-            color: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-        
-        .topic-card.strong .topic-rank { 
-            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); 
-        }
-        .topic-card.weak .topic-rank { 
-            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); 
-        }
-        
-        .topic-name { 
-            font-weight: 700; 
-            font-size: 15px; 
-            color: #1e2a3a; 
-            margin-bottom: 10px; 
-            padding-right: 40px;
-            line-height: 1.4;
-        }
-        
-        .topic-percent { 
-            font-size: 28px; 
-            font-weight: 900; 
-            margin-bottom: 10px;
-            line-height: 1;
-        }
-        
+        #profileSelect, #feedbackCitySelect { padding: 12px 18px; border-radius: 12px; border: 2px solid var(--border); width: 100%; max-width: 450px; margin-bottom: 16px; font-size: 15px; font-family: 'Inter', sans-serif; font-weight: 500; background: var(--bg-input); color: var(--text-1); cursor: pointer; }
+        #profileSelect:focus, #feedbackCitySelect:focus { outline: none; border-color: #c41e3a; }
+
+        /* ===== FEEDBACK ===== */
+        .feedback-wrapper { background: var(--bg-card); border-radius: 24px; padding: 32px; margin-top: 24px; border: 2px solid var(--border); }
+        .feedback-header { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; padding: 28px 32px; border-radius: 18px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .feedback-header h3 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .feedback-header p { font-size: 14px; opacity: 0.9; }
+        .feedback-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+        .feedback-stat-pill { background: rgba(255,255,255,0.15); padding: 8px 18px; border-radius: 50px; font-size: 13px; font-weight: 700; }
+        .feedback-section { margin-bottom: 32px; }
+        .feedback-section-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 2px solid var(--border-soft); }
+        .feedback-section-title .icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .topic-card { background: var(--bg-input); border-radius: 16px; padding: 20px; border: 2px solid var(--border); transition: all 0.3s; position: relative; }
+        .topic-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .topic-card.strong { border-left: 5px solid #16a34a; }
+        .topic-card.weak { border-left: 5px solid #dc2626; }
+        .topic-rank { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: white; }
+        .topic-card.strong .topic-rank { background: linear-gradient(135deg, #16a34a, #22c55e); }
+        .topic-card.weak .topic-rank { background: linear-gradient(135deg, #dc2626, #ef4444); }
+        .topic-name { font-weight: 700; font-size: 15px; margin-bottom: 10px; padding-right: 40px; line-height: 1.4; }
+        .topic-percent { font-size: 28px; font-weight: 900; margin-bottom: 10px; line-height: 1; }
         .topic-card.strong .topic-percent { color: #16a34a; }
         .topic-card.weak .topic-percent { color: #dc2626; }
-        
-        .topic-bar { 
-            height: 8px; 
-            background: #e2e8f0; 
-            border-radius: 4px; 
-            overflow: hidden; 
-            margin-bottom: 10px; 
-        }
-        
-        .topic-bar-fill { 
-            height: 100%; 
-            border-radius: 4px; 
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-        
-        .topic-card.strong .topic-bar-fill { 
-            background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%); 
-        }
-        .topic-card.weak .topic-bar-fill { 
-            background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%); 
-        }
-        
-        .topic-details { 
-            font-size: 13px; 
-            color: #64748b; 
-            line-height: 1.5; 
-        }
-        
-        .recommendations-list { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 14px; 
-        }
-        
-        .rec-card {
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            border-left: 5px solid #3b82f6;
-            padding: 18px 22px;
-            border-radius: 14px;
-            transition: all 0.3s;
-            box-shadow: 0 2px 8px rgba(59,130,246,0.08);
-        }
-        
-        .rec-card:hover { 
-            transform: translateX(6px); 
-            box-shadow: 0 4px 16px rgba(59,130,246,0.2); 
-        }
-        
-        .rec-card-title { 
-            font-weight: 800; 
-            color: #1e40af; 
-            margin-bottom: 8px; 
-            font-size: 15px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-        }
-        .rec-card-text { 
-            color: #1e3a8a; 
-            font-size: 14px; 
-            line-height: 1.6; 
-            font-weight: 500;
-        }
-
-        .feedback-actions {
-            display: none;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-            padding: 20px;
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border-radius: 16px;
-            border: 2px solid #bbf7d0;
-        }
+        .topic-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+        .topic-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s; }
+        .topic-card.strong .topic-bar-fill { background: linear-gradient(90deg, #16a34a, #22c55e); }
+        .topic-card.weak .topic-bar-fill { background: linear-gradient(90deg, #dc2626, #ef4444); }
+        .topic-details { font-size: 13px; color: var(--text-3); }
+        .recommendations-list { display: flex; flex-direction: column; gap: 14px; }
+        .rec-card { background: rgba(59,130,246,0.08); border-left: 5px solid #3b82f6; padding: 18px 22px; border-radius: 14px; transition: all 0.3s; }
+        .rec-card:hover { transform: translateX(6px); }
+        .rec-card-title { font-weight: 800; color: #3b82f6; margin-bottom: 8px; font-size: 15px; }
+        .rec-card-text { color: var(--text-2); font-size: 14px; line-height: 1.6; }
+        .feedback-actions { display: none; gap: 12px; flex-wrap: wrap; margin-top: 20px; padding: 20px; background: rgba(22,163,74,0.1); border-radius: 16px; border: 2px solid rgba(22,163,74,0.3); }
         .feedback-actions.show { display: flex; }
-        .feedback-actions .btn { 
-            flex: 1; 
-            min-width: 160px;
-            color: #166534;
-            background: white;
-            border-color: #86efac;
-        }
-        .feedback-actions .btn:hover {
-            background: #16a34a;
-            color: white;
-            border-color: #16a34a;
-        }
+        .feedback-actions .btn { flex: 1; min-width: 160px; color: #16a34a; background: var(--bg-card); border-color: #16a34a; }
 
-        /* SELECT FEEDBACK */
-        #feedbackCitySelect {
-            padding: 12px 18px;
-            border-radius: 12px;
-            border: 2px solid #e2e8f0;
-            width: 100%;
-            max-width: 450px;
-            margin-bottom: 16px;
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            background: #f8fafc;
-            color: #1e2a3a;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        #feedbackCitySelect:focus {
-            outline: none;
-            border-color: #c41e3a;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 1024px) { 
-            .charts-row-3 { grid-template-columns: 1fr 1fr; } 
-        }
-        
+        @media (max-width: 1024px) { .charts-row-3 { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 800px) {
-            .charts-row { grid-template-columns: 1fr; }
-            .charts-row-3 { grid-template-columns: 1fr; }
+            .charts-row, .charts-row-3 { grid-template-columns: 1fr; }
             .status-grid { grid-template-columns: 1fr 1fr; }
-            .main-number { padding: 24px; }
             .main-number .value { font-size: 44px; }
-            .header { padding: 20px 24px; }
-            .header h1 { font-size: 22px; }
+            .header h1 { font-size: 20px; }
             body { padding: 16px; }
         }
-        
         @media (max-width: 500px) {
             .status-grid { grid-template-columns: 1fr; }
             .filter-bar { flex-direction: column; align-items: stretch; }
             .status-text { margin-left: 0; text-align: center; }
             .topics-grid { grid-template-columns: 1fr; }
-            .main-number { flex-direction: column; align-items: flex-start; }
-        }
-        
-        /* LOADING */
-        .loading-skeleton {
-            background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: 8px;
-            height: 200px;
-        }
-        
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            .profile-score { margin-left: 0; width: 100%; text-align: center; }
         }
     </style>
 </head>
 <body>
 <div class="container">
 
-    <!-- HEADER -->
     <div class="header">
         <h1>
             <span class="logo-icon">💎</span>
@@ -1199,20 +298,20 @@
             <span style="font-weight: 500;">Аналитика</span>
         </h1>
         <div class="header-actions">
+            <button class="btn" id="themeToggle" title="Переключить тему">🌙</button>
             <button class="btn" id="exportBtn">📊 CSV</button>
             <button class="btn btn-primary" id="loadBtn">🔄 Загрузить</button>
             <button class="btn btn-danger" id="clearAllBtn">🗑️ Сбросить</button>
         </div>
     </div>
 
-    <!-- TABS -->
     <div class="tabs-wrap">
         <button class="tab-btn active" data-tab="dashboard">📊 Дашборд</button>
         <button class="tab-btn" data-tab="cities">🏙️ Города</button>
+        <button class="tab-btn" data-tab="employees">👤 Сотрудники</button>
         <button class="tab-btn" data-tab="feedback">📝 Фидбек</button>
     </div>
 
-    <!-- FILTERS -->
     <div class="filter-bar">
         <div class="filter-group" style="flex-direction: column; align-items: flex-start; gap: 10px; width: 100%;">
             <label style="text-transform: uppercase; letter-spacing: 1px; font-size: 11px;">Тип теста</label>
@@ -1227,14 +326,9 @@
                 <button class="filter-chip" data-value="final_exam" onclick="setTypeFilter('final_exam')">🎓 Аттестация</button>
             </div>
             <select id="typeFilter" style="display: none;">
-                <option value="all">Все</option>
-                <option value="test">Тест</option>
-                <option value="trainer">Тренировка</option>
-                <option value="crosssell">Допродажи</option>
-                <option value="errorfinder">Найди ошибку</option>
-                <option value="clienttype">Адаптация</option>
-                <option value="service">Сервис</option>
-                <option value="final_exam">Аттестация</option>
+                <option value="all">Все</option><option value="test">Тест</option><option value="trainer">Тренировка</option>
+                <option value="crosssell">Допродажи</option><option value="errorfinder">Найди ошибку</option>
+                <option value="clienttype">Адаптация</option><option value="service">Сервис</option><option value="final_exam">Аттестация</option>
             </select>
         </div>
 
@@ -1264,18 +358,18 @@
             <label>🔍 Поиск</label>
             <input type="text" id="searchInput" placeholder="Имя сотрудника...">
         </div>
-        <button class="btn btn-danger" id="resetFiltersBtn" style="background: rgba(220, 38, 38, 0.1); color: #dc2626; border-color: #fecaca;">✕ Сбросить</button>
+        <button class="btn" id="resetFiltersBtn" style="background: rgba(220,38,38,0.15); color: #fca5a5; border-color: rgba(254,202,202,0.4);">✕ Сбросить</button>
         <span class="status-text" id="status">⏳ Загрузка...</span>
     </div>
 
     <div id="alertContainer"></div>
 
-    <!-- DASHBOARD TAB -->
     <div id="dashboardTab">
         <div class="main-number">
             <div>
                 <div class="label">Всего прохождений</div>
                 <div class="value" id="mainTotal">0</div>
+                <div class="sparkline-box" id="activitySparkline"></div>
             </div>
             <div>
                 <div class="sub">Средний балл: <strong id="mainAvg">0%</strong></div>
@@ -1283,61 +377,17 @@
         </div>
 
         <div class="status-grid">
-            <div class="status-card blue">
-                <div class="icon">📝</div>
-                <div class="label">Тестов</div>
-                <div class="value" id="sTest">0</div>
-            </div>
-            <div class="status-card purple">
-                <div class="icon">🎯</div>
-                <div class="label">Тренировок</div>
-                <div class="value" id="sTrainer">0</div>
-            </div>
-            <div class="status-card gold">
-                <div class="icon">💰</div>
-                <div class="label">Допродаж</div>
-                <div class="value" id="sCrosssell">0</div>
-            </div>
-            <div class="status-card teal">
-                <div class="icon">🔍</div>
-                <div class="label">Найди ошибку</div>
-                <div class="value" id="sErrorfinder">0</div>
-            </div>
-            <div class="status-card violet">
-                <div class="icon">🎭</div>
-                <div class="label">Адаптация</div>
-                <div class="value" id="sClienttype">0</div>
-            </div>
-            <div class="status-card sky">
-                <div class="icon">🤝</div>
-                <div class="label">Сервис</div>
-                <div class="value" id="sService">0</div>
-            </div>
-            <div class="status-card violet">
-                <div class="icon">🎓</div>
-                <div class="label">Аттестация</div>
-                <div class="value" id="sFinalExam">0</div>
-            </div>
-            <div class="status-card green">
-                <div class="icon">✅</div>
-                <div class="label">Успешно (≥85%)</div>
-                <div class="value" id="sSuccess">0</div>
-            </div>
-            <div class="status-card orange">
-                <div class="icon">📈</div>
-                <div class="label">Средний балл</div>
-                <div class="value" id="sAvg">0%</div>
-            </div>
-            <div class="status-card red">
-                <div class="icon">🔴</div>
-                <div class="label">Низкий (&lt;70%)</div>
-                <div class="value" id="sLow">0</div>
-            </div>
-            <div class="status-card teal">
-                <div class="icon">❌</div>
-                <div class="label">Ошибок</div>
-                <div class="value" id="sErrors">0</div>
-            </div>
+            <div class="status-card blue"><div class="icon">📝</div><div class="label">Тестов</div><div class="value" id="sTest">0</div></div>
+            <div class="status-card purple"><div class="icon">🎯</div><div class="label">Тренировок</div><div class="value" id="sTrainer">0</div></div>
+            <div class="status-card gold"><div class="icon">💰</div><div class="label">Допродаж</div><div class="value" id="sCrosssell">0</div></div>
+            <div class="status-card teal"><div class="icon">🔍</div><div class="label">Найди ошибку</div><div class="value" id="sErrorfinder">0</div></div>
+            <div class="status-card violet"><div class="icon">🎭</div><div class="label">Адаптация</div><div class="value" id="sClienttype">0</div></div>
+            <div class="status-card sky"><div class="icon">🤝</div><div class="label">Сервис</div><div class="value" id="sService">0</div></div>
+            <div class="status-card violet"><div class="icon">🎓</div><div class="label">Аттестация</div><div class="value" id="sFinalExam">0</div></div>
+            <div class="status-card green"><div class="icon">✅</div><div class="label">Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
+            <div class="status-card orange"><div class="icon">📈</div><div class="label">Средний балл</div><div class="value" id="sAvg">0%</div><div class="sparkline-box" id="avgSparkline"></div></div>
+            <div class="status-card red"><div class="icon">🔴</div><div class="label">Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
+            <div class="status-card teal"><div class="icon">❌</div><div class="label">Ошибок</div><div class="value" id="sErrors">0</div></div>
         </div>
 
         <div class="charts-row">
@@ -1350,6 +400,11 @@
                 <div id="trendContainer"><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
                 <div id="trendFallback" class="empty" style="display:none;">📉 Недостаточно данных для построения графика</div>
             </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🔥 Топ сложных вопросов — здесь ошибаются чаще всего</div>
+            <div id="hardQuestionsList"><div class="empty">Загрузите данные</div></div>
         </div>
 
         <div class="charts-row-3">
@@ -1373,7 +428,6 @@
         </div>
     </div>
 
-    <!-- CITIES TAB -->
     <div id="citiesTab" style="display:none; margin-top:20px;">
         <div class="card">
             <div class="card-title">📊 Статистика по городам</div>
@@ -1383,15 +437,34 @@
                     <tbody id="cityStatsBody"></tbody>
                 </table>
             </div>
-            <button class="btn btn-primary" id="exportCityBtn" style="margin-top:16px; color: #c41e3a; border-color: #c41e3a;">📥 Скачать CSV по городам</button>
+            <button class="btn btn-primary" id="exportCityBtn" style="margin-top:16px; color:#c41e3a; border-color:#c41e3a;">📥 Скачать CSV по городам</button>
         </div>
     </div>
 
-    <!-- FEEDBACK TAB -->
+    <div id="employeesTab" style="display:none; margin-top:20px;">
+        <div class="card">
+            <div class="card-title">👤 Личная карточка сотрудника</div>
+            <select id="profileSelect" onchange="renderProfile()">
+                <option value="">-- Выберите сотрудника --</option>
+            </select>
+            <div id="profileContent"><div class="empty">Выберите сотрудника, чтобы увидеть его прогресс</div></div>
+        </div>
+        
+        <div class="card">
+            <div class="card-title">🔗 Объединение имён (алиасы)</div>
+            <p class="hint">💡 Если один и тот же продавец регистрировался по-разному (например, «Анна» и «Анна Иванова»), объедините имена — и вся статистика соберётся в одну карточку. Дашборд сам подскажет вероятные дубли.</p>
+            <div id="mergeSuggestions"></div>
+            <div class="section-subtitle">Все зарегистрированные имена:</div>
+            <div id="nameList"></div>
+            <button class="btn btn-primary" id="mergeBtn" style="margin-top:12px; color:#c41e3a; border-color:#c41e3a;">🔗 Объединить выбранные</button>
+            <div id="groupsList"></div>
+        </div>
+    </div>
+
     <div id="feedbackTab" style="display:none; margin-top:20px;">
         <div class="card">
             <div class="card-title">📝 Фидбек по городу / магазину</div>
-            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.6;">Выберите город или магазин для получения детального анализа сильных и слабых сторон команды</p>
+            <p class="hint">Выберите город или магазин для получения детального анализа сильных и слабых сторон команды</p>
             <select id="feedbackCitySelect">
                 <option value="">-- Выберите город / магазин --</option>
                 <option value="Тюмень">Тюмень</option>
@@ -1402,22 +475,17 @@
                 <option value="Оренбург">Оренбург</option>
                 <option value="Псков">Псков</option>
             </select>
-            <button class="btn btn-primary" id="generateFeedbackBtn" style="color: #c41e3a; border-color: #c41e3a;">🔍 Сгенерировать фидбек</button>
-            
+            <button class="btn btn-primary" id="generateFeedbackBtn" style="color:#c41e3a; border-color:#c41e3a;">🔍 Сгенерировать фидбек</button>
             <div class="feedback-actions" id="feedbackActions">
                 <button class="btn" onclick="copyFeedbackText()">📋 Копировать текст</button>
                 <button class="btn" onclick="printFeedback()">🖨️ Печать / PDF</button>
                 <button class="btn" onclick="downloadFeedbackHTML()">📥 Скачать HTML</button>
             </div>
-            
             <div id="feedbackResult" style="margin-top:20px;"></div>
         </div>
     </div>
-
-    <div id="loadingSkeleton" class="loading-skeleton" style="display:none;"></div>
 </div>
 
-<!-- MODAL -->
 <div id="modal" class="modal">
     <div class="modal-content">
         <div class="modal-title" id="modalTitle">Детали</div>
@@ -1439,21 +507,27 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const CITIES = [
-        'Тюмень',
-        'Москва, Локомотивный, 4',
-        'Москва, Новоясеневский, 2',
-        'Челябинск',
-        'Архангельск',
-        'Оренбург',
-        'Псков'
-    ];
+    const CITIES = ['Тюмень','Москва, Локомотивный, 4','Москва, Новоясеневский, 2','Челябинск','Архангельск','Оренбург','Псков'];
 
     const TEST_TOPICS = [
         'Приветствие и установление контакта', 'Выявление бюджета', 'Предложение дополнительных товаров',
         'Работа с выбором материала', 'Предложение сопутствующих товаров', 'Работа с возражением "дорого"',
         'Предложение альтернативы при отсутствии размера', 'Эмоциональная презентация подарка',
         'Предложение дополнительных моделей', 'Предложение рассрочки (Сплит)', 'Проявление инициативы при молчаливом клиенте'
+    ];
+
+    const TEST_QUESTION_TEXTS = [
+        '«Девушка смотрит на витрину с кольцами. Что сказать первым?»',
+        '«Клиент назвал бюджет 25 000 ₽. Что делать дальше?»',
+        '«Клиентка выбрала кольцо. Как предложить серьги из коллекции?»',
+        '«Клиентка смотрит на серебро за 12 000 ₽. Как переориентировать на золото?»',
+        '«Клиентка оформляет покупку кольца. Что предложить?»',
+        '«Дороговато... Я думала, дешевле будет». Что ответить?',
+        '«Нет нужного размера в наличии. Что сказать?»',
+        '«Клиентка выбирает подарок маме на юбилей. Как презентовать?»',
+        '«Можно посмотреть другие модели?». Как ответить?',
+        '«Клиентка колеблется насчёт кольца за 55 000 ₽. Когда упомянуть Сплит?»',
+        '«Клиентка медленно идёт вдоль витрины, не останавливаясь. Что делать?»'
     ];
 
     const TEST_GENERAL_RECS = [
@@ -1496,29 +570,145 @@
     };
     
     let allData = [], filteredData = [];
-    let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null;
+    let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, profileChart = null;
+    let selectedNames = new Set();
 
+    // ========== 🌙 ТЕМА ==========
+    function applyTheme(theme) {
+        document.body.classList.toggle('dark', theme === 'dark');
+        localStorage.setItem('dashboard_theme', theme);
+        document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        Chart.defaults.color = theme === 'dark' ? '#94a3b8' : '#64748b';
+        if (filteredData.length) { renderDashboard(); renderTrendChart(); renderHardQuestions(); }
+    }
+    document.getElementById('themeToggle').onclick = () => {
+        applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+    };
+    applyTheme(localStorage.getItem('dashboard_theme') || 'light');
+
+    // ========== 👤 РАБОТА С ИМЕНАМИ ==========
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    
+    function normalizeName(name) { return String(name || '').toLowerCase().trim().replace(/\s+/g, ' '); }
+    
+    function getGroups() { try { return JSON.parse(localStorage.getItem('employee_groups') || '[]'); } catch(e) { return []; } }
+    function saveGroups(g) { localStorage.setItem('employee_groups', JSON.stringify(g)); }
+    
+    function getGroupKey(name) {
+        const key = normalizeName(name);
+        const groups = getGroups();
+        for (const g of groups) { if (g.includes(key)) return g[0]; }
+        return key;
+    }
+    
+    function getGroupMembers(mainKey) {
+        const groups = getGroups();
+        const g = groups.find(gr => gr[0] === mainKey || gr.includes(mainKey));
+        return g || [mainKey];
+    }
+    
+    function mergeNames(names) {
+        const keys = names.map(normalizeName);
+        let groups = getGroups();
+        // Собираем существующие группы, в которых уже есть эти имена
+        const existingMembers = new Set(keys);
+        groups.forEach(g => { if (g.some(k => keys.includes(k))) g.forEach(k => existingMembers.add(k)); });
+        groups = groups.filter(g => !g.some(k => keys.includes(k)));
+        const merged = [...existingMembers].sort((a, b) => b.length - a.length); // самое длинное имя — главное
+        if (merged.length > 1) groups.push(merged);
+        saveGroups(groups);
+    }
+    
+    function ungroup(mainKey) {
+        saveGroups(getGroups().filter(g => g[0] !== decodeURIComponent(mainKey)));
+        renderEmployeesTab();
+    }
+    
+    function getOriginalName(normKey) {
+        let best = normKey;
+        for (const r of allData) {
+            if (normalizeName(r.user_name) === normKey && r.user_name.length > best.length) best = r.user_name;
+        }
+        return best;
+    }
+    
+    function getDisplayName(mainKey) {
+        const members = getGroupMembers(mainKey);
+        let best = mainKey;
+        allData.forEach(r => {
+            if (members.includes(normalizeName(r.user_name)) && r.user_name.length > best.length) best = r.user_name;
+        });
+        return best;
+    }
+    
+    function namesSimilar(a, b) {
+        const ta = a.split(' ').filter(t => t.length > 3);
+        const tb = b.split(' ').filter(t => t.length > 3);
+        return ta.some(t => tb.includes(t));
+    }
+
+    function getTypeInfo(type) {
+        const map = {
+            test: { icon: '📝', label: 'Тест' }, trainer: { icon: '🎯', label: 'Тренировка' },
+            crosssell: { icon: '💰', label: 'Допродажи' }, errorfinder: { icon: '🔍', label: 'Найди ошибку' },
+            clienttype: { icon: '🎭', label: 'Адаптация' }, service: { icon: '🤝', label: 'Сервис' },
+            final_exam: { icon: '🎓', label: 'Аттестация' }
+        };
+        return map[type] || { icon: '📝', label: 'Тест' };
+    }
+
+    // ========== ✨ СПАРКЛАЙНЫ ==========
+    function makeSparkline(values, color) {
+        if (values.length < 2) return '';
+        const w = 100, h = 28;
+        const max = Math.max(...values), min = Math.min(...values);
+        const range = (max - min) || 1;
+        const pts = values.map((v, i) => {
+            const x = (i / (values.length - 1)) * (w - 4) + 2;
+            const y = h - 3 - ((v - min) / range) * (h - 6);
+            return x.toFixed(1) + ',' + y.toFixed(1);
+        }).join(' ');
+        return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/></svg>`;
+    }
+
+    function getDailySeries() {
+        const map = new Map();
+        filteredData.forEach(r => {
+            const d = new Date(r.date).toLocaleDateString('ru-RU');
+            if (!map.has(d)) map.set(d, { sum: 0, count: 0 });
+            const v = map.get(d); v.sum += r.percent; v.count++;
+        });
+        const dates = [...map.keys()].sort((a, b) => {
+            const [da, ma, ya] = a.split('.').map(Number);
+            const [db, mb, yb] = b.split('.').map(Number);
+            return new Date(ya, ma-1, da) - new Date(yb, mb-1, db);
+        });
+        return {
+            counts: dates.map(d => map.get(d).count),
+            avgs: dates.map(d => Math.round(map.get(d).sum / map.get(d).count))
+        };
+    }
+
+    // ========== ФИЛЬТРЫ ==========
     function saveFilters() {
-        const filters = {
+        localStorage.setItem('dashboard_filters', JSON.stringify({
             type: document.getElementById('typeFilter').value,
             city: document.getElementById('cityFilter').value,
             percent: document.getElementById('percentFilter').value,
             search: document.getElementById('searchInput').value
-        };
-        localStorage.setItem('dashboard_filters', JSON.stringify(filters));
+        }));
     }
 
     function loadFilters() {
         const saved = localStorage.getItem('dashboard_filters');
         if (saved) {
-            const filters = JSON.parse(saved);
-            document.getElementById('typeFilter').value = filters.type || 'all';
-            document.getElementById('cityFilter').value = filters.city || 'all';
-            document.getElementById('percentFilter').value = filters.percent || 'all';
-            document.getElementById('searchInput').value = filters.search || '';
-            
+            const f = JSON.parse(saved);
+            document.getElementById('typeFilter').value = f.type || 'all';
+            document.getElementById('cityFilter').value = f.city || 'all';
+            document.getElementById('percentFilter').value = f.percent || 'all';
+            document.getElementById('searchInput').value = f.search || '';
             document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.classList.toggle('active', chip.dataset.value === filters.type);
+                chip.classList.toggle('active', chip.dataset.value === f.type);
             });
         }
     }
@@ -1544,22 +734,16 @@
     document.getElementById('clearAllBtn').onclick = async () => {
         if (!confirm('🗑️ Удалить ВСЕ результаты из Firebase?')) return;
         if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
-        
         try {
             await Promise.all([
-                db.ref('results/test').remove(),
-                db.ref('results/dialog').remove(),
-                db.ref('results/crosssell').remove(),
-                db.ref('results/errorfinder').remove(),
-                db.ref('results/clienttype').remove(),
-                db.ref('results/service').remove(),
+                db.ref('results/test').remove(), db.ref('results/dialog').remove(),
+                db.ref('results/crosssell').remove(), db.ref('results/errorfinder').remove(),
+                db.ref('results/clienttype').remove(), db.ref('results/service').remove(),
                 db.ref('results/final_exam').remove()
             ]);
             alert('✅ Все данные удалены!');
             location.reload();
-        } catch(e) {
-            alert('Ошибка: ' + e.message);
-        }
+        } catch(e) { alert('Ошибка: ' + e.message); }
     };
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1569,74 +753,48 @@
             const tab = this.dataset.tab;
             document.getElementById('dashboardTab').style.display = tab === 'dashboard' ? 'block' : 'none';
             document.getElementById('citiesTab').style.display = tab === 'cities' ? 'block' : 'none';
+            document.getElementById('employeesTab').style.display = tab === 'employees' ? 'block' : 'none';
             document.getElementById('feedbackTab').style.display = tab === 'feedback' ? 'block' : 'none';
             if (tab === 'cities') renderCityStats();
+            if (tab === 'employees') renderEmployeesTab();
         });
     });
 
     async function loadResults() {
-        document.getElementById('loadingSkeleton').style.display = 'block';
         document.getElementById('status').textContent = '⏳ Загрузка...';
-        
         try {
             loadFilters();
-            
             const savedType = document.getElementById('typeFilter').value;
             const savedCity = document.getElementById('cityFilter').value;
             const savedPercent = document.getElementById('percentFilter').value;
             const savedSearch = document.getElementById('searchInput').value;
             
             const [testSnap, dialogSnap, crossSnap, errorSnap, clientSnap, serviceSnap, examSnap] = await Promise.all([
-                db.ref('results/test').get(),
-                db.ref('results/dialog').get(),
-                db.ref('results/crosssell').get(),
-                db.ref('results/errorfinder').get(),
-                db.ref('results/clienttype').get(),
-                db.ref('results/service').get(),
-                db.ref('results/final_exam').get()
+                db.ref('results/test').get(), db.ref('results/dialog').get(), db.ref('results/crosssell').get(),
+                db.ref('results/errorfinder').get(), db.ref('results/clienttype').get(),
+                db.ref('results/service').get(), db.ref('results/final_exam').get()
             ]);
             
             let allResults = [];
-            
-            const testData = testSnap.val();
-            if (testData) { Object.values(testData).forEach(item => { item.type = 'test'; allResults.push(item); }); }
-            
-            const dialogData = dialogSnap.val();
-            if (dialogData) { Object.values(dialogData).forEach(item => { item.type = 'trainer'; allResults.push(item); }); }
-            
-            const crossData = crossSnap.val();
-            if (crossData) { Object.values(crossData).forEach(item => { item.type = 'crosssell'; allResults.push(item); }); }
-
-            const errorData = errorSnap.val();
-            if (errorData) { Object.values(errorData).forEach(item => { item.type = 'errorfinder'; allResults.push(item); }); }
-
-            const clientData = clientSnap.val();
-            if (clientData) { Object.values(clientData).forEach(item => { item.type = 'clienttype'; allResults.push(item); }); }
-
-            const serviceData = serviceSnap.val();
-            if (serviceData) { Object.values(serviceData).forEach(item => { item.type = 'service'; allResults.push(item); }); }
-
-            const examData = examSnap.val();
-            if (examData) { Object.values(examData).forEach(item => { item.type = 'final_exam'; allResults.push(item); }); }
+            const addResults = (snap, type) => {
+                const data = snap.val();
+                if (data) Object.values(data).forEach(item => { item.type = type; allResults.push(item); });
+            };
+            addResults(testSnap, 'test'); addResults(dialogSnap, 'trainer'); addResults(crossSnap, 'crosssell');
+            addResults(errorSnap, 'errorfinder'); addResults(clientSnap, 'clienttype');
+            addResults(serviceSnap, 'service'); addResults(examSnap, 'final_exam');
             
             if (!allResults.length) {
                 document.getElementById('status').textContent = '📭 Нет результатов';
-                document.getElementById('loadingSkeleton').style.display = 'none';
                 return;
             }
             
             allData = allResults.map(r => ({
-                id: r.id || Date.now() + Math.random(),
-                type: r.type || 'test',
-                user_name: r.user_name || 'Аноним',
-                city: r.city || 'Не указан',
-                score: r.score || 0,
-                total: r.total || 11,
-                percent: r.percent || 0,
-                answers: r.answers || [],
-                rules_applied: r.rules_applied || [],
-                scenarios: r.scenarios || [],
-                level: r.level || '',
+                id: r.id || Date.now() + Math.random(), type: r.type || 'test',
+                user_name: r.user_name || 'Аноним', city: r.city || 'Не указан',
+                score: r.score || 0, total: r.total || 11, percent: r.percent || 0,
+                answers: r.answers || [], rules_applied: r.rules_applied || [],
+                scenarios: r.scenarios || [], level: r.level || '',
                 date: r.date || new Date().toISOString()
             }));
             
@@ -1644,9 +802,8 @@
             
             const dataCities = [...new Set(allData.map(r => r.city))];
             const allCities = [...new Set([...CITIES, ...dataCities])];
-            
             document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + 
-                allCities.map(c => `<option value="${c}">${c}</option>`).join('');
+                allCities.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
             
             document.getElementById('typeFilter').value = savedType;
             document.getElementById('cityFilter').value = savedCity;
@@ -1655,51 +812,271 @@
             
             renderCityStats();
             applyFilters();
+            if (document.getElementById('employeesTab').style.display !== 'none') renderEmployeesTab();
             
         } catch(e) { 
             console.error(e); 
             document.getElementById('status').textContent = '❌ Ошибка: ' + e.message;
         }
-        document.getElementById('loadingSkeleton').style.display = 'none';
     }
 
+    // ========== 🔥 ТОП СЛОЖНЫХ ВОПРОСОВ ==========
+    function renderHardQuestions() {
+        const container = document.getElementById('hardQuestionsList');
+        if (!filteredData.length) { container.innerHTML = '<div class="empty">Нет данных</div>'; return; }
+        
+        const items = [];
+        
+        // Тест: ошибки по вопросам
+        const qTotal = new Array(11).fill(0), qErrors = new Array(11).fill(0);
+        filteredData.filter(r => r.type === 'test').forEach(r => {
+            (r.answers || []).forEach(a => {
+                const idx = a.originalIndex !== undefined ? a.originalIndex : ((a.questionNum || 1) - 1);
+                if (idx >= 0 && idx < 11) { qTotal[idx]++; if (!a.correct) qErrors[idx]++; }
+            });
+        });
+        for (let i = 0; i < 11; i++) {
+            if (qTotal[i] > 0) {
+                items.push({ icon: '📝', name: TEST_TOPICS[i], question: TEST_QUESTION_TEXTS[i],
+                    errors: qErrors[i], total: qTotal[i], rate: Math.round(qErrors[i]/qTotal[i]*100), rec: TEST_GENERAL_RECS[i] });
+            }
+        }
+        
+        // Тренировка: неприменённые правила
+        TRAINER_RULES.forEach(rule => {
+            let total = 0, errors = 0;
+            filteredData.filter(r => r.type === 'trainer').forEach(r => {
+                total++;
+                if (!(r.rules_applied || []).includes(rule.name)) errors++;
+            });
+            if (total > 0) items.push({ icon: '🎯', name: rule.name, question: '«Правило диалога с клиентом»',
+                errors, total, rate: Math.round(errors/total*100), rec: TRAINER_GENERAL_RECS[rule.id] });
+        });
+        
+        // Допродажи: неприменённые правила
+        CROSSSELL_RULES.forEach(rule => {
+            let total = 0, errors = 0;
+            filteredData.filter(r => r.type === 'crosssell').forEach(r => {
+                total++;
+                if (!(r.rules_applied || []).includes(rule.name)) errors++;
+            });
+            if (total > 0) items.push({ icon: '💰', name: rule.name, question: '«Правило допродаж»',
+                errors, total, rate: Math.round(errors/total*100), rec: CROSSSELL_GENERAL_RECS[rule.id] });
+        });
+        
+        const top = items.filter(i => i.errors > 0).sort((a, b) => b.rate - a.rate).slice(0, 5);
+        
+        if (!top.length) {
+            container.innerHTML = '<div class="empty">🎉 Отлично! Ошибок пока нет</div>';
+            return;
+        }
+        
+        container.innerHTML = top.map((item, i) => `
+            <div class="hard-q-item">
+                <div class="hard-q-head">
+                    <div class="hard-q-name">${item.icon} ${i + 1}. ${esc(item.name)}</div>
+                    <div class="hard-q-rate">${item.rate}% ошибок</div>
+                </div>
+                <div class="hard-q-text">${item.question}</div>
+                <div class="hard-q-stats">❌ Ошиблись: ${item.errors} из ${item.total} прохождений</div>
+                <div class="hard-q-bar"><div class="hard-q-bar-fill" style="width: ${item.rate}%"></div></div>
+                <div class="hard-q-rec">💡 <strong>Рекомендация:</strong> ${item.rec}</div>
+            </div>
+        `).join('');
+    }
+
+    // ========== 👤 ВКЛАДКА СОТРУДНИКИ ==========
+    function renderEmployeesTab() {
+        if (!allData.length) return;
+        renderProfileSelect();
+        renderSuggestions();
+        renderNameList();
+        renderGroupsList();
+    }
+
+    function renderProfileSelect() {
+        const keys = [...new Set(allData.map(r => getGroupKey(r.user_name)))];
+        const select = document.getElementById('profileSelect');
+        const current = select.value;
+        select.innerHTML = '<option value="">-- Выберите сотрудника --</option>' +
+            keys.map(k => {
+                const members = getGroupMembers(k);
+                const count = allData.filter(r => members.includes(normalizeName(r.user_name))).length;
+                return `<option value="${encodeURIComponent(k)}">${esc(getDisplayName(k))} (${count} попыт.)</option>`;
+            }).join('');
+        if (current && keys.includes(decodeURIComponent(current))) select.value = current;
+        else if (keys.length) select.value = encodeURIComponent(keys[0]);
+        renderProfile();
+    }
+
+    function renderProfile() {
+        const rawVal = document.getElementById('profileSelect').value;
+        const container = document.getElementById('profileContent');
+        if (!rawVal) { container.innerHTML = '<div class="empty">Выберите сотрудника, чтобы увидеть его прогресс</div>'; return; }
+        
+        const mainKey = decodeURIComponent(rawVal);
+        const members = getGroupMembers(mainKey);
+        const attempts = allData
+            .filter(r => members.includes(normalizeName(r.user_name)))
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        if (!attempts.length) { container.innerHTML = '<div class="empty">Нет попыток</div>'; return; }
+        
+        const avg = Math.round(attempts.reduce((s, r) => s + r.percent, 0) / attempts.length);
+        const best = Math.max(...attempts.map(r => r.percent));
+        const last = attempts[attempts.length - 1];
+        const first = attempts[0];
+        const delta = last.percent - first.percent;
+        const cities = [...new Set(attempts.map(r => r.city))].join(', ');
+        
+        let html = `
+            <div class="profile-header">
+                <div class="profile-avatar">💎</div>
+                <div>
+                    <div class="profile-name">${esc(getDisplayName(mainKey))}</div>
+                    <div class="profile-meta">🏙️ ${esc(cities)} • Всего попыток: ${attempts.length}</div>
+                </div>
+                <div class="profile-score ${avg >= 85 ? 'good' : avg >= 70 ? 'mid' : 'bad'}">${avg}%</div>
+            </div>
+            <div class="profile-stats-row">
+                <div class="profile-stat"><div class="ps-value" style="color:#16a34a;">${best}%</div><div class="ps-label">Лучший результат</div></div>
+                <div class="profile-stat"><div class="ps-value">${last.percent}%</div><div class="ps-label">Последний</div></div>
+                <div class="profile-stat"><div class="ps-value" style="color:${delta >= 0 ? '#16a34a' : '#dc2626'}">${delta >= 0 ? '▲ +' : '▼ '}${delta}%</div><div class="ps-label">Динамика</div></div>
+                <div class="profile-stat"><div class="sparkline-box" style="justify-content:center;">${makeSparkline(attempts.map(a => a.percent), '#c41e3a')}</div><div class="ps-label">Тренд результатов</div></div>
+            </div>
+            <div class="profile-chart-box"><canvas id="profileChart"></canvas></div>
+            <div class="section-subtitle">📋 История попыток (последние 10)</div>
+        `;
+        
+        [...attempts].reverse().slice(0, 10).forEach(a => {
+            const t = getTypeInfo(a.type);
+            const dateStr = new Date(a.date).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+            html += `<div class="attempt-item"><span>${t.icon} ${t.label}</span><span class="attempt-date">${dateStr}</span><span class="badge ${a.percent >= 85 ? 'badge-green' : a.percent >= 70 ? 'badge-yellow' : 'badge-red'}">${a.percent}%</span></div>`;
+        });
+        
+        if (members.length > 1) {
+            html += `<div class="aliases-note">🔗 <strong>Объединённые имена:</strong> ${members.map(m => esc(getOriginalName(m))).join(' • ')}</div>`;
+        }
+        
+        container.innerHTML = html;
+        
+        if (profileChart) profileChart.destroy();
+        const canvas = document.getElementById('profileChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const labels = attempts.map(a => new Date(a.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }));
+        const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+        gradient.addColorStop(0, 'rgba(196, 30, 58, 0.25)');
+        gradient.addColorStop(1, 'rgba(196, 30, 58, 0)');
+        
+        profileChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Результат', data: attempts.map(a => a.percent),
+                    borderColor: '#c41e3a', backgroundColor: gradient, fill: true, tension: 0.35,
+                    pointBackgroundColor: attempts.map(a => a.percent >= 85 ? '#16a34a' : a.percent >= 70 ? '#f59e0b' : '#dc2626'),
+                    pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 6, borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1e2a3a', padding: 12, cornerRadius: 8 } },
+                scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(100,116,139,0.15)' } }, x: { grid: { display: false } } }
+            }
+        });
+    }
+
+    function renderSuggestions() {
+        const names = [...new Set(allData.map(r => normalizeName(r.user_name)))];
+        const pairs = [];
+        for (let i = 0; i < names.length; i++) {
+            for (let j = i + 1; j < names.length; j++) {
+                if (getGroupKey(names[i]) === getGroupKey(names[j])) continue;
+                if (namesSimilar(names[i], names[j])) pairs.push([names[i], names[j]]);
+            }
+        }
+        const el = document.getElementById('mergeSuggestions');
+        if (!pairs.length) { el.innerHTML = ''; return; }
+        let html = '<div class="suggestions"><div class="suggestions-title">🤖 Возможные дубли — нажмите, чтобы объединить:</div>';
+        pairs.slice(0, 6).forEach(([a, b]) => {
+            html += `<button class="suggestion-chip" onclick="quickMerge('${encodeURIComponent(a)}','${encodeURIComponent(b)}')">${esc(getOriginalName(a))} + ${esc(getOriginalName(b))}</button>`;
+        });
+        html += '</div>';
+        el.innerHTML = html;
+    }
+
+    function quickMerge(a, b) {
+        a = decodeURIComponent(a); b = decodeURIComponent(b);
+        if (confirm(`Объединить "${getOriginalName(a)}" и "${getOriginalName(b)}"?`)) {
+            mergeNames([a, b]);
+            renderEmployeesTab();
+        }
+    }
+
+    function renderNameList() {
+        const names = [...new Set(allData.map(r => normalizeName(r.user_name)))].sort();
+        const groups = getGroups();
+        let html = '';
+        names.forEach(n => {
+            const inGroup = groups.find(g => g.includes(n));
+            const count = allData.filter(r => normalizeName(r.user_name) === n).length;
+            const checked = selectedNames.has(n) ? 'checked' : '';
+            const groupLabel = inGroup ? `<span class="badge badge-green">👥 группа: ${esc(getDisplayName(inGroup[0]))}</span>` : '';
+            html += `<label class="name-item"><input type="checkbox" ${checked} onchange="toggleNameSelection('${encodeURIComponent(n)}')"><span class="name-text">${esc(getOriginalName(n))}</span><span class="name-count">${count} попыт.</span>${groupLabel}</label>`;
+        });
+        document.getElementById('nameList').innerHTML = html || '<div class="empty">Нет данных</div>';
+    }
+
+    function toggleNameSelection(encoded) {
+        const n = decodeURIComponent(encoded);
+        if (selectedNames.has(n)) selectedNames.delete(n); else selectedNames.add(n);
+    }
+
+    function renderGroupsList() {
+        const groups = getGroups();
+        const el = document.getElementById('groupsList');
+        if (!groups.length) { el.innerHTML = ''; return; }
+        let html = '<div class="groups-title">✅ Объединённые группы:</div>';
+        groups.forEach(g => {
+            html += `<div class="group-item"><span>👥 <strong>${esc(getDisplayName(g[0]))}</strong>: ${g.map(k => esc(getOriginalName(k))).join(' • ')}</span><button class="btn btn-danger" style="padding:6px 14px;font-size:12px;" onclick="ungroup('${encodeURIComponent(g[0])}')">Разделить</button></div>`;
+        });
+        el.innerHTML = html;
+    }
+
+    document.getElementById('mergeBtn').onclick = () => {
+        if (selectedNames.size < 2) { alert('Отметьте галочками минимум 2 имени для объединения'); return; }
+        mergeNames([...selectedNames]);
+        selectedNames.clear();
+        renderEmployeesTab();
+    };
+
+    // ========== ГРАФИКИ И ДАШБОРД ==========
     function renderTrendChart() {
+        const series = getDailySeries();
         const map = new Map();
         filteredData.forEach(r => {
             const d = new Date(r.date).toLocaleDateString('ru-RU');
             if (!map.has(d)) map.set(d, { sum: 0, count: 0 });
-            const v = map.get(d);
-            v.sum += r.percent; 
-            v.count++;
+            const v = map.get(d); v.sum += r.percent; v.count++;
         });
-        
         const dates = [...map.keys()].sort((a, b) => {
             const [da, ma, ya] = a.split('.').map(Number);
             const [db, mb, yb] = b.split('.').map(Number);
-            const dateA = new Date(ya, ma - 1, da);
-            const dateB = new Date(yb, mb - 1, db);
-            return dateA - dateB;
+            return new Date(ya, ma-1, da) - new Date(yb, mb-1, db);
         });
-        
         const values = dates.map(d => Math.round(map.get(d).sum / map.get(d).count));
 
         const container = document.getElementById('trendContainer');
         const fallback = document.getElementById('trendFallback');
 
-        if (dates.length < 2) {
-            container.style.display = 'none';
-            fallback.style.display = 'block';
-            return;
-        }
-        
-        container.style.display = 'block';
-        fallback.style.display = 'none';
+        if (dates.length < 2) { container.style.display = 'none'; fallback.style.display = 'block'; return; }
+        container.style.display = 'block'; fallback.style.display = 'none';
 
         if (trendChart) trendChart.destroy();
-        
         const ctx = document.getElementById('trendChart').getContext('2d');
         if (!ctx) return;
-
         const gradient = ctx.createLinearGradient(0, 0, 0, 220);
         gradient.addColorStop(0, 'rgba(196, 30, 58, 0.2)');
         gradient.addColorStop(1, 'rgba(196, 30, 58, 0)');
@@ -1709,57 +1086,17 @@
             data: {
                 labels: dates,
                 datasets: [{
-                    label: 'Средний балл',
-                    data: values,
-                    borderColor: '#c41e3a',
+                    label: 'Средний балл', data: values, borderColor: '#c41e3a',
                     backgroundColor: dates.length >= 3 ? gradient : '#c41e3a',
-                    fill: dates.length >= 3,
-                    tension: 0.4,
+                    fill: dates.length >= 3, tension: 0.4,
                     pointBackgroundColor: values.map(v => v >= 85 ? '#16a34a' : v >= 70 ? '#f59e0b' : '#dc2626'),
-                    pointBorderColor: 'white',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    borderWidth: 3,
-                    borderRadius: 6
+                    pointBorderColor: 'white', pointBorderWidth: 2, pointRadius: 6, borderWidth: 3, borderRadius: 6
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { 
-                    legend: { display: false },
-                    tooltip: { 
-                        backgroundColor: '#1e2a3a',
-                        titleColor: 'white',
-                        bodyColor: 'white',
-                        borderColor: '#c41e3a',
-                        borderWidth: 1,
-                        padding: 12,
-                        cornerRadius: 8,
-                        callbacks: { 
-                            label: function(context) { 
-                                return 'Средний балл: ' + context.parsed.y + '%'; 
-                            } 
-                        } 
-                    }
-                },
-                scales: { 
-                    y: { 
-                        beginAtZero: true, 
-                        max: 100, 
-                        ticks: { 
-                            callback: v => v + '%',
-                            color: '#64748b',
-                            font: { weight: '600' }
-                        },
-                        grid: { color: '#f1f5f9' }
-                    },
-                    x: {
-                        ticks: { color: '#64748b', font: { weight: '500' } },
-                        grid: { display: false }
-                    }
-                }
+                responsive: true, maintainAspectRatio: true,
+                plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1e2a3a', padding: 12, cornerRadius: 8, callbacks: { label: c => 'Средний балл: ' + c.parsed.y + '%' } } },
+                scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(100,116,139,0.15)' } }, x: { grid: { display: false } } }
             }
         });
     }
@@ -1767,45 +1104,33 @@
     function renderCityStats() {
         const map = new Map();
         filteredData.forEach(r => {
-            if (!map.has(r.city)) {
-                map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0, testQe: new Array(11).fill(0), trainerRules: {}, crosssellRules: {} });
-            }
+            if (!map.has(r.city)) map.set(r.city, { count: 0, sum: 0, success: 0, errors: 0, testQe: new Array(11).fill(0), trainerRules: {}, crosssellRules: {} });
             const c = map.get(r.city);
-            c.count++; c.sum += r.percent; 
-            if (r.percent >= 85) c.success++; 
+            c.count++; c.sum += r.percent;
+            if (r.percent >= 85) c.success++;
             c.errors += (r.total - r.score);
-            
             if (r.type === 'test' && r.answers) {
-                r.answers.forEach((a) => { 
+                r.answers.forEach(a => {
                     const idx = (a.originalIndex !== undefined) ? a.originalIndex : (r.answers.indexOf(a));
-                    if (!a.correct && idx >= 0 && idx < 11) c.testQe[idx]++; 
+                    if (!a.correct && idx >= 0 && idx < 11) c.testQe[idx]++;
                 });
             } else if (r.type === 'trainer' && r.rules_applied) {
-                TRAINER_RULES.forEach(rule => {
-                    if (!r.rules_applied.includes(rule.name)) c.trainerRules[rule.name] = (c.trainerRules[rule.name] || 0) + 1;
-                });
+                TRAINER_RULES.forEach(rule => { if (!r.rules_applied.includes(rule.name)) c.trainerRules[rule.name] = (c.trainerRules[rule.name] || 0) + 1; });
             } else if (r.type === 'crosssell' && r.rules_applied) {
-                CROSSSELL_RULES.forEach(rule => {
-                    if (!r.rules_applied.includes(rule.name)) c.crosssellRules[rule.name] = (c.crosssellRules[rule.name] || 0) + 1;
-                });
+                CROSSSELL_RULES.forEach(rule => { if (!r.rules_applied.includes(rule.name)) c.crosssellRules[rule.name] = (c.crosssellRules[rule.name] || 0) + 1; });
             }
         });
         
         const testQTexts = ['Приветствие','Бюджет','Доп. товары','Материал','Сопутствующие','Дороговато','Нет размера','Подарок','Другие модели','Сплит','Инициатива'];
         
         const stats = [...map.entries()].map(([city, d]) => {
-            let weakPoint = '—';
-            let maxErrors = 0;
-            
+            let weakPoint = '—', maxErrors = 0;
             const testMaxIdx = d.testQe.reduce((a,b,i,arr) => b > arr[a] ? i : a, 0);
             if (d.testQe[testMaxIdx] > maxErrors) { maxErrors = d.testQe[testMaxIdx]; weakPoint = `📝 ${testQTexts[testMaxIdx] || '—'}`; }
-            
             const trainerMaxRule = Object.entries(d.trainerRules).sort((a,b) => b[1] - a[1])[0];
             if (trainerMaxRule && trainerMaxRule[1] > maxErrors) { maxErrors = trainerMaxRule[1]; weakPoint = `🎯 ${trainerMaxRule[0]}`; }
-            
             const crosssellMaxRule = Object.entries(d.crosssellRules).sort((a,b) => b[1] - a[1])[0];
-            if (crosssellMaxRule && crosssellMaxRule[1] > maxErrors) { maxErrors = crosssellMaxRule[1]; weakPoint = `💰 ${crosssellMaxRule[0]}`; }
-            
+            if (crosssellMaxRule && crosssellMaxRule[1] > maxErrors) { weakPoint = `💰 ${crosssellMaxRule[0]}`; }
             return { city, count: d.count, avg: Math.round(d.sum/d.count), success: d.success, errors: d.errors, weakPoint };
         }).sort((a,b) => b.avg - a.avg);
 
@@ -1813,9 +1138,9 @@
         tbody.innerHTML = '';
         stats.forEach(c => {
             const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<b style="color: #1e2a3a;">${c.city}</b>`;
+            row.insertCell(0).innerHTML = `<strong>${esc(c.city)}</strong>`;
             row.insertCell(1).textContent = c.count;
-            row.insertCell(2).innerHTML = `<span style="color:${c.avg>=85?'#16a34a':c.avg>=70?'#f59e0b':'#dc2626'}; font-weight: 700;">${c.avg}%</span>`;
+            row.insertCell(2).innerHTML = `<span style="color:${c.avg>=85?'#16a34a':c.avg>=70?'#f59e0b':'#dc2626'}; font-weight:700;">${c.avg}%</span>`;
             row.insertCell(3).textContent = `${c.success}/${c.count}`;
             row.insertCell(4).textContent = c.errors;
             row.insertCell(5).innerHTML = `<span class="badge badge-red">${c.weakPoint}</span>`;
@@ -1836,20 +1161,12 @@
         if (search) filtered = filtered.filter(r => r.user_name.toLowerCase().includes(search));
         
         filteredData = filtered;
-        
-        const fTest = filteredData.filter(r => r.type === 'test').length;
-        const fTrainer = filteredData.filter(r => r.type === 'trainer').length;
-        const fCrosssell = filteredData.filter(r => r.type === 'crosssell').length;
-        const fErrorfinder = filteredData.filter(r => r.type === 'errorfinder').length;
-        const fClienttype = filteredData.filter(r => r.type === 'clienttype').length;
-        const fService = filteredData.filter(r => r.type === 'service').length;
-        const fFinalExam = filteredData.filter(r => r.type === 'final_exam').length;
-        
         document.getElementById('status').textContent = `✅ Показано: ${filteredData.length}`;
 
         renderDashboard();
         renderAlerts();
         renderTrendChart();
+        renderHardQuestions();
         renderCityStats();
     }
 
@@ -1861,13 +1178,16 @@
         const low = filteredData.filter(r => r.percent < 70).length;
         const success = filteredData.filter(r => r.percent >= 85).length;
         if (low > 0 && (low / total) > 0.3) {
-            container.innerHTML = `<div class="alert-box" style="display: block;"><strong>🚨 Внимание:</strong> ${low} сотрудников (${Math.round(low/total*100)}%) показали низкий результат.</div>`;
+            container.innerHTML = `<div class="alert-box" style="display:block;"><strong>🚨 Внимание:</strong> ${low} сотрудников (${Math.round(low/total*100)}%) показали низкий результат.</div>`;
         } else if (success / total > 0.7 && total > 2) {
-            container.innerHTML = `<div class="alert-box success" style="display: block;"><strong>🎉 Отлично!</strong> ${success} сотрудников (${Math.round(success/total*100)}%) успешно прошли тестирование.</div>`;
+            container.innerHTML = `<div class="alert-box success" style="display:block;"><strong>🎉 Отлично!</strong> ${success} сотрудников (${Math.round(success/total*100)}%) успешно прошли тестирование.</div>`;
         }
     }
 
     function renderDashboard() {
+        const actEl = document.getElementById('activitySparkline');
+        const avgSpEl = document.getElementById('avgSparkline');
+        
         if (!filteredData.length) {
             document.getElementById('mainTotal').textContent = '0';
             document.getElementById('mainAvg').textContent = '0%';
@@ -1877,7 +1197,8 @@
             document.getElementById('topList').innerHTML = '<div class="empty">📭 Нет данных</div>';
             document.getElementById('employeeList').innerHTML = '<div class="empty">📭 Нет данных</div>';
             document.getElementById('empCount').textContent = '0';
-            
+            if (actEl) actEl.innerHTML = '';
+            if (avgSpEl) avgSpEl.innerHTML = '';
             if (pieChart) { pieChart.destroy(); pieChart = null; }
             if (cityBarChart) { cityBarChart.destroy(); cityBarChart = null; }
             if (scoreBarChart) { scoreBarChart.destroy(); scoreBarChart = null; }
@@ -1887,86 +1208,46 @@
         const total = filteredData.length;
         const avg = Math.round(filteredData.reduce((s,r) => s + r.percent, 0) / total);
         const success = filteredData.filter(r => r.percent >= 85).length;
-        const errors = filteredData.reduce((s,r) => {
-            if (r.type === 'clienttype' || r.type === 'service') return s + (r.scenarios ? r.scenarios.filter(sc => !sc.isCorrect).length : 0);
-            else if (r.type === 'errorfinder') return s + (r.total - r.score);
-            else return s + (r.total - r.score);
-        }, 0);
+        const errors = filteredData.reduce((s,r) => s + (r.total - r.score), 0);
         
-        const testCount = filteredData.filter(r => r.type === 'test').length;
-        const trainerCount = filteredData.filter(r => r.type === 'trainer').length;
-        const crosssellCount = filteredData.filter(r => r.type === 'crosssell').length;
-        const errorfinderCount = filteredData.filter(r => r.type === 'errorfinder').length;
-        const clienttypeCount = filteredData.filter(r => r.type === 'clienttype').length;
-        const serviceCount = filteredData.filter(r => r.type === 'service').length;
-        const finalExamCount = filteredData.filter(r => r.type === 'final_exam').length;
-        const low = filteredData.filter(r => r.percent < 70).length;
-        const medium = total - success - low;
-
         document.getElementById('mainTotal').textContent = total;
         document.getElementById('mainAvg').textContent = avg + '%';
         document.getElementById('mainAvg').style.color = avg >= 85 ? '#16a34a' : avg >= 70 ? '#f59e0b' : '#dc2626';
-        document.getElementById('sTest').textContent = testCount;
-        document.getElementById('sTrainer').textContent = trainerCount;
-        document.getElementById('sCrosssell').textContent = crosssellCount;
-        document.getElementById('sErrorfinder').textContent = errorfinderCount;
-        document.getElementById('sClienttype').textContent = clienttypeCount;
-        document.getElementById('sService').textContent = serviceCount;
-        document.getElementById('sFinalExam').textContent = finalExamCount;
+        document.getElementById('sTest').textContent = filteredData.filter(r => r.type === 'test').length;
+        document.getElementById('sTrainer').textContent = filteredData.filter(r => r.type === 'trainer').length;
+        document.getElementById('sCrosssell').textContent = filteredData.filter(r => r.type === 'crosssell').length;
+        document.getElementById('sErrorfinder').textContent = filteredData.filter(r => r.type === 'errorfinder').length;
+        document.getElementById('sClienttype').textContent = filteredData.filter(r => r.type === 'clienttype').length;
+        document.getElementById('sService').textContent = filteredData.filter(r => r.type === 'service').length;
+        document.getElementById('sFinalExam').textContent = filteredData.filter(r => r.type === 'final_exam').length;
         document.getElementById('sSuccess').textContent = success;
         document.getElementById('sAvg').textContent = avg + '%';
-        document.getElementById('sLow').textContent = low;
+        document.getElementById('sLow').textContent = filteredData.filter(r => r.percent < 70).length;
         document.getElementById('sErrors').textContent = errors;
+
+        // ✨ Спарклайны
+        const series = getDailySeries();
+        if (actEl) actEl.innerHTML = series.counts.length >= 2 ? makeSparkline(series.counts, '#c41e3a') + '<span class="sparkline-label">активность по дням</span>' : '';
+        if (avgSpEl) avgSpEl.innerHTML = series.avgs.length >= 2 ? makeSparkline(series.avgs, '#d97706') + '<span class="sparkline-label">тренд балла</span>' : '';
 
         if (pieChart) pieChart.destroy();
         const pieCtx = document.getElementById('pieChart').getContext('2d');
-        if (total > 0) {
-            pieChart = new Chart(pieCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['✅ Успешно (≥85%)', '⚠️ Средне (70-84%)', '❌ Низкий (<70%)'],
-                    datasets: [{ 
-                        data: [success, medium, low], 
-                        backgroundColor: [
-                            'rgba(22, 163, 74, 0.85)', 
-                            'rgba(245, 158, 11, 0.85)', 
-                            'rgba(220, 38, 38, 0.85)'
-                        ], 
-                        borderColor: ['white', 'white', 'white'], 
-                        borderWidth: 3, 
-                        hoverOffset: 12 
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: true, 
-                    cutout: '65%', 
-                    plugins: { 
-                        legend: { 
-                            position: 'bottom', 
-                            labels: { 
-                                padding: 16, 
-                                font: { size: 12, weight: '600', family: 'Inter' }, 
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            } 
-                        } 
-                    } 
-                }
-            });
-        }
+        const low = filteredData.filter(r => r.percent < 70).length;
+        const medium = total - success - low;
+        pieChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['✅ Успешно (≥85%)', '⚠️ Средне (70-84%)', '❌ Низкий (<70%)'],
+                datasets: [{ data: [success, medium, low], backgroundColor: ['rgba(22,163,74,0.85)', 'rgba(245,158,11,0.85)', 'rgba(220,38,38,0.85)'], borderColor: document.body.classList.contains('dark') ? '#1e293b' : 'white', borderWidth: 3, hoverOffset: 12 }]
+            },
+            options: { responsive: true, maintainAspectRatio: true, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { padding: 16, font: { size: 12, weight: '600', family: 'Inter' }, usePointStyle: true } } } }
+        });
 
         const top5 = [...filteredData].filter(r => r.percent >= 85).sort((a,b) => b.percent - a.percent).slice(0,5);
         document.getElementById('topList').innerHTML = top5.length ? top5.map((r,i) => {
-            let badgeClass = 'badge-green';
-            if (r.type === 'trainer') badgeClass = 'badge-purple';
-            else if (r.type === 'crosssell') badgeClass = 'badge-gold';
-            else if (r.type === 'errorfinder') badgeClass = 'badge-blue';
-            else if (r.type === 'clienttype') badgeClass = 'badge-purple';
-            else if (r.type === 'service') badgeClass = 'badge-sky';
-            else if (r.type === 'final_exam') badgeClass = 'badge-violet';
-            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
-            return `<div class="employee-item" onclick="showDetails('${String(r.id).replace(/[^a-zA-Z0-9_-]/g, '_')}')"><span><b>${medal} ${i+1}.</b> ${r.user_name} <span style="color:#64748b; font-size:12px;">(${r.city})</span></span><span class="badge ${badgeClass}">${r.percent}%</span></div>`;
+            const t = getTypeInfo(r.type);
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+            return `<div class="employee-item" onclick="showDetails('${String(r.id).replace(/[^a-zA-Z0-9_-]/g, '_')}')"><span><b>${medal}</b> ${esc(r.user_name)} <span style="color:var(--text-4);font-size:12px;">(${esc(r.city)})</span></span><span class="badge ${t.label === 'Тренировка' ? 'badge-purple' : t.label === 'Допродажи' ? 'badge-gold' : 'badge-green'}">${r.percent}%</span></div>`;
         }).join('') : '<div class="empty">📭 Нет данных</div>';
 
         const cityMap = new Map();
@@ -1974,134 +1255,41 @@
             if (!cityMap.has(r.city)) cityMap.set(r.city, { sum: 0, count: 0 });
             const c = cityMap.get(r.city); c.sum += r.percent; c.count++;
         });
-        const cityRating = [...cityMap.entries()].map(([city, d]) => ({ city, avg: Math.round(d.sum/d.count), count: d.count })).sort((a,b) => b.avg - a.avg);
+        const cityRating = [...cityMap.entries()].map(([city, d]) => ({ city, avg: Math.round(d.sum/d.count) })).sort((a,b) => b.avg - a.avg);
 
         if (cityBarChart) cityBarChart.destroy();
         const cityCtx = document.getElementById('cityBarChart').getContext('2d');
-        if (cityCtx && cityRating.length > 0) {
+        if (cityRating.length > 0) {
             cityBarChart = new Chart(cityCtx, {
                 type: 'bar',
-                data: { 
-                    labels: cityRating.map(c => c.city.length > 20 ? c.city.substring(0, 20) + '...' : c.city), 
-                    datasets: [{ 
-                        label: 'Средний балл (%)', 
-                        data: cityRating.map(c => c.avg), 
-                        backgroundColor: cityRating.map(c => {
-                            if (c.avg >= 85) return 'rgba(22, 163, 74, 0.8)';
-                            if (c.avg >= 70) return 'rgba(245, 158, 11, 0.8)';
-                            return 'rgba(220, 38, 38, 0.8)';
-                        }), 
-                        borderRadius: 6, 
-                        borderSkipped: false 
-                    }] 
-                },
-                options: { 
-                    indexAxis: 'y', 
-                    responsive: true, 
-                    maintainAspectRatio: true, 
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1e2a3a',
-                            padding: 12,
-                            cornerRadius: 8,
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Средний балл: ' + context.parsed.x + '%';
-                                }
-                            }
-                        }
-                    }, 
-                    scales: { 
-                        x: { 
-                            beginAtZero: true, 
-                            max: 100, 
-                            ticks: { 
-                                callback: v => v + '%',
-                                color: '#64748b',
-                                font: { weight: '600' }
-                            },
-                            grid: { color: '#f1f5f9' }
-                        }, 
-                        y: { 
-                            grid: { display: false },
-                            ticks: { color: '#1e2a3a', font: { weight: '600' } }
-                        } 
-                    } 
-                }
+                data: { labels: cityRating.map(c => c.city.length > 18 ? c.city.substring(0, 18) + '…' : c.city), datasets: [{ data: cityRating.map(c => c.avg), backgroundColor: cityRating.map(c => c.avg >= 85 ? 'rgba(22,163,74,0.8)' : c.avg >= 70 ? 'rgba(245,158,11,0.8)' : 'rgba(220,38,38,0.8)'), borderRadius: 6 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(100,116,139,0.15)' } }, y: { grid: { display: false } } } }
             });
         }
 
         const bins = [0,0,0,0,0];
         filteredData.forEach(r => {
-            if (r.percent <= 20) bins[0]++;
-            else if (r.percent <= 40) bins[1]++;
-            else if (r.percent <= 60) bins[2]++;
-            else if (r.percent <= 80) bins[3]++;
-            else bins[4]++;
+            if (r.percent <= 20) bins[0]++; else if (r.percent <= 40) bins[1]++; else if (r.percent <= 60) bins[2]++; else if (r.percent <= 80) bins[3]++; else bins[4]++;
         });
         if (scoreBarChart) scoreBarChart.destroy();
         const scoreCtx = document.getElementById('scoreBarChart').getContext('2d');
-        if (scoreCtx) {
-            const gradient = scoreCtx.createLinearGradient(0, 0, 0, 220);
-            gradient.addColorStop(0, '#c41e3a');
-            gradient.addColorStop(1, '#8b1a2c');
-            
-            scoreBarChart = new Chart(scoreCtx, {
-                type: 'bar',
-                data: { 
-                    labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], 
-                    datasets: [{ 
-                        data: bins, 
-                        backgroundColor: gradient, 
-                        borderRadius: 6, 
-                        borderSkipped: false 
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: true, 
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1e2a3a',
-                            padding: 12,
-                            cornerRadius: 8
-                        }
-                    }, 
-                    scales: { 
-                        y: { 
-                            beginAtZero: true,
-                            ticks: { color: '#64748b', font: { weight: '600' } },
-                            grid: { color: '#f1f5f9' }
-                        }, 
-                        x: { 
-                            grid: { display: false },
-                            ticks: { color: '#1e2a3a', font: { weight: '600' } }
-                        } 
-                    } 
-                }
-            });
-        }
+        const sGradient = scoreCtx.createLinearGradient(0, 0, 0, 220);
+        sGradient.addColorStop(0, '#c41e3a'); sGradient.addColorStop(1, '#8b1a2c');
+        scoreBarChart = new Chart(scoreCtx, {
+            type: 'bar',
+            data: { labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'], datasets: [{ data: bins, backgroundColor: sGradient, borderRadius: 6 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(100,116,139,0.15)' } }, x: { grid: { display: false } } } }
+        });
 
         document.getElementById('empCount').textContent = filteredData.length;
         document.getElementById('employeeList').innerHTML = filteredData.map(r => {
-            let badgeClass = 'badge-green';
-            if (r.type === 'trainer') badgeClass = 'badge-purple';
-            else if (r.type === 'crosssell') badgeClass = 'badge-gold';
-            else if (r.type === 'errorfinder') badgeClass = 'badge-blue';
-            else if (r.type === 'clienttype') badgeClass = 'badge-purple';
-            else if (r.type === 'service') badgeClass = 'badge-sky';
-            else if (r.type === 'final_exam') badgeClass = 'badge-violet';
-            else if (r.percent < 70) badgeClass = 'badge-red';
-            else if (r.percent < 85) badgeClass = 'badge-yellow';
-            
+            const t = getTypeInfo(r.type);
+            let badgeClass = r.percent >= 85 ? 'badge-green' : r.percent >= 70 ? 'badge-yellow' : 'badge-red';
             const dateStr = new Date(r.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
             const safeId = String(r.id).replace(/[^a-zA-Z0-9_-]/g, '_');
-            
             return `<div class="employee-item" onclick="showDetails('${safeId}')">
-                <div style="flex:1;cursor:pointer;"><b>${r.user_name}</b> <span style="color:#64748b; font-size:12px; margin: 0 6px;">(${r.city})</span><span style="color:#94a3b8; font-size:11px;">${dateStr}</span> <span class="badge ${badgeClass}">${r.percent}%</span></div>
-                <button class="btn" style="padding:4px 12px; background:transparent; color:#dc2626; border:1px solid #fecaca; border-radius:6px; cursor:pointer; font-size:12px;" onclick="event.stopPropagation(); deleteRow('${safeId}')">✕</button>
+                <div style="flex:1;cursor:pointer;"><b>${esc(r.user_name)}</b> ${t.icon} <span style="color:var(--text-4);font-size:12px;">(${esc(r.city)}) ${dateStr}</span> <span class="badge ${badgeClass}">${r.percent}%</span></div>
+                <button class="btn" style="padding:4px 12px;background:transparent;color:#ef4444;border:1px solid rgba(239,68,68,0.4);border-radius:6px;font-size:12px;" onclick="event.stopPropagation(); deleteRow('${safeId}')">✕</button>
             </div>`;
         }).join('');
     }
@@ -2111,7 +1299,6 @@
         try {
             const record = allData.find(r => String(r.id) === String(id));
             if (!record) { alert('Запись не найдена'); return; }
-            
             let path = '';
             if (record.type === 'test') path = 'results/test';
             else if (record.type === 'trainer') path = 'results/dialog';
@@ -2120,7 +1307,6 @@
             else if (record.type === 'clienttype') path = 'results/clienttype';
             else if (record.type === 'service') path = 'results/service';
             else if (record.type === 'final_exam') path = 'results/final_exam';
-            
             if (path) {
                 const snapshot = await db.ref(path).get();
                 const data = snapshot.val();
@@ -2129,7 +1315,6 @@
                         const item = data[key];
                         if (item.user_name === record.user_name && item.date === record.date && item.percent === record.percent) {
                             await db.ref(`${path}/${key}`).remove();
-                            console.log('✅ Удалено из Firebase:', key);
                             break;
                         }
                     }
@@ -2137,96 +1322,63 @@
             }
             allData = allData.filter(r => String(r.id) !== String(id));
             applyFilters();
-            renderCityStats();
-        } catch (e) { console.error('Ошибка:', e); alert('Ошибка: ' + e.message); }
+        } catch (e) { alert('Ошибка: ' + e.message); }
     }
 
     function showDetails(id) {
         const emp = filteredData.find(r => String(r.id) === String(id));
-        if (!emp) {
-            console.log('Сотрудник не найден, id:', id);
-            return;
-        }
-        
-        let typeLabel = '📝 Тест';
-        if (emp.type === 'trainer') typeLabel = '🎯 Тренировка';
-        else if (emp.type === 'crosssell') typeLabel = '💰 Допродажи';
-        else if (emp.type === 'errorfinder') typeLabel = '🔍 Найди ошибку';
-        else if (emp.type === 'clienttype') typeLabel = '🎭 Адаптация';
-        else if (emp.type === 'service') typeLabel = '🤝 Сервис';
-        else if (emp.type === 'final_exam') typeLabel = '🎓 Аттестация';
-        
-        document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}% [${typeLabel}]`;
+        if (!emp) return;
+        const t = getTypeInfo(emp.type);
+        document.getElementById('modalTitle').textContent = `${emp.user_name} (${emp.city}) — ${emp.percent}% [${t.icon} ${t.label}]`;
         let html = `<div class="modal-summary">✅ Результат: ${emp.score} из ${emp.total} (${emp.percent}%)${emp.level ? `<br>🏆 Уровень: ${emp.level}` : ''}</div>`;
         
         if (emp.type === 'trainer') {
-            html += `<h4 style="margin:16px 0 12px; color:#1e2a3a;">Применённые правила:</h4>`;
+            html += `<div class="section-subtitle">Применённые правила:</div>`;
             TRAINER_RULES.forEach(rule => {
                 const applied = emp.rules_applied && emp.rules_applied.includes(rule.name);
-                html += `<div class="rule-item ${applied ? '' : 'failed'}"><div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>${!applied ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:6px;">📌 ${rule.rec}</div>` : ''}</div>`;
+                html += `<div class="rule-item ${applied ? '' : 'failed'}"><div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>${!applied ? `<div class="rule-status" style="color:#ef4444;margin-top:4px;">📌 ${rule.rec}</div>` : ''}</div>`;
             });
         } else if (emp.type === 'crosssell') {
-            html += `<h4 style="margin:16px 0 12px; color:#1e2a3a;">Применённые правила допродаж:</h4>`;
+            html += `<div class="section-subtitle">Применённые правила допродаж:</div>`;
             CROSSSELL_RULES.forEach(rule => {
                 const applied = emp.rules_applied && emp.rules_applied.includes(rule.name);
-                html += `<div class="rule-item ${applied ? '' : 'failed'}"><div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>${!applied ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:6px;">📌 ${rule.rec}</div>` : ''}</div>`;
+                html += `<div class="rule-item ${applied ? '' : 'failed'}"><div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>${!applied ? `<div class="rule-status" style="color:#ef4444;margin-top:4px;">📌 ${rule.rec}</div>` : ''}</div>`;
             });
-        } else if (emp.type === 'errorfinder') {
-            html += `<h4 style="margin:16px 0 12px; color:#1e2a3a;">Результаты по сценариям:</h4>`;
+        } else if (emp.type === 'errorfinder' || emp.type === 'clienttype') {
+            html += `<div class="section-subtitle">Результаты по сценариям:</div>`;
             if (emp.scenarios && emp.scenarios.length) {
                 emp.scenarios.forEach((s, idx) => {
-                    html += `<div class="rule-item ${s.percent >= 70 ? '' : 'failed'}"><div class="rule-name">${idx + 1}. ${s.scenario}</div><div class="rule-status">Найдено ошибок: ${s.score}/${s.maxScore} (Результат: ${s.percent}%)</div></div>`;
-                });
-            }
-        } else if (emp.type === 'clienttype') {
-            html += `<h4 style="margin:16px 0 12px; color:#1e2a3a;">Результаты по сценариям:</h4>`;
-            if (emp.scenarios && emp.scenarios.length) {
-                emp.scenarios.forEach((s, idx) => {
-                    html += `<div class="rule-item ${s.isCorrect ? '' : 'failed'}"><div class="rule-name">${idx + 1}. ${s.scenario}</div><div class="rule-status">${s.isCorrect ? '✅ Верно' : '❌ Неверно'}</div></div>`;
+                    const ok = emp.type === 'errorfinder' ? s.percent >= 70 : s.isCorrect;
+                    html += `<div class="rule-item ${ok ? '' : 'failed'}"><div class="rule-name">${idx + 1}. ${esc(s.scenario)}</div><div class="rule-status">${emp.type === 'errorfinder' ? `Найдено ошибок: ${s.score}/${s.maxScore} (${s.percent}%)` : (ok ? '✅ Верно' : '❌ Неверно')}</div></div>`;
                 });
             }
         } else if (emp.type === 'service') {
-            html += `<h4 style="margin:16px 0 12px; color:#1e2a3a;">Результаты по принципам сервиса:</h4>`;
+            html += `<div class="section-subtitle">Результаты по принципам сервиса:</div>`;
             if (emp.answers && emp.answers.length) {
-                const principlesMap = {};
-                emp.answers.forEach(a => {
-                    if (!principlesMap[a.principle]) principlesMap[a.principle] = { correct: 0, total: 0 };
-                    principlesMap[a.principle].total++;
-                    if (a.isCorrect) principlesMap[a.principle].correct++;
-                });
-                for (const [name, data] of Object.entries(principlesMap)) {
-                    const isStrong = data.correct === data.total;
-                    html += `<div class="rule-item ${isStrong ? '' : 'failed'}"><div class="rule-name">${isStrong ? '✅' : '❌'} ${name} (${data.correct}/${data.total})</div>${!isStrong ? `<div class="rule-status" style="color:#991b1b;font-size:12px;margin-top:6px;">Рекомендуем повторить этот принцип сервиса.</div>` : ''}</div>`;
+                const pm = {};
+                emp.answers.forEach(a => { if (!pm[a.principle]) pm[a.principle] = { correct: 0, total: 0 }; pm[a.principle].total++; if (a.isCorrect) pm[a.principle].correct++; });
+                for (const [name, data] of Object.entries(pm)) {
+                    const ok = data.correct === data.total;
+                    html += `<div class="rule-item ${ok ? '' : 'failed'}"><div class="rule-name">${ok ? '✅' : '❌'} ${esc(name)} (${data.correct}/${data.total})</div></div>`;
                 }
             }
         } else if (emp.type === 'final_exam') {
-            html += `<h4 style="margin:16px 0 12px; color:#1e2a3a;">Ответы и самооценка:</h4>`;
+            html += `<div class="section-subtitle">Ответы и самооценка:</div>`;
             if (emp.answers && emp.answers.length) {
                 emp.answers.forEach((a, idx) => {
-                    let evalText = '';
-                    let evalClass = '';
+                    let evalText = '❌ Мимо', evalClass = 'miss';
                     if (a.selfEval === 'perfect') { evalText = '✅ Попал в суть'; evalClass = 'perfect'; }
                     else if (a.selfEval === 'partial') { evalText = '🟡 Частично'; evalClass = 'partial'; }
-                    else { evalText = '❌ Мимо'; evalClass = 'miss'; }
-                    
-                    html += `<div class="exam-answer">
-                        <h4>${idx + 1}. ${a.principle}</h4>
-                        <div class="exam-situation">${a.situation || 'Ситуация'}</div>
-                        <div style="font-size:12px;color:#6b7280;margin-bottom:6px;"><strong>Ваш ответ:</strong></div>
-                        <div class="exam-user-answer">${a.userAnswer || 'Не указан'}</div>
-                        <div style="font-size:12px;color:#6b7280;margin:8px 0 6px;"><strong>Эталон:</strong></div>
-                        <div class="exam-etalon">${a.etalon || 'Не указан'}</div>
-                        <div class="exam-eval ${evalClass}">${evalText}</div>
-                    </div>`;
+                    html += `<div class="exam-answer"><h4>${idx + 1}. ${esc(a.principle)}</h4><div class="exam-situation">${esc(a.situation || 'Ситуация')}</div><div class="exam-user-answer">${esc(a.userAnswer || 'Не указан')}</div><div class="exam-etalon">${esc(a.etalon || 'Не указан')}</div><div class="exam-eval ${evalClass}">${evalText}</div></div>`;
                 });
             }
         } else {
             if (emp.answers && emp.answers.length) {
-                emp.answers.forEach((a) => {
+                emp.answers.forEach(a => {
                     const recIndex = (a.originalIndex !== undefined) ? a.originalIndex : ((a.questionNum || 1) - 1);
                     const rec = TEST_GENERAL_RECS[recIndex] || 'Изучите правильный ответ.';
-                    const correctAnswerHtml = a.correct ? '' : `<div class="correct-answer">✅ Правильный ответ: ${a.correctText}</div>`;
-                    html += `<div class="answer-item"><div class="q">Вопрос ${a.questionNum || '?'}: ${a.questionText}</div><div class="user-answer" style="color: ${a.correct ? '#16a34a' : '#dc2626'}">${a.correct ? '✅' : '❌'} Ваш ответ: ${a.selectedText}</div>${correctAnswerHtml}<div class="${a.correct ? 'rec' : 'rec-wrong'}">${a.correct ? '✅ Верно!' : '📌 ' + rec}</div></div>`;
+                    const correctHtml = a.correct ? '' : `<div class="correct-answer">✅ Правильный ответ: ${esc(a.correctText)}</div>`;
+                    html += `<div class="answer-item"><div class="q">Вопрос ${a.questionNum || '?'}: ${esc(a.questionText)}</div><div class="user-answer" style="color:${a.correct ? '#16a34a' : '#ef4444'}">${a.correct ? '✅' : '❌'} Ваш ответ: ${esc(a.selectedText)}</div>${correctHtml}<div class="${a.correct ? 'rec' : 'rec-wrong'}">${a.correct ? '✅ Верно!' : '📌 ' + rec}</div></div>`;
                 });
             }
         }
@@ -2236,12 +1388,14 @@
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
+    // ========== ФИДБЕК ==========
     function calculateCityTopics(cityData) {
         const testData = cityData.filter(r => r.type === 'test');
         const trainerData = cityData.filter(r => r.type === 'trainer');
         const crosssellData = cityData.filter(r => r.type === 'crosssell');
+        const topics = [];
         
-        const testTopicStats = TEST_TOPICS.map((topic, i) => {
+        TEST_TOPICS.forEach((topic, i) => {
             let correct = 0, total = 0;
             testData.forEach(r => {
                 if (r.answers) {
@@ -2249,81 +1403,68 @@
                     if (answer) { total++; if (answer.correct) correct++; }
                 }
             });
-            return { type: 'test', index: i, name: topic, correct, total, percent: total > 0 ? Math.round((correct/total)*100) : 0, rec: TEST_GENERAL_RECS[i] };
+            if (total > 0) topics.push({ type: 'test', name: topic, correct, total, percent: Math.round((correct/total)*100), rec: TEST_GENERAL_RECS[i] });
         });
         
-        const trainerTopicStats = TRAINER_RULES.map((rule) => {
-            let applied = 0, totalAttempts = 0;
-            trainerData.forEach(r => {
-                if (r.rules_applied) { totalAttempts++; if (r.rules_applied.includes(rule.name)) applied++; }
-            });
-            return { type: 'trainer', name: rule.name, correct: applied, total: totalAttempts, percent: totalAttempts > 0 ? Math.round((applied/totalAttempts)*100) : 0, rec: TRAINER_GENERAL_RECS[rule.id] };
+        TRAINER_RULES.forEach(rule => {
+            let applied = 0, total = 0;
+            trainerData.forEach(r => { if (r.rules_applied) { total++; if (r.rules_applied.includes(rule.name)) applied++; } });
+            if (total > 0) topics.push({ type: 'trainer', name: rule.name, correct: applied, total, percent: Math.round((applied/total)*100), rec: TRAINER_GENERAL_RECS[rule.id] });
         });
 
-        const crosssellTopicStats = CROSSSELL_RULES.map((rule) => {
-            let applied = 0, totalAttempts = 0;
-            crosssellData.forEach(r => {
-                if (r.rules_applied) { totalAttempts++; if (r.rules_applied.includes(rule.name)) applied++; }
-            });
-            return { type: 'crosssell', name: rule.name, correct: applied, total: totalAttempts, percent: totalAttempts > 0 ? Math.round((applied/totalAttempts)*100) : 0, rec: CROSSSELL_GENERAL_RECS[rule.id] };
+        CROSSSELL_RULES.forEach(rule => {
+            let applied = 0, total = 0;
+            crosssellData.forEach(r => { if (r.rules_applied) { total++; if (r.rules_applied.includes(rule.name)) applied++; } });
+            if (total > 0) topics.push({ type: 'crosssell', name: rule.name, correct: applied, total, percent: Math.round((applied/total)*100), rec: CROSSSELL_GENERAL_RECS[rule.id] });
         });
         
-        return [...testTopicStats, ...trainerTopicStats, ...crosssellTopicStats].filter(t => t.total > 0);
+        return topics;
     }
 
     function generateFeedback() {
         const city = document.getElementById('feedbackCitySelect').value;
         if (!city) { alert('Выберите город'); return; }
-        
         const cityData = allData.filter(r => r.city === city);
         if (!cityData.length) {
             document.getElementById('feedbackResult').innerHTML = '<div class="empty">📭 Нет данных по этому городу</div>';
             document.getElementById('feedbackActions').classList.remove('show');
             return;
         }
-        
         const total = cityData.length;
         const avg = Math.round(cityData.reduce((s,r) => s + r.percent, 0) / total);
         const success = cityData.filter(r => r.percent >= 85).length;
         const failed = cityData.filter(r => r.percent < 70).length;
-        const testCount = cityData.filter(r => r.type === 'test').length;
-        const trainerCount = cityData.filter(r => r.type === 'trainer').length;
-        const crosssellCount = cityData.filter(r => r.type === 'crosssell').length;
-        
         const allTopics = calculateCityTopics(cityData);
         const sorted = [...allTopics].sort((a,b) => b.percent - a.percent);
         const topStrong = sorted.slice(0, 5);
         const topWeak = sorted.slice(-4).reverse();
         
-        let html = `<div class="feedback-wrapper"><div class="feedback-header"><div><h3>🏙️ ${city}</h3><p>Детальный анализ сильных и слабых сторон</p></div><div class="feedback-stats"><div class="feedback-stat-pill">👥 ${total} прохождений</div><div class="feedback-stat-pill">📈 ${avg}% средний балл</div><div class="feedback-stat-pill">🏆 ${success}/${total} успешно</div></div></div>
-        <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
-            <span class="badge badge-blue">📝 Тестов: ${testCount}</span>
-            <span class="badge badge-purple">🎯 Тренировок: ${trainerCount}</span>
-            <span class="badge badge-gold">💰 Допродаж: ${crosssellCount}</span>
+        let html = `<div class="feedback-wrapper"><div class="feedback-header"><div><h3>🏙️ ${esc(city)}</h3><p>Детальный анализ сильных и слабых сторон</p></div><div class="feedback-stats"><div class="feedback-stat-pill">👥 ${total} прохождений</div><div class="feedback-stat-pill">📈 ${avg}% средний балл</div><div class="feedback-stat-pill">🏆 ${success}/${total} успешно</div></div></div>
+        <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+            <span class="badge badge-blue">📝 Тестов: ${cityData.filter(r=>r.type==='test').length}</span>
+            <span class="badge badge-purple">🎯 Тренировок: ${cityData.filter(r=>r.type==='trainer').length}</span>
+            <span class="badge badge-gold">💰 Допродаж: ${cityData.filter(r=>r.type==='crosssell').length}</span>
             ${failed > 0 ? `<span class="badge badge-red">🔴 Требуют внимания: ${failed}</span>` : ''}
         </div>`;
         
-        if (topStrong.length > 0) {
-            html += `<div class="feedback-section"><div class="feedback-section-title"><div class="icon" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534;">✅</div>Сильные стороны — темы, где продавцы отвечают правильно</div><div class="topics-grid">`;
+        if (topStrong.length) {
+            html += `<div class="feedback-section"><div class="feedback-section-title"><div class="icon" style="background:rgba(22,163,74,0.15);color:#16a34a;">✅</div>Сильные стороны</div><div class="topics-grid">`;
             topStrong.forEach((topic, i) => {
-                let icon = '📝'; if (topic.type === 'trainer') icon = '🎯'; else if (topic.type === 'crosssell') icon = '💰';
-                html += `<div class="topic-card strong"><div class="topic-rank">${i+1}</div><div class="topic-name">${icon} ${topic.name}</div><div class="topic-percent">${topic.percent}%</div><div class="topic-bar"><div class="topic-bar-fill" style="width: ${topic.percent}%"></div></div><div class="topic-details">Правильных ответов: ${topic.correct} из ${topic.total}</div></div>`;
+                const icon = topic.type === 'trainer' ? '🎯' : topic.type === 'crosssell' ? '💰' : '📝';
+                html += `<div class="topic-card strong"><div class="topic-rank">${i+1}</div><div class="topic-name">${icon} ${esc(topic.name)}</div><div class="topic-percent">${topic.percent}%</div><div class="topic-bar"><div class="topic-bar-fill" style="width:${topic.percent}%"></div></div><div class="topic-details">Правильно: ${topic.correct} из ${topic.total}</div></div>`;
             });
             html += `</div></div>`;
         }
         
-        if (topWeak.length > 0) {
-            html += `<div class="feedback-section"><div class="feedback-section-title"><div class="icon" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b;">⚠️</div>Зоны развития — темы, где чаще всего ошибаются</div><div class="topics-grid">`;
+        if (topWeak.length) {
+            html += `<div class="feedback-section"><div class="feedback-section-title"><div class="icon" style="background:rgba(220,38,38,0.15);color:#dc2626;">⚠️</div>Зоны развития</div><div class="topics-grid">`;
             topWeak.forEach((topic, i) => {
-                let icon = '📝'; if (topic.type === 'trainer') icon = '🎯'; else if (topic.type === 'crosssell') icon = '💰';
-                html += `<div class="topic-card weak"><div class="topic-rank">${i+1}</div><div class="topic-name">${icon} ${topic.name}</div><div class="topic-percent">${topic.percent}%</div><div class="topic-bar"><div class="topic-bar-fill" style="width: ${topic.percent}%"></div></div><div class="topic-details">Правильных ответов: ${topic.correct} из ${topic.total} (${100-topic.percent}% ошибок)</div></div>`;
+                const icon = topic.type === 'trainer' ? '🎯' : topic.type === 'crosssell' ? '💰' : '📝';
+                html += `<div class="topic-card weak"><div class="topic-rank">${i+1}</div><div class="topic-name">${icon} ${esc(topic.name)}</div><div class="topic-percent">${topic.percent}%</div><div class="topic-bar"><div class="topic-bar-fill" style="width:${topic.percent}%"></div></div><div class="topic-details">Правильно: ${topic.correct} из ${topic.total}</div></div>`;
             });
             html += `</div></div>`;
-        }
-        
-        if (topWeak.length > 0) {
-            html += `<div class="feedback-section"><div class="feedback-section-title"><div class="icon" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af;">💡</div>Общие рекомендации по зонам развития</div><div class="recommendations-list">`;
-            topWeak.forEach((topic, i) => { html += `<div class="rec-card"><div class="rec-card-title">📌 ${i+1}. ${topic.name}</div><div class="rec-card-text">${topic.rec}</div></div>`; });
+            html += `<div class="feedback-section"><div class="feedback-section-title"><div class="icon" style="background:rgba(59,130,246,0.15);color:#3b82f6;">💡</div>Рекомендации</div><div class="recommendations-list">`;
+            topWeak.forEach((topic, i) => { html += `<div class="rec-card"><div class="rec-card-title">📌 ${i+1}. ${esc(topic.name)}</div><div class="rec-card-text">${topic.rec}</div></div>`; });
             html += `</div></div>`;
         }
         html += `</div>`;
@@ -2337,45 +1478,32 @@
         if (!city) { alert('Сначала сгенерируйте фидбек'); return; }
         const cityData = allData.filter(r => r.city === city);
         if (!cityData.length) { alert('Нет данных'); return; }
-        
         const total = cityData.length;
         const avg = Math.round(cityData.reduce((s,r) => s + r.percent, 0) / total);
         const success = cityData.filter(r => r.percent >= 85).length;
-        const testData = cityData.filter(r => r.type === 'test');
-        const trainerData = cityData.filter(r => r.type === 'trainer');
-        const crosssellData = cityData.filter(r => r.type === 'crosssell');
-        
         const allTopics = calculateCityTopics(cityData);
         const sorted = [...allTopics].sort((a,b) => b.percent - a.percent);
         const topStrong = sorted.slice(0, 5);
         const topWeak = sorted.slice(-4).reverse();
         
         let text = `═══════════════════════════════════════\n📊 ФИДБЕК ПО РЕЗУЛЬТАТАМ ОБУЧЕНИЯ\n🏙️ ${city}\n📅 ${new Date().toLocaleDateString('ru-RU')}\n═══════════════════════════════════════\n\n`;
-        text += `📊 ОБЩАЯ СТАТИСТИКА\n• Всего прохождений: ${total}\n• Средний балл: ${avg}%\n• Успешно (≥85%): ${success} из ${total}\n• Тестов: ${testData.length} | Тренировок: ${trainerData.length} | Допродаж: ${crosssellData.length}\n\n`;
-        
-        if (topStrong.length > 0) {
+        text += `📊 ОБЩАЯ СТАТИСТИКА\n• Всего прохождений: ${total}\n• Средний балл: ${avg}%\n• Успешно (≥85%): ${success} из ${total}\n\n`;
+        if (topStrong.length) {
             text += `✅ СИЛЬНЫЕ СТОРОНЫ\n───────────────────────────────────────\n`;
-            topStrong.forEach((t, i) => {
-                let icon = '📝'; if (t.type === 'trainer') icon = '🎯'; else if (t.type === 'crosssell') icon = '💰';
-                text += `${i+1}. ${icon} ${t.name} — ${t.percent}% (${t.correct} из ${t.total})\n`;
-            });
+            topStrong.forEach((t, i) => { text += `${i+1}. ${t.name} — ${t.percent}%\n`; });
             text += `\n`;
         }
-        
-        if (topWeak.length > 0) {
+        if (topWeak.length) {
             text += `⚠️ ЗОНЫ РАЗВИТИЯ\n───────────────────────────────────────\n`;
-            topWeak.forEach((t, i) => {
-                let icon = '📝'; if (t.type === 'trainer') icon = '🎯'; else if (t.type === 'crosssell') icon = '💰';
-                text += `${i+1}. ${icon} ${t.name} — ${t.percent}% (${100-t.percent}% ошибок)\n`;
-            });
+            topWeak.forEach((t, i) => { text += `${i+1}. ${t.name} — ${t.percent}%\n`; });
             text += `\n💡 РЕКОМЕНДАЦИИ\n───────────────────────────────────────\n`;
             topWeak.forEach((t, i) => { text += `\n📌 ${i+1}. ${t.name}\n${t.rec}\n`; });
         }
         text += `\n═══════════════════════════════════════\n💎 585GOLD | Система обучения продавцов\n`;
         
-        navigator.clipboard.writeText(text).then(() => { alert('✅ Фидбек скопирован!\n\nТеперь вставьте его в WhatsApp, Telegram или email (Ctrl+V).'); })
+        navigator.clipboard.writeText(text).then(() => alert('✅ Фидбек скопирован!'))
         .catch(() => {
-            const textarea = document.createElement('textarea'); textarea.value = text; document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea); alert('✅ Фидбек скопирован!');
+            const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert('✅ Фидбек скопирован!');
         });
     }
 
@@ -2383,21 +1511,20 @@
         const content = document.getElementById('feedbackResult').innerHTML;
         if (!content) { alert('Сначала сгенерируйте фидбек'); return; }
         const city = document.getElementById('feedbackCitySelect').value;
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`<!DOCTYPE html><html><head><title>Фидбек — ${city}</title><style>body { font-family: 'Inter', sans-serif; padding: 20px; color: #1e2a3a; }.feedback-wrapper { max-width: 800px; margin: 0 auto; }.feedback-header { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }.feedback-header h3 { font-size: 22px; margin-bottom: 4px; }.feedback-stats { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }.feedback-stat-pill { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; }.feedback-section { margin-bottom: 24px; }.feedback-section-title { font-size: 16px; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; margin-bottom: 12px; }.topics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }.topic-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px; }.topic-card.strong { border-left: 4px solid #16a34a; background: #f0fdf4; }.topic-card.weak { border-left: 4px solid #dc2626; background: #fef2f2; }.topic-name { font-weight: 600; margin-bottom: 6px; }.topic-percent { font-size: 22px; font-weight: 700; margin-bottom: 6px; }.topic-card.strong .topic-percent { color: #16a34a; }.topic-card.weak .topic-percent { color: #dc2626; }.topic-details { font-size: 12px; color: #64748b; }.rec-card { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 10px; }.rec-card-title { font-weight: 700; color: #1e40af; margin-bottom: 4px; }.rec-card-text { color: #1e3a8a; font-size: 13px; }.topic-rank, .topic-bar { display: none; }@media print { body { padding: 0; } .no-print { display: none !important; } }</style></head><body><div class="no-print" style="margin-bottom: 20px; text-align: center;"><button onclick="window.print()" style="padding: 10px 24px; background: #c41e3a; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; margin: 0 4px;">🖨️ Печать / PDF</button><button onclick="window.close()" style="padding: 10px 24px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; margin: 0 4px;">Закрыть</button></div>${content}<div style="margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; padding-top: 16px;">585GOLD | ${new Date().toLocaleDateString('ru-RU')}</div></body></html>`);
-        printWindow.document.close();
+        const w = window.open('', '_blank');
+        w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Фидбек — ${city}</title><style>body{font-family:'Inter',sans-serif;padding:20px;color:#1e2a3a;}.feedback-wrapper{max-width:800px;margin:0 auto;}.feedback-header{background:linear-gradient(135deg,#c41e3a,#8b1a2c);color:#fff;padding:20px;border-radius:12px;margin-bottom:20px;}.feedback-header h3{font-size:22px;}.feedback-stats{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;}.feedback-stat-pill{background:rgba(255,255,255,0.2);padding:6px 14px;border-radius:20px;font-size:13px;}.feedback-section{margin-bottom:24px;}.feedback-section-title{font-size:16px;font-weight:700;margin-bottom:12px;}.topics-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}.topic-card{border:1.5px solid #e2e8f0;border-radius:10px;padding:14px;}.topic-card.strong{border-left:4px solid #16a34a;background:#f0fdf4;}.topic-card.weak{border-left:4px solid #dc2626;background:#fef2f2;}.topic-name{font-weight:600;margin-bottom:6px;}.topic-percent{font-size:22px;font-weight:700;}.topic-card.strong .topic-percent{color:#16a34a;}.topic-card.weak .topic-percent{color:#dc2626;}.topic-details{font-size:12px;color:#64748b;}.rec-card{background:#eff6ff;border-left:4px solid #3b82f6;padding:14px;border-radius:8px;margin-bottom:10px;}.rec-card-title{font-weight:700;color:#1e40af;margin-bottom:4px;}.rec-card-text{color:#1e3a8a;font-size:13px;}.topic-rank,.topic-bar{display:none;}</style></head><body><div style="margin-bottom:20px;text-align:center;"><button onclick="window.print()" style="padding:10px 24px;background:#c41e3a;color:#fff;border:none;border-radius:6px;cursor:pointer;margin:0 4px;">🖨️ Печать</button><button onclick="window.close()" style="padding:10px 24px;background:#64748b;color:#fff;border:none;border-radius:6px;cursor:pointer;margin:0 4px;">Закрыть</button></div>${content}<div style="margin-top:30px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;padding-top:16px;">💎 585GOLD | ${new Date().toLocaleDateString('ru-RU')}</div></body></html>`);
+        w.document.close();
     }
 
     function downloadFeedbackHTML() {
         const content = document.getElementById('feedbackResult').innerHTML;
         if (!content) { alert('Сначала сгенерируйте фидбек'); return; }
         const city = document.getElementById('feedbackCitySelect').value;
-        const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Фидбек — ${city}</title><style>body { font-family: 'Inter', sans-serif; padding: 24px; background: #f5f7fa; color: #1e2a3a; }.feedback-wrapper { max-width: 900px; margin: 0 auto; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }.feedback-header { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }.feedback-header h3 { font-size: 22px; margin-bottom: 4px; }.feedback-stats { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }.feedback-stat-pill { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; }.feedback-section { margin-bottom: 24px; }.feedback-section-title { font-size: 16px; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid #f1f5f9; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }.topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }.topic-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px; position: relative; }.topic-card.strong { border-left: 4px solid #16a34a; background: #f0fdf4; }.topic-card.weak { border-left: 4px solid #dc2626; background: #fef2f2; }.topic-rank { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }.topic-card.strong .topic-rank { background: #16a34a; }.topic-card.weak .topic-rank { background: #dc2626; }.topic-name { font-weight: 600; margin-bottom: 6px; padding-right: 30px; }.topic-percent { font-size: 22px; font-weight: 700; margin-bottom: 6px; }.topic-card.strong .topic-percent { color: #16a34a; }.topic-card.weak .topic-percent { color: #dc2626; }.topic-details { font-size: 12px; color: #64748b; }.rec-card { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 10px; }.rec-card-title { font-weight: 700; color: #1e40af; margin-bottom: 4px; }.rec-card-text { color: #1e3a8a; font-size: 13px; }</style></head><body>${content}<div style="margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px;">585GOLD | ${new Date().toLocaleDateString('ru-RU')}</div></body></html>`;
+        const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Фидбек — ${city}</title><style>body{font-family:'Inter',sans-serif;padding:24px;background:#f5f7fa;color:#1e2a3a;}.feedback-wrapper{max-width:900px;margin:0 auto;background:#fff;padding:24px;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,0.08);}.feedback-header{background:linear-gradient(135deg,#c41e3a,#8b1a2c);color:#fff;padding:20px;border-radius:12px;margin-bottom:20px;}.feedback-header h3{font-size:22px;}.feedback-stats{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;}.feedback-stat-pill{background:rgba(255,255,255,0.2);padding:6px 14px;border-radius:20px;font-size:13px;}.feedback-section{margin-bottom:24px;}.feedback-section-title{font-size:16px;font-weight:700;margin-bottom:12px;}.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}.topic-card{border:1.5px solid #e2e8f0;border-radius:10px;padding:14px;position:relative;}.topic-card.strong{border-left:4px solid #16a34a;background:#f0fdf4;}.topic-card.weak{border-left:4px solid #dc2626;background:#fef2f2;}.topic-rank{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}.topic-card.strong .topic-rank{background:#16a34a;}.topic-card.weak .topic-rank{background:#dc2626;}.topic-name{font-weight:600;margin-bottom:6px;padding-right:30px;}.topic-percent{font-size:22px;font-weight:700;margin-bottom:6px;}.topic-card.strong .topic-percent{color:#16a34a;}.topic-card.weak .topic-percent{color:#dc2626;}.topic-details{font-size:12px;color:#64748b;}.rec-card{background:#eff6ff;border-left:4px solid #3b82f6;padding:14px;border-radius:8px;margin-bottom:10px;}.rec-card-title{font-weight:700;color:#1e40af;margin-bottom:4px;}.rec-card-text{color:#1e3a8a;font-size:13px;}</style></head><body>${content}<div style="margin-top:30px;text-align:center;color:#94a3b8;font-size:12px;">💎 585GOLD | ${new Date().toLocaleDateString('ru-RU')}</div></body></html>`;
         const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url;
-        const safeName = city.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_');
-        a.download = `feedback_${safeName}_${new Date().toISOString().slice(0,10)}.html`;
+        a.download = `feedback_${city.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_')}_${new Date().toISOString().slice(0,10)}.html`;
         a.click(); URL.revokeObjectURL(url);
     }
 
@@ -2405,16 +1532,9 @@
         if (!filteredData.length) return alert('Нет данных');
         let csv = "Тип,Имя,Город,Правильных,Всего,Процент\n";
         filteredData.forEach(r => {
-            let typeLabel = 'Тест';
-            if (r.type === 'trainer') typeLabel = 'Тренировка';
-            else if (r.type === 'crosssell') typeLabel = 'Допродажи';
-            else if (r.type === 'errorfinder') typeLabel = 'Найди ошибку';
-            else if (r.type === 'clienttype') typeLabel = 'Адаптация';
-            else if (r.type === 'service') typeLabel = 'Сервис';
-            else if (r.type === 'final_exam') typeLabel = 'Аттестация';
-            csv += `"${typeLabel}","${r.user_name}","${r.city}",${r.score},${r.total},${r.percent}%\n`;
+            csv += `"${getTypeInfo(r.type).label}","${r.user_name}","${r.city}",${r.score},${r.total},${r.percent}%\n`;
         });
-        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'results.csv'; a.click();
     }
 
@@ -2427,7 +1547,7 @@
         const stats = [...map.entries()].map(([city, d]) => ({ city, count: d.count, avg: Math.round(d.sum/d.count), success: d.success, errors: d.errors })).sort((a,b) => b.avg - a.avg);
         let csv = "Город,Сотрудников,Средний балл,Успешно,Ошибок\n";
         stats.forEach(c => csv += `"${c.city}",${c.count},${c.avg}%,${c.success}/${c.count},${c.errors}\n`);
-        const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv'});
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'city_stats.csv'; a.click();
     }
 
