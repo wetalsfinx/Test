@@ -1285,7 +1285,7 @@
         document.getElementById('employeeList').innerHTML = filteredData.map(r => {
             const t = getTypeInfo(r.type);
             let badgeClass = r.percent >= 85 ? 'badge-green' : r.percent >= 70 ? 'badge-yellow' : 'badge-red';
-            const dateStr = new Date(r.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const dateStr = new Date(r.date).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             const safeId = String(r.id).replace(/[^a-zA-Z0-9_-]/g, '_');
             return `<div class="employee-item" onclick="showDetails('${safeId}')">
                 <div style="flex:1;cursor:pointer;"><b>${esc(r.user_name)}</b> ${t.icon} <span style="color:var(--text-4);font-size:12px;">(${esc(r.city)}) ${dateStr}</span> <span class="badge ${badgeClass}">${r.percent}%</span></div>
