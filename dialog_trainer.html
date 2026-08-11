@@ -5,384 +5,233 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>585GOLD | Тренировка диалога</title>
     
-    <!-- 🔥 ПОДКЛЮЧЕНИЕ FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
-        * { box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: 'Inter', sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
+            background: linear-gradient(135deg, #fef5f5 0%, #fff5f5 50%, #fef9f0 100%);
+            min-height: 100vh; padding: 20px; position: relative; overflow-x: hidden;
         }
-        .main-container { max-width: 900px; margin: 0 auto; }
+        body::before { content: ''; position: fixed; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(196,30,58,0.08) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: float 20s ease-in-out infinite; }
+        body::after { content: ''; position: fixed; bottom: -30%; left: -10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: float 25s ease-in-out infinite reverse; }
+        @keyframes float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px,-30px); } }
         
-        .employee-view {
-            background: white;
-            border-radius: 24px;
-            padding: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            animation: slideIn 0.5s ease;
+        .container { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+        
+        .header {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
+            border-radius: 32px; padding: 40px 32px; margin-bottom: 24px;
+            box-shadow: 0 20px 60px rgba(196,30,58,0.3);
+            position: relative; overflow: hidden; animation: slideDown 0.6s ease;
         }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .header::before { content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%); border-radius: 50%; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .logo-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            color: white; margin-bottom: 16px; position: relative; z-index: 1;
+        }
+        h1 { color: white; text-align: center; font-size: 36px; font-weight: 900; margin-bottom: 12px; position: relative; z-index: 1; }
+        .subtitle { text-align: center; color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 500; position: relative; z-index: 1; }
+        
+        .card {
+            background: white; border-radius: 28px; padding: 40px; margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08); animation: slideUp 0.6s ease;
+            border: 1px solid rgba(229,231,235,0.5);
         }
         
-        .header { text-align: center; margin-bottom: 32px; }
-        .header h1 {
-            color: #c41e3a;
-            margin: 0 0 8px 0;
-            font-size: 32px;
-            font-weight: 800;
+        .form-group { margin-bottom: 24px; }
+        .form-group label { font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #1f2937; font-size: 15px; }
+        .form-group label::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #c41e3a 0%, #d4af37 100%); border-radius: 2px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 18px 24px; border-radius: 16px; border: 2px solid #e5e7eb;
+            font-size: 16px; background: #f9fafb; transition: all 0.3s; font-family: 'Inter', sans-serif; font-weight: 500;
         }
-        .header p { color: #6b7280; font-size: 16px; margin: 0; }
-        
-        .register-form {
-            background: #f9fafb;
-            border-radius: 20px;
-            padding: 32px;
-            margin-bottom: 24px;
-        }
-        .register-form input, .register-form select {
-            width: 100%;
-            padding: 16px 20px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 16px;
-            margin-bottom: 16px;
-            transition: all 0.3s;
-            font-family: 'Inter', sans-serif;
-        }
-        .register-form input:focus, .register-form select:focus {
-            outline: none;
-            border-color: #c41e3a;
-            box-shadow: 0 0 0 4px rgba(196,30,58,0.1);
-        }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #c41e3a; background: white; box-shadow: 0 0 0 4px rgba(196,30,58,0.1); transform: translateY(-2px); }
         
         .btn-primary {
-            width: 100%;
-            padding: 18px 32px;
-            border: none;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: #c41e3a;
-            color: white;
-            font-family: 'Inter', sans-serif;
+            width: 100%; padding: 20px 32px; border: none; border-radius: 20px; font-size: 17px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
+            color: white; font-family: 'Inter', sans-serif; margin-top: 12px; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(196,30,58,0.3);
         }
-        .btn-primary:hover { background: #a0162e; transform: translateY(-2px); }
-        .btn-primary:disabled { background: #d1d5db; cursor: not-allowed; transform: none; }
+        .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.5s; }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(196,30,58,0.4); }
+        .btn-primary:disabled { background: #d1d5db; cursor: not-allowed; transform: none; box-shadow: none; }
         
-        .game-container {
-            background: white;
-            border-radius: 24px;
-            overflow: hidden;
-            margin-top: 16px;
-        }
+        .progress-container { margin-bottom: 28px; }
+        .progress-text { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #6b7280; }
+        .progress-text .current { color: #c41e3a; font-size: 16px; }
+        .progress-bar { width: 100%; height: 8px; background: #f3f4f6; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #c41e3a 0%, #d4af37 100%); border-radius: 10px; transition: width 0.5s ease; position: relative; overflow: hidden; }
+        .progress-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 2s infinite; }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         
-        .progress-indicator { 
-            display: flex; 
-            justify-content: center; 
-            gap: 8px; 
-            padding: 20px 24px 0 24px; 
+        .question-wrapper {
+            display: flex; align-items: flex-start; gap: 20px; padding: 28px;
+            background: linear-gradient(135deg, #fef5f5 0%, #fff 100%);
+            border-radius: 24px; border-left: 6px solid #c41e3a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 24px; animation: questionAppear 0.5s ease;
         }
-        .dot { 
-            width: 12px; 
-            height: 12px; 
-            border-radius: 50%; 
-            background: #e5e7eb; 
-            transition: 0.3s; 
-        }
-        .dot.active { background: #c41e3a; transform: scale(1.2); }
-        .dot.done { background: #10b981; }
-        .dot.failed { background: #ef4444; }
+        @keyframes questionAppear { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        .chat-area { 
-            padding: 24px; 
-            background: #f9fafb; 
+        .question-icon {
+            flex-shrink: 0; width: 72px; height: 72px; border-radius: 50%;
+            background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%);
+            display: flex; align-items: center; justify-content: center; font-size: 36px;
+            box-shadow: 0 8px 24px rgba(196,30,58,0.3), inset 0 2px 8px rgba(255,255,255,0.2);
+            position: relative; animation: iconPulse 2s ease-in-out infinite;
         }
-        .client-message {
-            background: white;
-            padding: 16px 20px;
-            border-radius: 20px;
-            font-size: 16px;
-            color: #1f2937;
-            border-left: 4px solid #c41e3a;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .question-icon::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
+        @keyframes iconPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05) rotate(2deg); } }
         
-        .applied-rules {
-            background: #fff1f2;
-            border-radius: 16px;
-            padding: 16px 20px;
-            margin: 0 24px 24px 24px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid #fecdd3;
-        }
-        .applied-rules > span:first-child {
-            font-weight: 600;
-            color: #9f1239;
-            font-size: 14px;
-            width: 100%;
-            margin-bottom: 4px;
-        }
-        .applied-rule { 
-            background: white; 
-            color: #c41e3a; 
-            padding: 6px 14px; 
-            border-radius: 20px; 
-            font-size: 13px; 
-            font-weight: 600;
-            border: 1px solid #fecdd3;
-        }
+        .question-content { flex: 1; padding-top: 8px; }
+        .question-label { font-size: 12px; font-weight: 700; color: #c41e3a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .question-label::before { content: ''; width: 20px; height: 2px; background: linear-gradient(90deg, #c41e3a 0%, #d4af37 100%); }
+        .question-text { font-weight: 700; font-size: 19px; line-height: 1.6; color: #1f2937; }
         
-        .choices-area { 
-            padding: 0 24px 24px 24px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-        }
+        .applied-wrap { background: linear-gradient(135deg, #fff1f2, #fff); border: 1px solid #fecdd3; border-radius: 16px; padding: 14px 18px; margin-bottom: 24px; }
+        .applied-title { font-size: 12px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
+        .applied-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .applied-rule { background: linear-gradient(135deg, #c41e3a, #8b1a2c); color: white; padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; animation: chipIn 0.3s ease; }
+        .applied-empty { color: #9f1239; font-size: 13px; }
+        @keyframes chipIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
         
-        .choice-btn {
-            display: flex;
-            align-items: flex-start;
-            width: 100%;
-            text-align: left;
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 15px;
-            line-height: 1.5;
-            color: #374151;
-            font-family: 'Inter', sans-serif;
+        .option {
+            background: white; border: 2px solid #e5e7eb; border-radius: 20px; padding: 24px; margin-bottom: 16px;
+            cursor: pointer; font-size: 16px; line-height: 1.6; color: #374151; transition: all 0.3s;
+            display: flex; align-items: flex-start; position: relative; overflow: hidden;
         }
-        .choice-btn:hover {
-            border-color: #c41e3a;
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(196,30,58,0.1);
+        .option::before { content: ''; position: absolute; top: 0; left: 0; width: 0; height: 100%; background: linear-gradient(90deg, rgba(196,30,58,0.05) 0%, transparent 100%); transition: width 0.3s; }
+        .option:hover::before { width: 100%; }
+        .option:hover { border-color: #c41e3a; transform: translateX(8px); box-shadow: 0 8px 24px rgba(196,30,58,0.12); }
+        .option.selected { background: linear-gradient(135deg, #fff1f2 0%, #fff 100%); color: #9f1239; border-color: #c41e3a; box-shadow: 0 8px 24px rgba(196,30,58,0.2); transform: translateX(8px); }
+        .option-letter {
+            display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px;
+            border-radius: 12px; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); color: #4b5563;
+            font-weight: 800; margin-right: 16px; font-size: 15px; flex-shrink: 0; transition: all 0.3s;
         }
-        .choice-btn.selected {
-            border-color: #c41e3a;
-            background: #fff1f2;
-            box-shadow: 0 4px 16px rgba(196,30,58,0.15);
-        }
-        .choice-btn.correct {
-            border-color: #10b981;
-            background: #d1fae5;
-        }
-        .choice-btn.wrong {
-            border-color: #ef4444;
-            background: #fee2e2;
-            opacity: 0.7;
-        }
+        .option.selected .option-letter { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; }
+        .option-text { flex: 1; padding-top: 6px; }
         
-        .option-label {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: #c41e3a;
-            color: white;
-            font-weight: 700;
-            margin-right: 12px;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
+        .hidden { display: none; }
         
-        .next-area { 
-            padding: 0 24px 24px 24px; 
-        }
-        .next-btn {
-            width: 100%;
-            padding: 18px 32px;
-            border: none;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: #d97706;
-            color: white;
-            font-family: 'Inter', sans-serif;
-        }
-        .next-btn:hover { background: #b45309; transform: translateY(-2px); }
-        .next-btn:disabled { background: #d1d5db; cursor: not-allowed; transform: none; }
-        
-        .result-card { 
-            padding: 28px; 
-            margin: 0 24px 24px 24px; 
-            border-radius: 20px; 
-            border: 2px solid #e5e7eb;
-            animation: slideUp 0.5s ease;
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .result-card.success { background: #d1fae5; border-color: #10b981; }
-        .result-card.loss { background: #fee2e2; border-color: #ef4444; }
-        
-        .result-card h2 {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 12px;
-            text-align: center;
-        }
+        .result-card { border-radius: 32px; padding: 48px 40px; text-align: center; animation: scaleIn 0.6s ease; border: 3px solid #e5e7eb; background: white; position: relative; overflow: hidden; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .result-card.success { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: #10b981; }
+        .result-card.fail { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-color: #ef4444; }
+        .result-icon { font-size: 80px; margin-bottom: 24px; display: block; animation: bounce 0.6s ease; }
+        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .result-card h2 { font-size: 36px; font-weight: 900; margin-bottom: 20px; }
         .result-card.success h2 { color: #065f46; }
-        .result-card.loss h2 { color: #991b1b; }
+        .result-card.fail h2 { color: #991b1b; }
+        .result-stats { display: flex; justify-content: center; gap: 24px; margin: 32px 0; flex-wrap: wrap; }
+        .stat-box { background: white; padding: 24px 32px; border-radius: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); min-width: 140px; }
+        .stat-value { font-size: 36px; font-weight: 900; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; color: #6b7280; font-weight: 600; }
+        .result-card.success .stat-value { color: #10b981; }
+        .result-card.fail .stat-value { color: #ef4444; }
+        .result-card p { font-size: 17px; color: #4b5563; margin-bottom: 12px; font-weight: 500; }
         
-        .rec-section { 
-            margin-top: 16px; 
-            text-align: left; 
-        }
-        .rec-section h4 { 
-            color: #991b1b; 
-            font-size: 15px; 
-            margin-bottom: 12px; 
-            text-align: center; 
-            font-weight: 700;
-        }
-        .rec-item { 
-            background: white; 
-            border-radius: 12px; 
-            padding: 16px; 
-            margin-bottom: 10px; 
-            border-left: 4px solid #ef4444; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .rec-item .rec-rule { 
-            font-weight: 600; 
-            font-size: 14px; 
-            color: #1f2937; 
-            margin-bottom: 6px;
-        }
-        .rec-item .rec-tip { 
-            font-size: 13px; 
-            color: #6b7280; 
-            line-height: 1.5;
-        }
-        .rec-perfect { 
-            text-align: center; 
-            padding: 16px; 
-            background: white; 
-            border-radius: 12px; 
-            color: #065f46; 
-            margin-top: 12px; 
-            font-weight: 600;
-        }
+        .rec-section { margin-top: 40px; text-align: left; border-top: 3px dashed #e5e7eb; padding-top: 32px; }
+        .rec-section h3 { color: #1f2937; font-size: 22px; font-weight: 800; margin-bottom: 24px; text-align: center; }
+        .rec-item { background: white; border-radius: 20px; padding: 28px; margin-bottom: 20px; border-left: 6px solid #ef4444; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        .rec-item-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
+        .rec-item-icon { flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .rec-item .rec-q { font-weight: 700; font-size: 16px; color: #1f2937; line-height: 1.5; flex: 1; }
+        .rec-item .rec-tip { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 16px 20px; border-radius: 16px; font-size: 15px; color: #92400e; border-left: 4px solid #d97706; line-height: 1.6; font-weight: 500; }
+        .rec-perfect { text-align: center; padding: 40px 32px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 24px; color: #065f46; margin-top: 32px; font-weight: 800; font-size: 20px; border: 3px solid #10b981; }
         
+        .save-status { font-size: 15px; font-weight: 700; margin-top: 24px; text-align: center; padding: 16px; border-radius: 12px; }
         .restart-btn {
-            background: #c41e3a;
-            color: white;
-            border: none;
-            border-radius: 16px;
-            padding: 18px 32px;
-            font-size: 16px;
-            margin: 0 24px 24px 24px;
-            width: calc(100% - 48px);
-            cursor: pointer;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s;
+            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; border: none; border-radius: 20px;
+            padding: 20px 32px; font-size: 17px; margin-top: 32px; width: 100%; cursor: pointer; font-weight: 800;
+            font-family: 'Inter', sans-serif; transition: all 0.3s; box-shadow: 0 10px 30px rgba(196,30,58,0.3);
         }
-        .restart-btn:hover { background: #a0162e; transform: translateY(-2px); }
-        
-        .current-user {
-            background: #fff1f2;
-            padding: 10px 20px;
-            border-radius: 30px;
-            display: inline-block;
-            margin-bottom: 16px;
-            color: #c41e3a;
-            font-weight: 700;
-            font-size: 14px;
-            border: 1px solid #fecdd3;
-        }
-        .save-status { 
-            font-size: 14px; 
-            font-weight: 600; 
-            margin-top: 10px; 
-            text-align: center; 
-        }
+        .restart-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(196,30,58,0.4); }
         
         @media (max-width: 600px) {
             body { padding: 12px; }
-            .employee-view { padding: 20px; }
-            .header h1 { font-size: 24px; }
-            .choice-btn { font-size: 14px; padding: 16px; }
-            .next-btn, .btn-primary, .restart-btn { padding: 16px 20px; font-size: 15px; }
+            .header { padding: 32px 24px; }
+            h1 { font-size: 28px; }
+            .card { padding: 28px 20px; }
+            .question-wrapper { flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 24px 20px; }
+            .question-icon { width: 64px; height: 64px; font-size: 32px; }
+            .question-label { justify-content: center; }
+            .question-text { font-size: 17px; }
+            .option { padding: 20px 16px; font-size: 15px; }
+            .result-stats { flex-direction: column; gap: 16px; }
+            .stat-box { width: 100%; }
+            .result-card { padding: 32px 24px; }
+            .rec-item-header { flex-direction: column; }
         }
+        
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+<div class="container" id="app">
+    <div class="header">
+        <div class="logo-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7.5 3h9L21 9l-9 12L3 9l4.5-6z" fill="#ffffff"/><path d="M3 9H21M12 21L8 9M12 21L16 9M7.5 3L8 9M16.5 3L16 9" stroke="rgba(196,30,58,0.35)" stroke-width="1"/></svg> 585GOLD | Тренировка диалога</div>
+        <h1>Диалог с клиентом</h1>
+        <p class="subtitle">Примените все 6 правил продажи в живом диалоге</p>
+    </div>
 
-<div class="main-container">
-    <div class="employee-view">
-        <div class="header">
-            <h1>🎯 585GOLD | Тренировка диалога</h1>
-            <p>Пройди диалог с клиентом, применяя стандарты продаж</p>
+    <div id="regScreen" class="card">
+        <div class="form-group">
+            <label>Имя и фамилия</label>
+            <input type="text" id="userName" placeholder="Например: Иванова Анна" autocomplete="off">
         </div>
-        
-        <div class="register-form" id="registerForm">
-            <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
+        <div class="form-group">
+            <label>Город</label>
             <select id="userCity">
-    <option value="">Выберите город</option>
-    <option value="Тюмень">Тюмень</option>
-    <option value="Москва, Локомотивный, 4">Москва, Локомотивный, 4</option>
-    <option value="Москва, Новоясеневский, 2">Москва, Новоясеневский, 2</option>
-    <option value="Челябинск">Челябинск</option>
-    <option value="Архангельск">Архангельск</option>
-    <option value="Оренбург">Оренбург</option>
-    <option value="Псков">Псков</option>
-</select>
-            <button class="btn-primary" id="startGameBtn">🚀 Начать диалог</button>
+                <option value="">Выберите город</option>
+                <option value="Тюмень">Тюмень</option>
+                <option value="Москва, Локомотивный, 4">Москва, Локомотивный, 4</option>
+                <option value="Москва, Новоясеневский, 2">Москва, Новоясеневский, 2</option>
+                <option value="Челябинск">Челябинск</option>
+                <option value="Архангельск">Архангельск</option>
+                <option value="Оренбург">Оренбург</option>
+                <option value="Псков">Псков</option>
+            </select>
         </div>
-        
-        <div id="currentUserDisplay" class="current-user" style="display: none;"></div>
-        
-        <div id="gameContainer" style="display: none;">
-            <div class="game-container">
-                <div class="progress-indicator" id="progressDots"></div>
-                <div class="chat-area" id="chatArea"></div>
-                <div class="applied-rules">
-                    <span>🏆 Применённые правила:</span>
-                    <span id="emptyRulesMsg" style="color: #9f1239; font-size: 13px;">(пока ни одного)</span>
-                    <div id="appliedRulesList" style="display: flex; flex-wrap: wrap; gap: 6px; width: 100%; margin-top: 4px;"></div>
+        <button class="btn-primary" id="startGameBtn">🚀 Начать диалог</button>
+    </div>
+
+    <div id="quizScreen" class="hidden">
+        <div class="card">
+            <div class="progress-container">
+                <div class="progress-text">
+                    <span>Ситуация <span class="current" id="qNum">1</span> из <span id="qTotal">6</span></span>
+                    <span id="progressPercent">0%</span>
                 </div>
-                <div class="choices-area" id="choicesArea"></div>
-                <div class="next-area" id="nextArea">
-                    <button class="next-btn" id="nextBtn" disabled>Далее ➡️</button>
-                </div>
-                <div class="result-card" id="resultCard" style="display: none;"></div>
-                <div id="saveStatus" class="save-status"></div>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
             </div>
+            <div id="questionContainer"></div>
+            <div class="applied-wrap">
+                <span class="applied-title">🏆 Применённые правила</span>
+                <div class="applied-list" id="appliedRulesList"><span class="applied-empty">(пока ни одного)</span></div>
+            </div>
+            <div id="optionsContainer"></div>
+            <button class="btn-primary" id="nextBtn" style="margin-top: 24px;" disabled>➡️ Далее</button>
         </div>
     </div>
+
+    <div id="resultScreen" class="hidden"></div>
 </div>
 
 <script>
-    // ========== 🔥 ИНИЦИАЛИЗАЦИЯ FIREBASE ==========
     const firebaseConfig = {
         apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
         authDomain: "gold-8105a.firebaseapp.com",
@@ -395,44 +244,38 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ========== 🔄 АВТОМАТИЧЕСКАЯ ДОЗАГРУЗКА НЕСОХРАНЁННЫХ РЕЗУЛЬТАТОВ ==========
     window.addEventListener('load', async () => {
         const backup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
         if (backup.length > 0) {
-            console.log(`🔄 Найдено ${backup.length} несохранённых результатов диалога. Отправляем в Firebase...`);
             for (let result of backup) {
                 try {
                     const newRef = db.ref('results/dialog').push();
                     await newRef.set(result);
-                    console.log('✅ Отправлено из бэкапа:', result.user_name);
-                } catch(e) {
-                    console.error('❌ Ошибка дозагрузки из бэкапа:', e.message);
-                }
+                } catch(e) { console.error('❌ Ошибка дозагрузки:', e.message); }
             }
             localStorage.removeItem('dialog_backup');
-            console.log('✅ Все локальные результаты диалога отправлены в Firebase!');
         }
     });
 
+    // ⚠️ Названия правил ТОЧНО совпадают с дашбордом (TRAINER_RULES)
     const ALL_RULES = [
-        { id: "initiative", name: "Проявляй инициативу", rec: "Через 20-30 секунд подойди и спроси: «Какое изделие выбираете? Для себя или в подарок?»" },
-        { id: "askBeforeShow", name: "Задавай вопросы ДО показа", rec: "Сначала спроси «для какого случая?», «кто получатель?». Только потом показывай украшения." },
-        { id: "emotionalHPW", name: "Презентуй с эмоцией (ХПВ)", rec: "Привязывай украшение к событию: «Это кольцо будет напоминать о вашей годовщине...»" },
-        { id: "fittingOffer", name: "Предлагай примерку через «Давайте»", rec: "Всегда предлагай примерку фразой «Давайте примерим»." },
-        { id: "alternative", name: "Не отпускай без альтернативы", rec: "Если нет размера — сразу покажи похожие варианты и каталог заказов." },
-        { id: "warmClosing", name: "Завершай с теплотой", rec: "«Спасибо, что зашли! Если будете выбирать подарки — заходите...»" }
+        { id: "initiative", name: "Проявляй инициативу", icon: "🏃", label: "Инициатива", rec: "Не ждите, пока клиент сам позовёт. Через 20-30 секунд подойдите и спросите: «Какое изделие выбираете? Для себя или в подарок?»" },
+        { id: "askBeforeShow", name: "Задавай вопросы ДО показа", icon: "❓", label: "Вопросы до показа", rec: "Сначала спросите «для какого случая?», «кто получатель?», «какие предпочтения?». Только потом показывайте украшения." },
+        { id: "emotionalHPW", name: "Презентуй с эмоцией", icon: "✨", label: "Эмоциональная презентация", rec: "Привязывайте украшение к событию: «Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите»." },
+        { id: "fittingOffer", name: "Предлагай примерку", icon: "💍", label: "Примерка", rec: "Всегда предлагайте примерку фразой «Давайте примерим». Клиент, который примерил, покупает в 3 раза чаще." },
+        { id: "alternative", name: "Не отпускай без альтернативы", icon: "🔄", label: "Альтернатива", rec: "Если нет размера или модели — сразу покажите похожие варианты и каталог заказов." },
+        { id: "warmClosing", name: "Завершай с теплотой", icon: "👋", label: "Тёплое завершение", rec: "Завершайте с теплотой: «Спасибо, что зашли! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»." }
     ];
 
     const QUESTIONS = [
-        { client: "Клиент зашёл, молча смотрит на витрину с кольцами около 25 секунд. Что делаете?", ruleId: "initiative", correct: 1, choices: ["«Добрый день! Выбираете что-то конкретное или просто смотрите?»", "«Добрый день. У нас сегодня скидка 30% на бриллианты. Какое изделие выбираете? Для себя или в подарок?»", "«Здравствуйте! Если нужна помощь — обращайтесь» (и отхожу)"] },
-        { client: "Клиент: «Хочу подарить жене кольцо, бюджет до 40 000 ₽». Что делаете?", ruleId: "askBeforeShow", correct: 1, choices: ["«Отлично! Давайте посмотрим вот эту коллекцию — она как раз в вашем бюджете»", "«А для какого случая? Что ей нравится?»", "«40 тысяч — хороший бюджет. Покажу несколько вариантов в нейтральном стиле, а вы выберете»"] },
-        { client: "Клиент: «Годовщина 10 лет. Жена любит винтажный стиль». Показываете кольцо. Что говорите?", ruleId: "emotionalHPW", correct: 2, choices: ["«Это кольцо из нашей винтажной коллекции. Очень качественная огранка, хорошая цена»", "«Такие кольца сейчас хорошо покупают — это тренд сезона»", "«Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите. Оно создано для таких моментов»"] },
-        { client: "Клиент заинтересовался: «Да, это близко. Можно посмотреть?»", ruleId: "fittingOffer", correct: 1, choices: ["«Хотите, чтобы я показала это кольцо поближе?»", "«Давайте посмотрим на него вблизи — так вы сразу увидите, как оно прекрасно. Давайте примерим?»", "«У нас есть зеркало вон там — можете померить, если захотите»"] },
-        { client: "Клиент посмотрел кольцо, улыбается: «Красиво… но размера 16,5 нет в наличии». Что делаете?", ruleId: "alternative", correct: 0, choices: ["«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ — сможем заказать точно под размер»", "«Как жаль! Давайте посмотрим, что ещё есть в этой витрине»", "«Можем заказать с доставкой через 2-3 недели. Внесёте предоплату?»"] },
-        { client: "Клиент выбрал похожую модель, оформил заказ. Прощается. Что говорите?", ruleId: "warmClosing", correct: 2, choices: ["«Спасибо за покупку! Хорошего дня»", "«Будем рады видеть вас снова. У нас обновления коллекции каждую неделю»", "«Спасибо, что зашли к нам! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»"] }
+        { ruleId: "initiative", correct: 1, client: "Клиент зашёл, молча смотрит на витрину с кольцами около 25 секунд. Что делаете?", choices: ["«Добрый день! Выбираете что-то конкретное или просто смотрите?»", "«Добрый день. У нас сегодня скидка 30% на бриллианты. Какое изделие выбираете? Для себя или в подарок?»", "«Здравствуйте! Если нужна помощь — обращайтесь» (и отхожу)"] },
+        { ruleId: "askBeforeShow", correct: 1, client: "Клиент: «Хочу подарить жене кольцо, бюджет до 40 000 ₽». Что делаете?", choices: ["«Отлично! Давайте посмотрим вот эту коллекцию — она как раз в вашем бюджете»", "«А для какого случая? Что ей нравится?»", "«40 тысяч — хороший бюджет. Покажу несколько вариантов в нейтральном стиле, а вы выберете»"] },
+        { ruleId: "emotionalHPW", correct: 2, client: "Клиент: «Годовщина 10 лет. Жена любит винтажный стиль». Показываете кольцо. Что говорите?", choices: ["«Это кольцо из нашей винтажной коллекции. Очень качественная огранка, хорошая цена»", "«Такие кольца сейчас хорошо покупают — это тренд сезона»", "«Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите. Оно создано для таких моментов»"] },
+        { ruleId: "fittingOffer", correct: 1, client: "Клиент заинтересовался: «Да, это близко. Можно посмотреть?»", choices: ["«Хотите, чтобы я показала это кольцо поближе?»", "«Давайте посмотрим на него вблизи — так вы сразу увидите, как оно прекрасно. Давайте примерим?»", "«У нас есть зеркало вон там — можете померить, если захотите»"] },
+        { ruleId: "alternative", correct: 0, client: "Клиент посмотрел кольцо, улыбается: «Красиво… но размера 16,5 нет в наличии». Что делаете?", choices: ["«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ — сможем заказать точно под размер»", "«Как жаль! Давайте посмотрим, что ещё есть в этой витрине»", "«Можем заказать с доставкой через 2-3 недели. Внесёте предоплату?»"] },
+        { ruleId: "warmClosing", correct: 2, client: "Клиент выбрал похожую модель, оформил заказ. Прощается. Что говорите?", choices: ["«Спасибо за покупку! Хорошего дня»", "«Будем рады видеть вас снова. У нас обновления коллекции каждую неделю»", "«Спасибо, что зашли к нам! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»"] }
     ];
 
-    // ========== 🔥 ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE ==========
     async function saveToFirebase(resultData) {
         try {
             const localBackup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
@@ -441,15 +284,11 @@
                 localStorage.setItem('dialog_backup', JSON.stringify(localBackup));
             }
         } catch(e) { console.error('Не удалось сохранить локально:', e); }
-
         try {
             const newRef = db.ref('results/dialog').push();
             await newRef.set(resultData);
-            
             const backup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
-            const filtered = backup.filter(r => r.id !== resultData.id);
-            localStorage.setItem('dialog_backup', JSON.stringify(filtered));
-            
+            localStorage.setItem('dialog_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
             return true;
         } catch (error) {
             console.error('❌ Ошибка сохранения в Firebase:', error);
@@ -457,186 +296,180 @@
         }
     }
 
-    // ========== СОСТОЯНИЕ ==========
-    let currentQuestionIndex = 0;
-    let currentAnswers = [];
-    let appliedRules = [];
-    let currentUserName = null;
-    let currentUserCity = null;
-    let gameActive = false;
-    let selectedChoiceIndex = null;
-    let questionResults = [];
+    let currentIndex = 0, currentAnswers = [], appliedRules = [], questionResults = [];
+    let currentUser = { name: '', city: '' };
+    let selectedChoice = null;
 
-    // ========== ЛОГИКА ==========
-    function nextStep() {
-        if (!gameActive || selectedChoiceIndex === null) return;
-        
-        const isCorrect = selectedChoiceIndex === QUESTIONS[currentQuestionIndex].correct;
-        const ruleId = QUESTIONS[currentQuestionIndex].ruleId;
-        
-        currentAnswers.push({ 
-            question: currentQuestionIndex, 
-            selected: selectedChoiceIndex, 
-            correct: isCorrect, 
-            ruleId: ruleId
-        });
-        
-        questionResults[currentQuestionIndex] = isCorrect;
-        
-        if (isCorrect) {
-            const r = ALL_RULES.find(x => x.id === ruleId);
-            if (r && !appliedRules.includes(r.name)) appliedRules.push(r.name);
+    const regScreen = document.getElementById('regScreen');
+    const quizScreen = document.getElementById('quizScreen');
+    const resultScreen = document.getElementById('resultScreen');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function getRule(id) { return ALL_RULES.find(r => r.id === id); }
+
+    function updateProgress() {
+        const progress = (currentIndex / QUESTIONS.length) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+        document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
+    }
+
+    function renderApplied() {
+        const list = document.getElementById('appliedRulesList');
+        if (appliedRules.length) {
+            list.innerHTML = appliedRules.map(n => {
+                const r = ALL_RULES.find(x => x.name === n);
+                return `<span class="applied-rule">${r ? r.icon : '✅'} ${n}</span>`;
+            }).join('');
+        } else {
+            list.innerHTML = '<span class="applied-empty">(пока ни одного)</span>';
         }
+    }
+
+    function renderQuestion() {
+        const q = QUESTIONS[currentIndex];
+        const rule = getRule(q.ruleId);
         
-        currentQuestionIndex++;
+        document.getElementById('questionContainer').innerHTML = `
+            <div class="question-wrapper">
+                <div class="question-icon">${rule.icon}</div>
+                <div class="question-content">
+                    <div class="question-label">${rule.label}</div>
+                    <div class="question-text">${q.client}</div>
+                </div>
+            </div>
+        `;
         
-        if (currentQuestionIndex >= QUESTIONS.length) {
+        document.getElementById('qNum').innerText = currentIndex + 1;
+        document.getElementById('qTotal').innerText = QUESTIONS.length;
+        updateProgress();
+        renderApplied();
+
+        const optionsContainer = document.getElementById('optionsContainer');
+        optionsContainer.innerHTML = '';
+        selectedChoice = null;
+        nextBtn.disabled = true;
+
+        q.choices.forEach((opt, idx) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'option';
+            const letter = String.fromCharCode(65 + idx);
+            optionDiv.innerHTML = `<span class="option-letter">${letter}</span><span class="option-text">${opt}</span>`;
+            optionDiv.addEventListener('click', () => {
+                document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+                optionDiv.classList.add('selected');
+                selectedChoice = idx;
+                nextBtn.disabled = false;
+            });
+            optionsContainer.appendChild(optionDiv);
+        });
+    }
+
+    function nextStep() {
+        if (selectedChoice === null) return;
+        const q = QUESTIONS[currentIndex];
+        const isCorrect = selectedChoice === q.correct;
+        const rule = getRule(q.ruleId);
+
+        currentAnswers.push({ question: currentIndex, selected: selectedChoice, correct: isCorrect, ruleId: q.ruleId });
+        questionResults[currentIndex] = isCorrect;
+
+        if (isCorrect && !appliedRules.includes(rule.name)) appliedRules.push(rule.name);
+
+        currentIndex++;
+        if (currentIndex >= QUESTIONS.length) {
             finishGame();
         } else {
-            selectedChoiceIndex = null;
             renderQuestion();
         }
     }
 
     async function finishGame() {
-        gameActive = false;
-        const success = appliedRules.length === 6;
-        document.getElementById("choicesArea").innerHTML = "";
-        document.getElementById("nextArea").style.display = "none";
-        const resultDiv = document.getElementById("resultCard");
-        resultDiv.style.display = "block";
-        resultDiv.className = `result-card ${success ? "success" : "loss"}`;
-        
-        let html = '';
-        if (success) {
-            html = `<h2>🏆 ПОБЕДА!</h2><p style="text-align:center; font-size:18px;">Вы применили все 6 правил!</p><div class="rec-perfect"><strong>ИДЕАЛЬНО!</strong></div>`;
-        } else {
-            const missingRules = ALL_RULES.filter(r => !appliedRules.includes(r.name));
-            html = `<h2>😞 ДИАЛОГ НЕ ПРОЙДЕН</h2><p style="text-align:center; font-size:18px;">Применено правил: ${appliedRules.length} из 6</p>`;
-            if (missingRules.length > 0) {
-                html += `<div class="rec-section"><h4>📚 НЕ ПРИМЕНЕНЫ</h4>`;
-                missingRules.forEach(rule => {
-                    html += `<div class="rec-item"><div class="rec-rule">❌ ${rule.name}</div><div class="rec-tip">📌 ${rule.rec}</div></div>`;
-                });
-                html += `</div>`;
-            }
-        }
-        resultDiv.innerHTML = html;
-        await saveResult(success);
-        
-        const existingBtn = resultDiv.parentNode.querySelector('.restart-btn');
-        if (!existingBtn) {
-            const btn = document.createElement("button");
-            btn.className = "restart-btn";
-            btn.innerText = "🔄 Пройти заново";
-            btn.onclick = () => resetGame();
-            resultDiv.parentNode.appendChild(btn);
-        }
-    }
+        quizScreen.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
 
-    async function saveResult(success) {
+        const success = appliedRules.length === ALL_RULES.length;
+        const percent = Math.round((appliedRules.length / ALL_RULES.length) * 100);
+
+        let html = `
+            <div class="result-card ${success ? 'success' : 'fail'}">
+                <div class="result-icon">${success ? '🏆' : '📚'}</div>
+                <h2>${success ? 'ПОБЕДА!' : 'Диалог не пройден'}</h2>
+                <p>${success ? 'Вы применили все 6 правил — клиент в восторге!' : 'Применено правил: ' + appliedRules.length + ' из 6. Разберём ошибки?'}</p>
+                <div class="result-stats">
+                    <div class="stat-box"><div class="stat-value">${percent}%</div><div class="stat-label">Результат</div></div>
+                    <div class="stat-box"><div class="stat-value">${appliedRules.length}/6</div><div class="stat-label">Правил применено</div></div>
+                </div>
+        `;
+
+        if (success) {
+            html += `<div class="rec-perfect">🎉 ИДЕАЛЬНО! Все 6 правил в диалоге!</div>`;
+        } else {
+            const missing = ALL_RULES.filter(r => !appliedRules.includes(r.name));
+            html += `<div class="rec-section"><h3>📚 Какие правила не применены</h3>`;
+            missing.forEach(rule => {
+                html += `
+                    <div class="rec-item">
+                        <div class="rec-item-header">
+                            <div class="rec-item-icon">${rule.icon}</div>
+                            <div class="rec-q">❌ ${rule.name}</div>
+                        </div>
+                        <div class="rec-tip"><strong>💡 Как надо:</strong> ${rule.rec}</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        html += `
+                <div class="save-status" id="saveStatus"><span class="spinner"></span>Сохраняю результат...</div>
+                <button class="restart-btn" onclick="location.reload()">🔄 Пройти заново</button>
+            </div>
+        `;
+        resultScreen.innerHTML = html;
+
         const resultData = {
-            id: Date.now(), type: 'trainer', user_name: currentUserName, city: currentUserCity,
-            score: appliedRules.length, total: ALL_RULES.length,
-            percent: Math.round((appliedRules.length / ALL_RULES.length) * 100),
-            passed: success, rules_applied: appliedRules, rules_count: appliedRules.length,
+            id: Date.now(), type: 'trainer', user_name: currentUser.name, city: currentUser.city,
+            score: appliedRules.length, total: ALL_RULES.length, percent: percent, passed: success,
+            rules_applied: appliedRules, rules_count: appliedRules.length,
             answers: currentAnswers, date: new Date().toISOString(),
             timestamp: new Date().toLocaleString('ru-RU')
         };
-        const statusDiv = document.getElementById('saveStatus');
-        if (statusDiv) { statusDiv.innerHTML = '⏳ Сохранение...'; statusDiv.style.color = '#d97706'; }
-        
+
         const saved = await saveToFirebase(resultData);
-        
+        const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
-            if (saved) { statusDiv.innerHTML = '✅ Результат мгновенно сохранён!'; statusDiv.style.color = '#10b981'; }
-            else { statusDiv.innerHTML = '⚠️ Сохранено локально, будет отправлено при следующем запуске.'; statusDiv.style.color = '#ef4444'; }
+            if (saved) {
+                statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
+                statusDiv.style.color = '#10b981';
+                statusDiv.style.background = 'rgba(16,185,129,0.1)';
+            } else {
+                statusDiv.innerHTML = '⚠️ Сохранено локально, отправится при следующем запуске.';
+                statusDiv.style.color = '#d97706';
+                statusDiv.style.background = 'rgba(217,119,6,0.1)';
+            }
         }
     }
 
-    function renderQuestion() {
-        const q = QUESTIONS[currentQuestionIndex];
-        document.getElementById("chatArea").innerHTML = `<div class="client-message">${q.client}</div>`;
-        updateProgress();
-        
-        const rulesDiv = document.getElementById("appliedRulesList");
-        if (appliedRules.length) {
-            document.getElementById("emptyRulesMsg").style.display = "none";
-            rulesDiv.innerHTML = appliedRules.map(r => `<span class="applied-rule">✅ ${r}</span>`).join('');
-        } else {
-            document.getElementById("emptyRulesMsg").style.display = "inline";
-            rulesDiv.innerHTML = "";
-        }
-        
-        const choicesDiv = document.getElementById("choicesArea");
-        choicesDiv.innerHTML = "";
-        selectedChoiceIndex = null;
-        document.getElementById("nextBtn").disabled = true;
-        
-        q.choices.forEach((c, idx) => {
-            const letter = String.fromCharCode(65 + idx); // A, B, C
-            const btn = document.createElement("div");
-            btn.className = "choice-btn";
-            btn.innerHTML = `<span class="option-label">${letter}</span> <span>${c}</span>`;
-            btn.onclick = () => {
-                document.querySelectorAll(".choice-btn").forEach(b => b.classList.remove("selected"));
-                btn.classList.add("selected");
-                selectedChoiceIndex = idx;
-                document.getElementById("nextBtn").disabled = false;
-            };
-            choicesDiv.appendChild(btn);
-        });
-    }
+    document.getElementById('startGameBtn').onclick = () => {
+        const name = document.getElementById('userName').value.trim();
+        const city = document.getElementById('userCity').value;
+        if (!name) { alert('Введите имя и фамилию'); return; }
+        if (!city) { alert('Выберите город'); return; }
 
-    function updateProgress() {
-        const dotsContainer = document.getElementById('progressDots');
-        dotsContainer.innerHTML = '';
-        for (let i = 0; i < QUESTIONS.length; i++) {
-            const dot = document.createElement('span');
-            dot.className = 'dot';
-            if (i < currentQuestionIndex) dot.classList.add(questionResults[i] ? 'done' : 'failed');
-            else if (i === currentQuestionIndex) dot.classList.add('active');
-            dotsContainer.appendChild(dot);
-        }
-    }
+        currentUser = { name, city };
+        currentIndex = 0;
+        currentAnswers = [];
+        appliedRules = [];
+        questionResults = [];
+        selectedChoice = null;
 
-    function startGame(name, city) {
-        currentUserName = name; 
-        currentUserCity = city; 
-        currentQuestionIndex = 0;
-        appliedRules = []; 
-        currentAnswers = []; 
-        questionResults = []; 
-        gameActive = true;
-        
-        document.getElementById("gameContainer").style.display = "block";
-        document.getElementById("currentUserDisplay").innerHTML = `👤 ${name} (${city})`;
-        document.getElementById("currentUserDisplay").style.display = "inline-block";
-        document.getElementById("registerForm").style.display = "none";
-        document.getElementById("resultCard").style.display = "none";
-        document.getElementById("nextArea").style.display = "block";
-        document.getElementById("saveStatus").innerHTML = '';
-        
-        const oldBtn = document.querySelector('.restart-btn');
-        if (oldBtn) oldBtn.remove();
-        
+        regScreen.classList.add('hidden');
+        quizScreen.classList.remove('hidden');
         renderQuestion();
-    }
-
-    function resetGame() { startGame(currentUserName, currentUserCity); }
-
-    document.getElementById("startGameBtn").onclick = () => {
-        const name = document.getElementById("userName").value.trim();
-        const city = document.getElementById("userCity").value;
-        if (!name) return alert("Введите имя");
-        if (!city) return alert("Выберите город");
-        startGame(name, city);
     };
-    
-    document.getElementById("nextBtn").onclick = nextStep;
-    
-    document.getElementById("userName").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") document.getElementById("startGameBtn").click();
+    nextBtn.onclick = nextStep;
+    document.getElementById('userName').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('startGameBtn').click();
     });
 </script>
 </body>
