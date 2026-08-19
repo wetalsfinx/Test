@@ -335,15 +335,15 @@
         <div class="filter-group">
             <label>🏙️ Город</label>
             <select id="cityFilter">
-                <option value="all">Все города</option>
-                <option value="Тюмень">Тюмень</option>
-                <option value="Москва, Локомотивный, 4">Москва, Локомотивный, 4</option>
-                <option value="Москва, Новоясеневский, 2">Москва, Новоясеневский, 2</option>
-                <option value="Челябинск">Челябинск</option>
-                <option value="Архангельск">Архангельск</option>
-                <option value="Оренбург">Оренбург</option>
-                <option value="Псков">Псков</option>
-            </select>
+    <option value="all">Все города</option>
+    <option value="Тюмень">Тюмень</option>
+    <option value="Москва, Локомотивный, 4">Москва, Локомотивный, 4</option>
+    <option value="Москва, Новоясеневский, 2">Москва, Новоясеневский, 2</option>
+    <option value="Челябинск">Челябинск</option>
+    <option value="Архангельск">Архангельск</option>
+    <option value="Оренбург">Оренбург</option>
+    <option value="Псков">Псков</option>
+</select>
         </div>
         <div class="filter-group">
             <label>📈 Балл</label>
@@ -507,7 +507,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const CITIES = ['Тюмень','Москва, Локомотивный, 4','Москва, Новоясеневский, 2','Челябинск','Архангельск','Оренбург','Псков'];
+    const CITIES = ['Тюмень','Москва, Локомотивный, 4','Москва, Новоясеневский, 2','Челябинск','Архангельск','Оренбург','Псков','Екатеринбург','Каменск-Уральский','Краснотурьинск'];
 
     const TEST_TOPICS = [
         'Приветствие и установление контакта', 'Выявление бюджета', 'Предложение дополнительных товаров',
