@@ -427,19 +427,30 @@ const SITUATIONS = [
     }
 
     function selfEvaluate(level) {
-        document.querySelectorAll('.eval-btn').forEach(b => b.classList.remove('selected'));
-        event.target.classList.add('selected');
-        
-        answers.push({
-            situation: currentIndex,
-            principle: SITUATIONS[currentIndex].principle,
-            userAnswer: document.getElementById('answerInput').value.trim(),
-            etalon: SITUATIONS[currentIndex].etalon,
-            selfEval: level
-        });
-        
-        document.getElementById('nextBtn').style.display = 'block';
+    // 🛡️ Защита от повторных кликов: проверяем, есть ли уже ответ для этой ситуации
+    const existingIndex = answers.findIndex(a => a.situation === currentIndex);
+    const newAnswer = {
+        situation: currentIndex,
+        principle: SITUATIONS[currentIndex].principle,
+        userAnswer: document.getElementById('answerInput').value.trim(),
+        etalon: SITUATIONS[currentIndex].etalon,
+        selfEval: level
+    };
+    
+    if (existingIndex >= 0) {
+        // Ответ уже есть — перезаписываем (не добавляем новую запись)
+        answers[existingIndex] = newAnswer;
+    } else {
+        // Первый ответ — добавляем
+        answers.push(newAnswer);
     }
+    
+    // Визуальная обратная связь: выделяем выбранную кнопку
+    document.querySelectorAll('.eval-btn').forEach(b => b.classList.remove('selected'));
+    event.target.classList.add('selected');
+    
+    document.getElementById('nextBtn').style.display = 'block';
+}
 
     function nextSituation() {
         currentIndex++;
