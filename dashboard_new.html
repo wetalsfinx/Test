@@ -335,15 +335,8 @@
         <div class="filter-group">
             <label>🏙️ Город</label>
             <select id="cityFilter">
-    <option value="all">Все города</option>
-    <option value="Тюмень">Тюмень</option>
-    <option value="Москва, Локомотивный, 4">Москва, Локомотивный, 4</option>
-    <option value="Москва, Новоясеневский, 2">Москва, Новоясеневский, 2</option>
-    <option value="Челябинск">Челябинск</option>
-    <option value="Архангельск">Архангельск</option>
-    <option value="Оренбург">Оренбург</option>
-    <option value="Псков">Псков</option>
-</select>
+                <option value="all">Все города</option>
+            </select>
         </div>
         <div class="filter-group">
             <label>📈 Балл</label>
@@ -467,13 +460,6 @@
             <p class="hint">Выберите город или магазин для получения детального анализа сильных и слабых сторон команды</p>
             <select id="feedbackCitySelect">
                 <option value="">-- Выберите город / магазин --</option>
-                <option value="Тюмень">Тюмень</option>
-                <option value="Москва, Локомотивный, 4">Москва, Локомотивный, 4</option>
-                <option value="Москва, Новоясеневский, 2">Москва, Новоясеневский, 2</option>
-                <option value="Челябинск">Челябинск</option>
-                <option value="Архангельск">Архангельск</option>
-                <option value="Оренбург">Оренбург</option>
-                <option value="Псков">Псков</option>
             </select>
             <button class="btn btn-primary" id="generateFeedbackBtn" style="color:#c41e3a; border-color:#c41e3a;">🔍 Сгенерировать фидбек</button>
             <div class="feedback-actions" id="feedbackActions">
@@ -507,7 +493,28 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const CITIES = ['Тюмень','Москва, Локомотивный, 4','Москва, Новоясеневский, 2','Челябинск','Архангельск','Оренбург','Псков','Екатеринбург','Каменск-Уральский','Краснотурьинск'];
+    // 🔥 НОВАЯ СИСТЕМА: Списки городов для разных типов тестов
+    const CITY_SETS = {
+        final_exam: ['Тюмень','Москва, Локомотивный, 4','Москва, Новоясеневский, 2','Челябинск','Архангельск','Оренбург','Псков'],
+        test: ['Тюмень','Москва, Локомотивный, 4','Москва, Новоясеневский, 2','Челябинск','Архангельск','Оренбург','Псков','Екатеринбург','Каменск-Уральский','Краснотурьинск'],
+        trainer: ['Уфа','Екатеринбург','Санкт-Петербург, Московский, 2','Санкт-Петербург, Новаторов, 112','Калининград','Нижний Тагил'],
+        crosssell: ['Уфа','Екатеринбург','Санкт-Петербург, Московский, 2','Санкт-Петербург, Новаторов, 112','Калининград','Нижний Тагил'],
+        errorfinder: ['Уфа','Екатеринбург','Санкт-Петербург, Московский, 2','Санкт-Петербург, Новаторов, 112','Калининград','Нижний Тагил'],
+        clienttype: ['Уфа','Екатеринбург','Санкт-Петербург, Московский, 2','Санкт-Петербург, Новаторов, 112','Калининград','Нижний Тагил'],
+        service: ['Уфа','Екатеринбург','Санкт-Петербург, Московский, 2','Санкт-Петербург, Новаторов, 112','Калининград','Нижний Тагил']
+    };
+
+    // 🔥 Функция возвращает список городов для выбранного типа теста
+    function getCityListForType(type, dataCities = []) {
+        if (type === 'all') {
+            // Для "Все" — объединяем все предустановленные + все фактические из данных
+            const allPreset = Object.values(CITY_SETS).flat();
+            return [...new Set([...allPreset, ...dataCities])];
+        }
+        const preset = CITY_SETS[type] || [];
+        // Добавляем фактические города из данных, если они относятся к этому типу
+        return [...new Set([...preset, ...dataCities])];
+    }
 
     const TEST_TOPICS = [
         'Приветствие и установление контакта', 'Выявление бюджета', 'Предложение дополнительных товаров',
@@ -610,11 +617,10 @@
     function mergeNames(names) {
         const keys = names.map(normalizeName);
         let groups = getGroups();
-        // Собираем существующие группы, в которых уже есть эти имена
         const existingMembers = new Set(keys);
         groups.forEach(g => { if (g.some(k => keys.includes(k))) g.forEach(k => existingMembers.add(k)); });
         groups = groups.filter(g => !g.some(k => keys.includes(k)));
-        const merged = [...existingMembers].sort((a, b) => b.length - a.length); // самое длинное имя — главное
+        const merged = [...existingMembers].sort((a, b) => b.length - a.length);
         if (merged.length > 1) groups.push(merged);
         saveGroups(groups);
     }
@@ -713,13 +719,34 @@
         }
     }
 
+    // 🔥 ИЗМЕНЕНО: теперь setTypeFilter перестраивает список городов
     function setTypeFilter(value) {
         document.getElementById('typeFilter').value = value;
         document.querySelectorAll('.filter-chip').forEach(chip => {
             chip.classList.toggle('active', chip.dataset.value === value);
         });
+        // 🔄 Перестраиваем список городов под выбранный тип теста
+        updateCityFilterForType(value);
         saveFilters();
         applyFilters();
+    }
+
+    // 🔥 НОВАЯ ФУНКЦИЯ: обновление списка городов
+    function updateCityFilterForType(type) {
+        const citySelect = document.getElementById('cityFilter');
+        const currentCity = citySelect.value;
+        const dataCities = [...new Set(allData.filter(r => type === 'all' || r.type === type).map(r => r.city))];
+        const list = getCityListForType(type, dataCities).sort();
+        
+        citySelect.innerHTML = '<option value="all">Все города</option>' + 
+            list.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+        
+        // Если текущий выбранный город есть в новом списке — оставляем, иначе сбрасываем
+        if (currentCity !== 'all' && list.includes(currentCity)) {
+            citySelect.value = currentCity;
+        } else {
+            citySelect.value = 'all';
+        }
     }
 
     function resetFilters() {
@@ -800,15 +827,30 @@
             
             allData.sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            const dataCities = [...new Set(allData.map(r => r.city))];
-            const allCities = [...new Set([...CITIES, ...dataCities])];
-            document.getElementById('cityFilter').innerHTML = '<option value="all">Все города</option>' + 
-                allCities.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-            
+            // 🔥 ИЗМЕНЕНО: восстанавливаем тип фильтра, затем перестраиваем список городов под него
             document.getElementById('typeFilter').value = savedType;
-            document.getElementById('cityFilter').value = savedCity;
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.value === savedType);
+            });
+            updateCityFilterForType(savedType);
+
+            // Восстанавливаем выбранный город, если он есть в новом списке
+            const citySelect = document.getElementById('cityFilter');
+            const availableOptions = [...citySelect.options].map(o => o.value);
+            if (availableOptions.includes(savedCity)) {
+                citySelect.value = savedCity;
+            } else {
+                citySelect.value = 'all';
+            }
+            
             document.getElementById('percentFilter').value = savedPercent;
             document.getElementById('searchInput').value = savedSearch;
+            
+            // 🔥 НОВОЕ: Заполняем select фидбека всеми фактическими городами из данных
+            const feedbackSelect = document.getElementById('feedbackCitySelect');
+            const allUniqueCities = [...new Set(allData.map(r => r.city))].sort();
+            feedbackSelect.innerHTML = '<option value="">-- Выберите город / магазин --</option>' +
+                allUniqueCities.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
             
             renderCityStats();
             applyFilters();
