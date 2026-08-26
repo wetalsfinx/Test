@@ -131,13 +131,14 @@
             background: white; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif;
             font-size: 13px; font-weight: 600; text-align: center;
         }
-        .eval-btn:hover { transform: translateY(-2px); }
+        .eval-btn:hover:not(.locked) { transform: translateY(-2px); }
         .eval-btn.perfect { color: #059669; }
-        .eval-btn.perfect:hover, .eval-btn.perfect.selected { background: #d1fae5; border-color: #10b981; }
+        .eval-btn.perfect.selected { background: #d1fae5; border-color: #10b981; }
         .eval-btn.partial { color: #d97706; }
-        .eval-btn.partial:hover, .eval-btn.partial.selected { background: #fef3c7; border-color: #f59e0b; }
+        .eval-btn.partial.selected { background: #fef3c7; border-color: #f59e0b; }
         .eval-btn.miss { color: #dc2626; }
-        .eval-btn.miss:hover, .eval-btn.miss.selected { background: #fee2e2; border-color: #ef4444; }
+        .eval-btn.miss.selected { background: #fee2e2; border-color: #ef4444; }
+        .eval-btn.locked { opacity: 0.6; cursor: not-allowed; }
         
         .btn-next {
             display: none; width: 100%; padding: 16px; border: none; border-radius: 14px;
@@ -208,7 +209,6 @@
             .self-eval-buttons { flex-direction: column; }
         }
         @media print {
-    /* Скрываем всё, кроме сертификата */
     .cert-actions,
     .save-status,
     .btn-secondary,
@@ -219,7 +219,6 @@
         display: none !important;
     }
     
-    /* Показываем только сертификат */
     .certificate-wrapper {
         display: block !important;
         margin: 0;
@@ -243,7 +242,6 @@
         padding: 0;
     }
     
-    /* Убираем стандартные колонтитулы браузера */
     @page {
         margin: 1cm;
         size: A4;
@@ -311,9 +309,9 @@
             <div class="self-eval" id="selfEval">
                 <div class="self-eval-label">Насколько вы попали в суть?</div>
                 <div class="self-eval-buttons">
-                    <button class="eval-btn perfect" onclick="selfEvaluate('perfect')">Попал в суть</button>
-                    <button class="eval-btn partial" onclick="selfEvaluate('partial')">Частично</button>
-                    <button class="eval-btn miss" onclick="selfEvaluate('miss')">Мимо</button>
+                    <button class="eval-btn perfect" onclick="selfEvaluate('perfect', this)">Попал в суть</button>
+                    <button class="eval-btn partial" onclick="selfEvaluate('partial', this)">Частично</button>
+                    <button class="eval-btn miss" onclick="selfEvaluate('miss', this)">Мимо</button>
                 </div>
             </div>
             
@@ -412,6 +410,11 @@ const SITUATIONS = [
         document.getElementById('nextBtn').style.display = 'none';
         document.getElementById('showBtn').style.display = 'block';
         document.getElementById('answerInput').disabled = false;
+        
+        // Сбрасываем визуальное состояние кнопок самооценки
+        document.querySelectorAll('.eval-btn').forEach(b => {
+            b.classList.remove('selected', 'locked');
+        });
     }
 
     function showEtalon() {
@@ -426,33 +429,50 @@ const SITUATIONS = [
         document.getElementById('answerInput').disabled = true;
     }
 
-    function selfEvaluate(level) {
-    // 🛡️ Защита от повторных кликов: проверяем, есть ли уже ответ для этой ситуации
-    const existingIndex = answers.findIndex(a => a.situation === currentIndex);
-    const newAnswer = {
-        situation: currentIndex,
-        principle: SITUATIONS[currentIndex].principle,
-        userAnswer: document.getElementById('answerInput').value.trim(),
-        etalon: SITUATIONS[currentIndex].etalon,
-        selfEval: level
-    };
-    
-    if (existingIndex >= 0) {
-        // Ответ уже есть — перезаписываем (не добавляем новую запись)
-        answers[existingIndex] = newAnswer;
-    } else {
-        // Первый ответ — добавляем
-        answers.push(newAnswer);
+    function selfEvaluate(level, btn) {
+        // 🛡️ Защита от повторных кликов: если выбор уже сделан - игнорируем
+        const alreadySelected = document.querySelector('.eval-btn.selected');
+        if (alreadySelected) {
+            return;
+        }
+        
+        const newAnswer = {
+            situation: currentIndex,
+            principle: SITUATIONS[currentIndex].principle,
+            userAnswer: document.getElementById('answerInput').value.trim(),
+            etalon: SITUATIONS[currentIndex].etalon,
+            selfEval: level
+        };
+        
+        // 🛡️ Защита: перезаписываем запись для текущей ситуации (если вдруг есть)
+        const existingIndex = answers.findIndex(a => a.situation === currentIndex);
+        if (existingIndex >= 0) {
+            answers[existingIndex] = newAnswer;
+        } else {
+            answers.push(newAnswer);
+        }
+        
+        // ✅ Визуальная обратная связь — используем переданный элемент btn
+        document.querySelectorAll('.eval-btn').forEach(b => {
+            b.classList.remove('selected');
+            b.classList.add('locked');
+        });
+        btn.classList.add('selected');
+        
+        // 🔍 Отладка
+        console.log(`📝 Ситуация ${currentIndex + 1}: ${level} (${level === 'perfect' ? 3 : level === 'partial' ? 2 : 1} баллов). Всего ответов: ${answers.length}`);
+        
+        document.getElementById('nextBtn').style.display = 'block';
     }
-    
-    // Визуальная обратная связь: выделяем выбранную кнопку
-    document.querySelectorAll('.eval-btn').forEach(b => b.classList.remove('selected'));
-    event.target.classList.add('selected');
-    
-    document.getElementById('nextBtn').style.display = 'block';
-}
 
     function nextSituation() {
+        // 🛡️ Проверка: есть ли ответ для текущей ситуации
+        const hasAnswer = answers.some(a => a.situation === currentIndex);
+        if (!hasAnswer) {
+            alert('Сначала оцените свой ответ');
+            return;
+        }
+        
         currentIndex++;
         if (currentIndex < SITUATIONS.length) {
             renderSituation();
@@ -463,22 +483,23 @@ const SITUATIONS = [
 
     async function finishExam() {
         // 🛡️ ЗАЩИТА: принудительно ограничиваем до 7 ситуаций
-const FIXED_SITUATIONS_COUNT = 7;
-if (SITUATIONS.length !== FIXED_SITUATIONS_COUNT) {
-    console.warn(`⚠️ Внимание! В массиве SITUATIONS ${SITUATIONS.length} элементов вместо ${FIXED_SITUATIONS_COUNT}. Используем только первые ${FIXED_SITUATIONS_COUNT}.`);
-}
-const maxScore = FIXED_SITUATIONS_COUNT * 3; // Жёстко 21 балл
+        const FIXED_SITUATIONS_COUNT = 7;
+        if (SITUATIONS.length !== FIXED_SITUATIONS_COUNT) {
+            console.warn(`⚠️ Внимание! В массиве SITUATIONS ${SITUATIONS.length} элементов вместо ${FIXED_SITUATIONS_COUNT}. Используем только первые ${FIXED_SITUATIONS_COUNT}.`);
+        }
+        const maxScore = FIXED_SITUATIONS_COUNT * 3; // Жёстко 21 балл
+        
         document.getElementById('examContainer').style.display = 'none';
         document.getElementById('certificateWrapper').style.display = 'block';
         
-        // maxScore уже определён выше как FIXED_SITUATIONS_COUNT * 3
         const score = answers.reduce((sum, a) => {
             if (a.selfEval === 'perfect') return sum + 3;
             if (a.selfEval === 'partial') return sum + 2;
             return sum + 1;
         }, 0);
         
-        const percent = Math.round((score / maxScore) * 100);
+        // 🛡️ Защита от процентов > 100%
+        const percent = Math.min(100, Math.round((score / maxScore) * 100));
         
         let level, levelClass, certTitle;
         if (percent >= 85) { level = 'Мастер продаж 585GOLD'; levelClass = 'gold'; certTitle = '🏆'; }
