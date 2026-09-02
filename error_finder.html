@@ -31,9 +31,9 @@
             position: relative; overflow: hidden; animation: slideDown 0.6s ease;
         }
         .header::before { content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%); border-radius: 50%; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes questionAppear { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opa: 0; transform: translateY(-30px); } to { opa: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opa: 0; transform: translateY(30px); } to { opa: 1; transform: translateY(0); } }
+        @keyframes questionAppear { from { opa: 0; transform: translateY(20px); } to { opa: 1; transform: translateY(0); } }
         
         .logo-badge {
             display: inline-flex; align-items: center; gap: 8px;
@@ -115,10 +115,10 @@
         .message.seller { background: #fffbeb; border-left: 5px solid #f59e0b; margin-left: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .message.seller .speaker { color: #b45309; }
         .message.seller.clickable { cursor: pointer; transition: all 0.25s; }
-        .message.seller.clickable::after { content: '✏️'; position: absolute; top: 12px; right: 14px; font-size: 14px; opacity: 0.5; }
+        .message.seller.clickable::after { content: '✏️'; position: absolute; top: 12px; right: 14px; font-size: 14px; opa: 0.5; }
         .message.seller.clickable:hover { transform: translateX(6px); box-shadow: 0 6px 16px rgba(245,158,11,0.25); }
         .message.seller.selected { background: #fee2e2; border-left-color: #c41e3a; box-shadow: 0 0 0 3px rgba(196,30,58,0.15); transform: scale(1.02); }
-        .message.seller.selected::after { content: '🚩'; opacity: 1; }
+        .message.seller.selected::after { content: '🚩'; opa: 1; }
         .message.seller.correct { background: #d1fae5; border-left-color: #10b981; box-shadow: 0 4px 16px rgba(16,185,129,0.2); }
         .message.seller.correct::after { content: '🎯'; opacity: 1; }
         .message.seller.wrong { background: #fee2e2; border-left-color: #ef4444; opacity: 0.75; }
@@ -201,15 +201,14 @@
         <div class="form-group">
             <label>Город</label>
             <select id="userCity">
-                <option value="">Выберите город</option>
-                <option value="Тюмень">Тюмень</option>
-                <option value="Москва, Локомотивный, 4">Москва, Локомотивный, 4</option>
-                <option value="Москва, Новоясеневский, 2">Москва, Новоясеневский, 2</option>
-                <option value="Челябинск">Челябинск</option>
-                <option value="Архангельск">Архангельск</option>
-                <option value="Оренбург">Оренбург</option>
-                <option value="Псков">Псков</option>
-            </select>
+    <option value="">Выберите город</option>
+    <option value="Екатеринбург">Екатеринбург</option>
+    <option value="Владимир">Владимир</option>
+    <option value="Чайковский">Чайковский</option>
+    <option value="Тольятти">Тольятти</option>
+    <option value="СПб, Заневский, 67, ТК Заневский Каскад">СПб, Заневский, 67, ТК Заневский Каскад</option>
+    <option value="СПб, Стародеревенская, 36, ТД Крокус">СПб, Стародеревенская, 36, ТД Крокус</option>
+</select>
         </div>
         <button class="btn-primary" id="startBtn">🚀 Начать игру</button>
     </div>
