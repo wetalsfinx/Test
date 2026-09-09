@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>585GOLD | Итоговая аттестация</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap');
@@ -341,17 +341,17 @@
 </div>
 
 <script>
+    // 🔥 Firestore (новый канал, без блокировок)
     const firebaseConfig = {
         apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
         authDomain: "gold-8105a.firebaseapp.com",
-        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "gold-8105a",
         storageBucket: "gold-8105a.firebasestorage.app",
         messagingSenderId: "195469188947",
         appId: "1:195469188947:web:af9671f88b0e70eceecba6"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const db = firebase.firestore();
 
 const SITUATIONS = [
     {
@@ -436,7 +436,6 @@ const SITUATIONS = [
         document.getElementById('showBtn').style.display = 'block';
         document.getElementById('answerInput').disabled = false;
         
-        // Сбрасываем визуальное состояние кнопок самооценки
         document.querySelectorAll('.eval-btn').forEach(b => b.classList.remove('selected', 'locked'));
     }
 
@@ -453,7 +452,6 @@ const SITUATIONS = [
     }
 
     function selfEvaluate(level, btn) {
-        // 🛡️ Защита от повторных кликов: если выбор уже сделан — игнорируем
         if (document.querySelector('.eval-btn.selected')) return;
         
         const newAnswer = {
@@ -493,7 +491,7 @@ const SITUATIONS = [
 
     async function finishExam() {
         const FIXED_SITUATIONS_COUNT = 7;
-        const maxScore = FIXED_SITUATIONS_COUNT * 3; // Жёстко 21 балл
+        const maxScore = FIXED_SITUATIONS_COUNT * 3;
         
         document.getElementById('examContainer').classList.add('hidden');
         document.getElementById('certificateWrapper').style.display = 'block';
@@ -504,7 +502,6 @@ const SITUATIONS = [
             return sum + 1;
         }, 0);
         
-        // 🛡️ Защита от процентов > 100%
         const percent = Math.min(100, Math.round((score / maxScore) * 100));
         
         let level, levelClass, certTitle;
@@ -565,9 +562,8 @@ const SITUATIONS = [
             localBackup.push(resultData);
             localStorage.setItem('exam_backup', JSON.stringify(localBackup));
             
-            const newRef = db.ref('results/final_exam').push();
             await Promise.race([
-                newRef.set(resultData),
+                db.collection('results').doc('final_exam').collection('items').add(resultData),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
             ]);
             
@@ -599,14 +595,21 @@ const SITUATIONS = [
         }
     }
 
+    // 🔥 АВТОДОЗАГРУЗКА ИЗ ЛОКАЛЬНОГО ХРАНИЛИЩА (в Firestore)
     window.addEventListener('load', async () => {
         const backup = JSON.parse(localStorage.getItem('exam_backup') || '[]');
         if (backup.length > 0) {
+            console.log(`🔄 Найдено ${backup.length} несохранённых результатов. Отправляем в Firestore...`);
             for (let result of backup) {
                 try {
-                    const newRef = db.ref('results/final_exam').push();
-                    await newRef.set(result);
-                } catch(e) {}
+                    await Promise.race([
+                        db.collection('results').doc('final_exam').collection('items').add(result),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+                    ]);
+                    console.log('✅ Отправлено:', result.user_name);
+                } catch(e) {
+                    console.error('❌ Ошибка:', e.message);
+                }
             }
             localStorage.removeItem('exam_backup');
         }
