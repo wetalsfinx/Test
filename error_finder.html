@@ -6,7 +6,7 @@
     <title>585GOLD | Найди ошибку в диалоге</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -31,9 +31,9 @@
             position: relative; overflow: hidden; animation: slideDown 0.6s ease;
         }
         .header::before { content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%); border-radius: 50%; }
-        @keyframes slideDown { from { opa: 0; transform: translateY(-30px); } to { opa: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { opa: 0; transform: translateY(30px); } to { opa: 1; transform: translateY(0); } }
-        @keyframes questionAppear { from { opa: 0; transform: translateY(20px); } to { opa: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes questionAppear { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
         .logo-badge {
             display: inline-flex; align-items: center; gap: 8px;
@@ -115,10 +115,10 @@
         .message.seller { background: #fffbeb; border-left: 5px solid #f59e0b; margin-left: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .message.seller .speaker { color: #b45309; }
         .message.seller.clickable { cursor: pointer; transition: all 0.25s; }
-        .message.seller.clickable::after { content: '✏️'; position: absolute; top: 12px; right: 14px; font-size: 14px; opa: 0.5; }
+        .message.seller.clickable::after { content: '✏️'; position: absolute; top: 12px; right: 14px; font-size: 14px; opacity: 0.5; }
         .message.seller.clickable:hover { transform: translateX(6px); box-shadow: 0 6px 16px rgba(245,158,11,0.25); }
         .message.seller.selected { background: #fee2e2; border-left-color: #c41e3a; box-shadow: 0 0 0 3px rgba(196,30,58,0.15); transform: scale(1.02); }
-        .message.seller.selected::after { content: '🚩'; opa: 1; }
+        .message.seller.selected::after { content: '🚩'; opacity: 1; }
         .message.seller.correct { background: #d1fae5; border-left-color: #10b981; box-shadow: 0 4px 16px rgba(16,185,129,0.2); }
         .message.seller.correct::after { content: '🎯'; opacity: 1; }
         .message.seller.wrong { background: #fee2e2; border-left-color: #ef4444; opacity: 0.75; }
@@ -234,26 +234,33 @@
 </div>
 
 <script>
+    // 🔥 Firestore (новый канал, без блокировок)
     const firebaseConfig = {
         apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
         authDomain: "gold-8105a.firebaseapp.com",
-        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "gold-8105a",
         storageBucket: "gold-8105a.firebasestorage.app",
         messagingSenderId: "195469188947",
         appId: "1:195469188947:web:af9671f88b0e70eceecba6"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const db = firebase.firestore();
 
+    // 🔥 АВТОДОЗАГРУЗКА ИЗ ЛОКАЛЬНОГО ХРАНИЛИЩА (в Firestore)
     window.addEventListener('load', async () => {
         const backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
         if (backup.length > 0) {
+            console.log(`🔄 Найдено ${backup.length} несохранённых результатов. Отправляем в Firestore...`);
             for (let result of backup) {
                 try {
-                    const newRef = db.ref('results/errorfinder').push();
-                    await newRef.set(result);
-                } catch(e) { console.error('❌ Ошибка дозагрузки:', e.message); }
+                    await Promise.race([
+                        db.collection('results').doc('errorfinder').collection('items').add(result),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+                    ]);
+                    console.log('✅ Отправлено:', result.user_name);
+                } catch(e) {
+                    console.error('❌ Ошибка дозагрузки:', e.message);
+                }
             }
             localStorage.removeItem('errorfinder_backup');
         }
@@ -509,8 +516,10 @@
             localBackup.push(resultData);
             localStorage.setItem('errorfinder_backup', JSON.stringify(localBackup));
 
-            const newRef = db.ref('results/errorfinder').push();
-            await newRef.set(resultData);
+            await Promise.race([
+                db.collection('results').doc('errorfinder').collection('items').add(resultData),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+            ]);
 
             const backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
             localStorage.setItem('errorfinder_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
