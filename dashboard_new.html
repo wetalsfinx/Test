@@ -6,7 +6,7 @@
     <title>585GOLD | Аналитика</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
@@ -184,7 +184,6 @@
         .exam-eval.partial { background: rgba(245,158,11,0.2); color: #f59e0b; }
         .exam-eval.miss { background: rgba(239,68,68,0.2); color: #ef4444; }
 
-        /* ===== HARD QUESTIONS ===== */
         .hard-q-item { padding: 16px 18px; background: var(--bg-input); border-radius: 14px; margin-bottom: 12px; border-left: 5px solid #dc2626; transition: transform 0.2s; }
         .hard-q-item:hover { transform: translateX(4px); }
         .hard-q-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; align-items: flex-start; }
@@ -196,11 +195,9 @@
         .hard-q-bar-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #dc2626); border-radius: 4px; transition: width 0.8s ease; }
         .hard-q-rec { font-size: 13px; color: var(--text-2); background: rgba(245,158,11,0.12); padding: 10px 14px; border-radius: 10px; border-left: 3px solid #f59e0b; }
 
-        /* ===== SPARKLINES ===== */
         .sparkline-box { display: flex; align-items: center; gap: 10px; margin-top: 12px; color: #c41e3a; }
         .sparkline-label { font-size: 11px; color: var(--text-4); font-weight: 600; }
 
-        /* ===== EMPLOYEES / PROFILE ===== */
         .profile-header { display: flex; align-items: center; gap: 16px; padding: 24px; background: linear-gradient(135deg, #fff5f5 0%, #fef9f0 100%); border-radius: 18px; margin-bottom: 16px; flex-wrap: wrap; }
         body.dark .profile-header { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); }
         .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 8px 20px rgba(196,30,58,0.3); flex-shrink: 0; }
@@ -234,7 +231,6 @@
         #profileSelect, #feedbackCitySelect { padding: 12px 18px; border-radius: 12px; border: 2px solid var(--border); width: 100%; max-width: 450px; margin-bottom: 16px; font-size: 15px; font-family: 'Inter', sans-serif; font-weight: 500; background: var(--bg-input); color: var(--text-1); cursor: pointer; }
         #profileSelect:focus, #feedbackCitySelect:focus { outline: none; border-color: #c41e3a; }
 
-        /* ===== FEEDBACK ===== */
         .feedback-wrapper { background: var(--bg-card); border-radius: 24px; padding: 32px; margin-top: 24px; border: 2px solid var(--border); }
         .feedback-header { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; padding: 28px 32px; border-radius: 18px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
         .feedback-header h3 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
@@ -481,19 +477,19 @@
 </div>
 
 <script>
+    // 🔥 Firestore (новый канал, без блокировок)
     const firebaseConfig = {
         apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
         authDomain: "gold-8105a.firebaseapp.com",
-        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "gold-8105a",
         storageBucket: "gold-8105a.firebasestorage.app",
         messagingSenderId: "195469188947",
         appId: "1:195469188947:web:af9671f88b0e70eceecba6"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const db = firebase.firestore();
 
-       // 🔥 Единый список новых магазинов для всех разделов
+    // 🔥 Единый список новых магазинов для всех разделов
     const NEW_STORES = ['Екатеринбург','Владимир','Чайковский','Тольятти','СПб, Заневский, 67, ТК Заневский Каскад','СПб, Стародеревенская, 36, ТД Крокус'];
     const CITY_SETS = {
         final_exam: NEW_STORES,
@@ -504,18 +500,6 @@
         clienttype: NEW_STORES,
         service: NEW_STORES
     };
-
-    // 🔥 Функция возвращает список городов для выбранного типа теста
-    function getCityListForType(type, dataCities = []) {
-        if (type === 'all') {
-            // Для "Все" — объединяем все предустановленные + все фактические из данных
-            const allPreset = Object.values(CITY_SETS).flat();
-            return [...new Set([...allPreset, ...dataCities])];
-        }
-        const preset = CITY_SETS[type] || [];
-        // Добавляем фактические города из данных, если они относятся к этому типу
-        return [...new Set([...preset, ...dataCities])];
-    }
 
     const TEST_TOPICS = [
         'Приветствие и установление контакта', 'Выявление бюджета', 'Предложение дополнительных товаров',
@@ -664,7 +648,6 @@
         return map[type] || { icon: '📝', label: 'Тест' };
     }
 
-    // ========== ✨ СПАРКЛАЙНЫ ==========
     function makeSparkline(values, color) {
         if (values.length < 2) return '';
         const w = 100, h = 28;
@@ -696,7 +679,6 @@
         };
     }
 
-    // ========== ФИЛЬТРЫ ==========
     function saveFilters() {
         localStorage.setItem('dashboard_filters', JSON.stringify({
             type: document.getElementById('typeFilter').value,
@@ -711,28 +693,26 @@
         if (saved) {
             const f = JSON.parse(saved);
             document.getElementById('typeFilter').value = f.type || 'all';
-            document.getElementById('cityFilter').value = f.city || 'all';
             document.getElementById('percentFilter').value = f.percent || 'all';
             document.getElementById('searchInput').value = f.search || '';
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.classList.toggle('active', chip.dataset.value === f.type);
             });
+            // Город восстанавливаем позже, после загрузки списка
+            window._savedCity = f.city || 'all';
         }
     }
 
-    // 🔥 ИЗМЕНЕНО: теперь setTypeFilter перестраивает список городов
     function setTypeFilter(value) {
         document.getElementById('typeFilter').value = value;
         document.querySelectorAll('.filter-chip').forEach(chip => {
             chip.classList.toggle('active', chip.dataset.value === value);
         });
-        // 🔄 Перестраиваем список городов под выбранный тип теста
         updateCityFilterForType(value);
         saveFilters();
         applyFilters();
     }
 
-    // 🔥 НОВАЯ ФУНКЦИЯ: обновление списка городов
     function updateCityFilterForType(type) {
         const citySelect = document.getElementById('cityFilter');
         const currentCity = citySelect.value;
@@ -742,12 +722,20 @@
         citySelect.innerHTML = '<option value="all">Все города</option>' + 
             list.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
         
-        // Если текущий выбранный город есть в новом списке — оставляем, иначе сбрасываем
         if (currentCity !== 'all' && list.includes(currentCity)) {
             citySelect.value = currentCity;
         } else {
             citySelect.value = 'all';
         }
+    }
+
+    function getCityListForType(type, dataCities = []) {
+        if (type === 'all') {
+            const allPreset = Object.values(CITY_SETS).flat();
+            return [...new Set([...allPreset, ...dataCities])];
+        }
+        const preset = CITY_SETS[type] || [];
+        return [...new Set([...preset, ...dataCities])];
     }
 
     function resetFilters() {
@@ -760,15 +748,17 @@
     }
 
     document.getElementById('clearAllBtn').onclick = async () => {
-        if (!confirm('🗑️ Удалить ВСЕ результаты из Firebase?')) return;
+        if (!confirm('🗑️ Удалить ВСЕ результаты из базы?')) return;
         if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
         try {
-            await Promise.all([
-                db.ref('results/test').remove(), db.ref('results/dialog').remove(),
-                db.ref('results/crosssell').remove(), db.ref('results/errorfinder').remove(),
-                db.ref('results/clienttype').remove(), db.ref('results/service').remove(),
-                db.ref('results/final_exam').remove()
-            ]);
+            document.getElementById('status').textContent = '⏳ Удаляю...';
+            const types = ['test', 'dialog', 'crosssell', 'errorfinder', 'clienttype', 'service', 'final_exam'];
+            for (const type of types) {
+                const snap = await db.collection('results').doc(type).collection('items').get();
+                const batch = db.batch();
+                snap.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            }
             alert('✅ Все данные удалены!');
             location.reload();
         } catch(e) { alert('Ошибка: ' + e.message); }
@@ -788,54 +778,71 @@
         });
     });
 
+    // 🔥 ЗАГРУЗКА ДАННЫХ ИЗ FIRESTORE
     async function loadResults() {
         document.getElementById('status').textContent = '⏳ Загрузка...';
         try {
             loadFilters();
             const savedType = document.getElementById('typeFilter').value;
-            const savedCity = document.getElementById('cityFilter').value;
-            const savedPercent = document.getElementById('percentFilter').value;
-            const savedSearch = document.getElementById('searchInput').value;
             
-            const [testSnap, dialogSnap, crossSnap, errorSnap, clientSnap, serviceSnap, examSnap] = await Promise.all([
-                db.ref('results/test').get(), db.ref('results/dialog').get(), db.ref('results/crosssell').get(),
-                db.ref('results/errorfinder').get(), db.ref('results/clienttype').get(),
-                db.ref('results/service').get(), db.ref('results/final_exam').get()
-            ]);
+            const types = [
+                { collection: 'test', type: 'test' },
+                { collection: 'dialog', type: 'trainer' },
+                { collection: 'crosssell', type: 'crosssell' },
+                { collection: 'errorfinder', type: 'errorfinder' },
+                { collection: 'clienttype', type: 'clienttype' },
+                { collection: 'service', type: 'service' },
+                { collection: 'final_exam', type: 'final_exam' }
+            ];
             
             let allResults = [];
-            const addResults = (snap, type) => {
-                const data = snap.val();
-                if (data) Object.values(data).forEach(item => { item.type = type; allResults.push(item); });
-            };
-            addResults(testSnap, 'test'); addResults(dialogSnap, 'trainer'); addResults(crossSnap, 'crosssell');
-            addResults(errorSnap, 'errorfinder'); addResults(clientSnap, 'clienttype');
-            addResults(serviceSnap, 'service'); addResults(examSnap, 'final_exam');
+            for (const t of types) {
+                try {
+                    const snap = await db.collection('results').doc(t.collection).collection('items').get();
+                    snap.forEach(doc => {
+                        const item = doc.data();
+                        item.type = t.type;
+                        item._docId = doc.id; // сохраняем для возможности удаления
+                        allResults.push(item);
+                    });
+                } catch(e) {
+                    console.warn(`⚠️ Не удалось прочитать ${t.collection}:`, e.message);
+                }
+            }
             
             if (!allResults.length) {
                 document.getElementById('status').textContent = '📭 Нет результатов';
+                allData = [];
+                applyFilters();
                 return;
             }
             
             allData = allResults.map(r => ({
-                id: r.id || Date.now() + Math.random(), type: r.type || 'test',
-                user_name: r.user_name || 'Аноним', city: r.city || 'Не указан',
-                score: r.score || 0, total: r.total || 11, percent: r.percent || 0,
-                answers: r.answers || [], rules_applied: r.rules_applied || [],
-                scenarios: r.scenarios || [], level: r.level || '',
+                id: r.id || Date.now() + Math.random(),
+                _docId: r._docId,
+                type: r.type || 'test',
+                user_name: r.user_name || 'Аноним',
+                city: r.city || 'Не указан',
+                score: r.score || 0,
+                total: r.total || 11,
+                percent: r.percent || 0,
+                answers: r.answers || [],
+                rules_applied: r.rules_applied || [],
+                scenarios: r.scenarios || [],
+                level: r.level || '',
                 date: r.date || new Date().toISOString()
             }));
             
             allData.sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            // 🔥 ИЗМЕНЕНО: восстанавливаем тип фильтра, затем перестраиваем список городов под него
             document.getElementById('typeFilter').value = savedType;
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.classList.toggle('active', chip.dataset.value === savedType);
             });
             updateCityFilterForType(savedType);
 
-            // Восстанавливаем выбранный город, если он есть в новом списке
+            // Восстанавливаем выбранный город
+            const savedCity = window._savedCity || 'all';
             const citySelect = document.getElementById('cityFilter');
             const availableOptions = [...citySelect.options].map(o => o.value);
             if (availableOptions.includes(savedCity)) {
@@ -844,10 +851,9 @@
                 citySelect.value = 'all';
             }
             
-            document.getElementById('percentFilter').value = savedPercent;
-            document.getElementById('searchInput').value = savedSearch;
+            document.getElementById('percentFilter').value = window._savedPercent || 'all';
+            document.getElementById('searchInput').value = window._savedSearch || '';
             
-            // 🔥 НОВОЕ: Заполняем select фидбека всеми фактическими городами из данных
             const feedbackSelect = document.getElementById('feedbackCitySelect');
             const allUniqueCities = [...new Set(allData.map(r => r.city))].sort();
             feedbackSelect.innerHTML = '<option value="">-- Выберите город / магазин --</option>' +
@@ -863,14 +869,12 @@
         }
     }
 
-    // ========== 🔥 ТОП СЛОЖНЫХ ВОПРОСОВ ==========
     function renderHardQuestions() {
         const container = document.getElementById('hardQuestionsList');
         if (!filteredData.length) { container.innerHTML = '<div class="empty">Нет данных</div>'; return; }
         
         const items = [];
         
-        // Тест: ошибки по вопросам
         const qTotal = new Array(11).fill(0), qErrors = new Array(11).fill(0);
         filteredData.filter(r => r.type === 'test').forEach(r => {
             (r.answers || []).forEach(a => {
@@ -885,7 +889,6 @@
             }
         }
         
-        // Тренировка: неприменённые правила
         TRAINER_RULES.forEach(rule => {
             let total = 0, errors = 0;
             filteredData.filter(r => r.type === 'trainer').forEach(r => {
@@ -896,7 +899,6 @@
                 errors, total, rate: Math.round(errors/total*100), rec: TRAINER_GENERAL_RECS[rule.id] });
         });
         
-        // Допродажи: неприменённые правила
         CROSSSELL_RULES.forEach(rule => {
             let total = 0, errors = 0;
             filteredData.filter(r => r.type === 'crosssell').forEach(r => {
@@ -928,7 +930,6 @@
         `).join('');
     }
 
-    // ========== 👤 ВКЛАДКА СОТРУДНИКИ ==========
     function renderEmployeesTab() {
         if (!allData.length) return;
         renderProfileSelect();
@@ -1095,7 +1096,6 @@
         renderEmployeesTab();
     };
 
-    // ========== ГРАФИКИ И ДАШБОРД ==========
     function renderTrendChart() {
         const series = getDailySeries();
         const map = new Map();
@@ -1268,7 +1268,6 @@
         document.getElementById('sLow').textContent = filteredData.filter(r => r.percent < 70).length;
         document.getElementById('sErrors').textContent = errors;
 
-        // ✨ Спарклайны
         const series = getDailySeries();
         if (actEl) actEl.innerHTML = series.counts.length >= 2 ? makeSparkline(series.counts, '#c41e3a') + '<span class="sparkline-label">активность по дням</span>' : '';
         if (avgSpEl) avgSpEl.innerHTML = series.avgs.length >= 2 ? makeSparkline(series.avgs, '#d97706') + '<span class="sparkline-label">тренд балла</span>' : '';
@@ -1337,29 +1336,30 @@
         }).join('');
     }
 
+    // 🔥 УДАЛЕНИЕ ЗАПИСИ В FIRESTORE (поиск документа по содержимому)
     async function deleteRow(id) {
         if (!confirm('Удалить этот результат навсегда?')) return;
         try {
             const record = allData.find(r => String(r.id) === String(id));
             if (!record) { alert('Запись не найдена'); return; }
-            let path = '';
-            if (record.type === 'test') path = 'results/test';
-            else if (record.type === 'trainer') path = 'results/dialog';
-            else if (record.type === 'crosssell') path = 'results/crosssell';
-            else if (record.type === 'errorfinder') path = 'results/errorfinder';
-            else if (record.type === 'clienttype') path = 'results/clienttype';
-            else if (record.type === 'service') path = 'results/service';
-            else if (record.type === 'final_exam') path = 'results/final_exam';
-            if (path) {
-                const snapshot = await db.ref(path).get();
-                const data = snapshot.val();
-                if (data) {
-                    for (let key in data) {
-                        const item = data[key];
-                        if (item.user_name === record.user_name && item.date === record.date && item.percent === record.percent) {
-                            await db.ref(`${path}/${key}`).remove();
-                            break;
-                        }
+            
+            let collectionName = '';
+            if (record.type === 'test') collectionName = 'test';
+            else if (record.type === 'trainer') collectionName = 'dialog';
+            else if (record.type === 'crosssell') collectionName = 'crosssell';
+            else if (record.type === 'errorfinder') collectionName = 'errorfinder';
+            else if (record.type === 'clienttype') collectionName = 'clienttype';
+            else if (record.type === 'service') collectionName = 'service';
+            else if (record.type === 'final_exam') collectionName = 'final_exam';
+            
+            if (collectionName) {
+                // Ищем документ по содержимому
+                const snap = await db.collection('results').doc(collectionName).collection('items').get();
+                for (const doc of snap.docs) {
+                    const data = doc.data();
+                    if (data.user_name === record.user_name && data.date === record.date && data.percent === record.percent) {
+                        await doc.ref.delete();
+                        break;
                     }
                 }
             }
@@ -1431,7 +1431,6 @@
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-    // ========== ФИДБЕК ==========
     function calculateCityTopics(cityData) {
         const testData = cityData.filter(r => r.type === 'test');
         const trainerData = cityData.filter(r => r.type === 'trainer');
