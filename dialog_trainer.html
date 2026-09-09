@@ -6,7 +6,7 @@
     <title>585GOLD | Тренировка диалога</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -231,26 +231,33 @@
 </div>
 
 <script>
+    // 🔥 Firestore (новый канал, без блокировок)
     const firebaseConfig = {
         apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
         authDomain: "gold-8105a.firebaseapp.com",
-        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "gold-8105a",
         storageBucket: "gold-8105a.firebasestorage.app",
         messagingSenderId: "195469188947",
         appId: "1:195469188947:web:af9671f88b0e70eceecba6"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const db = firebase.firestore();
 
+    // 🔥 АВТОДОЗАГРУЗКА ИЗ ЛОКАЛЬНОГО ХРАНИЛИЩА (в Firestore)
     window.addEventListener('load', async () => {
         const backup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
         if (backup.length > 0) {
+            console.log(`🔄 Найдено ${backup.length} несохранённых результатов. Отправляем в Firestore...`);
             for (let result of backup) {
                 try {
-                    const newRef = db.ref('results/dialog').push();
-                    await newRef.set(result);
-                } catch(e) { console.error('❌ Ошибка дозагрузки:', e.message); }
+                    await Promise.race([
+                        db.collection('results').doc('dialog').collection('items').add(result),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+                    ]);
+                    console.log('✅ Отправлено:', result.user_name);
+                } catch(e) {
+                    console.error('❌ Ошибка дозагрузки:', e.message);
+                }
             }
             localStorage.removeItem('dialog_backup');
         }
@@ -276,6 +283,7 @@
     ];
 
     async function saveToFirebase(resultData) {
+        // Сохраняем локально как резервную копию
         try {
             const localBackup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
             if (!localBackup.some(r => r.id === resultData.id)) {
@@ -283,14 +291,19 @@
                 localStorage.setItem('dialog_backup', JSON.stringify(localBackup));
             }
         } catch(e) { console.error('Не удалось сохранить локально:', e); }
+        
+        // Отправляем в Firestore (с таймаутом 6 секунд)
         try {
-            const newRef = db.ref('results/dialog').push();
-            await newRef.set(resultData);
+            await Promise.race([
+                db.collection('results').doc('dialog').collection('items').add(resultData),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+            ]);
+            // Успешно — удаляем из резервной копии
             const backup = JSON.parse(localStorage.getItem('dialog_backup') || '[]');
             localStorage.setItem('dialog_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
             return true;
         } catch (error) {
-            console.error('❌ Ошибка сохранения в Firebase:', error);
+            console.error('❌ Ошибка сохранения в Firestore:', error);
             return false;
         }
     }
