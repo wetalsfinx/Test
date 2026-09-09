@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>585GOLD | Тест знаний</title>
     
-    <!-- 🔥 ПОДКЛЮЧЕНИЕ FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -17,10 +16,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #fef5f5 0%, #fff5f5 50%, #fef9f0 100%);
-            min-height: 100vh;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
+            min-height: 100vh; padding: 20px; position: relative; overflow-x: hidden;
         }
         
         body::before {
@@ -50,18 +46,12 @@
         }
         
         @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(30px, -30px) rotate(180deg); }
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, -30px); }
         }
         
-        .container { 
-            max-width: 800px; 
-            margin: 0 auto; 
-            position: relative;
-            z-index: 1;
-        }
+        .container { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
         
-        /* HEADER */
         .header {
             background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
             border-radius: 32px;
@@ -84,17 +74,6 @@
             border-radius: 50%;
         }
         
-        .header::after {
-            content: '';
-            position: absolute;
-            bottom: -30%;
-            left: -10%;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-        
         .logo-badge {
             display: inline-flex;
             align-items: center;
@@ -111,20 +90,14 @@
             z-index: 1;
         }
         
-        .logo-badge::before {
-            content: '💎';
-            font-size: 16px;
-        }
-        
-        h1 { 
-            color: white; 
-            text-align: center; 
-            font-size: 36px; 
-            font-weight: 900; 
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 36px;
+            font-weight: 900;
             margin-bottom: 12px;
             position: relative;
             z-index: 1;
-            text-shadow: 0 2px 20px rgba(0,0,0,0.2);
         }
         
         .subtitle {
@@ -157,15 +130,14 @@
         }
         
         .form-group { margin-bottom: 24px; }
-        .form-group label { 
-            font-weight: 700; 
-            display: block; 
-            margin-bottom: 10px; 
-            color: #1f2937; 
-            font-size: 15px;
+        .form-group label {
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-bottom: 10px;
+            color: #1f2937;
+            font-size: 15px;
         }
         .form-group label::before {
             content: '';
@@ -221,16 +193,15 @@
             transition: left 0.5s;
         }
         .btn-primary:hover::before { left: 100%; }
-        .btn-primary:hover { 
-            transform: translateY(-3px); 
-            box-shadow: 0 15px 40px rgba(196,30,58,0.4); 
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(196,30,58,0.4);
         }
-        .btn-primary:active { transform: translateY(-1px); }
-        .btn-primary:disabled { 
-            background: #d1d5db; 
-            cursor: not-allowed; 
-            transform: none; 
-            box-shadow: none; 
+        .btn-primary:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         .progress-container { margin-bottom: 32px; }
@@ -250,7 +221,6 @@
             background: #f3f4f6;
             border-radius: 10px;
             overflow: hidden;
-            position: relative;
         }
         .progress-fill {
             height: 100%;
@@ -272,7 +242,6 @@
             100% { transform: translateX(100%); }
         }
         
-        /* 🎯 ВОПРОС С ИКОНКОЙ */
         .question-wrapper {
             display: flex;
             align-items: flex-start;
@@ -287,17 +256,10 @@
         }
         
         @keyframes questionAppear {
-            from { 
-                opacity: 0; 
-                transform: translateY(20px); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0); 
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        /* 🎨 ИКОНКА В ГРАДИЕНТНОМ КРУГЕ */
         .question-icon {
             flex-shrink: 0;
             width: 72px;
@@ -308,9 +270,7 @@
             align-items: center;
             justify-content: center;
             font-size: 36px;
-            box-shadow: 
-                0 8px 24px rgba(196, 30, 58, 0.3),
-                inset 0 2px 8px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 24px rgba(196, 30, 58, 0.3), inset 0 2px 8px rgba(255, 255, 255, 0.2);
             position: relative;
             animation: iconPulse 2s ease-in-out infinite;
         }
@@ -324,20 +284,17 @@
         }
         
         @keyframes iconPulse {
-            0%, 100% { 
-                transform: scale(1) rotate(0deg);
+            0%, 100% {
+                transform: scale(1);
                 box-shadow: 0 8px 24px rgba(196, 30, 58, 0.3), inset 0 2px 8px rgba(255, 255, 255, 0.2);
             }
-            50% { 
+            50% {
                 transform: scale(1.05) rotate(2deg);
                 box-shadow: 0 12px 32px rgba(196, 30, 58, 0.4), inset 0 2px 8px rgba(255, 255, 255, 0.3);
             }
         }
         
-        .question-content {
-            flex: 1;
-            padding-top: 8px;
-        }
+        .question-content { flex: 1; padding-top: 8px; }
         
         .question-label {
             font-size: 12px;
@@ -358,10 +315,10 @@
             background: linear-gradient(90deg, #c41e3a 0%, #d4af37 100%);
         }
         
-        .question-text { 
-            font-weight: 700; 
-            font-size: 19px; 
-            line-height: 1.6; 
+        .question-text {
+            font-weight: 700;
+            font-size: 19px;
+            line-height: 1.6;
             color: #1f2937;
         }
         
@@ -397,10 +354,10 @@
             transform: translateX(8px);
             box-shadow: 0 8px 24px rgba(196,30,58,0.12);
         }
-        .option.selected { 
+        .option.selected {
             background: linear-gradient(135deg, #fff1f2 0%, #fff 100%);
             color: #9f1239;
-            border-color: #c41e3a; 
+            border-color: #c41e3a;
             box-shadow: 0 8px 24px rgba(196,30,58,0.2);
             transform: translateX(8px);
         }
@@ -418,12 +375,10 @@
             font-size: 15px;
             flex-shrink: 0;
             transition: all 0.3s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         .option.selected .option-letter {
             background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
         }
         .option-text { flex: 1; padding-top: 6px; }
         
@@ -445,22 +400,11 @@
             to { opacity: 1; transform: scale(1); }
         }
         
-        .result-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-        }
-        
-        .result-card.success { 
+        .result-card.success {
             background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
             border-color: #10b981;
         }
-        .result-card.fail { 
+        .result-card.fail {
             background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             border-color: #ef4444;
         }
@@ -573,16 +517,16 @@
             font-size: 24px;
             box-shadow: 0 4px 12px rgba(196, 30, 58, 0.25);
         }
-        .rec-item .rec-q { 
-            font-weight: 700; 
-            font-size: 16px; 
-            color: #1f2937; 
+        .rec-item .rec-q {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1f2937;
             line-height: 1.5;
             flex: 1;
         }
-        .rec-item .rec-wrong { 
-            font-size: 15px; 
-            color: #dc2626; 
+        .rec-item .rec-wrong {
+            font-size: 15px;
+            color: #dc2626;
             margin-bottom: 8px;
             padding: 8px 12px;
             background: #fee2e2;
@@ -591,9 +535,9 @@
             align-items: center;
             gap: 8px;
         }
-        .rec-item .rec-correct { 
-            font-size: 15px; 
-            color: #059669; 
+        .rec-item .rec-correct {
+            font-size: 15px;
+            color: #059669;
             margin-bottom: 16px;
             padding: 8px 12px;
             background: #d1fae5;
@@ -602,34 +546,33 @@
             align-items: center;
             gap: 8px;
         }
-        .rec-item .rec-tip { 
+        .rec-item .rec-tip {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            padding: 20px 24px; 
-            border-radius: 16px; 
-            font-size: 15px; 
-            color: #92400e; 
-            border-left: 4px solid #d97706; 
+            padding: 20px 24px;
+            border-radius: 16px;
+            font-size: 15px;
+            color: #92400e;
+            border-left: 4px solid #d97706;
             line-height: 1.6;
             font-weight: 500;
         }
-        .rec-perfect { 
-            text-align: center; 
-            padding: 40px 32px; 
+        .rec-perfect {
+            text-align: center;
+            padding: 40px 32px;
             background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            border-radius: 24px; 
-            color: #065f46; 
-            margin-top: 32px; 
+            border-radius: 24px;
+            color: #065f46;
+            margin-top: 32px;
             font-weight: 800;
             font-size: 20px;
             border: 3px solid #10b981;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
         }
         
-        .save-status { 
-            font-size: 15px; 
-            font-weight: 700; 
-            margin-top: 24px; 
-            text-align: center; 
+        .save-status {
+            font-size: 15px;
+            font-weight: 700;
+            margin-top: 24px;
+            text-align: center;
             padding: 16px;
             border-radius: 12px;
         }
@@ -662,7 +605,7 @@
             transition: left 0.5s;
         }
         .restart-btn:hover::before { left: 100%; }
-        .restart-btn:hover { 
+        .restart-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 40px rgba(196, 30, 58, 0.4);
         }
@@ -672,8 +615,8 @@
             .header { padding: 32px 24px; }
             h1 { font-size: 28px; }
             .card { padding: 28px 20px; }
-            .question-wrapper { 
-                flex-direction: column; 
+            .question-wrapper {
+                flex-direction: column;
                 align-items: center;
                 text-align: center;
                 gap: 16px;
@@ -723,14 +666,14 @@
         <div class="form-group">
             <label>Город</label>
             <select id="userCity">
-    <option value="">Выберите город</option>
-    <option value="Екатеринбург">Екатеринбург</option>
-    <option value="Владимир">Владимир</option>
-    <option value="Чайковский">Чайковский</option>
-    <option value="Тольятти">Тольятти</option>
-    <option value="СПб, Заневский, 67, ТК Заневский Каскад">СПб, Заневский, 67, ТК Заневский Каскад</option>
-    <option value="СПб, Стародеревенская, 36, ТД Крокус">СПб, Стародеревенская, 36, ТД Крокус</option>
-</select>
+                <option value="">Выберите город</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Владимир">Владимир</option>
+                <option value="Чайковский">Чайковский</option>
+                <option value="Тольятти">Тольятти</option>
+                <option value="СПб, Заневский, 67, ТК Заневский Каскад">СПб, Заневский, 67, ТК Заневский Каскад</option>
+                <option value="СПб, Стародеревенская, 36, ТД Крокус">СПб, Стародеревенская, 36, ТД Крокус</option>
+            </select>
         </div>
         <button class="btn-primary" id="startTestBtn">🚀 Начать тест</button>
     </div>
@@ -756,27 +699,30 @@
 </div>
 
 <script>
+    // 🔥 Firestore (новый канал, без блокировок)
     const firebaseConfig = {
         apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
         authDomain: "gold-8105a.firebaseapp.com",
-        databaseURL: "https://gold-8105a-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "gold-8105a",
         storageBucket: "gold-8105a.firebasestorage.app",
         messagingSenderId: "195469188947",
         appId: "1:195469188947:web:af9671f88b0e70eceecba6"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const db = firebase.firestore();
 
+    // 🔥 АВТОДОЗАГРУЗКА ИЗ ЛОКАЛЬНОГО ХРАНИЛИЩА (в Firestore)
     window.addEventListener('load', async () => {
         const backup = JSON.parse(localStorage.getItem('test_backup') || '[]');
         if (backup.length > 0) {
-            console.log(`🔄 Найдено ${backup.length} несохранённых результатов теста. Отправляем в Firebase...`);
+            console.log(`🔄 Найдено ${backup.length} несохранённых результатов теста. Отправляем в Firestore...`);
             
             for (let result of backup) {
                 try {
-                    const newRef = db.ref('results/test').push();
-                    await newRef.set(result);
+                    await Promise.race([
+                        db.collection('results').doc('test').collection('items').add(result),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+                    ]);
                     console.log('✅ Отправлено из бэкапа:', result.user_name);
                 } catch(e) {
                     console.error('❌ Ошибка дозагрузки из бэкапа:', e.message);
@@ -784,7 +730,7 @@
             }
             
             localStorage.removeItem('test_backup');
-            console.log('✅ Все локальные результаты теста отправлены в Firebase!');
+            console.log('✅ Все локальные результаты теста отправлены в Firestore!');
         }
     });
 
@@ -812,8 +758,10 @@
         } catch(e) { console.error('Не удалось сохранить локально:', e); }
 
         try {
-            const newRef = db.ref('results/test').push();
-            await newRef.set(resultData);
+            await Promise.race([
+                db.collection('results').doc('test').collection('items').add(resultData),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+            ]);
             
             const backup = JSON.parse(localStorage.getItem('test_backup') || '[]');
             const filtered = backup.filter(r => r.id !== resultData.id);
@@ -821,89 +769,88 @@
             
             return true;
         } catch (error) {
-            console.error('❌ Ошибка сохранения в Firebase:', error);
+            console.error('❌ Ошибка сохранения в Firestore:', error);
             return false;
         }
     }
 
-    // 🎨 ВОПРОСЫ С ИКОНКАМИ
     const ORIGINAL_QUESTIONS = [
-        { 
-            icon: "💍", 
+        {
+            icon: "💍",
             label: "Встреча клиента",
-            text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?", 
-            options: ["«Добрый день! Чем могу помочь?»", "«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?»", "«Добрый день! Присмотритесь к нашим новинкам»", "«Здравствуйте! Если нужны будут рекомендации — обращайтесь»"], 
-            correct: 1 
+            text: "Молодая девушка 25 лет заходит в магазин, смотрит на витрину с кольцами. Вы установили зрительный контакт. Что говорите ПЕРВЫМ?",
+            options: ["«Добрый день! Чем могу помочь?»", "«Здравствуйте! У нас сегодня скидка 30% на бриллианты + оплата бонусами до 80%. Какое изделие выбираете — для себя или в подарок?»", "«Добрый день! Присмотритесь к нашим новинкам»", "«Здравствуйте! Если нужны будут рекомендации — обращайтесь»"],
+            correct: 1
         },
-        { 
-            icon: "💰", 
+        {
+            icon: "💰",
             label: "Бюджет клиента",
-            text: "Клиент говорит: «Мне нужно кольцо до 25 000 рублей». Вы услышали бюджет. Что делаете ДАЛЬШЕ?", 
-            options: ["Сразу показываете 3-4 кольца в пределах 25 000 ₽", "Показываете сначала кольцо за 28 000 ₽ (якорь), затем за 25 000 ₽", "Спрашиваете: «А для какого случая? Это подарок или для себя?»", "Спрашиваете: «А готовы добавить за лучшее качество?»"], 
-            correct: 2 
+            text: "Клиент говорит: «Мне нужно кольцо до 25 000 рублей». Вы услышали бюджет. Что делаете ДАЛЬШЕ?",
+            options: ["Сразу показываете 3-4 кольца в пределах 25 000 ₽", "Показываете сначала кольцо за 28 000 ₽ (якорь), затем за 25 000 ₽", "Спрашиваете: «А для какого случая? Это подарок или для себя?»", "Спрашиваете: «А готовы добавить за лучшее качество?»"],
+            correct: 2
         },
-        { 
-            icon: "✨", 
+        {
+            icon: "✨",
             label: "Дополнительная продажа",
-            text: "Клиентка выбрала кольцо. Вы хотите предложить серьги из той же коллекции. Как говорите?", 
-            options: ["«У нас есть ещё серьги, посмотрите?»", "«Можно подобрать серьги к этому кольцу?»", "«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»", "«К этому кольцу обычно берут серьги»"], 
-            correct: 2 
+            text: "Клиентка выбрала кольцо. Вы хотите предложить серьги из той же коллекции. Как говорите?",
+            options: ["«У нас есть ещё серьги, посмотрите?»", "«Можно подобрать серьги к этому кольцу?»", "«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»", "«К этому кольцу обычно берут серьги»"],
+            correct: 2
         },
-        { 
-            icon: "🥇", 
+        {
+            icon: "🥇",
             label: "Работа с выбором",
-            text: "Клиентка смотрит на серьги из серебра за 12 000 ₽. Вы хотите мягко переориентировать на золото. Что говорите?", 
-            options: ["«Золото лучше — оно дороже и качественнее»", "«У нас акция на золото — скидка 30%»", "«Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»", "«Золото 585 пробы служит дольше»"], 
-            correct: 2 
+            text: "Клиентка смотрит на серьги из серебра за 12 000 ₽. Вы хотите мягко переориентировать на золото. Что говорите?",
+            options: ["«Золото лучше — оно дороже и качественнее»", "«У нас акция на золото — скидка 30%»", "«Давайте примерим оба варианта — и серебро, и золото. Посмотрите, как золото сверкает на свету»", "«Золото 585 пробы служит дольше»"],
+            correct: 2
         },
-        { 
-            icon: "🎁", 
+        {
+            icon: "🎁",
             label: "Оформление покупки",
-            text: "Клиентка оформляет покупку кольца. Вы:", 
-            options: ["«Футляр нужен будет?»", "«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»", "«У нас есть футляры и средства для чистки. Показать?»", "«Можем предложить футляр»"], 
-            correct: 1 
+            text: "Клиентка оформляет покупку кольца. Вы:",
+            options: ["«Футляр нужен будет?»", "«Давайте выберем для вашего нового украшения красивый футляр и чистящее средство, чтобы оно всегда выглядело безупречно»", "«У нас есть футляры и средства для чистки. Показать?»", "«Можем предложить футляр»"],
+            correct: 1
         },
-        { 
-            icon: "💎", 
+        {
+            icon: "💎",
             label: "Работа с ценой",
-            text: "Клиентка выбрала кольцо за 38 000 ₽, но говорит: «Дороговато... Я думала, дешевле будет». Что отвечаете?", 
-            options: ["«Так вы же золото покупаете, а не бижутерию»", "«Это кольцо с бриллиантом высокой чистоты»", "«Понимаю, цена важна. А с чем вы сравниваете?»", "«Давайте посмотрю, что есть подешевле»"], 
-            correct: 2 
+            text: "Клиентка выбрала кольцо за 38 000 ₽, но говорит: «Дороговато... Я думала, дешевле будет». Что отвечаете?",
+            options: ["«Так вы же золото покупаете, а не бижутерию»", "«Это кольцо с бриллиантом высокой чистоты»", "«Понимаю, цена важна. А с чем вы сравниваете?»", "«Давайте посмотрю, что есть подешевле»"],
+            correct: 2
         },
-        { 
-            icon: "📏", 
+        {
+            icon: "📏",
             label: "Нет в наличии",
-            text: "Клиент выбирает кольцо, но размера нет в наличии. Что говорите?", 
-            options: ["«Можем заказать — доставка 3-5 дней»", "«Этот размер закончился, но скоро привезут»", "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", "«Приходите завтра — возможно, будет в наличии»"], 
-            correct: 2 
+            text: "Клиент выбирает кольцо, но размера нет в наличии. Что говорите?",
+            options: ["«Можем заказать — доставка 3-5 дней»", "«Этот размер закончился, но скоро привезут»", "«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ»", "«Приходите завтра — возможно, будет в наличии»"],
+            correct: 2
         },
-        { 
-            icon: "🎂", 
+        {
+            icon: "🎂",
             label: "Подарок близким",
-            text: "Клиентка выбирает подарок маме на юбилей. Как презентуете изделие?", 
-            options: ["«Это кольцо из золота 585 пробы, вес 3 грамма»", "«Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нем, глядя на ваш подарок»", "«Красивое кольцо, маме понравится»", "«Это кольцо с бриллиантом, очень популярная модель»"], 
-            correct: 1 
+            text: "Клиентка выбирает подарок маме на юбилей. Как презентуете изделие?",
+            options: ["«Это кольцо из золота 585 пробы, вес 3 грамма»", "«Это кольцо станет идеальным напоминанием о её юбилее, она будет с теплотой вспоминать о нем, глядя на ваш подарок»", "«Красивое кольцо, маме понравится»", "«Это кольцо с бриллиантом, очень популярная модель»"],
+            correct: 1
         },
-        { 
-            icon: "📚", 
+        {
+            icon: "📚",
             label: "Показать каталог",
-            text: "Клиент спрашивает: «Можно посмотреть другие модели?». Как отвечаете?", 
-            options: ["«Да, конечно. Какие именно?»", "«Смотрите, у нас много всего»", "«Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»", "«Конечно, вот каталог»"], 
-            correct: 2 
+            text: "Клиент спрашивает: «Можно посмотреть другие модели?». Как отвечаете?",
+            options: ["«Да, конечно. Какие именно?»", "«Смотрите, у нас много всего»", "«Давайте я покажу вам ещё несколько моделей, которые идеально дополнят вашу коллекцию»", "«Конечно, вот каталог»"],
+            correct: 2
         },
-        { 
-            icon: "💳", 
+        {
+            icon: "💳",
             label: "Яндекс Сплит",
-            text: "Клиентка выбрала кольцо за 55 000 ₽, но колеблется. Вы знаете, что у магазина есть Яндекс Сплит. Когда и КАК вы упоминаете об этом?", 
-            options: ["Только если клиентка скажет «дорого» или «я подумаю»", "Только на кассе при оформлении покупки", "Во время презентации, в момент завершения покупки, в случаях сомнения покупателя: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»", "Когда клиентка сама спросит про рассрочку"], 
-            correct: 2 
+            text: "Клиентка выбрала кольцо за 55 000 ₽, но колеблется. Вы знаете, что у магазина есть Яндекс Сплит. Когда и КАК вы упоминаете об этом?",
+            options: ["Только если клиентка скажет «дорого» или «я подумаю»", "Только на кассе при оформлении покупки", "Во время презентации, в момент завершения покупки, в случаях сомнения покупателя: «Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»", "Когда клиентка сама спросит про рассрочку"],
+            correct: 2
         },
-        { 
-            icon: "👣", 
+        {
+            icon: "👣",
             label: "Клиент у витрины",
-            text: "Клиентка зашла в магазин. Вы поздоровались, проговорили акцию. Она кивнула и продолжает медленно идти вдоль витрины, не останавливаясь. Что делаете?", 
-            options: ["Сразу подходите и спрашиваете: «Что-то присмотрели?»", "Ждёте 20-30 секунд, даёте клиентке освоиться, затем мягко начинаете диалог: «Какое изделие выбираете? Для себя или в подарок?»", "Подходите через 5 минут", "Наблюдаете, но не подходите, пока клиентка сама не обратится"], 
-            correct: 1 
+            text: "Клиентка зашла в магазин. Вы поздоровались, проговорили акцию. Она кивнула и продолжает медленно идти вдоль витрины, не останавливаясь. Что делаете?",
+            options: ["Сразу подходите и спрашиваете: «Что-то присмотрели?»", "Ждёте 20-30 секунд, даёте клиентке освоиться, затем мягко начинаете диалог: «Какое изделие выбираете? Для себя или в подарок?»", "Подходите через 5 минут", "Наблюдаете, но не подходите, пока клиентка сама не обратится"],
+            correct: 1
         }
     ];
 
@@ -942,7 +889,6 @@
     function renderQuestion() {
         const q = shuffledQuestions[currentIndex];
         
-        // 🎨 ОТОБРАЖАЕМ ВОПРОС С ИКОНКОЙ
         questionContainer.innerHTML = `
             <div class="question-wrapper">
                 <div class="question-icon">${q.icon}</div>
