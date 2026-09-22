@@ -420,7 +420,7 @@
         }
     ];
 
-       // 🔗 Какой тип допродажи тренирует каждый сценарий
+    // 🔗 Какой тип допродажи тренирует каждый сценарий
     const SCENARIO_RULE = {
         "Кольцо с бриллиантом": "Предлагай комплекты",
         "Золотая цепочка": "Цепочка + кулон",
@@ -433,6 +433,7 @@
         "Пара просто смотрит": "Активный вопрос",
         "Постоянный клиент": "Предлагай комплекты"
     };
+
     let currentScenario = 0;
     let selectedOption = null;
     let gameResults = [];
@@ -532,7 +533,7 @@
         html += `</div>`;
         resultCard.innerHTML = html;
         
-               gameResults.push({
+        gameResults.push({
             scenario: scenario.title,
             icon: scenario.icon,
             selectedOption: selectedOption,
