@@ -420,6 +420,19 @@
         }
     ];
 
+       // 🔗 Какой тип допродажи тренирует каждый сценарий
+    const SCENARIO_RULE = {
+        "Кольцо с бриллиантом": "Предлагай комплекты",
+        "Золотая цепочка": "Цепочка + кулон",
+        "Подарок маме": "Подарочная упаковка",
+        "Дорогие серьги": "Средства ухода",
+        "Растерянный клиент": "Подарочный сертификат",
+        "Молчаливый клиент": "Активный вопрос",
+        "Серьги-пусеты": "Предлагай комплекты",
+        "Серебряная цепь": "Средства ухода",
+        "Пара просто смотрит": "Активный вопрос",
+        "Постоянный клиент": "Предлагай комплекты"
+    };
     let currentScenario = 0;
     let selectedOption = null;
     let gameResults = [];
@@ -581,9 +594,12 @@
             </div>
         `;
         
+                const correctCount = gameResults.filter(r => r.isCorrect).length;
+        const rulesApplied = [...new Set(gameResults.filter(r => r.isCorrect).map(r => SCENARIO_RULE[r.scenario]).filter(Boolean))];
         const resultData = {
             id: Date.now(), type: 'crosssell', user_name: currentUserName, city: currentUserCity,
-            score: totalScore, total: SCENARIOS.length * 100, percent: avgPercent, passed: passed,
+            score: correctCount, total: SCENARIOS.length, percent: avgPercent, passed: passed,
+            rules_applied: rulesApplied, rules_count: rulesApplied.length,
             scenarios: gameResults, date: new Date().toISOString(),
             timestamp: new Date().toLocaleString('ru-RU')
         };
