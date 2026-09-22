@@ -582,6 +582,19 @@
         return [];
     }
     
+        // 🆕 Ответы сценариев допродаж (чтобы показывать выбор сотрудника)
+    const CROSSSELL_SCENARIOS = {
+        "Кольцо с бриллиантом": { correct: 1, options: ["«Отлично, сейчас пробью чек. С вас 45 тысяч».", "«Отличный выбор! К этому кольцу идеально подойдут серьги из той же коллекции. Давайте я их принесу, чтобы вы оценили комплект?»", "«Хорошо, а ещё у нас есть акция на браслеты, хотите посмотреть?»"] },
+        "Золотая цепочка": { correct: 1, options: ["«Хорошо, оформляю. Вам нужен футляр?»", "«Отличная цепочка! К ней часто берут вот этот стильный кулон или подвеску. Они продаются вместе в 70% случаев, так образ выглядит законченным. Примерим?»", "«А вы уверены, что не хотите взять цепочку подороже? Эта слишком простая»."] },
+        "Подарок маме": { correct: 0, options: ["«Конечно! Давайте я упакую их в наш фирменный подарочный футляр. Это сделает подарок по-настоящему праздничным и покажет вашу заботу».", "«У нас есть платный футляр, стоит ... рублей. Будете брать?»", "«Хорошо, упакую в бесплатный картонный футляр. Тоже неплохо смотрится»."] },
+        "Дорогие серьги": { correct: 1, options: ["«Не бойтесь, это же золото, оно не темнеет».", "«Понимаю вашу заботу. Чтобы серьги всегда сияли как новые, рекомендую взять наше профессиональное чистящее средство и мягкую салфетку. Это продлит жизнь украшению на годы».", "«Ну, если будете аккуратно носить, всё будет хорошо»."] },
+        "Растерянный клиент": { correct: 0, options: ["«Может быть, вам подарочный сертификат? Так вы точно не ошибётесь, а именинник выберет сам».", "«Давайте я покажу вам вообще всё, что у нас есть в этом бюджете».", "«Просто выберите то, что первым приглянулось»."] },
+        "Молчаливый клиент": { correct: 1, options: ["«Хорошо, смотрите. Я тут рядом».", "«Понимаю. Кстати, у многих наших покупателей сейчас популярны минималистичные кольца. Вы ищете что-то для повседневной носки или для особого случая?»", "«А почему вы ничего не выбираете? У нас большой ассортимент»."] },
+        "Серьги-пусеты": { correct: 1, options: ["«Хорошо, один товар, пробиваю».", "«Отличный базовый выбор! А к ним у нас есть очень нежные тонкие цепочки, которые идеально дополнят такой образ. Посмотрите пару вариантов?»", "«А может, возьмёте сразу две пары, пока акция?»"] },
+        "Серебряная цепь": { correct: 0, options: ["«Серебро требует особого ухода. Давайте я добавлю к покупке специальное средство для чистки, она стоит совсем недорого, но цепь будет как новая».", "«Серебро сейчас не очень модно, может, посмотрите золото?»", "«Хорошо, с вас 1500 рублей»."] },
+        "Пара просто смотрит": { correct: 0, options: ["«Понимаю, прогуливайтесь. А вы не подбираете что-то к предстоящему празднику или дате? У нас как раз новое поступление».", "«Ну ладно, заглядывайте, когда решите купить».", "«Смотрите, но ничего не трогайте, пожалуйста»."] },
+        "Постоянный клиент": { correct: 1, options: ["«Здравствуйте! Да, вот новые коллекции, смотрите».", "«Здравствуйте, Мария! Рада вас видеть. Как вам кольцо, которое вы брали в прошлом месяце, носите с удовольствием? Кстати, к нему отлично подойдут новые браслеты из той же коллекции, давайте покажу?»", "«Здравствуйте. У нас сегодня скидки 10%»."] }
+    };
     let allData = [], filteredData = [];
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, profileChart = null;
     let selectedNames = new Set();
@@ -1408,13 +1421,28 @@
                 const applied = emp.rules_applied && emp.rules_applied.includes(rule.name);
                 html += `<div class="rule-item ${applied ? '' : 'failed'}"><div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>${!applied ? `<div class="rule-status" style="color:#ef4444;margin-top:4px;">📌 ${rule.rec}</div>` : ''}</div>`;
             });
-        } else if (emp.type === 'crosssell') {
+                } else if (emp.type === 'crosssell') {
             html += `<div class="section-subtitle">Применённые правила допродаж:</div>`;
             const appliedRules = getCrosssellApplied(emp);
             CROSSSELL_RULES.forEach(rule => {
                 const applied = appliedRules.includes(rule.name);
                 html += `<div class="rule-item ${applied ? '' : 'failed'}"><div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>${!applied ? `<div class="rule-status" style="color:#ef4444;margin-top:4px;">📌 ${rule.rec}</div>` : ''}</div>`;
             });
+            // 🆕 Разбор сценариев с ответами сотрудника
+            if (emp.scenarios && emp.scenarios.length) {
+                html += `<div class="section-subtitle">Разбор сценариев:</div>`;
+                emp.scenarios.forEach((s, idx) => {
+                    const meta = CROSSSELL_SCENARIOS[s.scenario] || null;
+                    const selectedText = s.selectedText || (meta ? meta.options[s.selectedOption] : 'Ответ ' + String.fromCharCode(65 + (s.selectedOption || 0)));
+                    const correctText = s.correctText || (meta ? meta.options[meta.correct] : '');
+                    html += `<div class="rule-item ${s.isCorrect ? '' : 'failed'}">
+                        <div class="rule-name">${s.isCorrect ? '✅' : '❌'} ${idx + 1}. ${s.icon || '💰'} ${esc(s.scenario)}</div>
+                        <div class="rule-status" style="margin-top:6px;">💬 Ответ сотрудника: ${esc(selectedText)}</div>
+                        ${!s.isCorrect && correctText ? `<div class="rule-status" style="color:#16a34a;margin-top:4px;">✅ Правильный ответ: ${esc(correctText)}</div>` : ''}
+                    </div>`;
+                });
+            }
+        } else if (emp.type === 'errorfinder' || emp.type === 'clienttype') {
         } else if (emp.type === 'errorfinder' || emp.type === 'clienttype') {
             html += `<div class="section-subtitle">Результаты по сценариям:</div>`;
             if (emp.scenarios && emp.scenarios.length) {
