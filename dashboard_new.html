@@ -560,6 +560,27 @@
         "gift_wrapping": "Используйте формулировки подарочной упаковки.", "care": "Предлагайте средства ухода через заботу.",
         "certificate": "Позиционируйте сертификат как вариант подарка.", "active_question": "Отработайте мягкие вопросы."
     };
+
+    // 🆕 Соответствие сценариев допродаж правилам (для записей старого формата)
+    const SCENARIO_RULE_MAP = {
+        "Кольцо с бриллиантом": "Предлагай комплекты",
+        "Золотая цепочка": "Цепочка + кулон",
+        "Подарок маме": "Подарочная упаковка",
+        "Дорогие серьги": "Средства ухода",
+        "Растерянный клиент": "Подарочный сертификат",
+        "Молчаливый клиент": "Активный вопрос",
+        "Серьги-пусеты": "Предлагай комплекты",
+        "Серебряная цепь": "Средства ухода",
+        "Пара просто смотрит": "Активный вопрос",
+        "Постоянный клиент": "Предлагай комплекты"
+    };
+    function getCrosssellApplied(r) {
+        if (r.rules_applied && r.rules_applied.length) return r.rules_applied;
+        if (r.scenarios && r.scenarios.length) {
+            return [...new Set(r.scenarios.filter(s => s.isCorrect).map(s => SCENARIO_RULE_MAP[s.scenario]).filter(Boolean))];
+        }
+        return [];
+    }
     
     let allData = [], filteredData = [];
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, profileChart = null;
@@ -835,6 +856,11 @@
             
             allData.sort((a, b) => new Date(b.date) - new Date(a.date));
             
+            // 🆕 Нормализуем старый формат допродаж (1000 из 1000 → 10 из 10)
+            allData.forEach(r => {
+                if (r.type === 'crosssell' && r.total > 100) { r.score = Math.round(r.score / 100); r.total = Math.round(r.total / 100); }
+            });
+            
             document.getElementById('typeFilter').value = savedType;
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.classList.toggle('active', chip.dataset.value === savedType);
@@ -903,7 +929,7 @@
             let total = 0, errors = 0;
             filteredData.filter(r => r.type === 'crosssell').forEach(r => {
                 total++;
-                if (!(r.rules_applied || []).includes(rule.name)) errors++;
+                if (!getCrosssellApplied(r).includes(rule.name)) errors++;
             });
             if (total > 0) items.push({ icon: '💰', name: rule.name, question: '«Правило допродаж»',
                 errors, total, rate: Math.round(errors/total*100), rec: CROSSSELL_GENERAL_RECS[rule.id] });
@@ -1159,8 +1185,9 @@
                 });
             } else if (r.type === 'trainer' && r.rules_applied) {
                 TRAINER_RULES.forEach(rule => { if (!r.rules_applied.includes(rule.name)) c.trainerRules[rule.name] = (c.trainerRules[rule.name] || 0) + 1; });
-            } else if (r.type === 'crosssell' && r.rules_applied) {
-                CROSSSELL_RULES.forEach(rule => { if (!r.rules_applied.includes(rule.name)) c.crosssellRules[rule.name] = (c.crosssellRules[rule.name] || 0) + 1; });
+            } else if (r.type === 'crosssell') {
+                const appliedRules = getCrosssellApplied(r);
+                CROSSSELL_RULES.forEach(rule => { if (!appliedRules.includes(rule.name)) c.crosssellRules[rule.name] = (c.crosssellRules[rule.name] || 0) + 1; });
             }
         });
         
@@ -1383,8 +1410,9 @@
             });
         } else if (emp.type === 'crosssell') {
             html += `<div class="section-subtitle">Применённые правила допродаж:</div>`;
+            const appliedRules = getCrosssellApplied(emp);
             CROSSSELL_RULES.forEach(rule => {
-                const applied = emp.rules_applied && emp.rules_applied.includes(rule.name);
+                const applied = appliedRules.includes(rule.name);
                 html += `<div class="rule-item ${applied ? '' : 'failed'}"><div class="rule-name">${applied ? '✅' : '❌'} ${rule.name}</div>${!applied ? `<div class="rule-status" style="color:#ef4444;margin-top:4px;">📌 ${rule.rec}</div>` : ''}</div>`;
             });
         } else if (emp.type === 'errorfinder' || emp.type === 'clienttype') {
@@ -1456,7 +1484,7 @@
 
         CROSSSELL_RULES.forEach(rule => {
             let applied = 0, total = 0;
-            crosssellData.forEach(r => { if (r.rules_applied) { total++; if (r.rules_applied.includes(rule.name)) applied++; } });
+            crosssellData.forEach(r => { total++; if (getCrosssellApplied(r).includes(rule.name)) applied++; });
             if (total > 0) topics.push({ type: 'crosssell', name: rule.name, correct: applied, total, percent: Math.round((applied/total)*100), rec: CROSSSELL_GENERAL_RECS[rule.id] });
         });
         
