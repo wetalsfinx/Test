@@ -532,11 +532,13 @@
         html += `</div>`;
         resultCard.innerHTML = html;
         
-        gameResults.push({
+               gameResults.push({
             scenario: scenario.title,
             icon: scenario.icon,
             selectedOption: selectedOption,
             correctOption: correctOption,
+            selectedText: scenario.options[selectedOption].text,
+            correctText: scenario.options[correctOption].text,
             isCorrect: isCorrect,
             percent: percent
         });
