@@ -596,7 +596,6 @@
             </div>
         `;
         
-                const correctCount = gameResults.filter(r => r.isCorrect).length;
         const rulesApplied = [...new Set(gameResults.filter(r => r.isCorrect).map(r => SCENARIO_RULE[r.scenario]).filter(Boolean))];
         const resultData = {
             id: Date.now(), type: 'crosssell', user_name: currentUserName, city: currentUserCity,
