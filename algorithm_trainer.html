@@ -47,18 +47,19 @@ h1{color:#fff;text-align:center;font-size:32px;font-weight:900;margin-bottom:12p
 .dcard .pos{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#c41e3a,#8b1a2c);color:#fff;font-weight:800;font-size:13px;display:none;align-items:center;justify-content:center;flex-shrink:0}
 .zone.seq .dcard .pos{display:flex}
 .dcard.trap-reveal{border-color:#ef4444;background:#fee2e2}
-.dcard.good-reveal{border-color:#10b981;background:#d1fae5}
 .ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.9;box-shadow:0 12px 32px rgba(0,0,0,.25);transform:rotate(2deg)}
 .placeholder{border:2px dashed #c41e3a;border-radius:14px;background:rgba(196,30,58,.05)}
 .result-card{border-radius:24px;padding:28px;margin-top:20px;border:3px solid #e5e7eb;background:#fff;animation:slideUp .5s ease}
 .result-card.success{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#10b981}
 .result-card.fail{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#ef4444}
 .result-card h2{font-size:26px;font-weight:900;margin-bottom:12px;text-align:center}
-.result-card.success h2{color:#065f46}.result-card.fail h2{color:#991b1b}
+.result-card.success h2{color:#065f46}
+.result-card.fail h2{color:#991b1b}
 .reveal{margin-top:16px;text-align:left}
 .reveal-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;margin-bottom:6px;font-size:14px;background:#fff}
 .reveal-item .n{width:24px;height:24px;border-radius:6px;background:#c41e3a;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.reveal-item.miss{background:#fee2e2}.reveal-item.miss .n{background:#ef4444}
+.reveal-item.miss{background:#fee2e2}
+.reveal-item.miss .n{background:#ef4444}
 .reveal-item.trap{background:#f3f4f6;color:#6b7280;text-decoration:line-through}
 .final-card{border-radius:32px;padding:48px 40px;text-align:center;border:3px solid #e5e7eb;background:#fff}
 .final-card.success{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#10b981}
@@ -81,13 +82,20 @@ h1{color:#fff;text-align:center;font-size:32px;font-weight:900;margin-bottom:12p
   </div>
 
   <div id="regScreen" class="card">
-    <div class="form-group"><label>Имя и фамилия</label><input type="text" id="userName" placeholder="Например: Иванова Анна" autocomplete="off"></div>
-    <div class="form-group"><label>Магазин</label>
+    <div class="form-group">
+      <label>Имя и фамилия</label>
+      <input type="text" id="userName" placeholder="Например: Иванова Анна" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>Магазин</label>
       <select id="userCity">
         <option value="">Выберите магазин</option>
-        <option>Екатеринбург</option><option>Владимир</option><option>Чайковский</option>
-        <option>Тольятти</option><option>СПб, Заневский, 67, ТК Заневский Каскад</option>
-        <option>СПб, Стародеревенская, 36, ТД Крокус</option>
+        <option value="Екатеринбург">Екатеринбург</option>
+        <option value="Владимир">Владимир</option>
+        <option value="Чайковский">Чайковский</option>
+        <option value="Тольятти">Тольятти</option>
+        <option value="СПб, Заневский, 67, ТК Заневский Каскад">СПб, Заневский, 67, ТК Заневский Каскад</option>
+        <option value="СПб, Стародеревенская, 36, ТД Крокус">СПб, Стародеревенская, 36, ТД Крокус</option>
       </select>
     </div>
     <button class="btn-primary" id="startBtn">🚀 Начать игру</button>
@@ -100,12 +108,14 @@ h1{color:#fff;text-align:center;font-size:32px;font-weight:900;margin-bottom:12p
       <div><div class="sit-title" id="sitTitle"></div><div class="sit-diff" id="sitDiff"></div></div>
     </div>
     <div class="situation" id="situation"></div>
-    <div class="zone-label"> Твой алгоритм (перетащи по порядку)</div>
+    <div class="zone-label">🎯 Твой алгоритм (перетащи по порядку)</div>
     <div class="zone seq" id="seqZone"></div>
     <div class="zone-label">🃏 Карточки этапов</div>
     <div class="zone" id="poolZone"></div>
-    <div class="zone-label">🗑️ Корзина (лишние этапы)</div>
-    <div class="zone disc" id="discZone"></div>
+    <div id="trashWrap">
+      <div class="zone-label">🗑️ Корзина (лишние этапы)</div>
+      <div class="zone disc" id="discZone"></div>
+    </div>
     <button class="btn-primary" id="checkBtn" style="margin-top:20px">✅ Проверить</button>
     <div id="resultCard"></div>
   </div></div>
@@ -161,6 +171,7 @@ function renderScenario(){
   document.getElementById('sitTitle').textContent=sc.title;
   document.getElementById('sitDiff').textContent=sc.diff;
   document.getElementById('situation').textContent=sc.situation;
+  document.getElementById('trashWrap').style.display = sc.traps.length ? 'block' : 'none';
   seqZone.innerHTML=''; discZone.innerHTML=''; poolZone.innerHTML='';
   document.getElementById('resultCard').innerHTML='';
   const checkBtn=document.getElementById('checkBtn');
@@ -171,7 +182,7 @@ function renderScenario(){
   shuffle(cards).forEach(c=>{
     const d=document.createElement('div');
     d.className='dcard'; d.dataset.id=c.id; d.dataset.trap=c.trap?'1':'0';
-    d.innerHTML=`<span class="grip">⠿</span><span class="pos"></span><span class="txt">${c.text}</span>`;
+    d.innerHTML='<span class="grip">⠿</span><span class="pos"></span><span class="txt">'+c.text+'</span>';
     poolZone.appendChild(d);
   });
   updatePos();
@@ -179,7 +190,8 @@ function renderScenario(){
 }
 
 function updatePos(){
-  [...seqZone.children].forEach((k,i)=>{const p=k.querySelector('.pos'); if(p)p.textContent=i+1;});
+  const kids=[...seqZone.children].filter(k=>k.classList.contains('dcard'));
+  kids.forEach((k,i)=>{const p=k.querySelector('.pos'); if(p)p.textContent=i+1;});
 }
 
 function startTimer(){
@@ -193,7 +205,6 @@ function startTimer(){
   },1000);
 }
 
-/* ===== DRAG & DROP (pointer events, работает на телефоне и ПК) ===== */
 let drag=null;
 document.addEventListener('pointerdown',e=>{
   const card=e.target.closest('.dcard');
@@ -211,7 +222,8 @@ document.addEventListener('pointerdown',e=>{
 });
 function moveGhost(e){drag.ghost.style.left=(e.clientX-drag.dx)+'px';drag.ghost.style.top=(e.clientY-drag.dy)+'px';}
 function getTarget(e){
-  for(const c of [seqZone,poolZone,discZone]){
+  const zones=[seqZone,poolZone,discZone];
+  for(const c of zones){
     const r=c.getBoundingClientRect();
     if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){
       const kids=[...c.children].filter(k=>k.classList.contains('dcard'));
@@ -241,22 +253,18 @@ function checkScenario(byTime){
   const score=Math.max(0,base-trapsPlaced);
   const perfect=seqIds.join(',')===expected.join(',');
   const percent=Math.min(100,Math.round(score/expected.length*100));
-
-  // подсветка
   [...seqZone.children].forEach(k=>{ if(k.dataset.trap==='1')k.classList.add('trap-reveal'); });
   const rc=document.getElementById('resultCard');
   rc.className='result-card '+(percent>=70?'success':'fail');
-  let html=`<h2>${percent>=70?'🎉 Отлично!':'⚠️ Есть над чем поработать'}</h2>
-    <p style="text-align:center;font-weight:700">Собрано верно: ${score} из ${expected.length} (${percent}%)${perfect?' • 🏆 ИДЕАЛЬНЫЙ ПОРЯДОК +2':''}${byTime?' • ⏰ время вышло':''}</p>
-    <div class="reveal"><div class="zone-label">✅ Правильный алгоритм:</div>`;
-  sc.steps.forEach((t,i)=>{const ok=seqIds[i]==='s'+i; html+=`<div class="reveal-item ${ok?'':'miss'}"><span class="n">${i+1}</span><span>${t}</span></div>`;});
-  if(sc.traps.length){html+=`<div class="zone-label">🗑️ Лишнее (не должно быть в алгоритме):</div>`;
-    sc.traps.forEach(t=>{html+=`<div class="reveal-item trap"><span>${t}</span></div>`;});}
-  html+=`</div>`;
+  let html='<h2>'+(percent>=70?'🎉 Отлично!':'⚠️ Есть над чем поработать')+'</h2>'+
+    '<p style="text-align:center;font-weight:700">Собрано верно: '+score+' из '+expected.length+' ('+percent+'%)'+(perfect?' • 🏆 ИДЕАЛЬНЫЙ ПОРЯДОК':'')+(byTime?' • ⏰ время вышло':'')+'</p>'+
+    '<div class="reveal"><div class="zone-label">✅ Правильный алгоритм:</div>';
+  sc.steps.forEach((t,i)=>{const ok=seqIds[i]==='s'+i; html+='<div class="reveal-item '+(ok?'':'miss')+'"><span class="n">'+(i+1)+'</span><span>'+t+'</span></div>';});
+  if(sc.traps.length){html+='<div class="zone-label">🗑️ Лишнее (не должно быть в алгоритме):</div>';
+    sc.traps.forEach(t=>{html+='<div class="reveal-item trap"><span>'+t+'</span></div>';});}
+  html+='</div>';
   rc.innerHTML=html;
-
   gameResults.push({scenario:sc.title,percent,score,max:expected.length,perfect,trapsPlaced});
-
   const btn=document.getElementById('checkBtn');
   if(cur<SCENARIOS.length-1){btn.textContent='➡️ Следующий сценарий';btn.className='btn-primary btn-next';btn.disabled=false;btn.onclick=()=>{cur++;renderScenario();};}
   else{btn.textContent='🏁 Завершить игру';btn.className='btn-primary btn-finish';btn.disabled=false;btn.onclick=finishGame;}
@@ -270,16 +278,16 @@ async function finishGame(){
   const passed=avg>=70;
   document.getElementById('gameScreen').classList.add('hidden');
   const fs=document.getElementById('finalScreen'); fs.classList.remove('hidden');
-  fs.innerHTML=`<div class="final-card ${passed?'success':'fail'}">
-    <div class="final-icon">${passed?'🏆':'📚'}</div>
-    <h2>${passed?'Мастер алгоритма!':'Есть над чем поработать'}</h2>
-    <div class="stat-value">${avg}%</div>
-    <p style="margin:16px 0;font-weight:600">Этапов собрано: ${totalScore} из ${totalMax} • Идеальных порядков: ${perfects} из ${gameResults.length}</p>
-    <div class="save-status" id="saveStatus"><span class="spinner"></span>Сохраняю результат...</div>
-    <button class="btn-primary" onclick="location.reload()" style="margin-top:24px">🔄 Пройти ещё раз</button>
-  </div>`;
+  fs.innerHTML='<div class="final-card '+(passed?'success':'fail')+'">'+
+    '<div class="final-icon">'+(passed?'🏆':'')+'</div>'+
+    '<h2>'+(passed?'Мастер алгоритма!':'Есть над чем поработать')+'</h2>'+
+    '<div class="stat-value">'+avg+'%</div>'+
+    '<p style="margin:16px 0;font-weight:600">Этапов собрано: '+totalScore+' из '+totalMax+' • Идеальных порядков: '+perfects+' из '+gameResults.length+'</p>'+
+    '<div class="save-status" id="saveStatus"><span class="spinner"></span>Сохраняю результат...</div>'+
+    '<button class="btn-primary" onclick="location.reload()" style="margin-top:24px">🔄 Пройти ещё раз</button>'+
+  '</div>';
   const resultData={id:Date.now(),type:'algorithm',user_name:user.name,city:user.city,
-    score:totalScore,total:totalMax,percent:avg,passed,perfects,
+    score:totalScore,total:totalMax,percent:avg,passed:passed,perfects:perfects,
     scenarios:gameResults,date:new Date().toISOString(),timestamp:new Date().toLocaleString('ru-RU')};
   const st=document.getElementById('saveStatus');
   try{
