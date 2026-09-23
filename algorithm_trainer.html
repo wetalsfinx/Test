@@ -34,9 +34,7 @@ h1{color:#fff;text-align:center;font-size:32px;font-weight:900;margin-bottom:12p
 .sit-title{font-weight:800;font-size:20px;color:#1f2937}
 .sit-diff{font-size:12px;color:#d97706;font-weight:700}
 .situation{background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border-left:5px solid #d97706;border-radius:16px;padding:18px 20px;margin-bottom:20px;font-size:15px;color:#92400e;line-height:1.6;font-style:italic}
-.timer{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;color:#c41e3a;margin-bottom:16px}
-.timer.low{color:#dc2626;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.hint{font-size:13px;color:#6b7280;margin-bottom:12px}
 .zone-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#6b7280;margin:16px 0 8px}
 .zone{min-height:60px;border:2px dashed #e5e7eb;border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px;background:#fafafa}
 .zone.seq{border-color:#c41e3a;background:#fff5f5}
@@ -78,7 +76,7 @@ h1{color:#fff;text-align:center;font-size:32px;font-weight:900;margin-bottom:12p
   <div class="header">
     <div class="logo-badge">💎 585GOLD | Алгоритм продаж</div>
     <h1>📋 Собери алгоритм</h1>
-    <p class="subtitle">Перетащи этапы в правильном порядке. Лишнее — в корзину</p>
+    <p class="subtitle">Перетащи карточки или кликни по ним. Лишнее — в корзину</p>
   </div>
 
   <div id="regScreen" class="card">
@@ -102,13 +100,13 @@ h1{color:#fff;text-align:center;font-size:32px;font-weight:900;margin-bottom:12p
   </div>
 
   <div id="gameScreen" class="hidden"><div class="card">
-    <div class="timer" id="timer">⏰ <span id="timerText">60</span> сек</div>
     <div class="sit-head">
       <div class="sit-icon" id="sitIcon">🛍️</div>
       <div><div class="sit-title" id="sitTitle"></div><div class="sit-diff" id="sitDiff"></div></div>
     </div>
     <div class="situation" id="situation"></div>
-    <div class="zone-label">🎯 Твой алгоритм (перетащи по порядку)</div>
+    <div class="hint">💡 Тяни карточки мышкой/пальцем ИЛИ просто кликни — карточка переместится сама</div>
+    <div class="zone-label">🎯 Твой алгоритм (по порядку)</div>
     <div class="zone seq" id="seqZone"></div>
     <div class="zone-label">🃏 Карточки этапов</div>
     <div class="zone" id="poolZone"></div>
@@ -159,7 +157,7 @@ const SCENARIOS=[
   traps:["Давление: «оно последнее, берите»"]}
 ];
 
-let cur=0, gameResults=[], user={name:'',city:''}, timerInt=null, timeLeft=60, locked=false;
+let cur=0, gameResults=[], user={name:'',city:''}, locked=false;
 const poolZone=document.getElementById('poolZone'), seqZone=document.getElementById('seqZone'), discZone=document.getElementById('discZone');
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -186,7 +184,6 @@ function renderScenario(){
     poolZone.appendChild(d);
   });
   updatePos();
-  startTimer();
 }
 
 function updatePos(){
@@ -194,18 +191,8 @@ function updatePos(){
   kids.forEach((k,i)=>{const p=k.querySelector('.pos'); if(p)p.textContent=i+1;});
 }
 
-function startTimer(){
-  clearInterval(timerInt); timeLeft=60;
-  const tEl=document.getElementById('timer'), tTxt=document.getElementById('timerText');
-  tEl.classList.remove('low'); tTxt.textContent=timeLeft;
-  timerInt=setInterval(()=>{
-    timeLeft--; tTxt.textContent=timeLeft;
-    if(timeLeft<=10)tEl.classList.add('low');
-    if(timeLeft<=0){clearInterval(timerInt); checkScenario(true);}
-  },1000);
-}
-
-let drag=null;
+/* ===== DRAG & DROP + CLICK (работает на ПК и телефоне) ===== */
+let drag=null, moved=false;
 document.addEventListener('pointerdown',e=>{
   const card=e.target.closest('.dcard');
   if(!card||locked)return;
@@ -214,7 +201,8 @@ document.addEventListener('pointerdown',e=>{
   document.body.appendChild(ghost);
   const ph=document.createElement('div'); ph.className='placeholder'; ph.style.height=r.height+'px';
   card.parentNode.insertBefore(ph,card); card.style.display='none';
-  drag={card,ghost,ph,dx:e.clientX-r.left,dy:e.clientY-r.top};
+  drag={card,ghost,ph,dx:e.clientX-r.left,dy:e.clientY-r.top,from:card.parentNode};
+  moved=false;
   moveGhost(e);
   document.addEventListener('pointermove',onMove);
   document.addEventListener('pointerup',onUp);
@@ -234,17 +222,25 @@ function getTarget(e){
   }
   return null;
 }
-function onMove(e){moveGhost(e);const t=getTarget(e);if(t){const ref=t.idx<t.kids.length?t.kids[t.idx]:null; if(ref)t.c.insertBefore(drag.ph,ref); else t.c.appendChild(drag.ph);}}
+function onMove(e){moved=true;moveGhost(e);const t=getTarget(e);if(t){const ref=t.idx<t.kids.length?t.kids[t.idx]:null; if(ref)t.c.insertBefore(drag.ph,ref); else t.c.appendChild(drag.ph);}}
 function onUp(e){
   document.removeEventListener('pointermove',onMove);document.removeEventListener('pointerup',onUp);
+  const from=drag.from;
+  if(!moved){
+    drag.ph.remove(); drag.ghost.remove(); drag.card.style.display='';
+    if(from===poolZone) seqZone.appendChild(drag.card);
+    else if(from===seqZone) poolZone.appendChild(drag.card);
+    else if(from===discZone) poolZone.appendChild(drag.card);
+    drag=null; updatePos(); return;
+  }
   const t=getTarget(e);
   if(t){const ref=t.idx<t.kids.length?t.kids[t.idx]:null; if(ref)t.c.insertBefore(drag.card,ref); else t.c.appendChild(drag.card);}
   else drag.ph.parentNode.insertBefore(drag.card,drag.ph);
   drag.ph.remove(); drag.ghost.remove(); drag.card.style.display=''; drag=null; updatePos();
 }
 
-function checkScenario(byTime){
-  if(locked)return; locked=true; clearInterval(timerInt);
+function checkScenario(){
+  if(locked)return; locked=true;
   const sc=SCENARIOS[cur];
   const seqIds=[...seqZone.children].filter(k=>k.classList.contains('dcard')).map(k=>k.dataset.id);
   const expected=sc.steps.map((_,i)=>'s'+i);
@@ -257,7 +253,7 @@ function checkScenario(byTime){
   const rc=document.getElementById('resultCard');
   rc.className='result-card '+(percent>=70?'success':'fail');
   let html='<h2>'+(percent>=70?'🎉 Отлично!':'⚠️ Есть над чем поработать')+'</h2>'+
-    '<p style="text-align:center;font-weight:700">Собрано верно: '+score+' из '+expected.length+' ('+percent+'%)'+(perfect?' • 🏆 ИДЕАЛЬНЫЙ ПОРЯДОК':'')+(byTime?' • ⏰ время вышло':'')+'</p>'+
+    '<p style="text-align:center;font-weight:700">Собрано верно: '+score+' из '+expected.length+' ('+percent+'%)'+(perfect?' • 🏆 ИДЕАЛЬНЫЙ ПОРЯДОК':'')+'</p>'+
     '<div class="reveal"><div class="zone-label">✅ Правильный алгоритм:</div>';
   sc.steps.forEach((t,i)=>{const ok=seqIds[i]==='s'+i; html+='<div class="reveal-item '+(ok?'':'miss')+'"><span class="n">'+(i+1)+'</span><span>'+t+'</span></div>';});
   if(sc.traps.length){html+='<div class="zone-label">🗑️ Лишнее (не должно быть в алгоритме):</div>';
@@ -279,7 +275,7 @@ async function finishGame(){
   document.getElementById('gameScreen').classList.add('hidden');
   const fs=document.getElementById('finalScreen'); fs.classList.remove('hidden');
   fs.innerHTML='<div class="final-card '+(passed?'success':'fail')+'">'+
-    '<div class="final-icon">'+(passed?'🏆':'')+'</div>'+
+    '<div class="final-icon">'+(passed?'🏆':'📚')+'</div>'+
     '<h2>'+(passed?'Мастер алгоритма!':'Есть над чем поработать')+'</h2>'+
     '<div class="stat-value">'+avg+'%</div>'+
     '<p style="margin:16px 0;font-weight:600">Этапов собрано: '+totalScore+' из '+totalMax+' • Идеальных порядков: '+perfects+' из '+gameResults.length+'</p>'+
