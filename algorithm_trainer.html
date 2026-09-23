@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>585GOLD | Алгоритм продаж</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#fef5f5 0%,#fff5f5 50%,#fef9f0 100%);min-height:100vh;padding:20px;position:relative;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-50%;right:-20%;width:600px;height:600px;background:radial-gradient(circle,rgba(196,30,58,.08) 0,transparent 70%);border-radius:50%;z-index:0;animation:float 20s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-30px)}}
+.container{max-width:800px;margin:0 auto;position:relative;z-index:1}
+.header{background:linear-gradient(135deg,#c41e3a 0%,#8b1a2c 100%);border-radius:32px;padding:40px 32px;margin-bottom:24px;box-shadow:0 20px 60px rgba(196,30,58,.3);position:relative;overflow:hidden;animation:slideDown .6s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.logo-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;color:#fff;margin-bottom:16px}
+h1{color:#fff;text-align:center;font-size:32px;font-weight:900;margin-bottom:12px}
+.subtitle{text-align:center;color:rgba(255,255,255,.9);font-size:16px;font-weight:500}
+.card{background:#fff;border-radius:28px;padding:40px;margin-bottom:24px;box-shadow:0 10px 40px rgba(0,0,0,.08);animation:slideUp .6s ease;border:1px solid rgba(229,231,235,.5)}
+.form-group{margin-bottom:24px}
+.form-group label{font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#1f2937;font-size:15px}
+.form-group label::before{content:'';width:4px;height:20px;background:linear-gradient(180deg,#c41e3a 0%,#d4af37 100%);border-radius:2px}
+.form-group input,.form-group select{width:100%;padding:18px 24px;border-radius:16px;border:2px solid #e5e7eb;font-size:16px;background:#f9fafb;font-family:'Inter',sans-serif;font-weight:500}
+.btn-primary{width:100%;padding:20px 32px;border:none;border-radius:20px;font-size:17px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#c41e3a 0%,#8b1a2c 100%);color:#fff;font-family:'Inter',sans-serif;margin-top:12px;box-shadow:0 10px 30px rgba(196,30,58,.3)}
+.btn-primary:disabled{background:#d1d5db;cursor:not-allowed;box-shadow:none}
+.btn-next{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%)}
+.btn-finish{background:linear-gradient(135deg,#10b981 0%,#059669 100%)}
+.hidden{display:none}
+.sit-head{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.sit-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#c41e3a 0%,#d4af37 100%);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0}
+.sit-title{font-weight:800;font-size:20px;color:#1f2937}
+.sit-diff{font-size:12px;color:#d97706;font-weight:700}
+.situation{background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border-left:5px solid #d97706;border-radius:16px;padding:18px 20px;margin-bottom:20px;font-size:15px;color:#92400e;line-height:1.6;font-style:italic}
+.timer{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;color:#c41e3a;margin-bottom:16px}
+.timer.low{color:#dc2626;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.zone-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#6b7280;margin:16px 0 8px}
+.zone{min-height:60px;border:2px dashed #e5e7eb;border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px;background:#fafafa}
+.zone.seq{border-color:#c41e3a;background:#fff5f5}
+.zone.disc{border-color:#9ca3af;background:#f3f4f6;min-height:50px}
+.dcard{background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:14px 16px;font-size:14px;font-weight:600;color:#374151;cursor:grab;touch-action:none;user-select:none;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative}
+.dcard:active{cursor:grabbing}
+.dcard .grip{color:#9ca3af;font-size:16px;flex-shrink:0}
+.dcard .pos{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#c41e3a,#8b1a2c);color:#fff;font-weight:800;font-size:13px;display:none;align-items:center;justify-content:center;flex-shrink:0}
+.zone.seq .dcard .pos{display:flex}
+.dcard.trap-reveal{border-color:#ef4444;background:#fee2e2}
+.dcard.good-reveal{border-color:#10b981;background:#d1fae5}
+.ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.9;box-shadow:0 12px 32px rgba(0,0,0,.25);transform:rotate(2deg)}
+.placeholder{border:2px dashed #c41e3a;border-radius:14px;background:rgba(196,30,58,.05)}
+.result-card{border-radius:24px;padding:28px;margin-top:20px;border:3px solid #e5e7eb;background:#fff;animation:slideUp .5s ease}
+.result-card.success{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#10b981}
+.result-card.fail{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#ef4444}
+.result-card h2{font-size:26px;font-weight:900;margin-bottom:12px;text-align:center}
+.result-card.success h2{color:#065f46}.result-card.fail h2{color:#991b1b}
+.reveal{margin-top:16px;text-align:left}
+.reveal-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;margin-bottom:6px;font-size:14px;background:#fff}
+.reveal-item .n{width:24px;height:24px;border-radius:6px;background:#c41e3a;color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.reveal-item.miss{background:#fee2e2}.reveal-item.miss .n{background:#ef4444}
+.reveal-item.trap{background:#f3f4f6;color:#6b7280;text-decoration:line-through}
+.final-card{border-radius:32px;padding:48px 40px;text-align:center;border:3px solid #e5e7eb;background:#fff}
+.final-card.success{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#10b981}
+.final-card.fail{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#ef4444}
+.final-icon{font-size:80px;margin-bottom:24px;display:block}
+.final-card h2{font-size:34px;font-weight:900;margin-bottom:20px}
+.stat-value{font-size:44px;font-weight:900}
+.save-status{font-size:15px;font-weight:700;margin-top:24px;text-align:center;padding:16px;border-radius:12px}
+.spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:600px){body{padding:12px}.card{padding:24px 18px}h1{font-size:24px}.sit-head{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo-badge">💎 585GOLD | Алгоритм продаж</div>
+    <h1>📋 Собери алгоритм</h1>
+    <p class="subtitle">Перетащи этапы в правильном порядке. Лишнее — в корзину</p>
+  </div>
+
+  <div id="regScreen" class="card">
+    <div class="form-group"><label>Имя и фамилия</label><input type="text" id="userName" placeholder="Например: Иванова Анна" autocomplete="off"></div>
+    <div class="form-group"><label>Магазин</label>
+      <select id="userCity">
+        <option value="">Выберите магазин</option>
+        <option>Екатеринбург</option><option>Владимир</option><option>Чайковский</option>
+        <option>Тольятти</option><option>СПб, Заневский, 67, ТК Заневский Каскад</option>
+        <option>СПб, Стародеревенская, 36, ТД Крокус</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="startBtn">🚀 Начать игру</button>
+  </div>
+
+  <div id="gameScreen" class="hidden"><div class="card">
+    <div class="timer" id="timer">⏰ <span id="timerText">60</span> сек</div>
+    <div class="sit-head">
+      <div class="sit-icon" id="sitIcon">🛍️</div>
+      <div><div class="sit-title" id="sitTitle"></div><div class="sit-diff" id="sitDiff"></div></div>
+    </div>
+    <div class="situation" id="situation"></div>
+    <div class="zone-label"> Твой алгоритм (перетащи по порядку)</div>
+    <div class="zone seq" id="seqZone"></div>
+    <div class="zone-label">🃏 Карточки этапов</div>
+    <div class="zone" id="poolZone"></div>
+    <div class="zone-label">🗑️ Корзина (лишние этапы)</div>
+    <div class="zone disc" id="discZone"></div>
+    <button class="btn-primary" id="checkBtn" style="margin-top:20px">✅ Проверить</button>
+    <div id="resultCard"></div>
+  </div></div>
+
+  <div id="finalScreen" class="hidden"></div>
+</div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",authDomain:"gold-8105a.firebaseapp.com",projectId:"gold-8105a",storageBucket:"gold-8105a.firebasestorage.app",messagingSenderId:"195469188947",appId:"1:195469188947:web:af9671f88b0e70eceecba6"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+const SCENARIOS=[
+ {icon:"🛍️",title:"Классический путь покупателя",diff:"⭐ Новичок",
+  situation:"Клиент заходит в магазин, медленно идёт вдоль витрины, ни на что не смотрит пристально.",
+  steps:["Установить зрительный контакт","Приветствие + крючок (акция)","Выявить потребность (себе/в подарок)","Подобрать 2-3 варианта под запрос","Презентация с эмоцией","Предложить примерку","Завершение сделки"],
+  traps:[]},
+ {icon:"😅",title:"Растерянный мужчина с подарком",diff:"⭐⭐ Средний",
+  situation:"Мужчина 40 лет растерянно стоит у витрины: «Мне жене на годовщину, но я вообще не разбираюсь».",
+  steps:["Приветствие","Уточнить получателя и повод","Выявить стиль и бюджет","Предложить 2-3 готовых решения","Дать примерить лучшее","Красивая подарочная упаковка"],
+  traps:["Показать всю витрину сразу","Предложить сертификат вместо выбора"]},
+ {icon:"💸",title:"Клиент говорит ДОРОГО",diff:"⭐⭐⭐ Продвинутый",
+  situation:"Клиентка примерила кольцо за 38 000₽, смотрит с восхищением, но говорит: «Красиво, но дороговато...»",
+  steps:["Присоединение к эмоции","Выяснить критерии сравнения","Презентация уникальной ценности","Предложить рассрочку / Сплит","Завершение сделки"],
+  traps:["Оправдывать цену («это золото, не бижутерия»)"]},
+ {icon:"💰",title:"Допродажа на кассе",diff:"⭐⭐⭐ Продвинутый",
+  situation:"Клиентка уже выбрала серьги-пусеты, продавец оформляет покупку.",
+  steps:["Похвала выбора","Предложить дополнение","Аргументация через заботу","Примерка дополнения","Оформление расширенного чека"],
+  traps:["Сразу пробить чек"]},
+ {icon:"👀",title:"Молчаливый клиент",diff:"⭐⭐ Средний",
+  situation:"Клиент зашёл, молча ходит вдоль витрины, на приветствие кивнул, но ничего не говорит.",
+  steps:["Дать 20-30 секунд освоиться","Мягкий подход сбоку","Крючок-вопрос","Презентация хитов продаж","Предложить примерку"],
+  traps:["Настойчивые вопросы о покупке"]},
+ {icon:"💎",title:"Постоянный клиент",diff:"⭐⭐ Средний",
+  situation:"Постоянная клиентка Мария: «Здравствуйте! Просто посмотреть новинки». Месяц назад брала кольцо.",
+  steps:["Персональное приветствие по имени","Вопрос о прошлой покупке","Показать новинки под её стиль","Предложить комплект к её покупке","Тёплое завершение"],
+  traps:["Формальное «чем могу помочь?»"]},
+ {icon:"🔙",title:"Возврат после «подумаю»",diff:"⭐⭐⭐ Эксперт",
+  situation:"Клиентка вернулась через час после «я подумаю». Смотрит на то же кольцо.",
+  steps:["Тёплое приветствие («рада, что вернулись!»)","Уточнение сомнений","Дополнительная аргументация","Предложение бонуса","Завершение с позитивом"],
+  traps:["Давление: «оно последнее, берите»"]}
+];
+
+let cur=0, gameResults=[], user={name:'',city:''}, timerInt=null, timeLeft=60, locked=false;
+const poolZone=document.getElementById('poolZone'), seqZone=document.getElementById('seqZone'), discZone=document.getElementById('discZone');
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function renderScenario(){
+  locked=false;
+  const sc=SCENARIOS[cur];
+  document.getElementById('sitIcon').textContent=sc.icon;
+  document.getElementById('sitTitle').textContent=sc.title;
+  document.getElementById('sitDiff').textContent=sc.diff;
+  document.getElementById('situation').textContent=sc.situation;
+  seqZone.innerHTML=''; discZone.innerHTML=''; poolZone.innerHTML='';
+  document.getElementById('resultCard').innerHTML='';
+  const checkBtn=document.getElementById('checkBtn');
+  checkBtn.textContent='✅ Проверить'; checkBtn.className='btn-primary'; checkBtn.disabled=false; checkBtn.onclick=checkScenario;
+  let cards=[];
+  sc.steps.forEach((t,i)=>cards.push({id:'s'+i,text:t,trap:false}));
+  sc.traps.forEach((t,i)=>cards.push({id:'t'+i,text:t,trap:true}));
+  shuffle(cards).forEach(c=>{
+    const d=document.createElement('div');
+    d.className='dcard'; d.dataset.id=c.id; d.dataset.trap=c.trap?'1':'0';
+    d.innerHTML=`<span class="grip">⠿</span><span class="pos"></span><span class="txt">${c.text}</span>`;
+    poolZone.appendChild(d);
+  });
+  updatePos();
+  startTimer();
+}
+
+function updatePos(){
+  [...seqZone.children].forEach((k,i)=>{const p=k.querySelector('.pos'); if(p)p.textContent=i+1;});
+}
+
+function startTimer(){
+  clearInterval(timerInt); timeLeft=60;
+  const tEl=document.getElementById('timer'), tTxt=document.getElementById('timerText');
+  tEl.classList.remove('low'); tTxt.textContent=timeLeft;
+  timerInt=setInterval(()=>{
+    timeLeft--; tTxt.textContent=timeLeft;
+    if(timeLeft<=10)tEl.classList.add('low');
+    if(timeLeft<=0){clearInterval(timerInt); checkScenario(true);}
+  },1000);
+}
+
+/* ===== DRAG & DROP (pointer events, работает на телефоне и ПК) ===== */
+let drag=null;
+document.addEventListener('pointerdown',e=>{
+  const card=e.target.closest('.dcard');
+  if(!card||locked)return;
+  const r=card.getBoundingClientRect();
+  const ghost=card.cloneNode(true); ghost.classList.add('ghost'); ghost.style.width=r.width+'px';
+  document.body.appendChild(ghost);
+  const ph=document.createElement('div'); ph.className='placeholder'; ph.style.height=r.height+'px';
+  card.parentNode.insertBefore(ph,card); card.style.display='none';
+  drag={card,ghost,ph,dx:e.clientX-r.left,dy:e.clientY-r.top};
+  moveGhost(e);
+  document.addEventListener('pointermove',onMove);
+  document.addEventListener('pointerup',onUp);
+  e.preventDefault();
+});
+function moveGhost(e){drag.ghost.style.left=(e.clientX-drag.dx)+'px';drag.ghost.style.top=(e.clientY-drag.dy)+'px';}
+function getTarget(e){
+  for(const c of [seqZone,poolZone,discZone]){
+    const r=c.getBoundingClientRect();
+    if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){
+      const kids=[...c.children].filter(k=>k.classList.contains('dcard'));
+      let idx=kids.length;
+      for(let i=0;i<kids.length;i++){const kr=kids[i].getBoundingClientRect(); if(e.clientY<kr.top+kr.height/2){idx=i;break;}}
+      return {c,idx,kids};
+    }
+  }
+  return null;
+}
+function onMove(e){moveGhost(e);const t=getTarget(e);if(t){const ref=t.idx<t.kids.length?t.kids[t.idx]:null; if(ref)t.c.insertBefore(drag.ph,ref); else t.c.appendChild(drag.ph);}}
+function onUp(e){
+  document.removeEventListener('pointermove',onMove);document.removeEventListener('pointerup',onUp);
+  const t=getTarget(e);
+  if(t){const ref=t.idx<t.kids.length?t.kids[t.idx]:null; if(ref)t.c.insertBefore(drag.card,ref); else t.c.appendChild(drag.card);}
+  else drag.ph.parentNode.insertBefore(drag.card,drag.ph);
+  drag.ph.remove(); drag.ghost.remove(); drag.card.style.display=''; drag=null; updatePos();
+}
+
+function checkScenario(byTime){
+  if(locked)return; locked=true; clearInterval(timerInt);
+  const sc=SCENARIOS[cur];
+  const seqIds=[...seqZone.children].filter(k=>k.classList.contains('dcard')).map(k=>k.dataset.id);
+  const expected=sc.steps.map((_,i)=>'s'+i);
+  let base=0; for(let i=0;i<expected.length;i++)if(seqIds[i]===expected[i])base++;
+  const trapsPlaced=seqIds.filter(id=>id.startsWith('t')).length;
+  const score=Math.max(0,base-trapsPlaced);
+  const perfect=seqIds.join(',')===expected.join(',');
+  const percent=Math.min(100,Math.round(score/expected.length*100));
+
+  // подсветка
+  [...seqZone.children].forEach(k=>{ if(k.dataset.trap==='1')k.classList.add('trap-reveal'); });
+  const rc=document.getElementById('resultCard');
+  rc.className='result-card '+(percent>=70?'success':'fail');
+  let html=`<h2>${percent>=70?'🎉 Отлично!':'⚠️ Есть над чем поработать'}</h2>
+    <p style="text-align:center;font-weight:700">Собрано верно: ${score} из ${expected.length} (${percent}%)${perfect?' • 🏆 ИДЕАЛЬНЫЙ ПОРЯДОК +2':''}${byTime?' • ⏰ время вышло':''}</p>
+    <div class="reveal"><div class="zone-label">✅ Правильный алгоритм:</div>`;
+  sc.steps.forEach((t,i)=>{const ok=seqIds[i]==='s'+i; html+=`<div class="reveal-item ${ok?'':'miss'}"><span class="n">${i+1}</span><span>${t}</span></div>`;});
+  if(sc.traps.length){html+=`<div class="zone-label">🗑️ Лишнее (не должно быть в алгоритме):</div>`;
+    sc.traps.forEach(t=>{html+=`<div class="reveal-item trap"><span>${t}</span></div>`;});}
+  html+=`</div>`;
+  rc.innerHTML=html;
+
+  gameResults.push({scenario:sc.title,percent,score,max:expected.length,perfect,trapsPlaced});
+
+  const btn=document.getElementById('checkBtn');
+  if(cur<SCENARIOS.length-1){btn.textContent='➡️ Следующий сценарий';btn.className='btn-primary btn-next';btn.disabled=false;btn.onclick=()=>{cur++;renderScenario();};}
+  else{btn.textContent='🏁 Завершить игру';btn.className='btn-primary btn-finish';btn.disabled=false;btn.onclick=finishGame;}
+}
+
+async function finishGame(){
+  const totalScore=gameResults.reduce((s,r)=>s+r.score,0);
+  const totalMax=gameResults.reduce((s,r)=>s+r.max,0);
+  const perfects=gameResults.filter(r=>r.perfect).length;
+  const avg=Math.round(gameResults.reduce((s,r)=>s+r.percent,0)/gameResults.length);
+  const passed=avg>=70;
+  document.getElementById('gameScreen').classList.add('hidden');
+  const fs=document.getElementById('finalScreen'); fs.classList.remove('hidden');
+  fs.innerHTML=`<div class="final-card ${passed?'success':'fail'}">
+    <div class="final-icon">${passed?'🏆':'📚'}</div>
+    <h2>${passed?'Мастер алгоритма!':'Есть над чем поработать'}</h2>
+    <div class="stat-value">${avg}%</div>
+    <p style="margin:16px 0;font-weight:600">Этапов собрано: ${totalScore} из ${totalMax} • Идеальных порядков: ${perfects} из ${gameResults.length}</p>
+    <div class="save-status" id="saveStatus"><span class="spinner"></span>Сохраняю результат...</div>
+    <button class="btn-primary" onclick="location.reload()" style="margin-top:24px">🔄 Пройти ещё раз</button>
+  </div>`;
+  const resultData={id:Date.now(),type:'algorithm',user_name:user.name,city:user.city,
+    score:totalScore,total:totalMax,percent:avg,passed,perfects,
+    scenarios:gameResults,date:new Date().toISOString(),timestamp:new Date().toLocaleString('ru-RU')};
+  const st=document.getElementById('saveStatus');
+  try{
+    const lb=JSON.parse(localStorage.getItem('algorithm_backup')||'[]'); lb.push(resultData);
+    localStorage.setItem('algorithm_backup',JSON.stringify(lb));
+    await Promise.race([db.collection('results').doc('algorithm').collection('items').add(resultData),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),6000))]);
+    localStorage.setItem('algorithm_backup',JSON.stringify(JSON.parse(localStorage.getItem('algorithm_backup')||'[]').filter(r=>r.id!==resultData.id)));
+    st.innerHTML='✅ Результат сохранён в облаке!'; st.style.color='#10b981'; st.style.background='rgba(16,185,129,0.1)';
+  }catch(e){ st.innerHTML='⚠️ Сохранено локально, отправится при следующем запуске.'; st.style.color='#d97706'; st.style.background='rgba(217,119,6,0.1)'; }
+}
+
+window.addEventListener('load',async()=>{
+  const b=JSON.parse(localStorage.getItem('algorithm_backup')||'[]');
+  if(b.length){for(const r of b){try{await Promise.race([db.collection('results').doc('algorithm').collection('items').add(r),new Promise((_,rej)=>setTimeout(()=>rej(),6000))]);}catch(e){}}localStorage.removeItem('algorithm_backup');}
+});
+
+document.getElementById('startBtn').onclick=()=>{
+  const n=document.getElementById('userName').value.trim(), c=document.getElementById('userCity').value;
+  if(!n){alert('Введите имя и фамилию');return;} if(!c){alert('Выберите магазин');return;}
+  user={name:n,city:c}; cur=0; gameResults=[];
+  document.getElementById('regScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+  renderScenario();
+};
+</script>
+</body>
+</html>
