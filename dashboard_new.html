@@ -842,7 +842,9 @@
                     const snap = await db.collection('results').doc(t.collection).collection('items').get();
                     snap.forEach(doc => {
                         const item = doc.data();
-                        item.type = t.type;
+                        // Новая аттестация («Одна смена») сохраняется в коллекцию final_exam с пометкой exam_version — показываем её под «Аттестация_1»
+                        item.type = (t.type === 'final_exam' && item.exam_version === 'shift_v1') ? 'final_exam_1' : t.type;
+                        item._col = t.collection;
                         item._docId = doc.id; // сохраняем для возможности удаления
                         allResults.push(item);
                     });
@@ -861,6 +863,7 @@
             allData = allResults.map(r => ({
                 id: r.id || Date.now() + Math.random(),
                 _docId: r._docId,
+                _col: r._col,
                 type: r.type || 'test',
                 user_name: r.user_name || 'Аноним',
                 city: r.city || 'Не указан',
@@ -1402,7 +1405,7 @@
             else if (record.type === 'clienttype') collectionName = 'clienttype';
             else if (record.type === 'service') collectionName = 'service';
             else if (record.type === 'final_exam') collectionName = 'final_exam';
-            else if (record.type === 'final_exam_1') collectionName = 'final_exam_1';
+            else if (record.type === 'final_exam_1') collectionName = record._col || 'final_exam';
             
             if (collectionName) {
                 // Ищем документ по содержимому
