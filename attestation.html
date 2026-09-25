@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>585GOLD | Итоговая аттестация: одна смена</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fef5f5 0%, #fff5f5 50%, #fef9f0 100%);
+            min-height: 100vh; padding: 20px; position: relative; overflow-x: hidden;
+        }
+        body::before { content: ''; position: fixed; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(196,30,58,0.08) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: float 20s ease-in-out infinite; }
+        body::after { content: ''; position: fixed; bottom: -30%; left: -10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: float 25s ease-in-out infinite reverse; }
+        @keyframes float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px,-30px); } }
+        
+        .container { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+        
+        .header {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
+            border-radius: 32px; padding: 40px 32px; margin-bottom: 24px;
+            box-shadow: 0 20px 60px rgba(196,30,58,0.3);
+            position: relative; overflow: hidden; animation: slideDown 0.6s ease;
+        }
+        .header::before { content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%); border-radius: 50%; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scenarioAppear { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .logo-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            color: white; margin-bottom: 16px; position: relative; z-index: 1;
+        }
+        h1 { color: white; text-align: center; font-size: 32px; font-weight: 900; margin-bottom: 12px; position: relative; z-index: 1; }
+        .subtitle { text-align: center; color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 500; position: relative; z-index: 1; }
+        .header .badge-final {
+            display: inline-block; background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+            color: #78350f; padding: 8px 20px; border-radius: 20px; font-size: 12px;
+            font-weight: 800; margin-top: 16px; text-transform: uppercase; letter-spacing: 1px;
+            position: relative; z-index: 1;
+        }
+        
+        .card {
+            background: white; border-radius: 28px; padding: 40px; margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08); animation: slideUp 0.6s ease;
+            border: 1px solid rgba(229,231,235,0.5);
+        }
+        
+        .how-it-works {
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid #e5e7eb;
+        }
+        .how-title { font-size: 13px; font-weight: 800; color: #1f2937; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .how-list { list-style: none; }
+        .how-list li {
+            padding: 10px 0; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #4b5563;
+            line-height: 1.5; display: flex; align-items: flex-start; gap: 12px;
+        }
+        .how-list li:last-child { border-bottom: none; }
+        .how-num {
+            flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white;
+            font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+        }
+        .how-list li strong { color: #1f2937; }
+        
+        .form-group { margin-bottom: 24px; }
+        .form-group label { font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #1f2937; font-size: 15px; }
+        .form-group label::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #c41e3a 0%, #d4af37 100%); border-radius: 2px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 18px 24px; border-radius: 16px; border: 2px solid #e5e7eb;
+            font-size: 16px; background: #f9fafb; transition: all 0.3s; font-family: 'Inter', sans-serif; font-weight: 500;
+        }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #c41e3a; background: white; box-shadow: 0 0 0 4px rgba(196,30,58,0.1); transform: translateY(-2px); }
+        
+        .btn-primary {
+            width: 100%; padding: 20px 32px; border: none; border-radius: 20px; font-size: 17px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
+            color: white; font-family: 'Inter', sans-serif; margin-top: 12px; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(196,30,58,0.3);
+        }
+        .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.5s; }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(196,30,58,0.4); }
+        
+        .progress-container { margin-bottom: 28px; }
+        .progress-text { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #6b7280; }
+        .progress-text .current { color: #c41e3a; font-size: 16px; }
+        .progress-bar { width: 100%; height: 8px; background: #f3f4f6; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #c41e3a 0%, #d4af37 100%); border-radius: 10px; transition: width 0.5s ease; position: relative; overflow: hidden; }
+        .progress-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 2s infinite; }
+        
+        .scenario-header {
+            display: flex; align-items: center; gap: 20px; padding: 28px;
+            background: linear-gradient(135deg, #fef5f5 0%, #fff 100%);
+            border-radius: 24px; border-left: 6px solid #c41e3a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 20px; animation: scenarioAppear 0.5s ease;
+        }
+        .scenario-icon {
+            flex-shrink: 0; width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%);
+            display: flex; align-items: center; justify-content: center; font-size: 40px;
+            box-shadow: 0 8px 24px rgba(196,30,58,0.3), inset 0 2px 8px rgba(255,255,255,0.2); position: relative;
+        }
+        .scenario-icon::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
+        .scenario-content { flex: 1; }
+        .scenario-label { font-size: 12px; font-weight: 700; color: #c41e3a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .scenario-label::before { content: ''; width: 20px; height: 2px; background: linear-gradient(90deg, #c41e3a 0%, #d4af37 100%); }
+        .scenario-title { font-weight: 800; font-size: 22px; line-height: 1.3; color: #1f2937; }
+        
+        .situation-card {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-left: 5px solid #d97706; border-radius: 16px;
+            padding: 18px 20px; margin-bottom: 20px; font-size: 15px; color: #92400e; line-height: 1.7; font-style: italic;
+        }
+        .situation-card strong { color: #78350f; font-weight: 800; display: block; margin-bottom: 6px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; font-style: normal; }
+        
+        .answer-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .answer-label::before { content: ''; flex: 0 0 30px; height: 2px; background: linear-gradient(90deg, #c41e3a 0%, transparent 100%); }
+        .answer-textarea {
+            width: 100%; min-height: 110px; padding: 16px 18px; border: 2px solid #e5e7eb;
+            border-radius: 16px; font-size: 15px; font-family: 'Inter', sans-serif;
+            resize: vertical; transition: all 0.3s; line-height: 1.6; background: #f9fafb;
+        }
+        .answer-textarea:focus { outline: none; border-color: #c41e3a; background: white; box-shadow: 0 0 0 4px rgba(196,30,58,0.1); }
+        
+        .btn-show {
+            width: 100%; padding: 16px; border: 2px solid #c41e3a; border-radius: 16px;
+            background: white; color: #c41e3a; font-size: 15px; font-weight: 800;
+            cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif; margin-top: 16px;
+        }
+        .btn-show:hover { background: #c41e3a; color: white; transform: translateY(-2px); }
+        
+        .etalon-box {
+            display: none; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #10b981; border-radius: 16px; padding: 20px; margin-top: 16px; animation: slideUp 0.4s ease;
+        }
+        .etalon-label { font-size: 11px; font-weight: 800; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .etalon-text { color: #064e3b; font-size: 14px; line-height: 1.7; font-style: italic; }
+        
+        .self-eval { display: none; margin-top: 20px; animation: slideUp 0.4s ease; }
+        .self-eval-label { font-size: 14px; font-weight: 700; color: #4b5563; margin-bottom: 12px; text-align: center; }
+        .self-eval-buttons { display: flex; gap: 10px; }
+        .eval-btn {
+            flex: 1; padding: 16px 10px; border: 2px solid #e5e7eb; border-radius: 16px;
+            background: white; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif;
+            font-size: 14px; font-weight: 700; text-align: center;
+        }
+        .eval-btn:hover:not(.locked) { transform: translateY(-2px); }
+        .eval-btn.perfect { color: #059669; }
+        .eval-btn.perfect.selected { background: #d1fae5; border-color: #10b981; }
+        .eval-btn.partial { color: #d97706; }
+        .eval-btn.partial.selected { background: #fef3c7; border-color: #f59e0b; }
+        .eval-btn.miss { color: #dc2626; }
+        .eval-btn.miss.selected { background: #fee2e2; border-color: #ef4444; }
+        .eval-btn.locked { opacity: 0.6; cursor: not-allowed; }
+        
+        .btn-next {
+            display: none; width: 100%; padding: 18px; border: none; border-radius: 18px;
+            font-size: 16px; font-weight: 800; cursor: pointer;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;
+            margin-top: 16px; transition: all 0.3s; font-family: 'Inter', sans-serif;
+            box-shadow: 0 10px 30px rgba(245,158,11,0.3);
+        }
+        .btn-next:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(245,158,11,0.4); }
+        
+        /* ===== СЕРТИФИКАТ (золотой, торжественный) ===== */
+        .certificate-wrapper { display: none; }
+        .certificate {
+            background: linear-gradient(135deg, #fef9ef 0%, #fdf4d8 100%);
+            border: 3px solid #d4a017; border-radius: 16px; padding: 40px 30px;
+            text-align: center; position: relative; margin: 20px 0;
+            box-shadow: 0 10px 40px rgba(212, 160, 23, 0.2);
+        }
+        .certificate::before {
+            content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 1px solid #d4a017; border-radius: 10px; pointer-events: none;
+        }
+        .cert-logo { font-size: 32px; margin-bottom: 10px; }
+        .cert-brand { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900; color: #c41e3a; margin-bottom: 20px; letter-spacing: 2px; }
+        .cert-title { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 900; color: #1f2937; margin: 10px 0; letter-spacing: 3px; }
+        .cert-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 24px; font-style: italic; }
+        .cert-name {
+            font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700;
+            color: #1f2937; margin: 20px 0; padding: 10px 0;
+            border-top: 1px solid #d4a017; border-bottom: 1px solid #d4a017;
+        }
+        .cert-level { display: inline-block; padding: 8px 24px; border-radius: 30px; font-size: 16px; font-weight: 700; margin: 16px 0; }
+        .cert-level.gold { background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%); color: #78350f; }
+        .cert-level.silver { background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%); color: #1f2937; }
+        .cert-level.bronze { background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%); color: #7c2d12; }
+        .cert-score { font-size: 48px; font-weight: 800; color: #c41e3a; margin: 16px 0; }
+        .cert-date { font-size: 13px; color: #6b7280; margin-top: 20px; }
+        .cert-signature { margin-top: 24px; padding-top: 16px; border-top: 1px dashed #d4a017; font-size: 12px; color: #6b7280; font-style: italic; }
+        
+        .cert-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .cert-actions .btn-primary { flex: 1; min-width: 150px; margin-top: 0; }
+        .btn-secondary {
+            flex: 1; min-width: 150px; padding: 16px; border: 2px solid #e5e7eb; border-radius: 18px;
+            background: white; color: #4b5563; font-size: 15px; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif;
+        }
+        .btn-secondary:hover { background: #f9fafb; border-color: #c41e3a; }
+        
+        .no-cert {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #fecaca;
+            border-radius: 20px; padding: 36px; text-align: center; margin: 20px 0;
+        }
+        .no-cert h2 { color: #991b1b; font-size: 26px; font-weight: 900; margin-bottom: 12px; }
+        .no-cert p { color: #7f1d1d; font-size: 15px; line-height: 1.6; }
+        
+        .save-status { font-size: 15px; font-weight: 700; margin-top: 16px; text-align: center; padding: 14px; border-radius: 12px; }
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(217,119,6,0.3); border-top-color: #d97706; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+        
+        .hidden { display: none; }
+        
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .header { padding: 32px 24px; }
+            h1 { font-size: 24px; }
+            .card { padding: 24px 18px; }
+            .scenario-header { flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 24px 20px; }
+            .scenario-icon { width: 70px; height: 70px; font-size: 34px; }
+            .scenario-title { font-size: 19px; }
+            .scenario-label { justify-content: center; }
+            .self-eval-buttons { flex-direction: column; }
+            .cert-title { font-size: 26px; }
+            .cert-name { font-size: 24px; }
+            .cert-score { font-size: 36px; }
+        }
+        @media print {
+            .cert-actions, .save-status, .btn-secondary, .header, .how-it-works, .register-form, .exam-container { display: none !important; }
+            .certificate-wrapper { display: block !important; margin: 0; padding: 0; }
+            .certificate { box-shadow: none; border: 3px solid #d4a017; page-break-inside: avoid; margin: 0 auto; }
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; padding: 0; border: none; }
+            @page { margin: 1cm; size: A4; }
+        }
+    
+        /* ===== СМЕНА: дополнительные стили ===== */
+        .shift-hud { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .hud-item { flex: 1; min-width: 130px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 14px; padding: 10px 14px; }
+        .hud-label { font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; }
+        .hud-value { font-size: 20px; font-weight: 900; color: #1f2937; margin-top: 2px; }
+        .hud-value.gold { color: #b8860b; }
+        .task-badge { display: inline-block; background: #1f2937; color: #fde68a; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+        .client-line { background: #f3f4f6; border-radius: 16px 16px 16px 4px; padding: 14px 16px; margin-bottom: 16px; font-size: 15px; color: #1f2937; line-height: 1.6; }
+        .client-line b { display: block; font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+        .instruction { font-size: 14px; color: #4b5563; margin: 4px 0 14px; line-height: 1.6; }
+        .instruction b { color: #c41e3a; }
+
+        /* сборка реплики */
+        .build-zone { min-height: 80px; border: 2px dashed #d4a017; border-radius: 16px; padding: 12px; background: #fffdf5; margin-bottom: 14px; }
+        .build-zone.empty::before { content: 'Нажимайте на фрагменты ниже — из них сложится ваша реплика'; color: #b45309; font-size: 13px; font-style: italic; }
+        .frag-pool { display: flex; flex-wrap: wrap; gap: 8px; }
+        .frag { background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; cursor: pointer; transition: all .2s; user-select: none; }
+        .frag:hover { border-color: #c41e3a; transform: translateY(-1px); }
+        .build-zone .frag { display: inline-block; margin: 4px; background: #fef3c7; border-color: #d4a017; }
+        .frag.used { opacity: .35; pointer-events: none; }
+        .frag .n { display: inline-block; min-width: 20px; height: 20px; border-radius: 50%; background: #c41e3a; color: #fff; font-size: 11px; font-weight: 800; text-align: center; line-height: 20px; margin-right: 6px; }
+        .frag.locked { pointer-events: none; }
+        .frag.good { border-color: #10b981 !important; background: #ecfdf5 !important; }
+        .frag.bad { border-color: #ef4444 !important; background: #fef2f2 !important; }
+
+        /* диалог */
+        .dlg { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .msg { padding: 12px 14px; border-radius: 16px; font-size: 14.5px; line-height: 1.55; max-width: 92%; }
+        .msg .who { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #6b7280; margin-bottom: 3px; }
+        .msg.client { background: #f3f4f6; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .msg.seller { background: #fff7ed; border: 2px solid #fed7aa; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .msg.seller.clickable { cursor: pointer; }
+        .msg.seller.clickable:hover { border-color: #c41e3a; }
+        .msg.seller.selected { border-color: #c41e3a; background: #fee2e2; }
+        .msg.seller.correct { border-color: #10b981; background: #ecfdf5; }
+        .msg.seller.wrong { border-color: #9ca3af; background: #f3f4f6; opacity: .8; }
+        .rewrite-box { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 16px; padding: 14px; margin-bottom: 14px; }
+        .rewrite-box .orig { font-size: 13px; color: #991b1b; margin-bottom: 8px; text-decoration: line-through; }
+
+        /* чтение клиента */
+        .story { font-size: 16px; line-height: 2; color: #1f2937; background: #fffbeb; border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+        .detail { cursor: pointer; padding: 2px 4px; border-radius: 6px; border-bottom: 2px dotted #d97706; transition: background .2s; }
+        .detail:hover { background: #fef3c7; }
+        .detail.picked { background: #fde68a; border-bottom-color: #c41e3a; }
+        .detail.sig { background: #d1fae5; border-bottom: 2px solid #10b981; }
+        .detail.miss { background: #fef3c7; border-bottom: 2px solid #f59e0b; }
+        .detail.false { background: #fee2e2; border-bottom: 2px solid #ef4444; text-decoration: line-through; }
+
+        /* корзина */
+        .catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .prod { background: white; border: 2px solid #e5e7eb; border-radius: 14px; padding: 12px; cursor: pointer; transition: all .2s; position: relative; }
+        .prod:hover { border-color: #d4a017; }
+        .prod.in { border-color: #c41e3a; background: #fff1f2; }
+        .prod.in::after { content: '✓'; position: absolute; top: 8px; right: 10px; color: #c41e3a; font-weight: 900; }
+        .prod .pi { font-size: 26px; }
+        .prod .pn { font-size: 13.5px; font-weight: 700; color: #1f2937; margin: 4px 0; line-height: 1.35; }
+        .prod .pp { font-size: 14px; font-weight: 800; color: #c41e3a; }
+        .prod.locked { pointer-events: none; }
+        .receipt { background: #1f2937; color: #f9fafb; border-radius: 14px; padding: 12px 16px; font-size: 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .receipt b { font-size: 18px; }
+        .receipt .over { color: #fca5a5; }
+
+        /* таймер */
+        .timer { text-align: center; font-size: 42px; font-weight: 900; color: #c41e3a; margin: 6px 0 12px; font-variant-numeric: tabular-nums; }
+        .timer.low { animation: pulse 0.6s infinite alternate; }
+        @keyframes pulse { to { color: #ef4444; transform: scale(1.08); } }
+        .timer-start { text-align: center; padding: 26px; background: #fafafa; border-radius: 16px; border: 1px dashed #d1d5db; margin-bottom: 14px; }
+
+        /* порядок */
+        .seq-zone { min-height: 60px; border: 2px dashed #c41e3a; border-radius: 16px; padding: 10px; background: #fff5f5; margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
+        .seq-zone.empty::before { content: 'Нажимайте на шаги в том порядке, в котором будете действовать'; color: #9f1239; font-size: 13px; font-style: italic; }
+        .step-pool { display: flex; flex-direction: column; gap: 6px; }
+        .step { background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; font-size: 14px; cursor: pointer; user-select: none; }
+        .step:hover { border-color: #c41e3a; }
+        .seq-zone .step { background: #fff; border-color: #fecdd3; }
+        .step.locked { pointer-events: none; }
+
+        /* разбор */
+        .feedback { display: none; margin-top: 18px; border-radius: 18px; padding: 20px; animation: slideUp .4s ease; }
+        .feedback.win { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 2px solid #10b981; }
+        .feedback.mid { background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 2px solid #f59e0b; }
+        .feedback.lose { background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 2px solid #ef4444; }
+        .fb-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .fb-outcome { font-size: 18px; font-weight: 900; color: #1f2937; }
+        .fb-points { font-size: 14px; font-weight: 800; background: white; padding: 6px 12px; border-radius: 20px; color: #1f2937; }
+        .fb-list { list-style: none; margin: 8px 0; }
+        .fb-list li { font-size: 14px; line-height: 1.55; padding: 5px 0; color: #374151; }
+        .fb-etalon { background: white; border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.6; color: #064e3b; font-style: italic; margin-top: 10px; border-left: 4px solid #10b981; }
+        .fb-etalon b { font-style: normal; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; color: #065f46; }
+        .btn-ghost { width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 16px; background: white; color: #6b7280; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; font-family: 'Inter', sans-serif; }
+        .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+        .hint-err { color: #b91c1c; font-size: 13px; font-weight: 700; margin-top: 8px; min-height: 18px; }
+
+        /* сертификат: итоги смены */
+        .cert-stats { display: flex; justify-content: center; gap: 24px; margin: 14px 0 4px; flex-wrap: wrap; }
+        .cert-stat { font-size: 12px; color: #6b7280; }
+        .cert-stat b { display: block; font-size: 20px; color: #1f2937; font-weight: 900; }
+        .cert-skills { margin: 18px auto 0; max-width: 460px; text-align: left; }
+        .cert-skill { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #374151; margin: 6px 0; }
+        .cert-skill span:first-child { flex: 0 0 170px; }
+        .cert-bar { flex: 1; height: 7px; background: #f3e8c8; border-radius: 6px; overflow: hidden; }
+        .cert-bar i { display: block; height: 100%; background: linear-gradient(90deg, #c41e3a, #d4af37); }
+        .cert-skill em { flex: 0 0 38px; text-align: right; font-style: normal; font-weight: 800; }
+        .summary-table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 13.5px; }
+        .summary-table td { padding: 9px 6px; border-bottom: 1px solid #f3f4f6; }
+        .summary-table td:last-child { text-align: right; font-weight: 800; white-space: nowrap; }
+        @media (max-width: 600px) {
+            .cert-skill span:first-child { flex-basis: 120px; }
+            .timer { font-size: 36px; }
+            .catalog { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="logo-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7.5 3h9L21 9l-9 12L3 9l4.5-6z" fill="#ffffff"/><path d="M3 9H21M12 21L8 9M12 21L16 9M7.5 3L8 9M16.5 3L16 9" stroke="rgba(196,30,58,0.35)" stroke-width="1"/></svg> 585GOLD | Аттестация</div>
+        <h1>Одна смена в 585GOLD</h1>
+        <p class="subtitle">Итоговая аттестация продавца-консультанта</p>
+        <div class="badge-final">🏆 Финальный экзамен</div>
+    </div>
+
+    <div id="registerForm" class="card">
+        <div class="how-it-works">
+            <div class="how-title">Как это работает</div>
+            <ul class="how-list">
+                <li><span class="how-num">1</span><span>Вас ждёт <strong>смена из 6 клиентов</strong>, и к каждому нужен свой подход</span></li>
+                <li><span class="how-num">2</span><span><strong>Готовых вариантов ответа нет.</strong> Вы собираете реплики, находите и исправляете ошибки, читаете клиента, собираете чек и отвечаете своими словами</span></li>
+                <li><span class="how-num">3</span><span>Одно задание <strong>на время</strong>, как в зале: клиент ждать не будет</span></li>
+                <li><span class="how-num">4</span><span>После каждого клиента вы узнаете, <strong>купил он или ушёл</strong>, и сколько принесли в кассу</span></li>
+                <li><span class="how-num">5</span><span>В конце смены получите <strong>персональный сертификат</strong> с итогом</span></li>
+            </ul>
+        </div>
+        <div class="form-group">
+            <label>Имя и фамилия</label>
+            <input type="text" id="userName" placeholder="Например: Иванова Анна" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label>Магазин</label>
+            <select id="userCity">
+                <option value="">Выберите магазин</option>
+                <option value="Екатеринбург">Екатеринбург</option>
+                <option value="Владимир">Владимир</option>
+                <option value="Чайковский">Чайковский</option>
+                <option value="Тольятти">Тольятти</option>
+                <option value="СПб, Заневский, 67, ТК Заневский Каскад">СПб, Заневский, 67, ТК Заневский Каскад</option>
+                <option value="СПб, Стародеревенская, 36, ТД Крокус">СПб, Стародеревенская, 36, ТД Крокус</option>
+            </select>
+        </div>
+        <button class="btn-primary" onclick="startExam()">🚀 Открыть смену</button>
+    </div>
+
+    <div id="examContainer" class="card hidden">
+        <div class="progress-container">
+            <div class="progress-text">
+                <span>Клиент <span class="current" id="sitNum">1</span> из 6</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+        </div>
+        <div class="shift-hud">
+            <div class="hud-item"><div class="hud-label">💰 Выручка смены</div><div class="hud-value gold" id="hudRevenue">0 ₽</div></div>
+            <div class="hud-item"><div class="hud-label">🛍️ Купили</div><div class="hud-value" id="hudBought">0</div></div>
+            <div class="hud-item"><div class="hud-label">🚪 Ушли</div><div class="hud-value" id="hudLeft">0</div></div>
+        </div>
+        <div class="scenario-header">
+            <div class="scenario-icon" id="clientIcon">👤</div>
+            <div class="scenario-content">
+                <div class="scenario-label" id="clientLabel">Клиент</div>
+                <div class="scenario-title" id="clientTitle"></div>
+                <div class="task-badge" id="taskBadge"></div>
+            </div>
+        </div>
+        <div id="taskArea"></div>
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="certificate-wrapper card" id="certificateWrapper">
+        <div id="certificateContent"></div>
+        <div id="saveStatus" class="save-status"></div>
+    </div>
+</div>
+
+<script>
+    // 🔥 Firestore — отдельная коллекция final_exam_1 (дашборд → «Аттестация_1»)
+    const firebaseConfig = {
+        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+        authDomain: "gold-8105a.firebaseapp.com",
+        projectId: "gold-8105a",
+        storageBucket: "gold-8105a.firebasestorage.app",
+        messagingSenderId: "195469188947",
+        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+    };
+    let db = null;
+    try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); } catch (e) { console.error('Firebase не загрузился:', e); }
+
+    // ================= УТИЛИТЫ =================
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const norm = s => String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ');
+    const rub = n => n.toLocaleString('ru-RU') + ' ₽';
+    function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+    const hasAny = (t, stems) => stems.some(s => t.includes(s));
+    const MIN_TEXT = 20;
+
+    // Проверка свободного ответа по ключевым элементам.
+    // rubric: [{label, stems:[...], pts, test?(t)}]; penalties: [{label, stems, pts}]
+    function checkText(text, rubric, penalties = []) {
+        const t = norm(text);
+        const lines = [];
+        let pts = 0, max = 0;
+        rubric.forEach(r => {
+            max += r.pts;
+            const ok = t.length >= MIN_TEXT && (r.test ? r.test(t) : hasAny(t, r.stems));
+            if (ok) pts += r.pts;
+            lines.push((ok ? '✅ ' : '❌ ') + r.label);
+        });
+        penalties.forEach(p => {
+            if (hasAny(t, p.stems)) { pts -= p.pts; lines.push('⚠️ ' + p.label + ' (−' + p.pts + ')'); }
+        });
+        if (t.length < MIN_TEXT) lines.unshift('⚠️ Ответ слишком короткий, его не засчитали');
+        return { pts: Math.max(0, pts), max, lines };
+    }
+
+    // Длина наибольшей общей подпоследовательности (для порядка шагов)
+    function lcs(a, b) {
+        const dp = Array(a.length + 1).fill(0).map(() => Array(b.length + 1).fill(0));
+        for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+            dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+        return dp[a.length][b.length];
+    }
+
+    function noPaste(el) { el.addEventListener('paste', e => { e.preventDefault(); }); el.addEventListener('drop', e => e.preventDefault()); }
+
+    // ================= КЛИЕНТЫ СМЕНЫ =================
+    const CLIENTS = [
+        // ---------- 1. СОБЕРИ РЕПЛИКУ ----------
+        {
+            icon: '😅', title: 'Мужчина ищет подарок на годовщину', principle: 'Выявление потребностей',
+            task: 'Собери реплику', skill: 'Выявление потребностей', potential: 38000,
+            situation: 'Мужчина около 40 лет, в куртке, торопливо заходит и сразу к вам: «Мне жене на годовщину, 15 лет вместе. Бюджет до 40 тысяч. Я в этом вообще ничего не понимаю».',
+            etalon: '«Понимаю, 15 лет — серьёзный повод, хочется угадать. Расскажите, что она носит чаще: кольца, серьги, цепочки? И какой у неё стиль — классика, минимализм или что-то ярче? А потом я покажу 2–3 варианта, которые ей точно подойдут».',
+            render(area, done) {
+                const F = [
+                    { id: 'J1', role: 'join', text: 'Понимаю, 15 лет — серьёзный повод, хочется угадать.' },
+                    { id: 'J2', role: 'join', text: 'Здорово, что заранее пришли, вместе точно подберём.' },
+                    { id: 'A1', role: 'ask', text: 'Расскажите, что она носит чаще: кольца, серьги, цепочки?' },
+                    { id: 'A2', role: 'ask', text: 'Какой у неё стиль — классика, минимализм или что-то ярче?' },
+                    { id: 'P1', role: 'plan', text: 'А потом я покажу 2–3 варианта, которые ей подойдут.' },
+                    { id: 'T1', role: 'trap', text: 'Давайте я сразу покажу кольца до 40 000, выбор большой.', why: 'Показ товара до вопросов: вы не знаете, что она носит.' },
+                    { id: 'T2', role: 'trap', text: 'Самый надёжный вариант — сертификат, она выберет сама.', why: 'Сертификат в самом начале = отказ помогать. Это последнее средство.' },
+                    { id: 'T3', role: 'trap', text: 'С бриллиантом за 40 000 выбор, честно говоря, небольшой.', why: 'Обесценивает бюджет клиента, ему становится неловко.' },
+                    { id: 'T4', role: 'trap', text: 'Все женщины любят бриллианты, с ними не ошибётесь.', why: 'Шаблон вместо вопросов: вы решили за клиента.' },
+                    { id: 'T5', role: 'trap', text: 'Чем я могу вам помочь? Может, что-то подсказать?', why: 'Он уже сказал, что ему нужно. Вопрос пустой.' }
+                ];
+                let picked = [];
+                area.innerHTML = `
+                    <div class="client-line"><b>👤 Клиент</b>${esc(this.situation)}</div>
+                    <div class="instruction">Соберите <b>свою первую реплику</b> из 2–4 фрагментов. Порядок важен. Нажмите на фрагмент в реплике, чтобы убрать его.</div>
+                    <div class="build-zone empty" id="bz"></div>
+                    <div class="frag-pool" id="fp"></div>
+                    <div class="hint-err" id="err"></div>
+                    <button class="btn-primary" id="go">🗣️ Сказать клиенту</button>`;
+                const bz = $('bz'), fp = $('fp');
+                const pool = shuffle(F);
+                function draw() {
+                    fp.innerHTML = ''; bz.innerHTML = '';
+                    pool.forEach(f => {
+                        const d = document.createElement('div');
+                        d.className = 'frag' + (picked.includes(f.id) ? ' used' : '');
+                        d.textContent = f.text;
+                        d.onclick = () => { if (picked.length >= 4) { $('err').textContent = 'Не больше 4 фрагментов: клиент торопится.'; return; } $('err').textContent = ''; picked.push(f.id); draw(); };
+                        fp.appendChild(d);
+                    });
+                    picked.forEach((id, i) => {
+                        const f = F.find(x => x.id === id);
+                        const d = document.createElement('div');
+                        d.className = 'frag'; d.dataset.id = id;
+                        d.innerHTML = `<span class="n">${i + 1}</span>${esc(f.text)}`;
+                        d.onclick = () => { picked = picked.filter(x => x !== id); draw(); };
+                        bz.appendChild(d);
+                    });
+                    bz.classList.toggle('empty', picked.length === 0);
+                }
+                draw();
+                $('go').onclick = () => {
+                    if (picked.length < 2) { $('err').textContent = 'Соберите реплику хотя бы из 2 фрагментов.'; return; }
+                    const roles = picked.map(id => F.find(f => f.id === id).role);
+                    const traps = picked.filter(id => id.startsWith('T'));
+                    const asks = roles.filter(r => r === 'ask').length;
+                    const lines = []; let pts = 0;
+                    const hasJoin = roles.includes('join');
+                    if (hasJoin) { pts++; lines.push('✅ Присоединились к клиенту'); } else lines.push('❌ Нет присоединения: клиент растерян, сначала поддержите его');
+                    if (asks >= 1) { pts++; lines.push('✅ Задали вопрос о её предпочтениях'); } else lines.push('❌ Ни одного вопроса о ней, подбор будет наугад');
+                    if (asks >= 2 || (asks >= 1 && roles.includes('plan'))) { pts++; lines.push('✅ Выявление полное: вопросы + понятный план'); } else lines.push('❌ Одного вопроса мало или нет плана, что будет дальше');
+                    const firstShow = roles.findIndex(r => r === 'plan');
+                    const lastAsk = roles.lastIndexOf('ask');
+                    const orderOk = (!hasJoin || roles.indexOf('join') === 0) && (firstShow === -1 || lastAsk === -1 || lastAsk < firstShow) && asks >= 1;
+                    if (orderOk) { pts++; lines.push('✅ Логичный порядок: поддержка → вопросы → предложение'); } else lines.push('❌ Порядок сбит: сначала поддержка, потом вопросы, потом показ');
+                    if (!traps.length) { pts++; lines.push('✅ Без фраз-ловушек'); }
+                    traps.forEach(id => { const f = F.find(x => x.id === id); pts--; lines.push('⚠️ Ловушка «' + f.text + '» — ' + f.why); });
+                    pts = Math.max(0, pts);
+                    [...bz.children].forEach(el => { el.classList.add(el.dataset.id.startsWith('T') ? 'bad' : 'good'); });
+                    [...bz.children, ...fp.children].forEach(el => el.classList.add('locked'));
+                    $('go').style.display = 'none';
+                    done({ pts, max: 5, lines, userAnswer: picked.map(id => F.find(f => f.id === id).text).join(' ') });
+                };
+            }
+        },
+
+        // ---------- 2. НАЙДИ И ПЕРЕПИШИ ----------
+        {
+            icon: '💎', title: 'Постоянная клиентка «просто посмотреть»', principle: 'Работа с постоянным клиентом',
+            task: 'Найди и перепиши', skill: 'Удержание и допродажа', potential: 24500,
+            situation: 'Марина, постоянная клиентка. Месяц назад купила кольцо с топазом. Сегодня зашла «просто посмотреть». Её обслуживала ваша коллега-стажёр.',
+            etalon: 'Ошибка 1 → «Марина, у нас как раз пришли серьги с топазами — к вашему кольцу будут как комплект. Показать?» Ошибка 2 → «Понимаю, покупку вы не планировали. Давайте я отложу их для вас до субботы — спокойно решите, без спешки».',
+            render(area, done) {
+                const D = [
+                    { s: 'client', t: 'Марина: «Здравствуйте! Я просто посмотреть, что нового»' },
+                    { s: 'seller', t: '«Марина, добрый день! Рада вас видеть. Как вам кольцо с топазом, носите?»' },
+                    { s: 'client', t: 'Марина: «Да, почти не снимаю!»' },
+                    { s: 'seller', t: '«Замечательно! Тогда смотрите спокойно, не буду мешать. Если что, я у кассы.»', err: 1,
+                      why: 'Продавец отступила, хотя есть готовый повод: кольцо, которое клиентка любит. Нужно было предложить новинки к нему.' },
+                    { s: 'client', t: 'Марина сама останавливается у витрины с серьгами и рассматривает серьги с топазами.' },
+                    { s: 'seller', t: '«Это новая коллекция, пришла на этой неделе. Давайте примерим: к вашему кольцу будет комплект.»' },
+                    { s: 'client', t: 'Марина: «Ой, правда красиво… Но я сегодня не планировала тратиться».' },
+                    { s: 'seller', t: '«Понимаю! Только они последние, завтра может уже не быть. Лучше решить сейчас.»', err: 2,
+                      why: 'Давление и искусственный дефицит. Постоянная клиентка почувствует, что ей «впаривают», и доверие пострадает.' },
+                    { s: 'client', t: 'Марина: «Нет, я, наверное, в другой раз».' },
+                    { s: 'seller', t: '«Хорошо, Марина! Спасибо, что заглянули, всегда вам рады.»' }
+                ];
+                let sel = [];
+                area.innerHTML = `
+                    <div class="client-line"><b>📋 Ситуация</b>${esc(this.situation)}</div>
+                    <div class="instruction"><b>Шаг 1.</b> Нажмите на реплики продавца, в которых есть ошибка. Сколько их, не скажем. За лишние отметки снимаются баллы.</div>
+                    <div class="dlg" id="dlg"></div>
+                    <div class="hint-err" id="err"></div>
+                    <button class="btn-primary" id="go">🔍 Проверить</button>
+                    <div id="step2"></div>`;
+                const dlg = $('dlg');
+                D.forEach((m, i) => {
+                    const d = document.createElement('div');
+                    d.className = 'msg ' + m.s + (m.s === 'seller' ? ' clickable' : '');
+                    d.innerHTML = `<div class="who">${m.s === 'client' ? '👤 Клиент' : '💼 Продавец'}</div>${esc(m.t)}`;
+                    if (m.s === 'seller') d.onclick = () => { sel = sel.includes(i) ? sel.filter(x => x !== i) : [...sel, i]; d.classList.toggle('selected'); };
+                    dlg.appendChild(d);
+                });
+                $('go').onclick = () => {
+                    if (!sel.length) { $('err').textContent = 'Отметьте хотя бы одну реплику.'; return; }
+                    $('err').textContent = '';
+                    const errIdx = D.map((m, i) => m.err ? i : -1).filter(i => i >= 0);
+                    const found = sel.filter(i => errIdx.includes(i)).length;
+                    const falseP = sel.filter(i => !errIdx.includes(i)).length;
+                    const findPts = Math.max(0, found * 2 - falseP);
+                    [...dlg.children].forEach((el, i) => {
+                        el.classList.remove('clickable'); el.onclick = null;
+                        if (errIdx.includes(i)) el.classList.add('correct');
+                        else if (sel.includes(i)) el.classList.add('wrong');
+                    });
+                    $('go').style.display = 'none';
+                    const s2 = $('step2');
+                    s2.innerHTML = `<div class="instruction" style="margin-top:16px">Вы нашли ${found} из 2 ошибок${falseP ? ', ложных отметок: ' + falseP : ''}. Ошибочные реплики подсвечены зелёным.<br><b>Шаг 2.</b> Перепишите обе реплики так, как сказали бы вы сами.</div>
+                        ${errIdx.map((i, k) => `<div class="rewrite-box"><div class="orig">${esc(D[i].t)}</div><textarea class="answer-textarea" id="rw${k}" placeholder="Ваш вариант фразы..."></textarea></div>`).join('')}
+                        <div class="hint-err" id="err2"></div>
+                        <button class="btn-primary" id="go2">✍️ Отправить исправления</button>`;
+                    noPaste($('rw0')); noPaste($('rw1'));
+                    $('go2').onclick = () => {
+                        const a1 = $('rw0').value.trim(), a2 = $('rw1').value.trim();
+                        if (a1.length < 10 || a2.length < 10) { $('err2').textContent = 'Перепишите обе реплики.'; return; }
+                        const r1 = checkText(a1, [
+                            { label: 'Предложили показать новинки или новую коллекцию', stems: ['нов', 'пришл', 'поступ', 'коллекц', 'покаж', 'показ', 'посмотр'], pts: 1 },
+                            { label: 'Связали с её кольцом или стилем (комплект)', stems: ['кольц', 'топаз', 'комплект', 'к ваш', 'в пару', 'стил', 'под ваш'], pts: 1 },
+                            { label: 'Вовлекли клиентку вопросом или приглашением', test: t => t.includes('?') || hasAny(t, ['давайте', 'хотите', 'пойдем', 'пойдём', 'предлагаю']), pts: 1 }
+                        ], [{ label: 'Снова отпустили клиентку («если что, я рядом»)', stems: ['если что', 'не буду мешать', 'обращайтесь'], pts: 1 }]);
+                        const r2 = checkText(a2, [
+                            { label: 'Приняли её слова без спора', stems: ['понима', 'конечно', 'соглас', 'без спеш', 'спокойн', 'разумеется', 'хорошо'], pts: 1 },
+                            { label: 'Убрали давление и «последние»', test: t => !hasAny(t, ['последн', 'завтра', 'не будет', 'успе', 'сейчас или', 'берите']), pts: 1 },
+                            { label: 'Дали мягкий следующий шаг (отложить, фото, рассрочка)', stems: ['отлож', 'резерв', 'заброн', 'сфотограф', 'фото', 'рассроч', 'частями', 'сплит', 'сообщ', 'напиш', 'позвон', 'придерж', 'сохран'], pts: 1 }
+                        ]);
+                        ['rw0', 'rw1'].forEach(id => $(id).disabled = true);
+                        $('go2').style.display = 'none';
+                        const lines = [
+                            `🔍 Поиск ошибок: найдено ${found} из 2${falseP ? ', лишних отметок: ' + falseP : ''} (+${findPts})`,
+                            '<b>Ошибка 1:</b> ' + esc(D[errIdx[0]].why), ...r1.lines.map(l => '&nbsp;&nbsp;' + l),
+                            '<b>Ошибка 2:</b> ' + esc(D[errIdx[1]].why), ...r2.lines.map(l => '&nbsp;&nbsp;' + l)
+                        ];
+                        done({ pts: findPts + r1.pts + r2.pts, max: 10, lines, userAnswer: `Найдено ошибок: ${found}/2, ложных: ${falseP}. Исправление 1: ${a1} | Исправление 2: ${a2}` });
+                    };
+                };
+            }
+        },
+
+        // ---------- 3. ПРОЧИТАЙ КЛИЕНТА ----------
+        {
+            icon: '🕵️', title: 'Клиентка у витрины с серьгами', principle: 'Наблюдение и скрытая потребность',
+            task: 'Прочитай клиента', skill: 'Наблюдательность', potential: 16800,
+            etalon: 'Сигналы: касается мочки уха, спрашивает про застёжки, держит в руке снятые серьги, спокойно смотрит на цены. Ей нужны удобные лёгкие серьги, которые не давят и не натирают, а цена для неё вторична. Первый вопрос: «Вижу, вы присматриваете серьги. Скажите, а ваши чем не устраивают — не давят?» Дальше покажите лёгкие модели с английским замком.',
+            render(area, done) {
+                const S = [
+                    { t: 'Женщина около 55 лет', sig: false },
+                    { t: 'с большим пакетом из магазина одежды', sig: false },
+                    { t: 'медленно подходит к витрине с серьгами.', plain: true },
+                    { t: 'Одной рукой то и дело касается мочки уха.', sig: true },
+                    { t: 'На ней очки в золотой оправе.', sig: false },
+                    { t: 'Спрашивает: «А какие у вас застёжки бывают?»', sig: true },
+                    { t: 'Ценники рассматривает спокойно, без реакции.', sig: true },
+                    { t: 'Говорит, что утром уже заходила в соседний ТЦ.', sig: false },
+                    { t: 'Свои серьги она сняла и держит в ладони.', sig: true },
+                    { t: 'В сумке звонит телефон, она не отвечает.', sig: false }
+                ];
+                let picked = [];
+                area.innerHTML = `
+                    <div class="instruction"><b>Шаг 1.</b> Прочитайте описание. Нажмите на детали, которые подсказывают, <b>что ей на самом деле нужно</b>. Важных деталей несколько, есть и лишние.</div>
+                    <div class="story" id="story"></div>
+                    <div class="instruction"><b>Шаг 2.</b> Что ей на самом деле нужно и <b>каким вопросом</b> вы начнёте разговор?</div>
+                    <textarea class="answer-textarea" id="ans" placeholder="Ей нужно... Я спрошу: «...»"></textarea>
+                    <div class="hint-err" id="err"></div>
+                    <button class="btn-primary" id="go">🎯 Подойти к клиентке</button>`;
+                const st = $('story');
+                S.forEach((s, i) => {
+                    const sp = document.createElement('span');
+                    sp.textContent = s.t + ' ';
+                    if (!s.plain) { sp.className = 'detail'; sp.onclick = () => { picked = picked.includes(i) ? picked.filter(x => x !== i) : [...picked, i]; sp.classList.toggle('picked'); }; }
+                    st.appendChild(sp); st.appendChild(document.createTextNode(' '));
+                });
+                noPaste($('ans'));
+                $('go').onclick = () => {
+                    const txt = $('ans').value.trim();
+                    if (!picked.length) { $('err').textContent = 'Отметьте детали в описании.'; return; }
+                    if (txt.length < 15) { $('err').textContent = 'Напишите, что ей нужно и с какого вопроса начнёте.'; return; }
+                    const sigs = S.map((s, i) => s.sig ? i : -1).filter(i => i >= 0);
+                    const hit = picked.filter(i => sigs.includes(i)).length;
+                    const fal = picked.filter(i => !sigs.includes(i)).length;
+                    const clickPts = Math.max(0, hit - fal);
+                    const spans = st.querySelectorAll('span');
+                    let k = 0;
+                    S.forEach((s, i) => { const el = spans[i]; el.onclick = null; el.classList.remove('picked', 'detail');
+                        if (s.plain) return; el.classList.add('detail');
+                        if (s.sig && picked.includes(i)) el.classList.add('sig'); else if (s.sig) el.classList.add('miss'); else if (picked.includes(i)) el.classList.add('false'); });
+                    const r = checkText(txt, [
+                        { label: 'Поняли потребность: комфорт, удобная застёжка, чтобы не давило', stems: ['застеж', 'замок', 'замк', 'английск', 'удоб', 'комфорт', 'не дав', 'давят', 'давил', 'не бол', 'болят', 'болит', 'натира', 'легк', 'аллерг', 'чувствит', 'тяжел'], pts: 2 },
+                        { label: 'Первый вопрос про её уши или её серьги, а не про бюджет', test: t => t.includes('?') && hasAny(t, ['уш', 'мочк', 'ваши серьг', 'свои серьг', 'ваших серьг', 'не устраива', 'беспоко', 'неудоб', 'бол', 'дав', 'натира', 'застеж', 'носите']), pts: 1 }
+                    ], [{ label: 'Начали с цены или бюджета, хотя цена её не смущает', stems: ['бюджет', 'скидк', 'акци'], pts: 1 }]);
+                    $('ans').disabled = true; $('go').style.display = 'none';
+                    const lines = [
+                        `🔎 Важные детали: найдено ${hit} из 4${fal ? ', лишних: ' + fal : ''} (+${clickPts}). Зелёные — найденные, жёлтые — пропущенные, красные — лишние.`,
+                        ...r.lines
+                    ];
+                    done({ pts: clickPts + r.pts, max: 7, lines, userAnswer: `Детали: ${picked.map(i => S[i].t).join(' / ')}. Ответ: ${txt}` });
+                };
+            }
+        },
+
+        // ---------- 4. СОБЕРИ ЧЕК ----------
+        {
+            icon: '👗', title: 'Мама невесты', principle: 'Допродажа и комплект',
+            task: 'Собери чек', skill: 'Допродажа', potential: 0,
+            situation: 'Клиентка выбрала кольцо с сапфиром из коллекции «Ночное небо» за 32 900 ₽. «Через неделю свадьба дочери, платье у меня тёмно-синее. Вообще я хотела уложиться тысяч в 50, не больше».',
+            etalon: 'Лучший чек: серьги с сапфирами из той же коллекции + средство по уходу = 48 290 ₽, в рамках бюджета. Фраза: «К вашему синему платью и кольцу серьги из „Ночного неба“ соберут образ целиком. И вы уложитесь в свои 50. Давайте примерим вместе?»',
+            render(area, done) {
+                const RING = 32900, LIMIT = 50000;
+                const P = [
+                    { id: 'e', i: '💎', n: 'Серьги с сапфирами «Ночное небо»', p: 14900, v: 4, why: 'та же коллекция и цвет платья, образ собран' },
+                    { id: 'pd', i: '🔹', n: 'Подвеска с сапфиром «Ночное небо»', p: 11500, v: 3, why: 'в тон, но без цепи не наденешь' },
+                    { id: 'ch', i: '🔗', n: 'Цепь якорная, 45 см', p: 8900, v: 1, why: 'полезна только вместе с подвеской' },
+                    { id: 'cr', i: '🧴', n: 'Средство по уходу + салфетка', p: 490, v: 1, why: 'забота о покупке, в рамках бюджета' },
+                    { id: 'box', i: '🎁', n: 'Подарочный футляр', p: 690, v: 0, why: 'покупка для себя, футляр не главное' },
+                    { id: 'br', i: '✨', n: 'Браслет с бриллиантами', p: 22400, v: 0, why: 'красиво, но точно за рамками её бюджета' },
+                    { id: 'rb', i: '❤️', n: 'Серьги с рубинами', p: 13800, v: -2, why: 'красный камень спорит с синим платьем и сапфиром' },
+                    { id: 'em', i: '💚', n: 'Кольцо с изумрудом', p: 18600, v: -2, why: 'второе кольцо другого цвета, образ не собирается' },
+                    { id: 'kd', i: '🧒', n: 'Детские серьги-гвоздики', p: 4200, v: -2, why: 'никак не связано с её историей' },
+                    { id: 'ms', i: '🤵', n: 'Мужская печатка', p: 24000, v: -2, why: 'клиентка ни о ком, кроме себя, не говорила' }
+                ];
+                const cat = shuffle(P);
+                let basket = [];
+                area.innerHTML = `
+                    <div class="client-line"><b>👤 Клиентка</b>${esc(this.situation)}</div>
+                    <div class="instruction"><b>Шаг 1.</b> Добавьте в чек то, что <b>действительно</b> стоит предложить именно ей (до 3 позиций). Кольцо уже в чеке.</div>
+                    <div class="receipt"><span>🧾 Чек: кольцо 32 900 ₽ + допродажа</span><b id="tot">32 900 ₽</b></div>
+                    <div class="catalog" id="cat"></div>
+                    <div class="instruction"><b>Шаг 2.</b> Как вы предложите главное дополнение? Одна-две фразы своими словами.</div>
+                    <textarea class="answer-textarea" id="ans" placeholder="Ваша фраза клиентке..."></textarea>
+                    <div class="hint-err" id="err"></div>
+                    <button class="btn-primary" id="go">🧾 Пробить чек</button>`;
+                const catEl = $('cat');
+                const upd = () => { const s = RING + basket.reduce((a, id) => a + P.find(p => p.id === id).p, 0); $('tot').innerHTML = rub(s) + (s > LIMIT ? ' <span class="over">· больше 50 000</span>' : ''); };
+                cat.forEach(p => {
+                    const d = document.createElement('div');
+                    d.className = 'prod'; d.innerHTML = `<div class="pi">${p.i}</div><div class="pn">${esc(p.n)}</div><div class="pp">${rub(p.p)}</div>`;
+                    d.onclick = () => {
+                        if (basket.includes(p.id)) basket = basket.filter(x => x !== p.id);
+                        else { if (basket.length >= 3) { $('err').textContent = 'Не больше 3 позиций: не перегружайте клиентку.'; return; } basket.push(p.id); }
+                        $('err').textContent = ''; d.classList.toggle('in'); upd();
+                    };
+                    catEl.appendChild(d);
+                });
+                noPaste($('ans'));
+                $('go').onclick = () => {
+                    const txt = $('ans').value.trim();
+                    if (!basket.length) { $('err').textContent = 'Добавьте в чек хотя бы одну позицию.'; return; }
+                    if (txt.length < 15) { $('err').textContent = 'Напишите, как предложите дополнение.'; return; }
+                    const items = basket.map(id => P.find(p => p.id === id));
+                    const total = RING + items.reduce((a, p) => a + p.p, 0);
+                    const over = total > LIMIT;
+                    let bp = items.reduce((a, p) => a + (p.id === 'ch' && !basket.includes('pd') ? -1 : p.v), 0);
+                    const lines = items.map(p => { const ok = p.v > 0 && !(p.id === 'ch' && !basket.includes('pd')); return (ok ? '✅ ' : (p.v === 0 && p.id !== 'br') ? '➖ ' : '❌ ') + p.n + ' — ' + p.why; });
+                    if (over) { bp -= 3; lines.push('⚠️ Чек ' + rub(total) + ' — больше названных 50 000. Клиентка назвала предел, и его нужно уважать (−3)'); }
+                    else lines.push('✅ Уложились в бюджет клиентки: ' + rub(total));
+                    bp = Math.max(0, Math.min(5, bp));
+                    const r = checkText(txt, [
+                        { label: 'Опирались на её историю: платье, свадьбу, образ', stems: ['плать', 'свадьб', 'образ', 'торжеств', 'праздн', 'дочер', 'синий', 'синем', 'синего', 'к наряд'], pts: 1 },
+                        { label: 'Связали с выбранным кольцом (комплект, коллекция)', stems: ['комплект', 'коллекц', 'к кольц', 'с кольц', 'в пару', 'ночное небо', 'ансамбл', 'вместе'], pts: 1 },
+                        { label: 'Пригласили примерить или спросили', test: t => t.includes('?') || hasAny(t, ['пример', 'давайте']), pts: 1 }
+                    ]);
+                    lines.push(...r.lines);
+                    [...catEl.children].forEach(el => el.classList.add('locked'));
+                    $('ans').disabled = true; $('go').style.display = 'none';
+                    const pts = bp + r.pts;
+                    done({ pts, max: 8, lines, basket: { total, ring: RING, over },
+                        userAnswer: `Чек: ${items.map(p => p.n).join(', ')} = ${rub(total)}. Фраза: ${txt}` });
+                };
+            }
+        },
+
+        // ---------- 5. «ДОРОГО» НА ВРЕМЯ ----------
+        {
+            icon: '⏱️', title: '«За такие деньги я в отпуск съезжу»', principle: 'Работа с возражением «дорого»',
+            task: 'Ответ на время', skill: 'Работа с возражениями', potential: 58000,
+            situation: 'Клиентка примерила серьги с бриллиантами за 58 000 ₽. Смотрит в зеркало, явно нравится. Потом снимает: «Красиво… Но за такие деньги я могу в отпуск съездить».',
+            etalon: '«Понимаю, сумма серьёзная, и отпуск тоже хочется. Скажите, а с чем вы сравниваете? Отпуск закончится через неделю, а серьги будут с вами каждый день много лет. И совсем необязательно отказываться от одного ради другого: можно оформить рассрочку, платёж выйдет около 5 000 в месяц. Или я покажу похожие модели чуть легче по цене».',
+            render(area, done) {
+                const LIMIT = 60;
+                area.innerHTML = `
+                    <div class="client-line"><b>👤 Клиентка</b>${esc(this.situation)}</div>
+                    <div class="timer-start" id="ts">
+                        <div class="instruction" style="margin:0 0 12px">На ответ <b>${LIMIT} секунд</b>, как в живом разговоре. Когда время выйдет, ответ отправится сам.</div>
+                        <button class="btn-primary" id="start" style="margin-top:0">⏱️ Я готов(а) ответить</button>
+                    </div>
+                    <div id="tw" class="hidden">
+                        <div class="timer" id="tm">${LIMIT}</div>
+                        <textarea class="answer-textarea" id="ans" placeholder="Отвечайте клиентке..." style="min-height:140px"></textarea>
+                        <button class="btn-primary" id="go">🗣️ Ответить</button>
+                    </div>`;
+                let tLeft = LIMIT, iv = null, sent = false;
+                const finish = () => {
+                    if (sent) return; sent = true; clearInterval(iv);
+                    const txt = $('ans').value.trim();
+                    $('ans').disabled = true; $('go').style.display = 'none';
+                    const r = checkText(txt, [
+                        { label: 'Присоединились к её словам, а не спорили', stems: ['понима', 'согла', 'действительно', 'конечно', 'вы правы', 'разумно', 'серьезн', 'отпуск тоже', 'важн'], pts: 1 },
+                        { label: 'Уточнили, что смущает или с чем сравнивает', test: t => t.includes('?') && hasAny(t, ['сравнив', 'смущ', 'что именно', 'какой бюджет', 'на какую сумм', 'ориентир', 'что для вас', 'подума', 'останавлива', 'комфортн']), pts: 1 },
+                        { label: 'Показали ценность: надолго, каждый день, останется', stems: ['навсегда', 'на годы', 'годами', 'много лет', 'долго', 'каждый день', 'ежедневн', 'останется', 'остаются', 'наслед', 'память', 'закончится', 'пройдет', 'пройдёт', 'вложен', 'не обесцен'], pts: 1 },
+                        { label: 'Предложили выход: рассрочка, сплит или другой бюджет', stems: ['рассроч', 'сплит', 'частями', 'долями', 'в месяц', 'платеж', 'платёж', 'другой бюджет', 'похож', 'альтернатив', 'дешевл', 'доступн', 'легче', 'поменьше', 'бонус'], pts: 1 }
+                    ], [
+                        { label: 'Оправдывали цену («это же бриллианты», «не бижутерия»)', stems: ['бижутер', 'это же бриллиант', 'это же золото', 'цена оправдан', 'качество стоит', 'не дорого', 'недорого'], pts: 1 },
+                        { label: 'Обесценили её отпуск', stems: ['отпуск не', 'отпуск это', 'отпуск — это', 'зачем отпуск'], pts: 1 }
+                    ]);
+                    const lines = [(tLeft <= 0 ? '⏰ Время вышло, засчитали то, что успели написать' : `⏱️ Ответили за ${LIMIT - tLeft} сек.`), ...r.lines];
+                    done({ pts: r.pts, max: 4, lines, userAnswer: txt || '(пусто)' });
+                };
+                $('start').onclick = () => {
+                    $('ts').classList.add('hidden'); $('tw').classList.remove('hidden');
+                    noPaste($('ans')); $('ans').focus();
+                    iv = setInterval(() => { tLeft--; $('tm').textContent = tLeft; if (tLeft <= 10) $('tm').classList.add('low'); if (tLeft <= 0) finish(); }, 1000);
+                };
+                $('go').onclick = () => { if ($('ans').value.trim().length < 5) return; finish(); };
+            }
+        },
+
+        // ---------- 6. ПОРЯДОК ДЕЙСТВИЙ ----------
+        {
+            icon: '🔙', title: 'Вернулась, а кольцо уже продано', principle: 'Алгоритм: не отпускай без альтернативы',
+            task: 'Выстрой алгоритм', skill: 'Алгоритм продажи', potential: 27000,
+            situation: 'Клиентка мерила кольцо в субботу, сказала «подумаю». Сегодня вернулась за ним, а кольцо вчера купили. Она ещё не знает об этом и идёт прямо к той витрине.',
+            etalon: '1) Узнать и тепло поприветствовать → 2) Честно сказать, что кольцо купили, и посочувствовать → 3) Спросить, что именно понравилось в модели → 4) Показать 2–3 похожих кольца в наличии → 5) Предложить примерить самое близкое → 6) Если не подошло, предложить заказ той же модели → 7) Взять контакт и договориться, когда сообщите. Лишнее: обещать поставку, не зная сроков; сразу давать скидку.',
+            render(area, done) {
+                const ST = [
+                    'Узнать клиентку и тепло поприветствовать',
+                    'Честно сказать, что кольцо купили, и посочувствовать',
+                    'Спросить, что именно понравилось в той модели',
+                    'Показать 2–3 похожих кольца, которые есть в наличии',
+                    'Предложить примерить самое близкое по стилю',
+                    'Если не подошло — предложить заказ той же модели',
+                    'Взять контакт и договориться, когда сообщите'
+                ];
+                const TR = ['Пообещать, что модель точно привезут на днях', 'Сразу предложить скидку за неудобство'];
+                const all = shuffle([...ST.map((t, i) => ({ t, k: 's' + i })), ...TR.map((t, i) => ({ t, k: 't' + i }))]);
+                let seq = [];
+                area.innerHTML = `
+                    <div class="client-line"><b>📋 Ситуация</b>${esc(this.situation)}</div>
+                    <div class="instruction">Постройте свои действия по порядку. <b>Не все шаги нужны</b>: лишние оставьте внизу. Нажмите на шаг в цепочке, чтобы вернуть его.</div>
+                    <div class="seq-zone empty" id="sz"></div>
+                    <div class="step-pool" id="sp"></div>
+                    <div class="hint-err" id="err"></div>
+                    <button class="btn-primary" id="go">✅ Действовать</button>`;
+                const draw = () => {
+                    const sz = $('sz'), sp = $('sp'); sz.innerHTML = ''; sp.innerHTML = '';
+                    seq.forEach((k, i) => { const it = all.find(x => x.k === k); const d = document.createElement('div'); d.className = 'step'; d.dataset.k = k; d.innerHTML = `<b>${i + 1}.</b> ${esc(it.t)}`; d.onclick = () => { seq = seq.filter(x => x !== k); draw(); }; sz.appendChild(d); });
+                    all.filter(x => !seq.includes(x.k)).forEach(it => { const d = document.createElement('div'); d.className = 'step'; d.textContent = it.t; d.onclick = () => { seq.push(it.k); draw(); }; sp.appendChild(d); });
+                    sz.classList.toggle('empty', !seq.length);
+                };
+                draw();
+                $('go').onclick = () => {
+                    if (seq.length < 4) { $('err').textContent = 'Постройте цепочку хотя бы из 4 шагов.'; return; }
+                    const exp = ST.map((_, i) => 's' + i);
+                    const good = seq.filter(k => k.startsWith('s'));
+                    const traps = seq.filter(k => k.startsWith('t')).length;
+                    const l = lcs(good, exp);
+                    let pts = Math.round(l / ST.length * 6) - traps * 2;
+                    pts = Math.max(0, pts);
+                    const lines = [`✅ В правильном порядке: ${l} из ${ST.length} шагов`];
+                    const missing = ST.filter((_, i) => !seq.includes('s' + i));
+                    if (missing.length) lines.push('❌ Пропущено: ' + missing.join('; '));
+                    seq.filter(k => k.startsWith('t')).forEach(k => lines.push('⚠️ Лишний шаг: «' + TR[+k[1]] + '» (−2)'));
+                    [...$('sz').children].forEach(el => { el.classList.add('locked'); el.style.borderColor = el.dataset.k.startsWith('t') ? '#ef4444' : '#10b981'; });
+                    [...$('sp').children].forEach(el => el.classList.add('locked'));
+                    $('go').style.display = 'none';
+                    done({ pts, max: 6, lines, userAnswer: seq.map(k => all.find(x => x.k === k).t).join(' → ') });
+                };
+            }
+        }
+    ];
+
+    // ================= ХОД СМЕНЫ =================
+    let user = { name: '', city: '' }, idx = 0, answers = [], revenue = 0, bought = 0, left = 0;
+
+    function startExam() {
+        const name = $('userName').value.trim(), city = $('userCity').value;
+        if (!name || name.length < 3) { alert('Введите имя и фамилию'); return; }
+        if (!city) { alert('Выберите магазин'); return; }
+        user = { name, city }; idx = 0; answers = []; revenue = 0; bought = 0; left = 0;
+        $('registerForm').classList.add('hidden');
+        $('examContainer').classList.remove('hidden');
+        renderClient();
+    }
+
+    function renderClient() {
+        const c = CLIENTS[idx];
+        $('sitNum').textContent = idx + 1;
+        const pct = Math.round(idx / CLIENTS.length * 100);
+        $('progressFill').style.width = pct + '%'; $('progressPercent').textContent = pct + '%';
+        $('clientIcon').textContent = c.icon;
+        $('clientLabel').textContent = 'Клиент ' + (idx + 1) + ' · ' + c.principle;
+        $('clientTitle').textContent = c.title;
+        $('taskBadge').textContent = c.task;
+        $('feedback').style.display = 'none'; $('feedback').innerHTML = '';
+        c.render($('taskArea'), res => onDone(c, res));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function onDone(c, res) {
+        const percent = Math.round(res.pts / res.max * 100);
+        let outcome, cls, rev = 0;
+        if (res.basket) {
+            // клиентка кольцо купит в любом случае — вопрос, получится ли допродажа
+            bought++;
+            if (!res.basket.over && percent >= 75) { outcome = '🛍️ Купила комплект!'; cls = 'win'; rev = res.basket.total; }
+            else { outcome = '😐 Купила только кольцо, допродажа не случилась'; cls = percent >= 50 ? 'mid' : 'lose'; rev = res.basket.ring; }
+        }
+        else if (percent >= 75) { outcome = '🛍️ Клиент купил!'; cls = 'win'; rev = c.potential; bought++; }
+        else if (percent >= 50) { outcome = '🤔 Сказал «подумаю» и ушёл'; cls = 'mid'; left++; }
+        else { outcome = '🚪 Клиент ушёл'; cls = 'lose'; left++; }
+        revenue += rev;
+        $('hudRevenue').textContent = rub(revenue); $('hudBought').textContent = bought; $('hudLeft').textContent = left;
+
+        const selfEval = percent >= 80 ? 'perfect' : percent >= 50 ? 'partial' : 'miss';
+        answers.push({
+            situation: c.title + (c.situation ? ': ' + c.situation : ''), principle: c.principle, skill: c.skill, task: c.task,
+            userAnswer: res.userAnswer, etalon: c.etalon,
+            points: res.pts, max: res.max, percentTask: percent,
+            selfEval, isCorrect: percent >= 75, outcome, revenue: rev
+        });
+
+        const fb = $('feedback');
+        fb.className = 'feedback ' + cls;
+        fb.innerHTML = `
+            <div class="fb-head"><div class="fb-outcome">${outcome}${rev ? ' +' + rub(rev) : ''}</div><div class="fb-points">${res.pts} из ${res.max} · ${percent}%</div></div>
+            <ul class="fb-list">${res.lines.map(l => `<li>${l}</li>`).join('')}</ul>
+            <div class="fb-etalon"><b>✅ Как можно было</b>${esc(c.etalon)}</div>
+            <button class="btn-next" style="display:block" onclick="nextClient()">${idx < CLIENTS.length - 1 ? '➡️ Следующий клиент' : '🏁 Закрыть смену'}</button>`;
+        fb.style.display = 'block';
+        setTimeout(() => fb.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+
+    function nextClient() {
+        idx++;
+        if (idx < CLIENTS.length) renderClient(); else finishExam();
+    }
+
+    async function finishExam() {
+        $('examContainer').classList.add('hidden');
+        $('certificateWrapper').style.display = 'block';
+        const score = answers.reduce((s, a) => s + a.points, 0);
+        const maxScore = answers.reduce((s, a) => s + a.max, 0);
+        // каждый клиент весит одинаково
+        const percent = Math.round(answers.reduce((s, a) => s + a.percentTask, 0) / answers.length);
+
+        let level, levelClass, certTitle;
+        if (percent >= 85) { level = 'Мастер продаж 585GOLD'; levelClass = 'gold'; certTitle = '🏆'; }
+        else if (percent >= 70) { level = 'Специалист по сервису'; levelClass = 'silver'; certTitle = '🥈'; }
+        else if (percent >= 50) { level = 'Продавец-консультант'; levelClass = 'bronze'; certTitle = '🥉'; }
+        else { level = null; }
+        const dateStr = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+
+        const skills = answers.map(a => `<div class="cert-skill"><span>${esc(a.skill)}</span><div class="cert-bar"><i style="width:${a.percentTask}%"></i></div><em>${a.percentTask}%</em></div>`).join('');
+        const table = `<table class="summary-table">${answers.map((a, i) => `<tr><td>${i + 1}. ${esc(CLIENTS[i].title)}<br><span style="color:#6b7280;font-size:12px">${esc(a.outcome)}</span></td><td>${a.percentTask}%</td></tr>`).join('')}</table>`;
+
+        let html = '';
+        if (level) {
+            html = `
+                <div class="certificate" id="certificate">
+                    <div class="cert-logo">${certTitle}</div>
+                    <div class="cert-brand">585GOLD</div>
+                    <div class="cert-title">СЕРТИФИКАТ</div>
+                    <div class="cert-subtitle">подтверждает успешное прохождение итоговой аттестации «Одна смена в 585GOLD»</div>
+                    <div class="cert-name">${esc(user.name)}</div>
+                    <div class="cert-level ${levelClass}">${level}</div>
+                    <div class="cert-score">${percent}%</div>
+                    <div class="cert-stats">
+                        <div class="cert-stat"><b>${rub(revenue)}</b>выручка смены</div>
+                        <div class="cert-stat"><b>${bought} из ${CLIENTS.length}</b>клиентов купили</div>
+                    </div>
+                    <div class="cert-skills">${skills}</div>
+                    <div class="cert-date">${dateStr} | ${esc(user.city)}</div>
+                    <div class="cert-signature">«Клиент не помнит, что вы сказали. Он помнит, как вы заставили его себя чувствовать.»</div>
+                </div>
+                <div class="cert-actions">
+                    <button class="btn-primary" onclick="downloadCertificate()">📥 Скачать сертификат</button>
+                    <button class="btn-secondary" onclick="window.print()">🖨️ Распечатать</button>
+                </div>
+                <div class="how-title" style="margin-top:24px">Итоги смены по клиентам</div>${table}`;
+        } else {
+            html = `
+                <div class="no-cert">
+                    <h2>Аттестация не пройдена</h2>
+                    <p>Ваш результат: <strong>${percent}%</strong> (нужно минимум 50%)<br>
+                    Выручка смены: <strong>${rub(revenue)}</strong>, купили ${bought} из ${CLIENTS.length} клиентов.<br><br>
+                    Посмотрите, где клиенты уходили, пройдите тренажёры по этим темам и возвращайтесь.</p>
+                </div>
+                <div class="how-title" style="margin-top:16px">Итоги смены по клиентам</div>${table}
+                <button class="btn-primary" onclick="location.reload()" style="margin-top: 16px;">🔄 Пройти заново</button>`;
+        }
+        $('certificateContent').innerHTML = html;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        const statusDiv = $('saveStatus');
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = '<span class="spinner"></span>Сохранение...';
+        statusDiv.style.color = '#d97706';
+
+        const resultData = {
+            id: Date.now(), type: 'final_exam_1', exam_version: 'shift_v1',
+            user_name: user.name, city: user.city,
+            score, total: maxScore, percent, passed: percent >= 50, level: level,
+            revenue, clients_bought: bought, clients_total: CLIENTS.length,
+            answers, date: new Date().toISOString(), timestamp: new Date().toLocaleString('ru-RU')
+        };
+        try {
+            const lb = JSON.parse(localStorage.getItem('exam1_backup') || '[]'); lb.push(resultData); localStorage.setItem('exam1_backup', JSON.stringify(lb));
+        } catch (e) {}
+        try {
+            if (!db) throw new Error('no db');
+            await Promise.race([
+                db.collection('results').doc('final_exam_1').collection('items').add(resultData),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+            ]);
+            try { const b = JSON.parse(localStorage.getItem('exam1_backup') || '[]'); localStorage.setItem('exam1_backup', JSON.stringify(b.filter(r => r.id !== resultData.id))); } catch (e) {}
+            statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
+            statusDiv.style.color = '#10b981'; statusDiv.style.background = 'rgba(16,185,129,0.1)';
+        } catch (e) {
+            statusDiv.innerHTML = '⚠️ Сохранено локально, отправится при следующем запуске.';
+            statusDiv.style.color = '#d97706'; statusDiv.style.background = 'rgba(217,119,6,0.1)';
+        }
+    }
+
+    async function downloadCertificate() {
+        const cert = $('certificate'); if (!cert) return;
+        try {
+            const canvas = await html2canvas(cert, { scale: 2, backgroundColor: '#fef9ef' });
+            const link = document.createElement('a');
+            link.download = `Сертификат_${user.name.replace(/\s+/g, '_')}.png`;
+            link.href = canvas.toDataURL('image/png'); link.click();
+        } catch (e) { alert('Ошибка при сохранении. Попробуйте распечатать (Ctrl+P)'); }
+    }
+
+    // 🔥 Автодозагрузка несохранённых результатов
+    window.addEventListener('load', async () => {
+        let backup = [];
+        try { backup = JSON.parse(localStorage.getItem('exam1_backup') || '[]'); } catch (e) {}
+        if (!backup.length || !db) return;
+        const rest = [];
+        for (const r of backup) {
+            try { await Promise.race([db.collection('results').doc('final_exam_1').collection('items').add(r), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))]); }
+            catch (e) { rest.push(r); }
+        }
+        try { localStorage.setItem('exam1_backup', JSON.stringify(rest)); } catch (e) {}
+    });
+    $('userName').addEventListener('keydown', e => { if (e.key === 'Enter') startExam(); });
+</script>
+</body>
+</html>
