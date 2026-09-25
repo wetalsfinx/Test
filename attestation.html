@@ -392,7 +392,7 @@
             <div class="how-title">Как это работает</div>
             <ul class="how-list">
                 <li><span class="how-num">1</span><span>Вас ждёт <strong>смена из 6 клиентов</strong>, и к каждому нужен свой подход</span></li>
-                <li><span class="how-num">2</span><span><strong>Готовых вариантов ответа нет.</strong> Вы собираете реплики, находите и исправляете ошибки, читаете клиента, собираете чек и отвечаете своими словами</span></li>
+                <li><span class="how-num">2</span><span><strong>Готовых вариантов ответа нет.</strong> Вы собираете реплики, находите ошибки, читаете клиента, собираете чек и отвечаете своими словами</span></li>
                 <li><span class="how-num">3</span><span>Одно задание <strong>на время</strong>, как в зале: клиент ждать не будет</span></li>
                 <li><span class="how-num">4</span><span>После каждого клиента вы узнаете, <strong>купил он или ушёл</strong>, и сколько принесли в кассу</span></li>
                 <li><span class="how-num">5</span><span>В конце смены получите <strong>персональный сертификат</strong> с итогом</span></li>
@@ -566,12 +566,12 @@
             }
         },
 
-        // ---------- 2. НАЙДИ И ПЕРЕПИШИ ----------
+        // ---------- 2. НАЙДИ ОШИБКУ ----------
         {
             icon: '💎', title: 'Постоянная клиентка «просто посмотреть»', principle: 'Работа с постоянным клиентом',
-            task: 'Найди и перепиши', skill: 'Удержание и допродажа', potential: 24500,
+            task: 'Найди ошибку', skill: 'Удержание и допродажа', potential: 24500,
             situation: 'Марина, постоянная клиентка. Месяц назад купила кольцо с топазом. Сегодня зашла «просто посмотреть». Её обслуживала ваша коллега-стажёр.',
-            etalon: 'Ошибка 1 → «Марина, у нас как раз пришли серьги с топазами — к вашему кольцу будут как комплект. Показать?» Ошибка 2 → «Понимаю, покупку вы не планировали. Давайте я отложу их для вас до субботы — спокойно решите, без спешки».',
+            etalon: 'Как можно было сказать. Ошибка 1 → «Марина, у нас как раз пришли серьги с топазами — к вашему кольцу будут как комплект. Показать?» Ошибка 2 → «Понимаю, покупку вы не планировали. Давайте я отложу их для вас до субботы — спокойно решите, без спешки».',
             render(area, done) {
                 const D = [
                     { s: 'client', t: 'Марина: «Здравствуйте! Я просто посмотреть, что нового»' },
@@ -590,11 +590,10 @@
                 let sel = [];
                 area.innerHTML = `
                     <div class="client-line"><b>📋 Ситуация</b>${esc(this.situation)}</div>
-                    <div class="instruction"><b>Шаг 1.</b> Нажмите на реплики продавца, в которых есть ошибка. Сколько их, не скажем. За лишние отметки снимаются баллы.</div>
+                    <div class="instruction">Нажмите на реплики продавца, в которых есть ошибка. Сколько их, не скажем. За лишние отметки снимаются баллы.</div>
                     <div class="dlg" id="dlg"></div>
                     <div class="hint-err" id="err"></div>
-                    <button class="btn-primary" id="go">🔍 Проверить</button>
-                    <div id="step2"></div>`;
+                    <button class="btn-primary" id="go">🔍 Проверить</button>`;
                 const dlg = $('dlg');
                 D.forEach((m, i) => {
                     const d = document.createElement('div');
@@ -616,34 +615,12 @@
                         else if (sel.includes(i)) el.classList.add('wrong');
                     });
                     $('go').style.display = 'none';
-                    const s2 = $('step2');
-                    s2.innerHTML = `<div class="instruction" style="margin-top:16px">Вы нашли ${found} из 2 ошибок${falseP ? ', ложных отметок: ' + falseP : ''}. Ошибочные реплики подсвечены зелёным.<br><b>Шаг 2.</b> Перепишите обе реплики так, как сказали бы вы сами.</div><div class="tip">💡 В первой фразе предложите новинку к её кольцу. Во второй не давите, а предложите отложить украшение.</div>
-                        ${errIdx.map((i, k) => `<div class="rewrite-box"><div class="orig">${esc(D[i].t)}</div><textarea class="answer-textarea" id="rw${k}" placeholder="Ваш вариант фразы..."></textarea></div>`).join('')}
-                        <div class="hint-err" id="err2"></div>
-                        <button class="btn-primary" id="go2">✍️ Отправить исправления</button>`;
-                    noPaste($('rw0')); noPaste($('rw1'));
-                    $('go2').onclick = () => {
-                        const a1 = $('rw0').value.trim(), a2 = $('rw1').value.trim();
-                        if (a1.length < 10 || a2.length < 10) { $('err2').textContent = 'Перепишите обе реплики.'; return; }
-                        const r1 = checkText(a1, [
-                            { label: 'Предложили показать новинки или новую коллекцию', stems: ['нов', 'пришл', 'поступ', 'коллекц', 'покаж', 'показ', 'посмотр'], pts: 1 },
-                            { label: 'Связали с её кольцом или стилем (комплект)', stems: ['кольц', 'топаз', 'комплект', 'к ваш', 'в пару', 'стил', 'под ваш'], pts: 1 },
-                            { label: 'Вовлекли клиентку вопросом или приглашением', test: t => t.includes('?') || hasAny(t, ['давайте', 'хотите', 'пойдем', 'пойдём', 'предлагаю']), pts: 1 }
-                        ], [{ label: 'Снова отпустили клиентку («если что, я рядом»)', stems: ['если что', 'не буду мешать', 'обращайтесь'], pts: 1 }]);
-                        const r2 = checkText(a2, [
-                            { label: 'Приняли её слова без спора', stems: ['понима', 'конечно', 'соглас', 'без спеш', 'спокойн', 'разумеется', 'хорошо'], pts: 1 },
-                            { label: 'Убрали давление и «последние»', test: t => !hasAny(t, ['последн', 'завтра', 'не будет', 'успе', 'сейчас или', 'берите']), pts: 1 },
-                            { label: 'Дали мягкий следующий шаг (отложить, фото, рассрочка)', stems: ['отлож', 'резерв', 'заброн', 'сфотограф', 'фото', 'рассроч', 'частями', 'сплит', 'сообщ', 'напиш', 'позвон', 'придерж', 'сохран'], pts: 1 }
-                        ]);
-                        ['rw0', 'rw1'].forEach(id => $(id).disabled = true);
-                        $('go2').style.display = 'none';
-                        const lines = [
-                            `🔍 Поиск ошибок: найдено ${found} из 2${falseP ? ', лишних отметок: ' + falseP : ''} (+${findPts})`,
-                            '<b>Ошибка 1:</b> ' + esc(D[errIdx[0]].why), ...r1.lines.map(l => '&nbsp;&nbsp;' + l),
-                            '<b>Ошибка 2:</b> ' + esc(D[errIdx[1]].why), ...r2.lines.map(l => '&nbsp;&nbsp;' + l)
-                        ];
-                        done({ pts: findPts + r1.pts + r2.pts, max: 10, lines, userAnswer: `Найдено ошибок: ${found}/2, ложных: ${falseP}. Исправление 1: ${a1} | Исправление 2: ${a2}` });
-                    };
+                    const lines = [
+                        `🔍 Найдено ошибок: ${found} из 2${falseP ? ', лишних отметок: ' + falseP + ' (−' + falseP + ')' : ''}`,
+                        (sel.includes(errIdx[0]) ? '✅ ' : '❌ Пропущена. ') + '<b>Ошибка 1:</b> ' + esc(D[errIdx[0]].why),
+                        (sel.includes(errIdx[1]) ? '✅ ' : '❌ Пропущена. ') + '<b>Ошибка 2:</b> ' + esc(D[errIdx[1]].why)
+                    ];
+                    done({ pts: findPts, max: 4, lines, userAnswer: `Найдено ошибок: ${found}/2, ложных отметок: ${falseP}` });
                 };
             }
         },
@@ -788,7 +765,7 @@
                     </div>
                     <div id="tw" class="hidden">
                         <div class="timer" id="tm">${LIMIT}</div>
-                        <div class="tip">💡 Схема: согласитесь → спросите → покажите ценность → предложите рассрочку или другой вариант.</div><textarea class="answer-textarea" id="ans" placeholder="Отвечайте клиентке..." style="min-height:140px"></textarea>
+                        <textarea class="answer-textarea" id="ans" placeholder="Отвечайте клиентке..." style="min-height:140px"></textarea>
                         <button class="btn-primary" id="go">🗣️ Ответить</button>
                     </div>`;
                 let tLeft = LIMIT, iv = null, sent = false;
@@ -1005,21 +982,46 @@
             revenue, clients_bought: bought, clients_total: CLIENTS.length,
             answers, date: new Date().toISOString(), timestamp: new Date().toLocaleString('ru-RU')
         };
+        // убираем undefined/NaN — Firestore их не принимает
+        const clean = JSON.parse(JSON.stringify(resultData));
+        try { const lb = JSON.parse(localStorage.getItem('exam1_backup') || '[]'); lb.push(clean); localStorage.setItem('exam1_backup', JSON.stringify(lb)); } catch (e) {}
+        await trySave(clean);
+    }
+
+    // Отправка в Firestore: до 3 попыток по 20 секунд, при неудаче — кнопка «Отправить ещё раз»
+    async function sendOne(data) {
+        if (!db) throw new Error(location.protocol === 'file:' || typeof firebase === 'undefined'
+            ? 'страница открыта не с сайта (файл с компьютера или предпросмотр), поэтому связь с базой заблокирована. Откройте аттестацию по ссылке на github.io'
+            : 'база не загрузилась (проверьте интернет или VPN)');
+        let lastErr;
+        for (let i = 0; i < 3; i++) {
+            try {
+                await Promise.race([
+                    db.collection('results').doc('final_exam').collection('items').doc(String(data.id)).set(data),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('нет ответа от сервера за 20 сек')), 20000))
+                ]);
+                return;
+            } catch (e) { lastErr = e; console.error('Попытка ' + (i + 1) + ':', e); }
+        }
+        throw lastErr;
+    }
+    function dropBackup(id) { try { const b = JSON.parse(localStorage.getItem('exam1_backup') || '[]'); localStorage.setItem('exam1_backup', JSON.stringify(b.filter(r => r.id !== id))); } catch (e) {} }
+    async function trySave(data) {
+        const statusDiv = $('saveStatus');
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = '<span class="spinner"></span>Сохранение...';
+        statusDiv.style.color = '#d97706'; statusDiv.style.background = 'rgba(217,119,6,0.1)';
         try {
-            const lb = JSON.parse(localStorage.getItem('exam1_backup') || '[]'); lb.push(resultData); localStorage.setItem('exam1_backup', JSON.stringify(lb));
-        } catch (e) {}
-        try {
-            if (!db) throw new Error('no db');
-            await Promise.race([
-                db.collection('results').doc('final_exam').collection('items').add(resultData),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
-            ]);
-            try { const b = JSON.parse(localStorage.getItem('exam1_backup') || '[]'); localStorage.setItem('exam1_backup', JSON.stringify(b.filter(r => r.id !== resultData.id))); } catch (e) {}
+            await sendOne(data);
+            dropBackup(data.id);
             statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
             statusDiv.style.color = '#10b981'; statusDiv.style.background = 'rgba(16,185,129,0.1)';
         } catch (e) {
-            statusDiv.innerHTML = '⚠️ Сохранено локально, отправится при следующем запуске.';
-            statusDiv.style.color = '#d97706'; statusDiv.style.background = 'rgba(217,119,6,0.1)';
+            statusDiv.innerHTML = '⚠️ Не удалось отправить результат: ' + esc((e && (e.code ? e.code + ' — ' : '') + e.message) || 'ошибка') +
+                '<br><button class="btn-secondary" style="margin-top:10px" id="retryBtn">🔄 Отправить ещё раз</button>' +
+                '<div style="font-size:12px;font-weight:500;margin-top:8px">Результат сохранён на этом устройстве и отправится сам, когда вы снова откроете аттестацию.</div>';
+            statusDiv.style.color = '#b45309';
+            $('retryBtn').onclick = () => trySave(data);
         }
     }
 
@@ -1042,8 +1044,7 @@
         if (!backup.length || !db) return;
         const rest = [];
         for (const r of backup) {
-            try { await Promise.race([db.collection('results').doc('final_exam').collection('items').add(r), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))]); }
-            catch (e) { rest.push(r); }
+            try { await sendOne(JSON.parse(JSON.stringify(r))); } catch (e) { rest.push(r); }
         }
         try { localStorage.setItem('exam1_backup', JSON.stringify(rest)); } catch (e) {}
     });
