@@ -88,6 +88,55 @@
         .filter-chip.active[data-value="service"] { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); }
         .filter-chip.active[data-value="final_exam"] { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
         .filter-chip.active[data-value="final_exam_1"] { background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%); }
+        /* ===== Аттестация_1: навыки / выручка / путь ===== */
+        .growth-hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .gh-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 18px 20px; }
+        .gh-label { font-size: 12px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px; }
+        .gh-value { font-size: 28px; font-weight: 800; color: var(--text-1); margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+        .gh-value.up { color: #16a34a; } .gh-value.down { color: #dc2626; }
+        .gh-sub { font-size: 12px; color: var(--text-4); }
+        table.heatmap { border-collapse: separate; border-spacing: 3px; }
+        table.heatmap th { text-align: center; font-size: 11px; padding: 8px 6px; border: none; }
+        table.heatmap th.hm-store { text-align: left; font-size: 13px; text-transform: none; color: var(--text-1); font-weight: 700; white-space: nowrap; padding-right: 14px; }
+        .hm-n { display: block; font-size: 11px; font-weight: 500; color: var(--text-4); }
+        .hm-cell { text-align: center; font-weight: 800; font-size: 14px; border-radius: 8px; padding: 12px 6px; border: none; min-width: 74px; font-variant-numeric: tabular-nums; cursor: default; }
+        .hm-good { background: rgba(22,163,74,.16); color: #15803d; }
+        .hm-mid { background: rgba(245,158,11,.20); color: #b45309; }
+        .hm-bad { background: rgba(220,38,38,.16); color: #b91c1c; }
+        .hm-none { background: var(--bg-soft); color: var(--text-4); }
+        body.dark .hm-good { color: #86efac; } body.dark .hm-mid { color: #fde68a; } body.dark .hm-bad { color: #fca5a5; }
+        .hm-total { outline: 2px solid var(--border); }
+        tr.hm-all th.hm-store { color: var(--text-2); font-style: italic; }
+        .hm-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--text-3); margin-top: 14px; }
+        .hm-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
+        .rec-item { padding: 12px 16px; border-radius: 12px; background: rgba(245,158,11,.10); border-left: 4px solid #f59e0b; font-size: 14px; color: var(--text-2); line-height: 1.55; margin-bottom: 8px; }
+        .rec-item.rec-ok { background: rgba(22,163,74,.10); border-left-color: #16a34a; }
+        .rec-item b { color: var(--text-1); } .rec-item a { color: #c41e3a; font-weight: 700; text-decoration: none; }
+        body.dark .rec-item a { color: #fda4af; }
+        .rev-toggle { display: inline-flex; background: var(--bg-soft); border-radius: 50px; padding: 4px; margin-bottom: 16px; }
+        .rev-toggle button { border: none; background: transparent; padding: 8px 16px; border-radius: 50px; font-weight: 700; font-size: 13px; color: var(--text-3); cursor: pointer; font-family: 'Inter', sans-serif; }
+        .rev-toggle button.active { background: var(--bg-card); color: #c41e3a; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+        .rv-row { display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-bottom: 1px solid var(--border-soft); }
+        .rv-medal { width: 32px; text-align: center; font-size: 22px; flex-shrink: 0; }
+        .rv-pos { font-size: 14px; font-weight: 800; color: var(--text-4); }
+        .rv-main { flex: 1; min-width: 0; }
+        .rv-name { font-weight: 700; color: var(--text-1); font-size: 14px; }
+        .rv-sub { font-size: 12px; color: var(--text-4); margin: 2px 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rv-bar { height: 6px; background: var(--bg-soft); border-radius: 4px; overflow: hidden; }
+        .rv-bar i { display: block; height: 100%; background: #d4af37; border-radius: 4px; }
+        .rv-val { font-weight: 800; font-size: 15px; color: var(--text-1); white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .path-line { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; }
+        .path-step { flex: 1; min-width: 150px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+        .path-step.empty-step { opacity: .6; border-style: dashed; }
+        .ps-title { font-size: 13px; font-weight: 700; color: var(--text-2); }
+        .ps-big { font-size: 26px; font-weight: 800; margin: 4px 0; color: var(--text-1); font-variant-numeric: tabular-nums; }
+        .ps-big.lvl-good { color: #16a34a; } .ps-big.lvl-mid { color: #d97706; } .ps-big.lvl-bad { color: #dc2626; }
+        .ps-note { font-size: 12px; color: var(--text-4); }
+        .path-arrow { display: flex; align-items: center; color: var(--text-4); font-size: 20px; font-weight: 800; }
+        .path-verdict { margin-top: 12px; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 700; background: var(--bg-soft); color: var(--text-2); }
+        .path-verdict.up { background: rgba(22,163,74,.12); color: #15803d; } .path-verdict.down { background: rgba(220,38,38,.12); color: #b91c1c; }
+        body.dark .path-verdict.up { color: #86efac; } body.dark .path-verdict.down { color: #fca5a5; }
+        @media (max-width: 700px) { .path-arrow { display: none; } .hm-cell { min-width: 56px; font-size: 13px; padding: 10px 4px; } }
         .exam-points { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 700; color: var(--text-secondary, #6b7280); }
 
         .status-text { margin-left: auto; font-size: 13px; color: white; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); padding: 8px 16px; border-radius: 50px; font-weight: 600; }
@@ -308,6 +357,7 @@
         <button class="tab-btn" data-tab="cities">🏙️ Города</button>
         <button class="tab-btn" data-tab="employees">👤 Сотрудники</button>
         <button class="tab-btn" data-tab="feedback">📝 Фидбек</button>
+        <button class="tab-btn" data-tab="exam1">🏆 Аттестация_1</button>
     </div>
 
     <div class="filter-bar">
@@ -451,6 +501,22 @@
             <div id="nameList"></div>
             <button class="btn btn-primary" id="mergeBtn" style="margin-top:12px; color:#c41e3a; border-color:#c41e3a;">🔗 Объединить выбранные</button>
             <div id="groupsList"></div>
+        </div>
+    </div>
+
+    <div id="exam1Tab" style="display:none; margin-top:20px;">
+        <div class="growth-hero" id="growthHero"></div>
+        <div class="card">
+            <div class="card-title">🎯 Навыки по магазинам</div>
+            <p class="hint">Средний результат по каждому навыку из «Аттестации_1». Берётся последняя попытка каждого сотрудника. Наведите на ячейку, чтобы увидеть подробности.</p>
+            <div id="skillMatrix"></div>
+            <div class="section-subtitle">💡 Что дать каждому магазину</div>
+            <div id="skillRecs"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">💰 Рейтинг выручки смены</div>
+            <div class="rev-toggle"><button class="active" data-m="people" onclick="setRevenueMode('people')">👤 Сотрудники</button><button data-m="stores" onclick="setRevenueMode('stores')">🏙️ Магазины</button></div>
+            <div id="revenueBoard"></div>
         </div>
     </div>
 
@@ -677,6 +743,147 @@
         return ta.some(t => tb.includes(t));
     }
 
+
+    // ================= 🏆 АТТЕСТАЦИЯ_1: навыки, выручка, рост =================
+    const EXAM1_SKILLS = ['Выявление потребностей', 'Удержание и допродажа', 'Наблюдательность', 'Допродажа', 'Работа с возражениями', 'Алгоритм продажи'];
+    const SKILL_SHORT = { 'Выявление потребностей': 'Выявление', 'Удержание и допродажа': 'Удержание', 'Наблюдательность': 'Наблюдат.', 'Допродажа': 'Допродажа', 'Работа с возражениями': 'Возражения', 'Алгоритм продажи': 'Алгоритм' };
+    const SKILL_TRAINER = {
+        'Выявление потребностей': { name: 'Тренировка диалога', url: 'dialog_trainer.html' },
+        'Удержание и допродажа': { name: 'Найди ошибку в диалоге', url: 'error_finder.html' },
+        'Наблюдательность': { name: 'Адаптация под тип клиента', url: 'client_type_trainer.html' },
+        'Допродажа': { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' },
+        'Работа с возражениями': { name: 'Алгоритм продаж (сценарий «Дорого»)', url: 'algorithm_trainer.html' },
+        'Алгоритм продажи': { name: 'Алгоритм продаж', url: 'algorithm_trainer.html' }
+    };
+    const lvlClass = p => p == null ? 'none' : p >= 80 ? 'good' : p >= 60 ? 'mid' : 'bad';
+    const rubFmt = n => Math.round(n || 0).toLocaleString('ru-RU') + ' ₽';
+
+    // последняя попытка аттестации_1 каждого сотрудника (с учётом объединённых имён)
+    function latestExam1ByPerson() {
+        const map = {};
+        allData.filter(r => r.type === 'final_exam_1').forEach(r => {
+            const k = getGroupKey(r.user_name);
+            if (!map[k] || new Date(r.date) > new Date(map[k].date)) map[k] = r;
+        });
+        return map;
+    }
+
+    function renderExam1Tab() {
+        const latest = latestExam1ByPerson();
+        const people = Object.entries(latest);
+        const empty = '<div class="empty">📭 Пока нет результатов «Аттестации_1»</div>';
+        if (!people.length) { ['skillMatrix', 'skillRecs', 'revenueBoard', 'growthHero'].forEach(id => document.getElementById(id).innerHTML = id === 'skillMatrix' ? empty : ''); return; }
+
+        // ---- матрица навыков ----
+        const stores = {};
+        people.forEach(([k, r]) => {
+            const s = r.city || 'Не указан';
+            if (!stores[s]) stores[s] = { n: 0, sk: {} };
+            stores[s].n++;
+            (r.answers || []).forEach(a => {
+                if (!a.skill || a.percentTask == null) return;
+                (stores[s].sk[a.skill] = stores[s].sk[a.skill] || []).push(a.percentTask);
+            });
+        });
+        const avg = arr => arr && arr.length ? Math.round(arr.reduce((x, y) => x + y, 0) / arr.length) : null;
+        const all = { n: people.length, sk: {} };
+        Object.values(stores).forEach(st => EXAM1_SKILLS.forEach(sk => { if (st.sk[sk]) (all.sk[sk] = all.sk[sk] || []).push(...st.sk[sk]); }));
+        const storeNames = Object.keys(stores).sort((a, b) => a.localeCompare(b, 'ru'));
+        const cell = (store, sk, v, n) => `<td class="hm-cell hm-${lvlClass(v)}" title="${esc(store)} · ${esc(sk)}: ${v == null ? 'нет данных' : v + '%'} (${n} чел.)">${v == null ? '—' : v + '%'}</td>`;
+        const row = (name, st, cls = '') => {
+            const vals = EXAM1_SKILLS.map(sk => avg(st.sk[sk]));
+            const tot = avg(vals.filter(v => v != null));
+            return `<tr class="${cls}"><th class="hm-store">${esc(name)}<span class="hm-n">${st.n} чел.</span></th>${EXAM1_SKILLS.map((sk, i) => cell(name, sk, vals[i], st.n)).join('')}<td class="hm-cell hm-total hm-${lvlClass(tot)}">${tot == null ? '—' : tot + '%'}</td></tr>`;
+        };
+        document.getElementById('skillMatrix').innerHTML = `
+            <div class="table-wrap"><table class="heatmap">
+                <thead><tr><th>Магазин</th>${EXAM1_SKILLS.map(sk => `<th title="${esc(sk)}">${esc(SKILL_SHORT[sk])}</th>`).join('')}<th>Итого</th></tr></thead>
+                <tbody>${storeNames.map(s => row(s, stores[s])).join('')}${storeNames.length > 1 ? row('Все магазины', all, 'hm-all') : ''}</tbody>
+            </table></div>
+            <div class="hm-legend"><span><i class="hm-good"></i>✓ 80% и выше — навык в порядке</span><span><i class="hm-mid"></i>! 60–79% — стоит подтянуть</span><span><i class="hm-bad"></i>✕ ниже 60% — зона риска</span></div>`;
+
+        // ---- подсказки: самый слабый навык каждого магазина ----
+        document.getElementById('skillRecs').innerHTML = storeNames.map(s => {
+            const vals = EXAM1_SKILLS.map(sk => ({ sk, v: avg(stores[s].sk[sk]) })).filter(x => x.v != null).sort((a, b) => a.v - b.v);
+            if (!vals.length) return '';
+            const w = vals[0], t = SKILL_TRAINER[w.sk];
+            if (w.v >= 80) return `<div class="rec-item rec-ok"><b>${esc(s)}</b> — все навыки 80% и выше. Можно ставить в пример другим магазинам 🎉</div>`;
+            return `<div class="rec-item"><b>${esc(s)}</b> — слабее всего <b>${esc(w.sk.toLowerCase())}</b> (${w.v}%). Дайте команде <a href="${t.url}" target="_blank">«${esc(t.name)}» ↗</a>${vals[1] && vals[1].v < 70 ? `, затем подтяните ${esc(vals[1].sk.toLowerCase())} (${vals[1].v}%)` : ''}.</div>`;
+        }).join('');
+
+        // ---- рейтинг выручки ----
+        renderRevenueBoard(people);
+
+        // ---- рост после обучения: первый тест → последняя аттестация ----
+        const growth = [];
+        people.forEach(([k, r]) => {
+            const members = getGroupMembers(k);
+            const tests = allData.filter(x => x.type === 'test' && members.includes(normalizeName(x.user_name))).sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (tests.length) growth.push(r.percent - tests[0].percent);
+        });
+        const g = growth.length ? Math.round(growth.reduce((a, b) => a + b, 0) / growth.length) : null;
+        const avgExam = Math.round(people.reduce((s, [, r]) => s + r.percent, 0) / people.length);
+        const totalRev = people.reduce((s, [, r]) => s + (r.revenue || 0), 0);
+        document.getElementById('growthHero').innerHTML = `
+            <div class="gh-item"><div class="gh-label">Прошли аттестацию</div><div class="gh-value">${people.length}</div><div class="gh-sub">сотрудников</div></div>
+            <div class="gh-item"><div class="gh-label">Средний результат</div><div class="gh-value">${avgExam}%</div><div class="gh-sub">последние попытки</div></div>
+            <div class="gh-item"><div class="gh-label">Рост после обучения</div><div class="gh-value ${g == null ? '' : g >= 0 ? 'up' : 'down'}">${g == null ? '—' : (g >= 0 ? '▲ +' : '▼ ') + g + ' п.п.'}</div><div class="gh-sub">${g == null ? 'нет входных тестов для сравнения' : 'входной тест → аттестация, ' + growth.length + ' чел.'}</div></div>
+            <div class="gh-item"><div class="gh-label">Выручка всех смен</div><div class="gh-value">${rubFmt(totalRev)}</div><div class="gh-sub">в среднем ${rubFmt(totalRev / people.length)}</div></div>`;
+    }
+
+    let revenueMode = 'people';
+    function setRevenueMode(m) { revenueMode = m; document.querySelectorAll('.rev-toggle button').forEach(b => b.classList.toggle('active', b.dataset.m === m)); renderRevenueBoard(Object.entries(latestExam1ByPerson())); }
+    function renderRevenueBoard(people) {
+        const box = document.getElementById('revenueBoard');
+        let rows;
+        if (revenueMode === 'people') {
+            // лучшая выручка каждого сотрудника
+            const best = {};
+            allData.filter(r => r.type === 'final_exam_1').forEach(r => { const k = getGroupKey(r.user_name); if (!best[k] || (r.revenue || 0) > (best[k].revenue || 0)) best[k] = r; });
+            rows = Object.entries(best).map(([k, r]) => ({ name: (getDisplayName(k) || r.user_name).replace(/(^|\s)\S/g, c => c.toUpperCase()), sub: `${r.city} · купили ${r.clients_bought || 0} из ${r.clients_total || 6}${r.level ? ' · ' + r.level : ''}`, v: r.revenue || 0 }));
+        } else {
+            const st = {};
+            people.forEach(([, r]) => { const s = r.city || 'Не указан'; (st[s] = st[s] || []).push(r.revenue || 0); });
+            rows = Object.entries(st).map(([s, arr]) => ({ name: s, sub: `${arr.length} чел. · в среднем за смену`, v: arr.reduce((a, b) => a + b, 0) / arr.length }));
+        }
+        rows.sort((a, b) => b.v - a.v);
+        const max = Math.max(1, ...rows.map(r => r.v));
+        const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span class="rv-pos">${i + 1}</span>`;
+        box.innerHTML = rows.length ? rows.slice(0, 20).map((r, i) => `
+            <div class="rv-row" title="${esc(r.name)}: ${rubFmt(r.v)}">
+                <div class="rv-medal">${medal(i)}</div>
+                <div class="rv-main"><div class="rv-name">${esc(r.name)}</div><div class="rv-sub">${esc(r.sub)}</div>
+                    <div class="rv-bar"><i style="width:${Math.max(2, r.v / max * 100)}%"></i></div></div>
+                <div class="rv-val">${rubFmt(r.v)}</div>
+            </div>`).join('') : '<div class="empty">📭 Нет данных</div>';
+    }
+
+    // путь сотрудника: тест → тренажёры → аттестация
+    const PATH_STAGES = [
+        { key: 'test', title: '📝 Входной тест', types: ['test'] },
+        { key: 'train', title: '🎯 Тренажёры', types: ['trainer', 'crosssell', 'errorfinder', 'clienttype', 'service'] },
+        { key: 'exam', title: '🎓 Аттестация', types: ['final_exam', 'final_exam_1'] }
+    ];
+    function renderPathHtml(attempts) {
+        const st = PATH_STAGES.map(s => {
+            const a = attempts.filter(r => s.types.includes(r.type));
+            return { ...s, a, first: a[0], last: a[a.length - 1], best: a.length ? Math.max(...a.map(r => r.percent)) : null };
+        });
+        const box = s => {
+            if (!s.a.length) return `<div class="path-step empty-step"><div class="ps-title">${s.title}</div><div class="ps-big">—</div><div class="ps-note">ещё не проходил</div></div>`;
+            const note = s.a.length > 1 ? `${s.a.length} попыток: ${s.first.percent}% → ${s.last.percent}%` : '1 попытка';
+            const kinds = s.key === 'train' ? `<div class="ps-note">${[...new Set(s.a.map(r => getTypeInfo(r.type).label))].join(', ')}</div>` : '';
+            return `<div class="path-step"><div class="ps-title">${s.title}</div><div class="ps-big lvl-${lvlClass(s.last.percent)}">${s.last.percent}%</div><div class="ps-note">${note}</div>${kinds}</div>`;
+        };
+        const firstTest = st[0].first, lastExam = st[2].last;
+        let verdict = '';
+        if (firstTest && lastExam) {
+            const d = lastExam.percent - firstTest.percent;
+            verdict = `<div class="path-verdict ${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${d >= 0 ? '+' : ''}${d} п.п. от входного теста до аттестации${d >= 10 ? ' — обучение дало заметный рост' : d < 0 ? ' — стоит разобрать с сотрудником' : ''}</div>`;
+        } else if (!lastExam) verdict = `<div class="path-verdict">Аттестацию ещё не проходил</div>`;
+        return `<div class="section-subtitle">🛤️ Путь обучения</div><div class="path-line">${box(st[0])}<div class="path-arrow">→</div>${box(st[1])}<div class="path-arrow">→</div>${box(st[2])}</div>${verdict}`;
+    }
+
     function getTypeInfo(type) {
         const map = {
             test: { icon: '📝', label: 'Тест' }, trainer: { icon: '🎯', label: 'Тренировка' },
@@ -813,6 +1020,8 @@
             document.getElementById('citiesTab').style.display = tab === 'cities' ? 'block' : 'none';
             document.getElementById('employeesTab').style.display = tab === 'employees' ? 'block' : 'none';
             document.getElementById('feedbackTab').style.display = tab === 'feedback' ? 'block' : 'none';
+            document.getElementById('exam1Tab').style.display = tab === 'exam1' ? 'block' : 'none';
+            if (tab === 'exam1') renderExam1Tab();
             if (tab === 'cities') renderCityStats();
             if (tab === 'employees') renderEmployeesTab();
         });
@@ -1040,6 +1249,7 @@
                 <div class="profile-stat"><div class="ps-value" style="color:${delta >= 0 ? '#16a34a' : '#dc2626'}">${delta >= 0 ? '▲ +' : '▼ '}${delta}%</div><div class="ps-label">Динамика</div></div>
                 <div class="profile-stat"><div class="sparkline-box" style="justify-content:center;">${makeSparkline(attempts.map(a => a.percent), '#c41e3a')}</div><div class="ps-label">Тренд результатов</div></div>
             </div>
+            ${renderPathHtml(attempts)}
             <div class="profile-chart-box"><canvas id="profileChart"></canvas></div>
             <div class="section-subtitle">📋 История попыток (последние 10)</div>
         `;
@@ -1264,6 +1474,7 @@
         renderTrendChart();
         renderHardQuestions();
         renderCityStats();
+        if (document.getElementById('exam1Tab').style.display === 'block') renderExam1Tab();
     }
 
     function renderAlerts() {
