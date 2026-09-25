@@ -113,6 +113,19 @@
         .rec-item.rec-ok { background: rgba(22,163,74,.10); border-left-color: #16a34a; }
         .rec-item b { color: var(--text-1); } .rec-item a { color: #c41e3a; font-weight: 700; text-decoration: none; }
         body.dark .rec-item a { color: #fda4af; }
+        .skill-picker { padding: 18px 20px; }
+        .skill-picker .filter-chips { flex-wrap: wrap; margin-bottom: 14px; }
+        .filter-chip:disabled { opacity: .45; cursor: not-allowed; }
+        .chip-n { display: inline-block; min-width: 18px; padding: 1px 6px; border-radius: 10px; background: rgba(0,0,0,.08); font-size: 11px; margin-left: 4px; }
+        .filter-chip.active .chip-n { background: rgba(255,255,255,.25); }
+        .skill-picker .filter-chip.active { background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%) !important; color: #fff; }
+        .skill-mode-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .skill-mode-label { font-size: 13px; font-weight: 700; color: var(--text-2); }
+        .rv-bar { display: flex; }
+        .rv-bar i.rv-first { background: #c9a227; border-radius: 4px 0 0 4px; }
+        .rv-bar i.rv-gain { background: #e8d9a0; border-radius: 0 4px 4px 0; }
+        body.dark .rv-bar i.rv-gain { background: #6b5a1e; }
+        .lvl-txt-good { color: #16a34a; } .lvl-txt-mid { color: #d97706; } .lvl-txt-bad { color: #dc2626; }
         .rev-toggle { display: inline-flex; background: var(--bg-soft); border-radius: 50px; padding: 4px; margin-bottom: 16px; }
         .rev-toggle button { border: none; background: transparent; padding: 8px 16px; border-radius: 50px; font-weight: 700; font-size: 13px; color: var(--text-3); cursor: pointer; font-family: 'Inter', sans-serif; }
         .rev-toggle button.active { background: var(--bg-card); color: #c41e3a; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
@@ -357,7 +370,7 @@
         <button class="tab-btn" data-tab="cities">🏙️ Города</button>
         <button class="tab-btn" data-tab="employees">👤 Сотрудники</button>
         <button class="tab-btn" data-tab="feedback">📝 Фидбек</button>
-        <button class="tab-btn" data-tab="exam1">🏆 Аттестация_1</button>
+        <button class="tab-btn" data-tab="exam1">📈 Навыки</button>
     </div>
 
     <div class="filter-bar">
@@ -505,18 +518,27 @@
     </div>
 
     <div id="exam1Tab" style="display:none; margin-top:20px;">
+        <div class="card skill-picker">
+            <div class="filter-chips" id="skillViewChips"></div>
+            <div class="skill-mode-row"><span class="skill-mode-label">Какую попытку учитывать:</span><div class="rev-toggle" id="skillModeToggle" style="margin:0"></div><span class="hint" id="skillModeHint" style="margin:0"></span></div>
+        </div>
         <div class="growth-hero" id="growthHero"></div>
         <div class="card">
-            <div class="card-title">🎯 Навыки по магазинам</div>
-            <p class="hint">Средний результат по каждому навыку из «Аттестации_1». Берётся последняя попытка каждого сотрудника. Наведите на ячейку, чтобы увидеть подробности.</p>
+            <div class="card-title" id="skillTitle">🎯 Результат по магазинам</div>
+            <p class="hint" id="selfEvalNote" style="display:none">⚠️ В старой аттестации оценку ставили сами продавцы, поэтому цифры завышены: «попал в суть» = 100%, «частично» = 67%, «мимо» = 33%.</p>
             <div id="skillMatrix"></div>
             <div class="section-subtitle">💡 Что дать каждому магазину</div>
             <div id="skillRecs"></div>
         </div>
-        <div class="card">
+        <div class="card" id="revenueCard">
             <div class="card-title">💰 Рейтинг выручки смены</div>
             <div class="rev-toggle"><button class="active" data-m="people" onclick="setRevenueMode('people')">👤 Сотрудники</button><button data-m="stores" onclick="setRevenueMode('stores')">🏙️ Магазины</button></div>
             <div id="revenueBoard"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">🏅 Рейтинг сотрудников</div>
+            <p class="hint">По лучшему результату. Светлая часть полоски — сколько человек добрал пересдачами.</p>
+            <div id="personBoard"></div>
         </div>
     </div>
 
@@ -744,9 +766,8 @@
     }
 
 
-    // ================= 🏆 АТТЕСТАЦИЯ_1: навыки, выручка, рост =================
+    // ================= 📈 АНАЛИТИКА ПО НАВЫКАМ (все виды обучения) =================
     const EXAM1_SKILLS = ['Выявление потребностей', 'Удержание и допродажа', 'Наблюдательность', 'Допродажа', 'Работа с возражениями', 'Алгоритм продажи'];
-    const SKILL_SHORT = { 'Выявление потребностей': 'Выявление', 'Удержание и допродажа': 'Удержание', 'Наблюдательность': 'Наблюдат.', 'Допродажа': 'Допродажа', 'Работа с возражениями': 'Возражения', 'Алгоритм продажи': 'Алгоритм' };
     const SKILL_TRAINER = {
         'Выявление потребностей': { name: 'Тренировка диалога', url: 'dialog_trainer.html' },
         'Удержание и допродажа': { name: 'Найди ошибку в диалоге', url: 'error_finder.html' },
@@ -757,90 +778,153 @@
     };
     const lvlClass = p => p == null ? 'none' : p >= 80 ? 'good' : p >= 60 ? 'mid' : 'bad';
     const rubFmt = n => Math.round(n || 0).toLocaleString('ru-RU') + ' ₽';
+    const avgOf = arr => arr && arr.length ? Math.round(arr.reduce((x, y) => x + y, 0) / arr.length) : null;
 
-    // последняя попытка аттестации_1 каждого сотрудника (с учётом объединённых имён)
-    function latestExam1ByPerson() {
+    // Описание каждого вида: что считать «навыком» (столбцом) и какой тренажёр советовать
+    const SKILL_VIEWS = {
+        final_exam_1: { label: '🏆 Аттестация_1', unit: 'навык', defaultMode: 'last', trainer: null,
+            items: r => (r.answers || []).filter(a => a.skill && a.percentTask != null).map(a => [a.skill, a.percentTask]),
+            order: EXAM1_SKILLS },
+        test: { label: '📝 Тест знаний', unit: 'тема', defaultMode: 'first', trainer: { name: 'Тест знаний', url: 'test_new.html' },
+            items: r => (r.answers || []).map(a => [TEST_TOPICS[a.originalIndex] || a.questionText || ('Вопрос ' + a.questionNum), a.correct ? 100 : 0]),
+            order: TEST_TOPICS, rec: item => { const i = TEST_TOPICS.indexOf(item); return i >= 0 ? TEST_GENERAL_RECS[i] : ''; } },
+        trainer: { label: '🎯 Тренировка диалога', unit: 'правило', defaultMode: 'first', trainer: { name: 'Тренировка диалога', url: 'dialog_trainer.html' },
+            items: r => TRAINER_RULES.map(rule => [rule.name, (r.rules_applied || []).includes(rule.name) ? 100 : 0]),
+            order: TRAINER_RULES.map(r => r.name), rec: item => (TRAINER_RULES.find(r => r.name === item) || {}).rec || '' },
+        crosssell: { label: '💰 Допродажи', unit: 'ситуация', defaultMode: 'first', trainer: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' },
+            items: r => (r.scenarios || []).map(s => [s.scenario, s.isCorrect ? 100 : 0]) },
+        errorfinder: { label: '🔍 Найди ошибку', unit: 'сценарий', defaultMode: 'first', trainer: { name: 'Найди ошибку в диалоге', url: 'error_finder.html' },
+            items: r => (r.scenarios || []).map(s => [s.scenario, s.percent != null ? s.percent : (s.score / (s.maxScore || 1) * 100)]) },
+        clienttype: { label: '🎭 Адаптация', unit: 'тип клиента', defaultMode: 'first', trainer: { name: 'Адаптация под тип клиента', url: 'client_type_trainer.html' },
+            items: r => (r.scenarios || []).map(s => [s.clientType || s.scenario, s.isCorrect ? 100 : 0]) },
+        service: { label: '🤝 Сервис', unit: 'принцип', defaultMode: 'first', trainer: { name: 'Сервис с человеческим лицом', url: 'service_trainer.html' },
+            items: r => (r.answers || []).filter(a => a.principle).map(a => [a.principle, a.isCorrect ? 100 : 0]) },
+        final_exam: { label: '🎓 Аттестация (старая)', unit: 'принцип', defaultMode: 'last', trainer: null, selfEval: true,
+            items: r => (r.answers || []).filter(a => a.principle).map(a => [a.principle, a.selfEval === 'perfect' ? 100 : a.selfEval === 'partial' ? 67 : 33]) }
+    };
+    let skillView = 'final_exam_1', skillMode = null, revenueMode = 'people';
+
+    // попытки одного вида, сгруппированные по сотруднику (с учётом объединённых имён), по времени
+    function attemptsByPerson(type) {
         const map = {};
-        allData.filter(r => r.type === 'final_exam_1').forEach(r => {
-            const k = getGroupKey(r.user_name);
-            if (!map[k] || new Date(r.date) > new Date(map[k].date)) map[k] = r;
-        });
+        allData.filter(r => r.type === type).forEach(r => { (map[getGroupKey(r.user_name)] = map[getGroupKey(r.user_name)] || []).push(r); });
+        Object.values(map).forEach(a => a.sort((x, y) => new Date(x.date) - new Date(y.date)));
         return map;
     }
+    const niceName = (k, r) => (getDisplayName(k) || r.user_name || '').replace(/(^|\s)\S/g, c => c.toUpperCase());
+    const shortLabel = s => { s = String(s).replace(/["«»]/g, ''); return s.length <= 16 ? s : s.split(' ').slice(0, 2).join(' ').slice(0, 16) + '…'; };
+
+    function setSkillView(t) { skillView = t; skillMode = null; renderExam1Tab(); }
+    function setSkillMode(m) { skillMode = m; renderExam1Tab(); }
 
     function renderExam1Tab() {
-        const latest = latestExam1ByPerson();
-        const people = Object.entries(latest);
-        const empty = '<div class="empty">📭 Пока нет результатов «Аттестации_1»</div>';
-        if (!people.length) { ['skillMatrix', 'skillRecs', 'revenueBoard', 'growthHero'].forEach(id => document.getElementById(id).innerHTML = id === 'skillMatrix' ? empty : ''); return; }
+        const V = SKILL_VIEWS[skillView];
+        const mode = skillMode || V.defaultMode;
+        // переключатель видов (только те, по которым есть данные)
+        const counts = {}; allData.forEach(r => counts[r.type] = (counts[r.type] || 0) + 1);
+        document.getElementById('skillViewChips').innerHTML = Object.entries(SKILL_VIEWS).map(([t, v]) =>
+            `<button class="filter-chip ${t === skillView ? 'active' : ''}" data-value="${t}" onclick="setSkillView('${t}')" ${counts[t] ? '' : 'disabled title="Нет данных"'}>${v.label} <span class="chip-n">${counts[t] || 0}</span></button>`).join('');
+        document.getElementById('skillModeToggle').innerHTML = `<button class="${mode === 'first' ? 'active' : ''}" onclick="setSkillMode('first')">1-я попытка</button><button class="${mode === 'last' ? 'active' : ''}" onclick="setSkillMode('last')">Последняя</button><button class="${mode === 'best' ? 'active' : ''}" onclick="setSkillMode('best')">Лучшая</button>`;
+        document.getElementById('skillModeHint').textContent = mode === 'first' ? 'Первая попытка показывает реальный уровень знаний, до пересдач.' : mode === 'last' ? 'Последняя попытка показывает, где сотрудник сейчас.' : 'Лучшая попытка показывает, чего сотрудник смог добиться.';
+        document.getElementById('skillTitle').textContent = `🎯 ${V.label.replace(/^\S+\s/, '')}: результат по магазинам`;
+        document.getElementById('revenueCard').style.display = skillView === 'final_exam_1' ? 'block' : 'none';
+        document.getElementById('selfEvalNote').style.display = V.selfEval ? 'block' : 'none';
 
-        // ---- матрица навыков ----
-        const stores = {};
-        people.forEach(([k, r]) => {
-            const s = r.city || 'Не указан';
-            if (!stores[s]) stores[s] = { n: 0, sk: {} };
-            stores[s].n++;
-            (r.answers || []).forEach(a => {
-                if (!a.skill || a.percentTask == null) return;
-                (stores[s].sk[a.skill] = stores[s].sk[a.skill] || []).push(a.percentTask);
+        const byPerson = attemptsByPerson(skillView);
+        const people = Object.entries(byPerson);
+        if (!people.length) {
+            ['skillMatrix', 'skillRecs', 'growthHero', 'personBoard'].forEach(id => document.getElementById(id).innerHTML = '');
+            document.getElementById('skillMatrix').innerHTML = '<div class="empty">📭 Пока нет результатов по этому виду</div>';
+            return;
+        }
+        const pick = arr => mode === 'first' ? arr[0] : mode === 'last' ? arr[arr.length - 1] : arr.reduce((b, r) => r.percent > b.percent ? r : b, arr[0]);
+
+        // ---- матрица: магазины × навыки ----
+        const stores = {}, allSk = {}, itemsSeen = [];
+        people.forEach(([k, arr]) => {
+            const r = pick(arr), s = r.city || 'Не указан';
+            if (!stores[s]) stores[s] = { n: 0, sk: {}, pct: [] };
+            stores[s].n++; stores[s].pct.push(r.percent);
+            V.items(r).forEach(([name, v]) => {
+                if (v == null || isNaN(v)) return;
+                if (!itemsSeen.includes(name)) itemsSeen.push(name);
+                (stores[s].sk[name] = stores[s].sk[name] || []).push(v);
+                (allSk[name] = allSk[name] || []).push(v);
             });
         });
-        const avg = arr => arr && arr.length ? Math.round(arr.reduce((x, y) => x + y, 0) / arr.length) : null;
-        const all = { n: people.length, sk: {} };
-        Object.values(stores).forEach(st => EXAM1_SKILLS.forEach(sk => { if (st.sk[sk]) (all.sk[sk] = all.sk[sk] || []).push(...st.sk[sk]); }));
+        const items = (V.order || []).filter(x => itemsSeen.includes(x)).concat(itemsSeen.filter(x => !(V.order || []).includes(x)));
         const storeNames = Object.keys(stores).sort((a, b) => a.localeCompare(b, 'ru'));
-        const cell = (store, sk, v, n) => `<td class="hm-cell hm-${lvlClass(v)}" title="${esc(store)} · ${esc(sk)}: ${v == null ? 'нет данных' : v + '%'} (${n} чел.)">${v == null ? '—' : v + '%'}</td>`;
+        const cell = (store, it, v, n) => `<td class="hm-cell hm-${lvlClass(v)}" title="${esc(store)} · ${esc(it)}: ${v == null ? 'нет данных' : v + '%'} (${n} чел.)">${v == null ? '—' : v + '%'}</td>`;
         const row = (name, st, cls = '') => {
-            const vals = EXAM1_SKILLS.map(sk => avg(st.sk[sk]));
-            const tot = avg(vals.filter(v => v != null));
-            return `<tr class="${cls}"><th class="hm-store">${esc(name)}<span class="hm-n">${st.n} чел.</span></th>${EXAM1_SKILLS.map((sk, i) => cell(name, sk, vals[i], st.n)).join('')}<td class="hm-cell hm-total hm-${lvlClass(tot)}">${tot == null ? '—' : tot + '%'}</td></tr>`;
+            const vals = items.map(it => avgOf(st.sk[it]));
+            const tot = avgOf(st.pct);
+            return `<tr class="${cls}"><th class="hm-store">${esc(name)}<span class="hm-n">${st.n} чел.</span></th>${items.map((it, i) => cell(name, it, vals[i], st.n)).join('')}<td class="hm-cell hm-total hm-${lvlClass(tot)}" title="Общий результат">${tot == null ? '—' : tot + '%'}</td></tr>`;
         };
-        document.getElementById('skillMatrix').innerHTML = `
+        const all = { n: people.length, sk: allSk, pct: Object.values(stores).flatMap(s => s.pct) };
+        document.getElementById('skillMatrix').innerHTML = items.length ? `
             <div class="table-wrap"><table class="heatmap">
-                <thead><tr><th>Магазин</th>${EXAM1_SKILLS.map(sk => `<th title="${esc(sk)}">${esc(SKILL_SHORT[sk])}</th>`).join('')}<th>Итого</th></tr></thead>
+                <thead><tr><th>Магазин</th>${items.map(it => `<th title="${esc(it)}">${esc(shortLabel(it))}</th>`).join('')}<th>Итого</th></tr></thead>
                 <tbody>${storeNames.map(s => row(s, stores[s])).join('')}${storeNames.length > 1 ? row('Все магазины', all, 'hm-all') : ''}</tbody>
             </table></div>
-            <div class="hm-legend"><span><i class="hm-good"></i>✓ 80% и выше — навык в порядке</span><span><i class="hm-mid"></i>! 60–79% — стоит подтянуть</span><span><i class="hm-bad"></i>✕ ниже 60% — зона риска</span></div>`;
+            <div class="hm-legend"><span><i class="hm-good"></i>✓ 80% и выше — в порядке</span><span><i class="hm-mid"></i>! 60–79% — стоит подтянуть</span><span><i class="hm-bad"></i>✕ ниже 60% — зона риска</span><span>Наведите на заголовок или ячейку, чтобы увидеть полное название</span></div>`
+            : '<div class="empty">В этих результатах нет разбивки по пунктам — доступен только общий балл.</div>';
 
-        // ---- подсказки: самый слабый навык каждого магазина ----
+        // ---- подсказки по магазинам ----
         document.getElementById('skillRecs').innerHTML = storeNames.map(s => {
-            const vals = EXAM1_SKILLS.map(sk => ({ sk, v: avg(stores[s].sk[sk]) })).filter(x => x.v != null).sort((a, b) => a.v - b.v);
+            const vals = items.map(it => ({ it, v: avgOf(stores[s].sk[it]) })).filter(x => x.v != null).sort((a, b) => a.v - b.v);
             if (!vals.length) return '';
-            const w = vals[0], t = SKILL_TRAINER[w.sk];
-            if (w.v >= 80) return `<div class="rec-item rec-ok"><b>${esc(s)}</b> — все навыки 80% и выше. Можно ставить в пример другим магазинам 🎉</div>`;
-            return `<div class="rec-item"><b>${esc(s)}</b> — слабее всего <b>${esc(w.sk.toLowerCase())}</b> (${w.v}%). Дайте команде <a href="${t.url}" target="_blank">«${esc(t.name)}» ↗</a>${vals[1] && vals[1].v < 70 ? `, затем подтяните ${esc(vals[1].sk.toLowerCase())} (${vals[1].v}%)` : ''}.</div>`;
+            const w = vals[0];
+            if (w.v >= 80) return `<div class="rec-item rec-ok"><b>${esc(s)}</b> — все пункты 80% и выше. Можно ставить в пример другим магазинам 🎉</div>`;
+            const t = skillView === 'final_exam_1' ? SKILL_TRAINER[w.it] : V.trainer;
+            const tip = V.rec ? V.rec(w.it) : '';
+            const second = vals[1] && vals[1].v < 70 ? `, затем «${esc(vals[1].it)}» (${vals[1].v}%)` : '';
+            return `<div class="rec-item"><b>${esc(s)}</b> — слабее всего ${esc(V.unit)} <b>«${esc(w.it)}»</b> (${w.v}%)${second}.${tip ? ' 💡 ' + esc(tip) : ''}${t ? ` Дайте команде <a href="${t.url}" target="_blank">«${esc(t.name)}» ↗</a>${skillView === 'final_exam_1' ? '' : ' ещё раз'}.` : ''}</div>`;
         }).join('');
 
-        // ---- рейтинг выручки ----
-        renderRevenueBoard(people);
+        // ---- сводка сверху ----
+        const firsts = people.map(([, a]) => a[0].percent), bests = people.map(([, a]) => Math.max(...a.map(r => r.percent)));
+        const attemptsPer = (people.reduce((s, [, a]) => s + a.length, 0) / people.length);
+        let hero;
+        if (skillView === 'final_exam_1') {
+            const growth = [];
+            people.forEach(([k, a]) => { const tests = allData.filter(x => x.type === 'test' && getGroupMembers(k).includes(normalizeName(x.user_name))).sort((x, y) => new Date(x.date) - new Date(y.date)); if (tests.length) growth.push(a[a.length - 1].percent - tests[0].percent); });
+            const g = avgOf(growth);
+            const totalRev = people.reduce((s, [, a]) => s + (a[a.length - 1].revenue || 0), 0);
+            hero = [['Прошли', people.length, 'сотрудников'], ['Средний результат', avgOf(people.map(([, a]) => pick(a).percent)) + '%', mode === 'first' ? '1-я попытка' : mode === 'last' ? 'последняя попытка' : 'лучшая попытка'],
+                ['Рост после обучения', g == null ? '—' : (g >= 0 ? '▲ +' : '▼ ') + g + ' п.п.', g == null ? 'нет входных тестов для сравнения' : 'входной тест → аттестация, ' + growth.length + ' чел.', g == null ? '' : g >= 0 ? 'up' : 'down'],
+                ['Выручка всех смен', rubFmt(totalRev), 'в среднем ' + rubFmt(totalRev / people.length)]];
+        } else {
+            const gain = avgOf(bests) - avgOf(firsts);
+            hero = [['Прошли', people.length, 'сотрудников'], ['С первой попытки', avgOf(firsts) + '%', 'реальный уровень знаний'],
+                ['Лучший результат', avgOf(bests) + '%', gain > 0 ? '▲ +' + gain + ' п.п. после пересдач' : 'без пересдач', gain > 0 ? 'up' : ''],
+                ['Попыток на человека', attemptsPer.toFixed(1).replace('.', ','), people.filter(([, a]) => a.length >= 3).length + ' чел. проходили 3+ раз']];
+        }
+        document.getElementById('growthHero').innerHTML = hero.map(h => `<div class="gh-item"><div class="gh-label">${h[0]}</div><div class="gh-value ${h[3] || ''}">${h[1]}</div><div class="gh-sub">${h[2]}</div></div>`).join('');
 
-        // ---- рост после обучения: первый тест → последняя аттестация ----
-        const growth = [];
-        people.forEach(([k, r]) => {
-            const members = getGroupMembers(k);
-            const tests = allData.filter(x => x.type === 'test' && members.includes(normalizeName(x.user_name))).sort((a, b) => new Date(a.date) - new Date(b.date));
-            if (tests.length) growth.push(r.percent - tests[0].percent);
-        });
-        const g = growth.length ? Math.round(growth.reduce((a, b) => a + b, 0) / growth.length) : null;
-        const avgExam = Math.round(people.reduce((s, [, r]) => s + r.percent, 0) / people.length);
-        const totalRev = people.reduce((s, [, r]) => s + (r.revenue || 0), 0);
-        document.getElementById('growthHero').innerHTML = `
-            <div class="gh-item"><div class="gh-label">Прошли аттестацию</div><div class="gh-value">${people.length}</div><div class="gh-sub">сотрудников</div></div>
-            <div class="gh-item"><div class="gh-label">Средний результат</div><div class="gh-value">${avgExam}%</div><div class="gh-sub">последние попытки</div></div>
-            <div class="gh-item"><div class="gh-label">Рост после обучения</div><div class="gh-value ${g == null ? '' : g >= 0 ? 'up' : 'down'}">${g == null ? '—' : (g >= 0 ? '▲ +' : '▼ ') + g + ' п.п.'}</div><div class="gh-sub">${g == null ? 'нет входных тестов для сравнения' : 'входной тест → аттестация, ' + growth.length + ' чел.'}</div></div>
-            <div class="gh-item"><div class="gh-label">Выручка всех смен</div><div class="gh-value">${rubFmt(totalRev)}</div><div class="gh-sub">в среднем ${rubFmt(totalRev / people.length)}</div></div>`;
+        // ---- рейтинг сотрудников ----
+        const rows = people.map(([k, a]) => { const f = a[0].percent, b = Math.max(...a.map(r => r.percent)); return { name: niceName(k, a[0]), city: a[a.length - 1].city, f, b, n: a.length }; })
+            .sort((x, y) => y.b - x.b || y.f - x.f || x.n - y.n);
+        const medal = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span class="rv-pos">${i + 1}</span>`;
+        document.getElementById('personBoard').innerHTML = rows.slice(0, 30).map((r, i) => `
+            <div class="rv-row" title="${esc(r.name)}: первая попытка ${r.f}%, лучшая ${r.b}%, попыток ${r.n}">
+                <div class="rv-medal">${medal(i)}</div>
+                <div class="rv-main"><div class="rv-name">${esc(r.name)}</div><div class="rv-sub">${esc(r.city)} · ${r.n === 1 ? '1 попытка' : r.n + ' попыт.: ' + r.f + '% → ' + r.b + '%'}</div>
+                    <div class="rv-bar"><i class="rv-first" style="width:${Math.max(2, r.f)}%"></i><i class="rv-gain" style="width:${Math.max(0, r.b - r.f)}%"></i></div></div>
+                <div class="rv-val"><span class="lvl-txt-${lvlClass(r.b)}">${r.b}%</span></div>
+            </div>`).join('') + (rows.length > 30 ? `<div class="empty">…и ещё ${rows.length - 30}</div>` : '') +
+            `<div class="hm-legend"><span><i style="background:#c9a227"></i>первая попытка</span><span><i style="background:#e8d9a0"></i>прирост после пересдач</span></div>`;
+
+        if (skillView === 'final_exam_1') renderRevenueBoard(people.map(([k, a]) => [k, a[a.length - 1]]));
     }
 
-    let revenueMode = 'people';
-    function setRevenueMode(m) { revenueMode = m; document.querySelectorAll('.rev-toggle button').forEach(b => b.classList.toggle('active', b.dataset.m === m)); renderRevenueBoard(Object.entries(latestExam1ByPerson())); }
+    function setRevenueMode(m) { revenueMode = m; document.querySelectorAll('.rev-toggle button').forEach(b => b.classList.toggle('active', b.dataset.m === m)); renderRevenueBoard(Object.entries(attemptsByPerson('final_exam_1')).map(([k, a]) => [k, a[a.length - 1]])); }
     function renderRevenueBoard(people) {
         const box = document.getElementById('revenueBoard');
         let rows;
         if (revenueMode === 'people') {
-            // лучшая выручка каждого сотрудника
             const best = {};
             allData.filter(r => r.type === 'final_exam_1').forEach(r => { const k = getGroupKey(r.user_name); if (!best[k] || (r.revenue || 0) > (best[k].revenue || 0)) best[k] = r; });
-            rows = Object.entries(best).map(([k, r]) => ({ name: (getDisplayName(k) || r.user_name).replace(/(^|\s)\S/g, c => c.toUpperCase()), sub: `${r.city} · купили ${r.clients_bought || 0} из ${r.clients_total || 6}${r.level ? ' · ' + r.level : ''}`, v: r.revenue || 0 }));
+            rows = Object.entries(best).map(([k, r]) => ({ name: niceName(k, r), sub: `${r.city} · купили ${r.clients_bought || 0} из ${r.clients_total || 6}${r.level ? ' · ' + r.level : ''}`, v: r.revenue || 0 }));
         } else {
             const st = {};
             people.forEach(([, r]) => { const s = r.city || 'Не указан'; (st[s] = st[s] || []).push(r.revenue || 0); });
@@ -1021,7 +1105,7 @@
             document.getElementById('employeesTab').style.display = tab === 'employees' ? 'block' : 'none';
             document.getElementById('feedbackTab').style.display = tab === 'feedback' ? 'block' : 'none';
             document.getElementById('exam1Tab').style.display = tab === 'exam1' ? 'block' : 'none';
-            if (tab === 'exam1') renderExam1Tab();
+            if (tab === 'exam1') { const gt = document.getElementById('typeFilter').value; if (SKILL_VIEWS[gt] && gt !== skillView) { skillView = gt; skillMode = null; } renderExam1Tab(); }
             if (tab === 'cities') renderCityStats();
             if (tab === 'employees') renderEmployeesTab();
         });
@@ -1485,9 +1569,11 @@
         const low = filteredData.filter(r => r.percent < 70).length;
         const success = filteredData.filter(r => r.percent >= 85).length;
         if (low > 0 && (low / total) > 0.3) {
-            container.innerHTML = `<div class="alert-box" style="display:block;"><strong>🚨 Внимание:</strong> ${low} сотрудников (${Math.round(low/total*100)}%) показали низкий результат.</div>`;
+            const lows = filteredData.filter(r => r.percent < 70).sort((a, b) => a.percent - b.percent);
+            const names = lows.slice(0, 5).map(r => `${esc(r.user_name)} (${esc(r.city)}, ${r.percent}%)`).join(', ') + (lows.length > 5 ? ` и ещё ${lows.length - 5}` : '');
+            container.innerHTML = `<div class="alert-box" style="display:block;"><strong>🚨 Внимание:</strong> ${low} из ${total} прохождений (${Math.round(low/total*100)}%) — результат ниже 70%: ${names}.</div>`;
         } else if (success / total > 0.7 && total > 2) {
-            container.innerHTML = `<div class="alert-box success" style="display:block;"><strong>🎉 Отлично!</strong> ${success} сотрудников (${Math.round(success/total*100)}%) успешно прошли тестирование.</div>`;
+            container.innerHTML = `<div class="alert-box success" style="display:block;"><strong>🎉 Отлично!</strong> ${success} из ${total} прохождений (${Math.round(success/total*100)}%) — результат 85% и выше.</div>`;
         }
     }
 
