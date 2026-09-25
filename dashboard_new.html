@@ -87,6 +87,8 @@
         .filter-chip.active[data-value="clienttype"] { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
         .filter-chip.active[data-value="service"] { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); }
         .filter-chip.active[data-value="final_exam"] { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
+        .filter-chip.active[data-value="final_exam_1"] { background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%); }
+        .exam-points { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 700; color: var(--text-secondary, #6b7280); }
 
         .status-text { margin-left: auto; font-size: 13px; color: white; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); padding: 8px 16px; border-radius: 50px; font-weight: 600; }
 
@@ -320,11 +322,12 @@
                 <button class="filter-chip" data-value="clienttype" onclick="setTypeFilter('clienttype')">🎭 Адаптация</button>
                 <button class="filter-chip" data-value="service" onclick="setTypeFilter('service')">🤝 Сервис</button>
                 <button class="filter-chip" data-value="final_exam" onclick="setTypeFilter('final_exam')">🎓 Аттестация</button>
+                <button class="filter-chip" data-value="final_exam_1" onclick="setTypeFilter('final_exam_1')">🏆 Аттестация_1</button>
             </div>
             <select id="typeFilter" style="display: none;">
                 <option value="all">Все</option><option value="test">Тест</option><option value="trainer">Тренировка</option>
                 <option value="crosssell">Допродажи</option><option value="errorfinder">Найди ошибку</option>
-                <option value="clienttype">Адаптация</option><option value="service">Сервис</option><option value="final_exam">Аттестация</option>
+                <option value="clienttype">Адаптация</option><option value="service">Сервис</option><option value="final_exam">Аттестация</option><option value="final_exam_1">Аттестация_1</option>
             </select>
         </div>
 
@@ -373,6 +376,7 @@
             <div class="status-card violet"><div class="icon">🎭</div><div class="label">Адаптация</div><div class="value" id="sClienttype">0</div></div>
             <div class="status-card sky"><div class="icon">🤝</div><div class="label">Сервис</div><div class="value" id="sService">0</div></div>
             <div class="status-card violet"><div class="icon">🎓</div><div class="label">Аттестация</div><div class="value" id="sFinalExam">0</div></div>
+            <div class="status-card gold"><div class="icon">🏆</div><div class="label">Аттестация_1</div><div class="value" id="sFinalExam1">0</div></div>
             <div class="status-card green"><div class="icon">✅</div><div class="label">Успешно (≥85%)</div><div class="value" id="sSuccess">0</div></div>
             <div class="status-card orange"><div class="icon">📈</div><div class="label">Средний балл</div><div class="value" id="sAvg">0%</div><div class="sparkline-box" id="avgSparkline"></div></div>
             <div class="status-card red"><div class="icon">🔴</div><div class="label">Низкий (&lt;70%)</div><div class="value" id="sLow">0</div></div>
@@ -493,6 +497,7 @@
     const NEW_STORES = ['Екатеринбург','Владимир','Чайковский','Тольятти','СПб, Заневский, 67, ТК Заневский Каскад','СПб, Стародеревенская, 36, ТД Крокус'];
     const CITY_SETS = {
         final_exam: NEW_STORES,
+        final_exam_1: NEW_STORES,
         test: NEW_STORES,
         trainer: NEW_STORES,
         crosssell: NEW_STORES,
@@ -677,7 +682,8 @@
             test: { icon: '📝', label: 'Тест' }, trainer: { icon: '🎯', label: 'Тренировка' },
             crosssell: { icon: '💰', label: 'Допродажи' }, errorfinder: { icon: '🔍', label: 'Найди ошибку' },
             clienttype: { icon: '🎭', label: 'Адаптация' }, service: { icon: '🤝', label: 'Сервис' },
-            final_exam: { icon: '🎓', label: 'Аттестация' }
+            final_exam: { icon: '🎓', label: 'Аттестация' },
+            final_exam_1: { icon: '🏆', label: 'Аттестация_1' }
         };
         return map[type] || { icon: '📝', label: 'Тест' };
     }
@@ -786,7 +792,7 @@
         if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
         try {
             document.getElementById('status').textContent = '⏳ Удаляю...';
-            const types = ['test', 'dialog', 'crosssell', 'errorfinder', 'clienttype', 'service', 'final_exam'];
+            const types = ['test', 'dialog', 'crosssell', 'errorfinder', 'clienttype', 'service', 'final_exam', 'final_exam_1'];
             for (const type of types) {
                 const snap = await db.collection('results').doc(type).collection('items').get();
                 const batch = db.batch();
@@ -826,7 +832,8 @@
                 { collection: 'errorfinder', type: 'errorfinder' },
                 { collection: 'clienttype', type: 'clienttype' },
                 { collection: 'service', type: 'service' },
-                { collection: 'final_exam', type: 'final_exam' }
+                { collection: 'final_exam', type: 'final_exam' },
+                { collection: 'final_exam_1', type: 'final_exam_1' }
             ];
             
             let allResults = [];
@@ -864,6 +871,9 @@
                 rules_applied: r.rules_applied || [],
                 scenarios: r.scenarios || [],
                 level: r.level || '',
+                revenue: r.revenue || 0,
+                clients_bought: r.clients_bought || 0,
+                clients_total: r.clients_total || 0,
                 date: r.date || new Date().toISOString()
             }));
             
@@ -1274,7 +1284,7 @@
         if (!filteredData.length) {
             document.getElementById('mainTotal').textContent = '0';
             document.getElementById('mainAvg').textContent = '0%';
-            ['sTest','sTrainer','sCrosssell','sErrorfinder','sClienttype','sService','sFinalExam','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
+            ['sTest','sTrainer','sCrosssell','sErrorfinder','sClienttype','sService','sFinalExam','sFinalExam1','sSuccess','sAvg','sLow','sErrors'].forEach(id => {
                 document.getElementById(id).textContent = id === 'sAvg' ? '0%' : '0';
             });
             document.getElementById('topList').innerHTML = '<div class="empty">📭 Нет данных</div>';
@@ -1303,6 +1313,7 @@
         document.getElementById('sClienttype').textContent = filteredData.filter(r => r.type === 'clienttype').length;
         document.getElementById('sService').textContent = filteredData.filter(r => r.type === 'service').length;
         document.getElementById('sFinalExam').textContent = filteredData.filter(r => r.type === 'final_exam').length;
+        document.getElementById('sFinalExam1').textContent = filteredData.filter(r => r.type === 'final_exam_1').length;
         document.getElementById('sSuccess').textContent = success;
         document.getElementById('sAvg').textContent = avg + '%';
         document.getElementById('sLow').textContent = filteredData.filter(r => r.percent < 70).length;
@@ -1391,6 +1402,7 @@
             else if (record.type === 'clienttype') collectionName = 'clienttype';
             else if (record.type === 'service') collectionName = 'service';
             else if (record.type === 'final_exam') collectionName = 'final_exam';
+            else if (record.type === 'final_exam_1') collectionName = 'final_exam_1';
             
             if (collectionName) {
                 // Ищем документ по содержимому
@@ -1443,7 +1455,6 @@
                 });
             }
         } else if (emp.type === 'errorfinder' || emp.type === 'clienttype') {
-        } else if (emp.type === 'errorfinder' || emp.type === 'clienttype') {
             html += `<div class="section-subtitle">Результаты по сценариям:</div>`;
             if (emp.scenarios && emp.scenarios.length) {
                 emp.scenarios.forEach((s, idx) => {
@@ -1460,6 +1471,15 @@
                     const ok = data.correct === data.total;
                     html += `<div class="rule-item ${ok ? '' : 'failed'}"><div class="rule-name">${ok ? '✅' : '❌'} ${esc(name)} (${data.correct}/${data.total})</div></div>`;
                 }
+            }
+        } else if (emp.type === 'final_exam_1') {
+            html += `<div class="section-subtitle">Смена: выручка ${(emp.revenue || 0).toLocaleString('ru-RU')} ₽ · купили ${emp.clients_bought || 0} из ${emp.clients_total || 6} клиентов${emp.level ? ' · ' + esc(emp.level) : ''}</div>`;
+            if (emp.answers && emp.answers.length) {
+                emp.answers.forEach((a, idx) => {
+                    const pct = a.percentTask || 0;
+                    const evalClass = pct >= 80 ? 'perfect' : pct >= 50 ? 'partial' : 'miss';
+                    html += `<div class="exam-answer"><h4>${idx + 1}. ${esc(a.task || '')} · ${esc(a.principle)}</h4><div class="exam-situation">${esc(a.situation || '')}</div><div class="exam-user-answer">${esc(a.userAnswer || 'Не указан')}</div><div class="exam-etalon">${esc(a.etalon || '')}</div><div class="exam-eval ${evalClass}">${esc(a.outcome || '')}</div><span class="exam-points">${a.points ?? 0} из ${a.max ?? 0} · ${pct}%${a.revenue ? ' · +' + a.revenue.toLocaleString('ru-RU') + ' ₽' : ''}</span></div>`;
+                });
             }
         } else if (emp.type === 'final_exam') {
             html += `<div class="section-subtitle">Ответы и самооценка:</div>`;
