@@ -340,6 +340,7 @@
         .fb-etalon b { font-style: normal; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; color: #065f46; }
         .btn-ghost { width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 16px; background: white; color: #6b7280; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; font-family: 'Inter', sans-serif; }
         .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+        .tip { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 10px 14px; font-size: 13.5px; color: #1e3a8a; line-height: 1.55; margin: 0 0 10px; }
         .hint-err { color: #b91c1c; font-size: 13px; font-weight: 700; margin-top: 8px; min-height: 18px; }
 
         /* сертификат: итоги смены */
@@ -359,7 +360,21 @@
             .cert-skill span:first-child { flex-basis: 120px; }
             .timer { font-size: 36px; }
             .catalog { grid-template-columns: 1fr 1fr; }
+            .shift-hud { flex-wrap: nowrap; gap: 6px; margin-bottom: 14px; }
+            .hud-item { min-width: 0; padding: 8px 8px; border-radius: 10px; }
+            .hud-label { font-size: 9.5px; letter-spacing: 0; }
+            .hud-value { font-size: 15px; }
+            #examContainer .scenario-header { flex-direction: row; text-align: left; padding: 14px; gap: 12px; }
+            #examContainer .scenario-icon { width: 48px; height: 48px; font-size: 24px; }
+            #examContainer .scenario-label { justify-content: flex-start; font-size: 10px; }
+            #examContainer .scenario-title { font-size: 16px; }
+            .progress-container { margin-bottom: 14px; }
+            .frag, .step, .msg { font-size: 14px; }
+            .answer-textarea { font-size: 16px; } /* iPhone не увеличивает экран при вводе */
         }
+        body.in-exam .header { display: none; }
+        .save-img { display: none; margin-top: 16px; text-align: center; font-size: 13px; color: #6b7280; }
+        .save-img img { width: 100%; border-radius: 12px; margin-top: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.12); }
     </style>
 </head>
 <body>
@@ -434,7 +449,7 @@
 </div>
 
 <script>
-    // 🔥 Firestore — отдельная коллекция final_exam_1 (дашборд → «Аттестация_1»)
+    // 🔥 Firestore — коллекция final_exam (она точно открыта на запись); дашборд узнаёт новую аттестацию по exam_version и показывает под «Аттестация_1»
     const firebaseConfig = {
         apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
         authDomain: "gold-8105a.firebaseapp.com",
@@ -453,7 +468,7 @@
     const rub = n => n.toLocaleString('ru-RU') + ' ₽';
     function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
     const hasAny = (t, stems) => stems.some(s => t.includes(s));
-    const MIN_TEXT = 20;
+    const MIN_TEXT = 10;
 
     // Проверка свободного ответа по ключевым элементам.
     // rubric: [{label, stems:[...], pts, test?(t)}]; penalties: [{label, stems, pts}]
@@ -503,7 +518,7 @@
                 let picked = [];
                 area.innerHTML = `
                     <div class="client-line"><b>👤 Клиент</b>${esc(this.situation)}</div>
-                    <div class="instruction">Соберите <b>свою первую реплику</b> из подходящих фрагментов. Порядок важен. Нажмите на фрагмент в реплике, чтобы убрать его.</div>
+                    <div class="instruction">Соберите <b>свою первую реплику</b> из подходящих фрагментов. Нажмите на фрагмент в реплике, чтобы убрать его.</div><div class="tip">💡 Сначала поддержите клиента, потом задайте вопрос, потом скажите, что покажете.</div>
                     <div class="build-zone empty" id="bz"></div>
                     <div class="frag-pool" id="fp"></div>
                     <div class="hint-err" id="err"></div>
@@ -536,16 +551,12 @@
                     const traps = picked.filter(id => id.startsWith('T'));
                     const asks = roles.filter(r => r === 'ask').length;
                     const lines = []; let pts = 0;
-                    const hasJoin = roles.includes('join');
-                    if (hasJoin) { pts++; lines.push('✅ Присоединились к клиенту'); } else lines.push('❌ Нет присоединения: клиент растерян, сначала поддержите его');
-                    if (asks >= 1) { pts++; lines.push('✅ Задали вопрос о её предпочтениях'); } else lines.push('❌ Ни одного вопроса о ней, подбор будет наугад');
-                    if (asks >= 2 || (asks >= 1 && roles.includes('plan'))) { pts++; lines.push('✅ Выявление полное: вопросы + понятный план'); } else lines.push('❌ Одного вопроса мало или нет плана, что будет дальше');
-                    const firstShow = roles.findIndex(r => r === 'plan');
-                    const lastAsk = roles.lastIndexOf('ask');
-                    const orderOk = (!hasJoin || roles.indexOf('join') === 0) && (firstShow === -1 || lastAsk === -1 || lastAsk < firstShow) && asks >= 1;
-                    if (orderOk) { pts++; lines.push('✅ Логичный порядок: поддержка → вопросы → предложение'); } else lines.push('❌ Порядок сбит: сначала поддержка, потом вопросы, потом показ');
-                    if (!traps.length) { pts++; lines.push('✅ Без фраз-ловушек'); }
-                    traps.forEach(id => { const f = F.find(x => x.id === id); pts--; lines.push('⚠️ Ловушка «' + f.text + '» — ' + f.why); });
+                    const hasJoin = roles.includes('join'), hasPlan = roles.includes('plan');
+                    if (hasJoin) { pts += 1; lines.push('✅ Поддержали клиента (+1)'); } else lines.push('❌ Нет поддержки: клиент растерян, сначала успокойте его');
+                    if (asks >= 1) { pts += 2; lines.push('✅ Задали вопрос о её предпочтениях (+2)'); } else lines.push('❌ Ни одного вопроса о ней, подбор будет наугад');
+                    if (hasPlan) { pts += 1; lines.push('✅ Сказали, что будет дальше (+1)'); } else lines.push('❌ Не сказали, что покажете дальше');
+                    if (!traps.length) { pts += 1; lines.push('✅ Без фраз-ловушек (+1)'); }
+                    traps.forEach(id => { const f = F.find(x => x.id === id); lines.push('⚠️ Ловушка «' + f.text + '» — ' + f.why); });
                     pts = Math.max(0, pts);
                     [...bz.children].forEach(el => { el.classList.add(el.dataset.id.startsWith('T') ? 'bad' : 'good'); });
                     [...bz.children, ...fp.children].forEach(el => el.classList.add('locked'));
@@ -606,7 +617,7 @@
                     });
                     $('go').style.display = 'none';
                     const s2 = $('step2');
-                    s2.innerHTML = `<div class="instruction" style="margin-top:16px">Вы нашли ${found} из 2 ошибок${falseP ? ', ложных отметок: ' + falseP : ''}. Ошибочные реплики подсвечены зелёным.<br><b>Шаг 2.</b> Перепишите обе реплики так, как сказали бы вы сами.</div>
+                    s2.innerHTML = `<div class="instruction" style="margin-top:16px">Вы нашли ${found} из 2 ошибок${falseP ? ', ложных отметок: ' + falseP : ''}. Ошибочные реплики подсвечены зелёным.<br><b>Шаг 2.</b> Перепишите обе реплики так, как сказали бы вы сами.</div><div class="tip">💡 В первой фразе предложите новинку к её кольцу. Во второй не давите, а предложите отложить украшение.</div>
                         ${errIdx.map((i, k) => `<div class="rewrite-box"><div class="orig">${esc(D[i].t)}</div><textarea class="answer-textarea" id="rw${k}" placeholder="Ваш вариант фразы..."></textarea></div>`).join('')}
                         <div class="hint-err" id="err2"></div>
                         <button class="btn-primary" id="go2">✍️ Отправить исправления</button>`;
@@ -657,7 +668,7 @@
                     <div class="instruction"><b>Шаг 1.</b> Прочитайте описание. Нажмите на детали, которые подсказывают, <b>что ей на самом деле нужно</b>. Важных деталей несколько, есть и лишние.</div>
                     <div class="story" id="story"></div>
                     <div class="instruction"><b>Шаг 2.</b> Что ей на самом деле нужно и <b>каким вопросом</b> вы начнёте разговор?</div>
-                    <textarea class="answer-textarea" id="ans" placeholder="Ей нужно... Я спрошу: «...»"></textarea>
+                    <div class="tip">💡 Подумайте, почему она трогает ухо и сняла свои серьги.</div><textarea class="answer-textarea" id="ans" placeholder="Ей нужно... Я спрошу: «...»"></textarea>
                     <div class="hint-err" id="err"></div>
                     <button class="btn-primary" id="go">🎯 Подойти к клиентке</button>`;
                 const st = $('story');
@@ -682,9 +693,9 @@
                         if (s.plain) return; el.classList.add('detail');
                         if (s.sig && picked.includes(i)) el.classList.add('sig'); else if (s.sig) el.classList.add('miss'); else if (picked.includes(i)) el.classList.add('false'); });
                     const r = checkText(txt, [
-                        { label: 'Поняли потребность: комфорт, удобная застёжка, чтобы не давило', stems: ['застеж', 'замок', 'замк', 'английск', 'удоб', 'комфорт', 'не дав', 'давят', 'давил', 'не бол', 'болят', 'болит', 'натира', 'легк', 'аллерг', 'чувствит', 'тяжел'], pts: 2 },
-                        { label: 'Первый вопрос про её уши или её серьги, а не про бюджет', test: t => t.includes('?') && hasAny(t, ['уш', 'мочк', 'ваши серьг', 'свои серьг', 'ваших серьг', 'не устраива', 'беспоко', 'неудоб', 'бол', 'дав', 'натира', 'застеж', 'носите']), pts: 1 }
-                    ], [{ label: 'Начали с цены или бюджета, хотя цена её не смущает', stems: ['бюджет', 'скидк', 'акци'], pts: 1 }]);
+                        { label: 'Поняли потребность: комфорт, удобная застёжка, чтобы не давило', stems: ['уш', 'мочк', 'застеж', 'замок', 'замк', 'английск', 'удоб', 'комфорт', 'не дав', 'давят', 'давил', 'не бол', 'болят', 'болит', 'натира', 'легк', 'аллерг', 'чувствит', 'тяжел'], pts: 2 },
+                        { label: 'Первый вопрос про её уши или её серьги, а не про бюджет', test: t => t.includes('?') || hasAny(t, ['уш', 'мочк', 'ваши серьг', 'свои серьг', 'ваших серьг', 'не устраива', 'беспоко', 'неудоб', 'бол', 'дав', 'натира', 'застеж', 'носите']), pts: 1 }
+                    ]);
                     $('ans').disabled = true; $('go').style.display = 'none';
                     const lines = [
                         `🔎 Важные детали: найдено ${hit} из 3${fal ? ', лишних: ' + fal : ''} (+${clickPts}). Зелёные — найденные, жёлтые — пропущенные, красные — лишние.`,
@@ -718,7 +729,7 @@
                     <div class="receipt"><span>🧾 Чек: кольцо 32 900 ₽ + допродажа</span><b id="tot">32 900 ₽</b></div>
                     <div class="catalog" id="cat"></div>
                     <div class="instruction"><b>Шаг 2.</b> Как вы предложите главное дополнение? Одна-две фразы своими словами.</div>
-                    <textarea class="answer-textarea" id="ans" placeholder="Ваша фраза клиентке..."></textarea>
+                    <div class="tip">💡 Свяжите дополнение с её платьем или кольцом и предложите примерить.</div><textarea class="answer-textarea" id="ans" placeholder="Ваша фраза клиентке..."></textarea>
                     <div class="hint-err" id="err"></div>
                     <button class="btn-primary" id="go">🧾 Пробить чек</button>`;
                 const catEl = $('cat');
@@ -743,7 +754,7 @@
                     const over = total > LIMIT;
                     let bp = items.reduce((a, p) => a + (p.id === 'ch' && !basket.includes('pd') ? -1 : p.v), 0);
                     const lines = items.map(p => { const ok = p.v > 0 && !(p.id === 'ch' && !basket.includes('pd')); return (ok ? '✅ ' : (p.v === 0 && p.id !== 'br') ? '➖ ' : '❌ ') + p.n + ' — ' + p.why; });
-                    if (over) { bp -= 3; lines.push('⚠️ Чек ' + rub(total) + ' — больше названных 50 000. Клиентка назвала предел, и его нужно уважать (−3)'); }
+                    if (over) { bp -= 2; lines.push('⚠️ Чек ' + rub(total) + ' — больше названных 50 000. Клиентка назвала предел, и его нужно уважать (−2)'); }
                     else lines.push('✅ Уложились в бюджет клиентки: ' + rub(total));
                     bp = Math.max(0, Math.min(5, bp));
                     const r = checkText(txt, [
@@ -768,7 +779,7 @@
             situation: 'Клиентка примерила серьги с бриллиантами за 58 000 ₽. Смотрит в зеркало, явно нравится. Потом снимает: «Красиво… Но за такие деньги я могу в отпуск съездить».',
             etalon: '«Понимаю, сумма серьёзная, и отпуск тоже хочется. Скажите, а с чем вы сравниваете? Отпуск закончится через неделю, а серьги будут с вами каждый день много лет. И совсем необязательно отказываться от одного ради другого: можно оформить рассрочку, платёж выйдет около 5 000 в месяц. Или я покажу похожие модели чуть легче по цене».',
             render(area, done) {
-                const LIMIT = 60;
+                const LIMIT = 90;
                 area.innerHTML = `
                     <div class="client-line"><b>👤 Клиентка</b>${esc(this.situation)}</div>
                     <div class="timer-start" id="ts">
@@ -777,7 +788,7 @@
                     </div>
                     <div id="tw" class="hidden">
                         <div class="timer" id="tm">${LIMIT}</div>
-                        <textarea class="answer-textarea" id="ans" placeholder="Отвечайте клиентке..." style="min-height:140px"></textarea>
+                        <div class="tip">💡 Схема: согласитесь → спросите → покажите ценность → предложите рассрочку или другой вариант.</div><textarea class="answer-textarea" id="ans" placeholder="Отвечайте клиентке..." style="min-height:140px"></textarea>
                         <button class="btn-primary" id="go">🗣️ Ответить</button>
                     </div>`;
                 let tLeft = LIMIT, iv = null, sent = false;
@@ -787,8 +798,8 @@
                     $('ans').disabled = true; $('go').style.display = 'none';
                     const r = checkText(txt, [
                         { label: 'Присоединились к её словам, а не спорили', stems: ['понима', 'согла', 'действительно', 'конечно', 'вы правы', 'разумно', 'серьезн', 'отпуск тоже', 'важн'], pts: 1 },
-                        { label: 'Уточнили, что смущает или с чем сравнивает', test: t => t.includes('?') && hasAny(t, ['сравнив', 'смущ', 'что именно', 'какой бюджет', 'на какую сумм', 'ориентир', 'что для вас', 'подума', 'останавлива', 'комфортн']), pts: 1 },
-                        { label: 'Показали ценность: надолго, каждый день, останется', stems: ['навсегда', 'на годы', 'годами', 'много лет', 'долго', 'каждый день', 'ежедневн', 'останется', 'остаются', 'наслед', 'память', 'закончится', 'пройдет', 'пройдёт', 'вложен', 'не обесцен'], pts: 1 },
+                        { label: 'Уточнили, что смущает или с чем сравнивает', test: t => t.includes('?') || hasAny(t, ['сравнив', 'смущ', 'что именно', 'какой бюджет', 'на какую сумм', 'ориентир', 'что для вас', 'подума', 'останавлива', 'комфортн']), pts: 1 },
+                        { label: 'Показали ценность: надолго, каждый день, останется', stems: ['радова', 'носить', 'будет с вами', 'на всю жизнь', 'навсегда', 'на годы', 'годами', 'много лет', 'долго', 'каждый день', 'ежедневн', 'останется', 'остаются', 'наслед', 'память', 'закончится', 'пройдет', 'пройдёт', 'вложен', 'не обесцен'], pts: 1 },
                         { label: 'Предложили выход: рассрочка, сплит или другой бюджет', stems: ['рассроч', 'сплит', 'частями', 'долями', 'в месяц', 'платеж', 'платёж', 'другой бюджет', 'похож', 'альтернатив', 'дешевл', 'доступн', 'легче', 'поменьше', 'бонус'], pts: 1 }
                     ], [
                         { label: 'Оправдывали цену («это же бриллианты», «не бижутерия»)', stems: ['бижутер', 'это же бриллиант', 'это же золото', 'цена оправдан', 'качество стоит', 'не дорого', 'недорого'], pts: 1 },
@@ -842,12 +853,12 @@
                     const good = seq.filter(k => k.startsWith('s'));
                     const traps = seq.filter(k => k.startsWith('t')).length;
                     const l = lcs(good, exp);
-                    let pts = Math.round(l / ST.length * 6) - traps * 2;
+                    let pts = Math.round(l / ST.length * 6) - traps;
                     pts = Math.max(0, pts);
                     const lines = [`✅ В правильном порядке: ${l} из ${ST.length} шагов`];
                     const missing = ST.filter((_, i) => !seq.includes('s' + i));
                     if (missing.length) lines.push('❌ Пропущено: ' + missing.join('; '));
-                    seq.filter(k => k.startsWith('t')).forEach(k => lines.push('⚠️ Лишний шаг: «' + TR[+k[1]] + '» (−2)'));
+                    seq.filter(k => k.startsWith('t')).forEach(k => lines.push('⚠️ Лишний шаг: «' + TR[+k[1]] + '» (−1)'));
                     [...$('sz').children].forEach(el => { el.classList.add('locked'); el.style.borderColor = el.dataset.k.startsWith('t') ? '#ef4444' : '#10b981'; });
                     [...$('sp').children].forEach(el => el.classList.add('locked'));
                     $('go').style.display = 'none';
@@ -867,6 +878,7 @@
         user = { name, city }; idx = 0; answers = []; revenue = 0; bought = 0; left = 0;
         $('registerForm').classList.add('hidden');
         $('examContainer').classList.remove('hidden');
+        document.body.classList.add('in-exam');
         renderClient();
     }
 
@@ -890,11 +902,11 @@
         if (res.basket) {
             // клиентка кольцо купит в любом случае — вопрос, получится ли допродажа
             bought++;
-            if (!res.basket.over && percent >= 75) { outcome = '🛍️ Купила комплект!'; cls = 'win'; rev = res.basket.total; }
-            else { outcome = '😐 Купила только кольцо, допродажа не случилась'; cls = percent >= 50 ? 'mid' : 'lose'; rev = res.basket.ring; }
+            if (!res.basket.over && percent >= 60) { outcome = '🛍️ Купила комплект!'; cls = 'win'; rev = res.basket.total; }
+            else { outcome = '😐 Купила только кольцо, допродажа не случилась'; cls = percent >= 40 ? 'mid' : 'lose'; rev = res.basket.ring; }
         }
-        else if (percent >= 75) { outcome = '🛍️ Клиент купил!'; cls = 'win'; rev = c.potential; bought++; }
-        else if (percent >= 50) { outcome = '🤔 Сказал «подумаю» и ушёл'; cls = 'mid'; left++; }
+        else if (percent >= 60) { outcome = '🛍️ Клиент купил!'; cls = 'win'; rev = c.potential; bought++; }
+        else if (percent >= 40) { outcome = '🤔 Сказал «подумаю» и ушёл'; cls = 'mid'; left++; }
         else { outcome = '🚪 Клиент ушёл'; cls = 'lose'; left++; }
         revenue += rev;
         $('hudRevenue').textContent = rub(revenue); $('hudBought').textContent = bought; $('hudLeft').textContent = left;
@@ -904,7 +916,7 @@
             situation: c.title + (c.situation ? ': ' + c.situation : ''), principle: c.principle, skill: c.skill, task: c.task,
             userAnswer: res.userAnswer, etalon: c.etalon,
             points: res.pts, max: res.max, percentTask: percent,
-            selfEval, isCorrect: percent >= 75, outcome, revenue: rev
+            selfEval, isCorrect: percent >= 60, outcome, revenue: rev
         });
 
         const fb = $('feedback');
@@ -925,6 +937,7 @@
 
     async function finishExam() {
         $('examContainer').classList.add('hidden');
+        document.body.classList.remove('in-exam');
         $('certificateWrapper').style.display = 'block';
         const score = answers.reduce((s, a) => s + a.points, 0);
         const maxScore = answers.reduce((s, a) => s + a.max, 0);
@@ -964,6 +977,7 @@
                     <button class="btn-primary" onclick="downloadCertificate()">📥 Скачать сертификат</button>
                     <button class="btn-secondary" onclick="window.print()">🖨️ Распечатать</button>
                 </div>
+                <div class="save-img" id="saveImg">📱 Нажмите на картинку и удерживайте, чтобы сохранить сертификат в галерею<img id="certImg" alt="Сертификат"></div>
                 <div class="how-title" style="margin-top:24px">Итоги смены по клиентам</div>${table}`;
         } else {
             html = `
@@ -997,7 +1011,7 @@
         try {
             if (!db) throw new Error('no db');
             await Promise.race([
-                db.collection('results').doc('final_exam_1').collection('items').add(resultData),
+                db.collection('results').doc('final_exam').collection('items').add(resultData),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
             ]);
             try { const b = JSON.parse(localStorage.getItem('exam1_backup') || '[]'); localStorage.setItem('exam1_backup', JSON.stringify(b.filter(r => r.id !== resultData.id))); } catch (e) {}
@@ -1013,6 +1027,8 @@
         const cert = $('certificate'); if (!cert) return;
         try {
             const canvas = await html2canvas(cert, { scale: 2, backgroundColor: '#fef9ef' });
+            const isPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isPhone) { $('certImg').src = canvas.toDataURL('image/png'); $('saveImg').style.display = 'block'; $('saveImg').scrollIntoView({ behavior: 'smooth' }); if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) return; }
             const link = document.createElement('a');
             link.download = `Сертификат_${user.name.replace(/\s+/g, '_')}.png`;
             link.href = canvas.toDataURL('image/png'); link.click();
@@ -1026,7 +1042,7 @@
         if (!backup.length || !db) return;
         const rest = [];
         for (const r of backup) {
-            try { await Promise.race([db.collection('results').doc('final_exam_1').collection('items').add(r), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))]); }
+            try { await Promise.race([db.collection('results').doc('final_exam').collection('items').add(r), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))]); }
             catch (e) { rest.push(r); }
         }
         try { localStorage.setItem('exam1_backup', JSON.stringify(rest)); } catch (e) {}
