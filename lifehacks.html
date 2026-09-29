@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лайфхаки продаж | 585GOLD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E30613; --red-dk: #a8101c; --gold: #c9a227; --gold-lt: #f6ecc9;
+    --ink: #1f2430; --ink-2: #4b5260; --ink-3: #8a909c;
+    --bg: #faf7f5; --card: #ffffff; --line: #eee6e2;
+    --ok: #0f8a5f; --ok-bg: #e8f6ef; --bad: #c41c2a; --bad-bg: #fdecee;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 20px 16px 48px; }
+
+  /* ---------- шапка ---------- */
+  .hero { background: linear-gradient(135deg, var(--red) 0%, var(--red-dk) 100%); color: #fff; border-radius: 28px; padding: 32px 28px; position: relative; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; right: -80px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(201,162,39,.45), transparent 70%); }
+  .brand { font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #ffd98a; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 42px); line-height: 1.1; margin: 10px 0 8px; position: relative; z-index: 1; }
+  .hero p { opacity: .92; font-size: 15px; max-width: 560px; position: relative; z-index: 1; }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; position: relative; z-index: 1; }
+  .tools span { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.25); padding: 6px 12px; border-radius: 30px; font-size: 13px; font-weight: 600; }
+  .tools b { color: #ffd98a; }
+
+  .nav { display: flex; gap: 8px; margin: 18px 0 8px; overflow-x: auto; scrollbar-width: none; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 8px 0; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { flex-shrink: 0; text-decoration: none; color: var(--ink-2); background: var(--card); border: 1px solid var(--line); padding: 8px 14px; border-radius: 30px; font-size: 13px; font-weight: 700; }
+  .nav a:hover { color: var(--red); border-color: var(--red); }
+
+  section { margin-top: 30px; }
+  .sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .sec-head h2 { font-size: 22px; font-weight: 800; }
+  .sec-head .hint { color: var(--ink-3); font-size: 13px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: 0 6px 24px rgba(80,20,20,.05); }
+
+  /* ---------- 1. схема продажи ---------- */
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; position: relative; }
+  .flow::before { content: ''; position: absolute; left: 8%; right: 8%; top: 34px; height: 3px; background: linear-gradient(90deg, var(--red), var(--gold)); border-radius: 3px; z-index: 0; }
+  .step { position: relative; z-index: 1; background: none; border: none; cursor: pointer; text-align: center; font-family: inherit; color: var(--ink); padding: 0 4px 8px; }
+  .step .dot { width: 68px; height: 68px; margin: 0 auto 8px; border-radius: 50%; background: var(--card); border: 3px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 28px; transition: all .25s; box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+  .step .num { font-size: 11px; font-weight: 800; color: var(--ink-3); letter-spacing: 1px; }
+  .step .name { font-size: 14px; font-weight: 800; }
+  .step:hover .dot { border-color: var(--gold); transform: translateY(-2px); }
+  .step.active .dot { border-color: var(--red); background: var(--red); color: #fff; transform: scale(1.08); box-shadow: 0 8px 22px rgba(227,6,19,.35); }
+  .step.active .name { color: var(--red); }
+  .step.done .dot::after { content: '✓'; position: absolute; margin: -44px 0 0 50px; background: var(--ok); color: #fff; width: 20px; height: 20px; border-radius: 50%; font-size: 12px; line-height: 20px; }
+
+  .panel { margin-top: 18px; border-top: 1px dashed var(--line); padding-top: 18px; animation: fade .3s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .panel-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .panel-goal { color: var(--ink-2); margin-bottom: 14px; }
+  .hacks { display: grid; gap: 12px; }
+  .hack { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; background: #fffdfb; }
+  .hack h3 { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+  .hack .what { font-size: 14px; color: var(--ink-2); margin-bottom: 10px; }
+  .say { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .say div { border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+  .say .no { background: var(--bad-bg); color: var(--bad); }
+  .say .yes { background: var(--ok-bg); color: var(--ok); font-weight: 600; }
+  .say small { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; opacity: .8; margin-bottom: 2px; }
+  .effect { display: inline-block; margin-top: 10px; background: var(--gold-lt); color: #7a5b00; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
+  .panel-nav { display: flex; justify-content: space-between; margin-top: 16px; gap: 10px; }
+  .btn { border: none; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 14px; padding: 12px 18px; border-radius: 14px; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-ghost { background: var(--card); color: var(--ink-2); border: 1px solid var(--line); }
+  .btn:disabled { opacity: .35; cursor: default; }
+
+  /* ---------- 2. до / после ---------- */
+  .switch { display: inline-flex; background: #f1ebe8; border-radius: 30px; padding: 4px; margin-bottom: 14px; }
+  .switch button { border: none; background: none; padding: 9px 16px; border-radius: 30px; font-family: inherit; font-weight: 800; font-size: 13px; color: var(--ink-2); cursor: pointer; }
+  .switch button.on.bad { background: var(--bad); color: #fff; }
+  .switch button.on.good { background: var(--ok); color: #fff; }
+  .flips { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+  .flip { perspective: 900px; cursor: pointer; }
+  .flip-in { display: grid; min-height: 160px; transition: transform .5s; transform-style: preserve-3d; }
+  .flip.turned .flip-in { transform: rotateY(180deg); }
+  .face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; }
+  .face.front { background: var(--bad-bg); border: 1px solid #f6c8cd; }
+  .face.back { background: var(--ok-bg); border: 1px solid #bfe6d2; transform: rotateY(180deg); }
+  .face .sit { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-3); }
+  .face .ph { font-size: 17px; font-weight: 700; margin: 8px 0 auto; line-height: 1.35; }
+  .face.front .ph { color: var(--bad); }
+  .face.back .ph { color: var(--ok); }
+  .face .why { font-size: 12.5px; color: var(--ink-2); margin-top: 10px; }
+  .face .tap { font-size: 11px; color: var(--ink-3); margin-top: 8px; font-weight: 600; }
+
+  /* ---------- 3. чек-лист ---------- */
+  .check-wrap { display: grid; grid-template-columns: 180px 1fr; gap: 24px; align-items: center; }
+  .ring { position: relative; width: 170px; height: 170px; margin: 0 auto; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .val { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring .val b { font-size: 40px; font-weight: 900; color: var(--ink); line-height: 1; }
+  .ring .val span { font-size: 12px; color: var(--ink-3); font-weight: 700; margin-top: 4px; }
+  .checks { list-style: none; display: grid; gap: 8px; }
+  .checks li { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; cursor: pointer; background: #fff; transition: all .2s; user-select: none; }
+  .checks li:hover { border-color: var(--gold); }
+  .box { flex-shrink: 0; width: 24px; height: 24px; border: 2.5px solid var(--red); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; color: #fff; transition: all .2s; margin-top: 1px; }
+  .checks li.on { background: var(--ok-bg); border-color: #bfe6d2; }
+  .checks li.on .box { background: var(--ok); border-color: var(--ok); }
+  .checks li.on .act { text-decoration: line-through; text-decoration-color: rgba(15,138,95,.5); }
+  .act { font-weight: 700; font-size: 14.5px; }
+  .res { font-size: 13px; color: var(--ink-3); }
+  .check-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 10px; flex-wrap: wrap; }
+  .done-msg { font-weight: 700; color: var(--ok); font-size: 13.5px; }
+
+  .quote { margin-top: 30px; text-align: center; padding: 30px 22px; border-radius: 22px; background: linear-gradient(135deg, var(--red) 0%, var(--red-dk) 100%); color: #fff; position: relative; overflow: hidden; border-bottom: 4px solid var(--gold); box-shadow: 0 10px 30px rgba(227,6,19,.25); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .quote::before { content: '💎'; display: block; font-size: 26px; margin-bottom: 8px; }
+  .quote::after { content: ''; position: absolute; left: -70px; bottom: -90px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(201,162,39,.4), transparent 70%); }
+  .quote p { position: relative; z-index: 1; }
+  .quote small { position: relative; z-index: 1; }
+  .quote p { font-family: 'Playfair Display', serif; font-size: clamp(19px, 3vw, 26px); line-height: 1.35; max-width: 720px; margin: 0 auto; }
+  .quote small { display: block; margin-top: 10px; color: #ffd98a; font-weight: 700; letter-spacing: 1px; font-size: 12px; }
+  .foot { text-align: center; color: var(--ink-3); font-size: 12px; margin-top: 18px; }
+  .print-btn { position: fixed; right: 16px; bottom: 16px; z-index: 10; box-shadow: 0 8px 22px rgba(227,6,19,.35); }
+
+  @media (max-width: 720px) {
+    .flow { grid-template-columns: 1fr; gap: 6px; }
+    .flow::before { left: 33px; right: auto; top: 20px; bottom: 20px; width: 3px; height: auto; background: linear-gradient(180deg, var(--red), var(--gold)); }
+    .step { display: flex; align-items: center; gap: 14px; text-align: left; padding: 4px 0; }
+    .step .dot { margin: 0; width: 60px; height: 60px; font-size: 24px; flex-shrink: 0; }
+    .step.done .dot::after { margin: -40px 0 0 44px; }
+    .say { grid-template-columns: 1fr; }
+    .check-wrap { grid-template-columns: 1fr; }
+    .hero { padding: 26px 20px; border-radius: 22px; }
+    .card { padding: 16px; }
+    .print-btn { display: none; }
+  }
+
+  /* ---------- печать: шпаргалка A4 ---------- */
+  .print-only { display: none; }
+  @media print {
+    @page { size: A4 portrait; margin: 10mm; }
+    body { background: #fff; }
+    .nav, .print-btn, .switch, .panel-nav, .ring, .check-foot, .face .tap, #flipSection, #flowSection, .foot, .hero p, .sec-head .hint { display: none !important; }
+    .checks li.on { background: #fff !important; } .checks li.on .box { background: #fff !important; border-color: #E30613 !important; color: #fff !important; } .checks li.on .act { text-decoration: none; }
+    .pr-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .pr-step { border: 1px solid #eee; border-top: 3px solid #E30613; border-radius: 8px; padding: 6px 7px; font-size: 9.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .pr-step b { display: block; font-size: 11px; margin-bottom: 3px; }
+    .pr-step p { margin: 3px 0; } .pr-step .y { color: #0f8a5f; font-weight: 600; }
+    .sec-head h2 { font-size: 15px; } .sec-head { margin-bottom: 6px; }
+    .hero h1 { font-size: 20px; margin: 4px 0 0; } .tools { display: none !important; } .quote p { font-size: 14px; } .act { font-size: 12px; } .res { font-size: 10.5px; } .checks { gap: 4px; }
+    .print-only { display: block !important; }
+    .hero { padding: 16px 20px; border-radius: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .hero::after { display: none; }
+    .card { box-shadow: none; padding: 12px; border-radius: 12px; }
+    section { margin-top: 12px; break-inside: avoid; }
+    .check-wrap { grid-template-columns: 1fr; }
+    .checks li { padding: 6px 10px; }
+    .quote { padding: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .pr-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .pr-table td, .pr-table th { border: 1px solid #ddd; padding: 5px 7px; vertical-align: top; text-align: left; }
+    .pr-table th { background: #E30613; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .pr-no { color: #c41c2a; } .pr-yes { color: #0f8a5f; font-weight: 600; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="brand">585GOLD · ЛАЙФХАКИ ПРОДАЖ</div>
+    <h1>Быстрые победы для роста чека — уже на этой смене</h1>
+    <p>Пройдите по шагам продажи, переверните карточки «как говорят обычно → как говорит мастер» и отметьте чек-лист в конце смены.</p>
+    <div class="tools"><span><b>5 инструментов</b> = 80% роста чека:</span><span>💍 Второе украшение</span><span>🧴 Уход</span><span>💳 Финансы</span><span>✨ Эмоции</span><span>👋 Завершение</span></div>
+  </header>
+
+  <nav class="nav">
+    <a href="#flowSection">🧭 Схема продажи</a>
+    <a href="#flipSection">🔄 До / после</a>
+    <a href="#checkSection">✅ Чек-лист смены</a>
+  </nav>
+
+  <!-- 1. Кликабельная схема -->
+  <section id="flowSection">
+    <div class="sec-head"><h2>🧭 Формула успешной продажи</h2><span class="hint">Нажмите на шаг, чтобы открыть лайфхаки</span></div>
+    <div class="card">
+      <div class="flow" id="flow"></div>
+      <div class="panel" id="panel"></div>
+    </div>
+  </section>
+
+  <!-- 2. До / после -->
+  <section id="flipSection">
+    <div class="sec-head"><h2>🔄 Ключевые замены</h2><span class="hint">Нажмите на карточку, чтобы перевернуть</span></div>
+    <div class="switch" id="flipSwitch">
+      <button class="bad on" data-side="front">❌ Как говорят обычно</button>
+      <button class="good" data-side="back">✅ Как говорит мастер</button>
+    </div>
+    <div class="flips" id="flips"></div>
+  </section>
+
+  <!-- для печати: схема -->
+  <section class="print-only">
+    <div class="card">
+      <h2 style="font-size:15px;margin-bottom:6px">🧭 Формула: Инициатива → Потребности → Эмоция → Комплект → Завершение</h2>
+      <div class="pr-steps" id="printSteps"></div>
+    </div>
+  </section>
+
+  <!-- для печати: таблица замен -->
+  <section class="print-only">
+    <div class="card">
+      <h2 style="font-size:15px;margin-bottom:6px">❌ → ✅ Ключевые замены</h2>
+      <table class="pr-table" id="printTable"></table>
+    </div>
+  </section>
+
+  <!-- 3. Чек-лист -->
+  <section id="checkSection">
+    <div class="sec-head"><h2>✅ Чек-лист на смену</h2><span class="hint">Отмечайте то, что сделали сегодня</span></div>
+    <div class="card">
+      <div class="check-wrap">
+        <div class="ring">
+          <svg width="170" height="170" viewBox="0 0 170 170">
+            <circle cx="85" cy="85" r="72" fill="none" stroke="#f1ebe8" stroke-width="14"/>
+            <circle id="ringBar" cx="85" cy="85" r="72" fill="none" stroke="#E30613" stroke-width="14" stroke-linecap="round" stroke-dasharray="452.4" stroke-dashoffset="452.4" style="transition: stroke-dashoffset .5s, stroke .3s"/>
+          </svg>
+          <div class="val"><b id="ringVal">0/6</b><span>за смену</span></div>
+        </div>
+        <ul class="checks" id="checks"></ul>
+      </div>
+      <div class="check-foot"><span class="done-msg" id="doneMsg"></span><button class="btn btn-ghost" id="resetBtn" title="Снять все отметки, чтобы начать чек-лист заново на следующей смене">↺ Начать новую смену</button></div>
+    </div>
+  </section>
+
+  <div class="quote">
+    <p>«Не ждите, пока клиент попросит. Предлагайте, показывайте, убеждайте. Ваша уверенность = его решение.»</p>
+    <small>585GOLD · КОМАНДА ОБУЧЕНИЯ</small>
+  </div>
+  <div class="foot">С верой в ваш успех!</div>
+</div>
+
+<button class="btn btn-red print-btn" onclick="window.print()">🖨️ Шпаргалка</button>
+
+<script>
+  // ================= СОДЕРЖАНИЕ (правьте здесь) =================
+  const STEPS = [
+    { icon: '🏃', name: 'Инициатива', goal: 'Первыми начать разговор и сразу дать клиенту выгоду.',
+      hacks: [
+        { t: '📣 Акция в первые 30 секунд', what: 'Клиент должен услышать выгоду с порога — это повод остаться и поговорить.',
+          no: 'Молча ждать, пока клиент позовёт', yes: '«Добрый день! Сегодня у нас скидки на изделия с бриллиантами. Выбираете для себя или в подарок?»', eff: 'Клиент услышал выгоду с порога' }
+      ] },
+    { icon: '❓', name: 'Потребности', goal: 'Понять, что нужно клиенту, до того как показывать товар.',
+      hacks: [
+        { t: '🔍 Два вопроса до показа', what: 'Сначала повод и предпочтения — потом витрина. Так вы показываете то, что действительно подойдёт.',
+          no: 'Сразу вести к витрине', yes: '«Для какого случая выбираете? Что она любит носить — кольца, серьги?»', eff: 'Показали релевантное изделие' }
+      ] },
+    { icon: '✨', name: 'Эмоция', goal: 'Превратить украшение в чувство и снять барьер цены заранее.',
+      hacks: [
+        { t: '⏱️ Правило 3-х секунд', what: 'Клиент взял украшение в руки — у вас 3 секунды, чтобы сказать что-то ценное.',
+          no: 'Молчать → клиент кладёт обратно', yes: '«Смотрите, как играет свет!» → клиент примеряет', eff: 'Клиент примеряет' },
+        { t: '💍 Примерка через «Давайте»', what: 'Не спрашивайте разрешения — приглашайте.',
+          no: '«Будете мерить?»', yes: '«Давайте примерим — так вы сразу увидите, как оно сидит»', eff: 'Примерка = шаг к покупке' },
+        { t: '💳 Финансы ДО цены', what: 'Не после «дорого»! Говорите о Сплите во время презентации.',
+          no: 'Предлагать рассрочку после «дорого»', yes: '«Для такого выбора можно оформить Сплит — 4 платежа без переплат, это займёт 2 минуты»', eff: 'Барьер «дорого» снят заранее' }
+      ] },
+    { icon: '💎', name: 'Комплект', goal: 'Увеличить чек заботой, а не «впариванием».',
+      hacks: [
+        { t: '💍 Второе украшение ДО кассы', what: 'Не на кассе! Когда клиент ещё в зале, сразу после выбора первого изделия.',
+          no: '«Можно подобрать серьги?»', yes: '«Давайте подберём серьги в комплект — вместе они создадут законченный образ»', eff: '+35–70% к чеку' },
+        { t: '🧴 Уход как забота', what: 'Средство по уходу — продолжение заботы о покупке.',
+          no: '«Футляр нужен будет?»', yes: '«Давайте добавим средство для блеска — чтобы украшение всегда сияло как новое»', eff: '+10–15% к чеку' }
+      ] },
+    { icon: '👋', name: 'Завершение', goal: 'Оставить тёплое впечатление, даже если покупки не было.',
+      hacks: [
+        { t: '🤝 Тёплое завершение = возврат', what: 'Клиент, который ушёл с позитивом, возвращается.',
+          no: '«До свидания»', yes: '«Спасибо, что зашли! Если будете выбирать подарок для подруги — заходите, вместе найдём что-то особенное»', eff: 'Клиент вернётся' }
+      ] }
+  ];
+  const SWAPS = [
+    { s: 'Примерка', no: '«Будете мерить?»', yes: '«Давайте примерим — так вы сразу увидите, как оно сидит»', why: 'Вопрос «будете?» легко отклонить. «Давайте» — приглашение, от которого не хочется отказываться.' },
+    { s: 'Второе украшение', no: '«Можно подобрать серьги?»', yes: '«Давайте подберём серьги в комплект — законченный образ»', why: 'Не просим разрешения, а предлагаем ценность — готовый образ.' },
+    { s: 'Финансы', no: 'Рассрочка — после слова «дорого»', yes: 'Сплит — во время презентации, ДО цены', why: 'После «дорого» рассрочка звучит как оправдание. До цены — как удобство.' },
+    { s: 'Уход', no: '«Футляр нужен будет?»', yes: '«Давайте добавим средство — чтобы украшение всегда сияло»', why: 'Вопрос про футляр — о расходах. Фраза про сияние — о заботе.' },
+    { s: 'Завершение', no: '«До свидания»', yes: '«Спасибо, что зашли! Заходите ещё — вместе найдём что-то особенное»', why: 'Формальное прощание забывается. Тёплое — даёт повод вернуться.' }
+  ];
+  const CHECKS = [
+    ['Проговорил акцию в первые 30 секунд', 'Клиент услышал выгоду с порога'],
+    ['Задал 2 вопроса ДО показа товара', 'Показал релевантное изделие'],
+    ['Предложил второе украшение через «Давайте»', 'Увеличил чек на 35–70%'],
+    ['Предложил уход как заботу, не допродажу', '+10–15% к чеку через заботу'],
+    ['Упомянул финансы ДО озвучивания цены', 'Снял барьер «дорого» заранее'],
+    ['Завершил с теплотой, даже если нет покупки', 'Клиент ушёл с позитивом → вернётся']
+  ];
+
+  // ================= ЛОГИКА =================
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+
+  // 1. схема
+  let cur = 0; const seen = new Set([0]);
+  function drawFlow() {
+    $('flow').innerHTML = STEPS.map((s, i) => `<button class="step ${i === cur ? 'active' : ''} ${seen.has(i) && i !== cur ? 'done' : ''}" data-i="${i}"><div class="dot">${s.icon}</div><div><div class="num">ШАГ ${i + 1}</div><div class="name">${s.name}</div></div></button>`).join('');
+    $('flow').querySelectorAll('.step').forEach(b => b.onclick = () => go(+b.dataset.i));
+    const s = STEPS[cur];
+    $('panel').innerHTML = `
+      <div class="panel-title">${s.icon} Шаг ${cur + 1}. ${s.name}</div>
+      <div class="panel-goal">${s.goal}</div>
+      <div class="hacks">${s.hacks.map(h => `
+        <div class="hack"><h3>${h.t}</h3><div class="what">${h.what}</div>
+          <div class="say"><div class="no"><small>❌ Не так</small>${esc(h.no)}</div><div class="yes"><small>✅ Так</small>${esc(h.yes)}</div></div>
+          <span class="effect">📈 ${h.eff}</span></div>`).join('')}</div>
+      <div class="panel-nav"><button class="btn btn-ghost" id="prevB" ${cur === 0 ? 'disabled' : ''}>← Назад</button><button class="btn btn-red" id="nextB">${cur === STEPS.length - 1 ? 'К чек-листу ✅' : 'Следующий шаг →'}</button></div>`;
+    $('prevB').onclick = () => go(cur - 1);
+    $('nextB').onclick = () => cur === STEPS.length - 1 ? $('checkSection').scrollIntoView({ behavior: 'smooth' }) : go(cur + 1);
+  }
+  function go(i) { cur = Math.max(0, Math.min(STEPS.length - 1, i)); seen.add(cur); drawFlow(); if (window.innerWidth < 720) $('panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  drawFlow();
+
+  // 2. карточки до / после
+  $('flips').innerHTML = SWAPS.map((x, i) => `
+    <div class="flip" data-i="${i}"><div class="flip-in">
+      <div class="face front"><div class="sit">${x.s}</div><div class="ph">${esc(x.no)}</div><div class="tap">👆 Нажмите — как сказать лучше</div></div>
+      <div class="face back"><div class="sit">${x.s}</div><div class="ph">${esc(x.yes)}</div><div class="why">💡 ${esc(x.why)}</div></div>
+    </div></div>`).join('');
+  document.querySelectorAll('.flip').forEach(f => f.onclick = () => f.classList.toggle('turned'));
+  $('flipSwitch').querySelectorAll('button').forEach(b => b.onclick = () => {
+    $('flipSwitch').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.flip').forEach(f => f.classList.toggle('turned', b.dataset.side === 'back'));
+  });
+  $('printSteps').innerHTML = STEPS.map((st, i) => `<div class="pr-step"><b>${st.icon} ${i + 1}. ${st.name}</b>${st.hacks.map(h => `<p><b style="display:inline;font-size:9.5px">${h.t.replace(/^\S+\s/, '')}:</b> <span class="y">${esc(h.yes)}</span></p>`).join('')}</div>`).join('');
+  $('printTable').innerHTML = '<tr><th>Ситуация</th><th>❌ Ошибка</th><th>✅ Правильно</th></tr>' + SWAPS.map(x => `<tr><td><b>${x.s}</b></td><td class="pr-no">${esc(x.no)}</td><td class="pr-yes">${esc(x.yes)}</td></tr>`).join('');
+
+  // 3. чек-лист (запоминается в этом браузере до «Новой смены»)
+  let ticks = store.get('lh585_checks', []);
+  function drawChecks() {
+    $('checks').innerHTML = CHECKS.map((c, i) => `<li class="${ticks.includes(i) ? 'on' : ''}" data-i="${i}"><span class="box">${ticks.includes(i) ? '✓' : ''}</span><div><div class="act">${c[0]}</div><div class="res">→ ${c[1]}</div></div></li>`).join('');
+    $('checks').querySelectorAll('li').forEach(li => li.onclick = () => { const i = +li.dataset.i; ticks = ticks.includes(i) ? ticks.filter(x => x !== i) : [...ticks, i]; store.set('lh585_checks', ticks); drawChecks(); });
+    const n = ticks.length, total = CHECKS.length;
+    $('ringVal').textContent = `${n}/${total}`;
+    $('ringBar').style.strokeDashoffset = 452.4 * (1 - n / total);
+    $('ringBar').style.stroke = n === total ? '#0f8a5f' : '#E30613';
+    $('doneMsg').textContent = n === total ? '🏆 Идеальная смена! Все 6 пунктов выполнены' : n >= 4 ? '💪 Почти! Осталось совсем немного' : n === 0 ? 'Отмечайте пункты по ходу смены — отметки сохранятся на этом телефоне' : '';
+    $('resetBtn').disabled = n === 0;
+  }
+  $('resetBtn').onclick = () => { ticks = []; store.set('lh585_checks', ticks); drawChecks(); $('doneMsg').textContent = '✨ Отметки сняты — чек-лист готов к новой смене'; };
+  drawChecks();
+</script>
+</body>
+</html>
