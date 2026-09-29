@@ -150,6 +150,18 @@
         .path-verdict.up { background: rgba(22,163,74,.12); color: #15803d; } .path-verdict.down { background: rgba(220,38,38,.12); color: #b91c1c; }
         body.dark .path-verdict.up { color: #86efac; } body.dark .path-verdict.down { color: #fca5a5; }
         @media (max-width: 700px) { .path-arrow { display: none; } .hm-cell { min-width: 56px; font-size: 13px; padding: 10px 4px; } }
+        .lh-table { width: 100%; font-size: 13.5px; }
+        .lh-table th { text-align: left; white-space: nowrap; }
+        .lh-table td.num, .lh-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .lh-zero td { color: var(--text-4); }
+        .lh-days { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding-top: 16px; }
+        .lh-day { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+        .lh-day i { display: block; width: 100%; max-width: 34px; background: #c41e3a; border-radius: 4px 4px 0 0; min-height: 2px; }
+        .lh-day b { font-size: 11px; color: var(--text-2); margin-bottom: 3px; }
+        .lh-day span { font-size: 10.5px; color: var(--text-4); margin-top: 5px; white-space: nowrap; }
+        .lh-pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .lh-pill.ok { background: rgba(22,163,74,.14); color: #15803d; } .lh-pill.no { background: var(--bg-soft); color: var(--text-4); }
+        body.dark .lh-pill.ok { color: #86efac; }
         .exam-points { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 700; color: var(--text-secondary, #6b7280); }
 
         .status-text { margin-left: auto; font-size: 13px; color: white; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); padding: 8px 16px; border-radius: 50px; font-weight: 600; }
@@ -371,6 +383,7 @@
         <button class="tab-btn" data-tab="employees">👤 Сотрудники</button>
         <button class="tab-btn" data-tab="feedback">📝 Фидбек</button>
         <button class="tab-btn" data-tab="exam1">📈 Навыки</button>
+        <button class="tab-btn" data-tab="lh">💎 Лайфхаки</button>
     </div>
 
     <div class="filter-bar">
@@ -514,6 +527,23 @@
             <div id="nameList"></div>
             <button class="btn btn-primary" id="mergeBtn" style="margin-top:12px; color:#c41e3a; border-color:#c41e3a;">🔗 Объединить выбранные</button>
             <div id="groupsList"></div>
+        </div>
+    </div>
+
+    <div id="lhTab" style="display:none; margin-top:20px;">
+        <div class="growth-hero" id="lhHero"></div>
+        <div class="card">
+            <div class="card-title">📅 Открытия по дням</div>
+            <div id="lhDays"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">🏙️ Магазины</div>
+            <p class="hint">Сколько сотрудников магазина открывали лайфхаки и что делали на странице.</p>
+            <div class="table-wrap"><table class="lh-table" id="lhStores"></table></div>
+        </div>
+        <div class="card">
+            <div class="card-title">👤 Сотрудники</div>
+            <div class="table-wrap"><table class="lh-table" id="lhPeople"></table></div>
         </div>
     </div>
 
@@ -688,7 +718,7 @@
         "Пара просто смотрит": { correct: 0, options: ["«Понимаю, прогуливайтесь. А вы не подбираете что-то к предстоящему празднику или дате? У нас как раз новое поступление».", "«Ну ладно, заглядывайте, когда решите купить».", "«Смотрите, но ничего не трогайте, пожалуйста»."] },
         "Постоянный клиент": { correct: 1, options: ["«Здравствуйте! Да, вот новые коллекции, смотрите».", "«Здравствуйте, Мария! Рада вас видеть. Как вам кольцо, которое вы брали в прошлом месяце, носите с удовольствием? Кстати, к нему отлично подойдут новые браслеты из той же коллекции, давайте покажу?»", "«Здравствуйте. У нас сегодня скидки 10%»."] }
     };
-    let allData = [], filteredData = [];
+    let allData = [], filteredData = [], lhData = [];
     let pieChart = null, trendChart = null, cityBarChart = null, scoreBarChart = null, profileChart = null;
     let selectedNames = new Set();
 
@@ -968,6 +998,60 @@
         return `<div class="section-subtitle">🛤️ Путь обучения</div><div class="path-line">${box(st[0])}<div class="path-arrow">→</div>${box(st[1])}<div class="path-arrow">→</div>${box(st[2])}</div>${verdict}`;
     }
 
+
+    // ================= 💎 ЛАЙФХАКИ: кто открыл и что делал =================
+    const LH_STORES = ['Екатеринбург', 'Владимир', 'Чайковский', 'Тольятти', 'СПб, Заневский, 67, ТК Заневский Каскад', 'СПб, Стародеревенская, 36, ТД Крокус'];
+    function renderLifehacksTab() {
+        const ev = lhData.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+        const opens = ev.filter(e => e.event === 'open');
+        const people = {};
+        ev.forEach(e => {
+            const k = getGroupKey(e.user_name);
+            const p = people[k] = people[k] || { k, name: e.user_name, city: e.city, opens: 0, scenes: new Set(), tOk: 0, tAll: 0, perfect: 0, first: e.date, last: e.date, phone: 0 };
+            p.city = e.city; p.last = e.date;
+            if (e.event === 'open') { p.opens++; if (e.device === 'phone') p.phone++; }
+            if (e.event === 'scene') p.scenes.add(e.detail);
+            if (e.event === 'timer') { p.tAll++; if (e.detail === 'ok') p.tOk++; }
+            if (e.event === 'perfect') p.perfect++;
+        });
+        const P = Object.values(people);
+        const storesWith = new Set(P.map(p => p.city));
+        const fmtD = d => new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        const tAll = P.reduce((a, p) => a + p.tAll, 0), tOk = P.reduce((a, p) => a + p.tOk, 0);
+        const phones = opens.filter(o => o.device === 'phone').length;
+        document.getElementById('lhHero').innerHTML = [
+            ['Открытий', opens.length, opens.length ? `${Math.round(phones / opens.length * 100)}% с телефона` : 'пока никто не открывал'],
+            ['Сотрудников', P.length, 'открыли хотя бы раз'],
+            ['Магазинов', `${LH_STORES.filter(s => storesWith.has(s)).length} из ${LH_STORES.length}`, 'где открывали лайфхаки'],
+            ['Тест «3 секунды»', tAll ? `${Math.round(tOk / tAll * 100)}%` : '—', tAll ? `успели ${tOk} из ${tAll} попыток` : 'ещё не проходили'],
+            ['Идеальных смен', P.reduce((a, p) => a + p.perfect, 0), 'чек-лист 6 из 6']
+        ].map(h => `<div class="gh-item"><div class="gh-label">${h[0]}</div><div class="gh-value">${h[1]}</div><div class="gh-sub">${h[2]}</div></div>`).join('');
+
+        // открытия по дням: последние 14 дней
+        const days = [];
+        for (let i = 13; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); days.push(d); }
+        const cnt = days.map(d => opens.filter(o => { const x = new Date(o.date); return x >= d && x < new Date(d.getTime() + 864e5); }).length);
+        const mx = Math.max(1, ...cnt);
+        document.getElementById('lhDays').innerHTML = `<div class="lh-days">${days.map((d, i) => `<div class="lh-day" title="${d.toLocaleDateString('ru-RU')}: ${cnt[i]} открытий"><b>${cnt[i] || ''}</b><i style="height:${cnt[i] / mx * 100}%"></i><span>${d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span></div>`).join('')}</div>`;
+
+        // магазины
+        const allStores = LH_STORES.concat([...storesWith].filter(s => !LH_STORES.includes(s)));
+        document.getElementById('lhStores').innerHTML = `<thead><tr><th>Магазин</th><th class="num">Сотрудников</th><th class="num">Открытий</th><th class="num">Смотрели сценки</th><th class="num">«3 секунды»</th><th class="num">Идеальных смен</th><th>Последний визит</th></tr></thead><tbody>` +
+            allStores.map(s => {
+                const ps = P.filter(p => p.city === s);
+                if (!ps.length) return `<tr class="lh-zero"><td>${esc(s)}</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td>ещё не открывали</td></tr>`;
+                const ta = ps.reduce((a, p) => a + p.tAll, 0), to = ps.reduce((a, p) => a + p.tOk, 0);
+                const last = ps.map(p => p.last).sort().pop();
+                return `<tr><td><b>${esc(s)}</b></td><td class="num">${ps.length}</td><td class="num">${ps.reduce((a, p) => a + p.opens, 0)}</td><td class="num">${ps.filter(p => p.scenes.size).length} чел.</td><td class="num">${ta ? Math.round(to / ta * 100) + '%' : '—'}</td><td class="num">${ps.reduce((a, p) => a + p.perfect, 0)}</td><td>${fmtD(last)}</td></tr>`;
+            }).join('') + '</tbody>';
+
+        // сотрудники
+        const rows = P.sort((a, b) => new Date(b.last) - new Date(a.last));
+        document.getElementById('lhPeople').innerHTML = rows.length ? `<thead><tr><th>Сотрудник</th><th>Магазин</th><th class="num">Открытий</th><th class="num">Сценок</th><th>«3 секунды»</th><th>Идеальная смена</th><th>Последний визит</th></tr></thead><tbody>` +
+            rows.map(p => `<tr><td><b>${esc((getDisplayName(p.k) || p.name).replace(/(^|\s)\S/g, c => c.toUpperCase()))}</b></td><td>${esc(p.city)}</td><td class="num">${p.opens}</td><td class="num">${p.scenes.size} из 3</td><td>${p.tAll ? `<span class="lh-pill ${p.tOk ? 'ok' : 'no'}">${p.tOk ? '✓ успел' : 'не успел'}</span>` : '<span class="lh-pill no">—</span>'}</td><td>${p.perfect ? '<span class="lh-pill ok">🏆 да</span>' : '<span class="lh-pill no">—</span>'}</td><td>${fmtD(p.last)}</td></tr>`).join('') + '</tbody>'
+            : '<tbody><tr><td class="empty">📭 Пока никто не открывал лайфхаки</td></tr></tbody>';
+    }
+
     function getTypeInfo(type) {
         const map = {
             test: { icon: '📝', label: 'Тест' }, trainer: { icon: '🎯', label: 'Тренировка' },
@@ -1083,7 +1167,7 @@
         if (!confirm('Вы уверены? Это действие нельзя отменить.')) return;
         try {
             document.getElementById('status').textContent = '⏳ Удаляю...';
-            const types = ['test', 'dialog', 'crosssell', 'errorfinder', 'clienttype', 'service', 'final_exam', 'final_exam_1'];
+            const types = ['test', 'dialog', 'crosssell', 'errorfinder', 'clienttype', 'service', 'final_exam', 'final_exam_1', 'lifehacks'];
             for (const type of types) {
                 const snap = await db.collection('results').doc(type).collection('items').get();
                 const batch = db.batch();
@@ -1105,6 +1189,8 @@
             document.getElementById('employeesTab').style.display = tab === 'employees' ? 'block' : 'none';
             document.getElementById('feedbackTab').style.display = tab === 'feedback' ? 'block' : 'none';
             document.getElementById('exam1Tab').style.display = tab === 'exam1' ? 'block' : 'none';
+            document.getElementById('lhTab').style.display = tab === 'lh' ? 'block' : 'none';
+            if (tab === 'lh') renderLifehacksTab();
             if (tab === 'exam1') { const gt = document.getElementById('typeFilter').value; if (SKILL_VIEWS[gt] && gt !== skillView) { skillView = gt; skillMode = null; } renderExam1Tab(); }
             if (tab === 'cities') renderCityStats();
             if (tab === 'employees') renderEmployeesTab();
@@ -1146,6 +1232,10 @@
                 }
             }
             
+            // 💎 статистика лайфхаков — отдельно, в общие баллы не попадает
+            try { const lhSnap = await db.collection('results').doc('lifehacks').collection('items').get(); lhData = []; lhSnap.forEach(d => { const x = d.data(); x._docId = d.id; lhData.push(x); }); } catch (e) { console.warn('лайфхаки:', e.message); }
+            if (document.getElementById('lhTab').style.display === 'block') renderLifehacksTab();
+
             if (!allResults.length) {
                 document.getElementById('status').textContent = '📭 Нет результатов';
                 allData = [];
