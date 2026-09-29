@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Лайфхаки продаж | 585GOLD</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
@@ -132,6 +134,20 @@
   }
 
 
+  /* ---------- регистрация ---------- */
+  .reg { position: fixed; inset: 0; z-index: 200; background: rgba(30,10,10,.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .reg-card { background: #fff; border-radius: 24px; padding: 26px 22px 22px; width: min(100%, 400px); border-top: 6px solid var(--red); box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+  .reg-card .brand { margin-bottom: 6px; color: var(--red); }
+  .reg-card h2 { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+  .reg-card p { color: var(--ink-2); font-size: 14px; margin-bottom: 16px; }
+  .reg-card label { display: block; font-size: 13px; font-weight: 800; color: var(--ink-2); margin: 10px 0 6px; }
+  .reg-card input, .reg-card select { width: 100%; padding: 13px 14px; border: 2px solid var(--line); border-radius: 12px; font-size: 16px; font-family: inherit; background: #fffdfb; color: var(--ink); }
+  .reg-card input:focus, .reg-card select:focus { outline: none; border-color: var(--red); }
+  .reg-card .btn { width: 100%; margin-top: 18px; padding: 14px; font-size: 16px; }
+  .reg-err { color: var(--bad); font-size: 13px; font-weight: 700; min-height: 18px; margin-top: 8px; }
+  .who-chip { flex-shrink: 0; margin-left: auto; font-size: 13px; font-weight: 700; color: var(--ink-2); background: #fff; border: 1px dashed var(--line); padding: 8px 12px; border-radius: 30px; cursor: pointer; font-family: inherit; }
+  @media print { .reg, .who-chip { display: none !important; } }
+
   /* ---------- анимации ---------- */
   .scene-btn { margin-top: 10px; margin-left: 8px; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 2px solid var(--red); color: var(--red); border-radius: 12px; padding: 7px 13px; font-family: inherit; font-weight: 800; font-size: 13.5px; cursor: pointer; }
   .scene-btn:hover { background: var(--red); color: #fff; }
@@ -207,6 +223,7 @@
     <a href="#flowSection">🧭 Схема продажи</a>
     <a href="#flipSection">🔄 До / после</a>
     <a href="#checkSection">✅ Чек-лист смены</a>
+    <button class="who-chip" id="whoChip" title="Сменить имя или магазин"></button>
   </nav>
 
   <!-- 1. Кликабельная схема -->
@@ -492,6 +509,39 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
 
+  // ===================== КТО ЗАШЁЛ: регистрация и статистика =====================
+  const STORES = ['Екатеринбург', 'Владимир', 'Чайковский', 'Тольятти', 'СПб, Заневский, 67, ТК Заневский Каскад', 'СПб, Стародеревенская, 36, ТД Крокус'];
+  const PAGE_VERSION = 'lifehacks_v5';
+  let db = null;
+  try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); } catch (e) { console.warn('Статистика недоступна:', e); }
+  let user = store.get('lh585_user', null);
+  const device = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) ? 'phone' : 'desktop';
+  // журнал событий: open, scene, timer, perfect — не мешает работе страницы, если база недоступна
+  function track(event, detail) {
+    if (!db || !user) return;
+    const id = Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+    const doc = { id, type: 'lifehacks', event, detail: detail || '', user_name: user.name, city: user.city, device, page: PAGE_VERSION, date: new Date().toISOString(), timestamp: new Date().toLocaleString('ru-RU') };
+    try { db.collection('results').doc('lifehacks').collection('items').doc(id).set(doc).catch(e => console.warn('track:', e)); } catch (e) {}
+  }
+  function showWho() { const c = document.getElementById('whoChip'); if (c) c.textContent = user ? '👤 ' + user.name + ' · ' + (user.city.split(',').slice(0, 2).join(',')) : '👤 Представиться'; }
+  function askUser(isChange) {
+    const ov = document.createElement('div'); ov.className = 'reg';
+    ov.innerHTML = `<div class="reg-card"><div class="brand">585GOLD · ЛАЙФХАКИ ПРОДАЖ</div><h2>${isChange ? 'Сменить данные' : 'Давайте познакомимся 👋'}</h2><p>Укажите имя и магазин — один раз. Телефон запомнит, и больше спрашивать не будем.</p>
+      <label>Имя и фамилия</label><input id="regName" placeholder="Например: Иванова Анна" autocomplete="name" value="${user ? esc(user.name) : ''}">
+      <label>Ваш магазин</label><select id="regCity"><option value="">Выберите магазин</option>${STORES.map(x => `<option ${user && user.city === x ? 'selected' : ''}>${x}</option>`).join('')}</select>
+      <div class="reg-err" id="regErr"></div><button class="btn btn-red" id="regGo">Открыть лайфхаки →</button></div>`;
+    document.body.appendChild(ov);
+    const go = () => {
+      const name = ov.querySelector('#regName').value.trim().replace(/\s+/g, ' '), city = ov.querySelector('#regCity').value;
+      if (name.length < 3 || !name.includes(' ')) { ov.querySelector('#regErr').textContent = 'Напишите имя и фамилию'; return; }
+      if (!city) { ov.querySelector('#regErr').textContent = 'Выберите магазин'; return; }
+      user = { name, city }; store.set('lh585_user', user); ov.remove(); showWho();
+      if (!isChange) track('open', 'first');
+    };
+    ov.querySelector('#regGo').onclick = go;
+    ov.querySelector('#regName').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  }
+
   // ===================== АНИМАЦИИ: мини-сценки, таймер, реакции, праздник =====================
   const MINI_SVG = document.getElementById('miniTpl').innerHTML;
   const FACE = {
@@ -585,6 +635,7 @@
   }
   function openScene(btn) {
     const key = btn.dataset.k, yes = btn.dataset.yes;
+    if (key !== 'timer') track('scene', key);
     stopMini(); btn.style.display = 'none';
     const slot = btn.nextElementSibling, root = mountMini(slot), ctl = slot.querySelector('.mctl');
     const done = again => { ctl.innerHTML = `<button class="btn btn-ghost mini-again">↻ Ещё раз</button><button class="btn btn-ghost mini-close">✕ Закрыть</button>`; ctl.querySelector('.mini-again').onclick = again; ctl.querySelector('.mini-close').onclick = stopMini; };
@@ -610,6 +661,7 @@
       };
       miniRaf = requestAnimationFrame(loop);
       const finish = ok => {
+        track('timer', ok ? 'ok' : 'fail');
         cancelAnimationFrame(miniRaf); cnt.style.opacity = 0; ctl.innerHTML = '';
         const segs = ok
           ? [{ d: 2.8, say: ['s', '«Смотрите, как играет свет!»'], spark: true }, { d: 3.2, say: ['c', '«Ой, а можно примерить?»'], mc: 'happy', cap: '✅ Успели за 3 секунды — Ирина примеряет' }]
@@ -627,6 +679,7 @@
 
   // 🏆 праздник за идеальную смену
   function celebrate() {
+    track('perfect', '6/6');
     const ov = document.createElement('div'); ov.className = 'cele';
     ov.innerHTML = `<canvas></canvas><div class="cele-card"><div class="cele-pic">${MINI_SVG.replace('viewBox="250 0 900 660"', 'viewBox="285 160 250 330"')}</div><div class="cele-t">🏆 Идеальная смена!</div><div class="cele-s">Все 6 лайфхаков в деле. Ольга вами гордится!</div><button class="btn btn-red cele-ok">Спасибо! 💎</button></div>`;
     document.body.appendChild(ov);
@@ -701,6 +754,8 @@
   }
   $('resetBtn').onclick = () => { ticks = []; store.set('lh585_checks', ticks); drawChecks(); $('doneMsg').textContent = '✨ Отметки сняты — чек-лист готов к новой смене'; };
   drawChecks(); lhReady = true;
+  showWho(); document.getElementById('whoChip').onclick = () => askUser(true);
+  if (user) track('open', ''); else askUser(false);
 </script>
 </body>
 </html>
