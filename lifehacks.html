@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Лайфхаки продаж 2.0 | 585GOLD</title>
+<title>Лайфхаки продаж | 585GOLD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <style>
@@ -131,6 +131,40 @@
     .print-btn { display: none; }
   }
 
+
+  /* ---------- анимации ---------- */
+  .scene-btn { margin-top: 10px; margin-left: 8px; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 2px solid var(--red); color: var(--red); border-radius: 12px; padding: 7px 13px; font-family: inherit; font-weight: 800; font-size: 13.5px; cursor: pointer; }
+  .scene-btn:hover { background: var(--red); color: #fff; }
+  .mini { margin-top: 12px; }
+  .mini-stage { position: relative; width: 100%; aspect-ratio: 900 / 660; border-radius: 14px; overflow: hidden; background: #fbf6f0; border: 1px solid var(--line); }
+  .mini-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mb { position: absolute; top: 4%; max-width: 48%; background: #fff; border-radius: 14px; padding: 8px 11px; font-size: clamp(11px, 1.55vw, 15px); font-weight: 600; line-height: 1.3; box-shadow: 0 6px 16px rgba(0,0,0,.12); opacity: 0; transition: opacity .15s; }
+  .mb .who { display: block; font-size: .72em; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
+  .mb-s { left: 3%; border: 2px solid var(--red); } .mb-s .who { color: var(--red); }
+  .mb-c { right: 3%; border: 2px solid #8b5a2b; } .mb-c .who { color: #8b5a2b; }
+  .mcap { position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); background: var(--ok); color: #fff; font-weight: 800; font-size: clamp(11px, 1.55vw, 15px); padding: 7px 14px; border-radius: 30px; white-space: nowrap; opacity: 0; max-width: 94%; overflow: hidden; text-overflow: ellipsis; transition: opacity .2s; }
+  .mcap.bad { background: var(--bad); }
+  .mcount { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); font-size: clamp(56px, 11vw, 120px); font-weight: 900; color: var(--red); text-shadow: 0 4px 0 #fff, 0 10px 26px rgba(0,0,0,.25); opacity: 0; }
+  .msub { font-size: 14.5px; margin-top: 8px; color: var(--ink); min-height: 21px; line-height: 1.45; }
+  .mctl { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .mctl .btn { padding: 10px 14px; font-size: 14px; }
+  .face { position: relative; }
+  .fface { position: absolute; right: 12px; top: 10px; width: 44px; height: 50px; }
+  .face .sit { padding-right: 52px; } .face .ph { padding-right: 34px; }
+  .flip.turned .face.back .fface { animation: bounceIn .6s .3s both; }
+  .flip:not(.turned) .face.front .fface { animation: shake .5s .3s both; }
+  @keyframes bounceIn { 0% { transform: scale(.4); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+  @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
+  .cele { position: fixed; inset: 0; z-index: 100; background: rgba(30,10,10,.55); display: flex; align-items: center; justify-content: center; animation: fade .3s ease; }
+  .cele canvas { position: absolute; inset: 0; pointer-events: none; }
+  .cele-card { position: relative; background: #fff; border-radius: 24px; padding: 18px 22px 22px; text-align: center; width: min(92vw, 380px); border-bottom: 5px solid var(--gold); box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+  .cele-pic { position: relative; width: 180px; height: 238px; margin: 0 auto; border-radius: 16px; overflow: hidden; background: #fbf6f0; }
+  .cele-pic svg { width: 100%; height: 100%; }
+  .cele-t { font-size: 25px; font-weight: 900; color: var(--red); margin-top: 10px; }
+  .cele-s { color: var(--ink-2); margin: 6px 0 14px; font-size: 15px; }
+  @media (max-width: 520px) { .mb { display: none; } }
+  @media print { .scene-btn, .scene-slot, .fface, .cele { display: none !important; } }
+
   /* ---------- печать: шпаргалка A4 ---------- */
   .print-only { display: none; }
   @media print {
@@ -237,6 +271,171 @@
 
 <button class="btn btn-red print-btn" onclick="window.print()">🖨️ Шпаргалка</button>
 
+<template id="miniTpl"><svg xmlns="http://www.w3.org/2000/svg" viewBox="250 0 900 660" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" font-family="Inter, Arial, sans-serif">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf6f0"/><stop offset="1" stop-color="#f1e7dc"/></linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9dccd"/><stop offset="1" stop-color="#dccbb8"/></linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E30613"/><stop offset="1" stop-color="#a8101c"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".85"/><stop offset="1" stop-color="#dcebf2" stop-opacity=".55"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8891c"/><stop offset=".5" stop-color="#f0d27a"/><stop offset="1" stop-color="#b8891c"/></linearGradient>
+    <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a27a"/><stop offset="1" stop-color="#b58d66"/></linearGradient>
+    <radialGradient id="spot" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="#fff6d8" stop-opacity=".9"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient>
+    <g id="ring"><circle r="9" fill="none" stroke="url(#gold)" stroke-width="3.5"/><path d="M-4 -9 L0 -16 L4 -9 Z" fill="#fff" stroke="#9fd3ec" stroke-width="1"/></g>
+    <g id="necklace"><path d="M-22 -12 Q0 22 22 -12" fill="none" stroke="url(#gold)" stroke-width="2.5"/><circle cx="0" cy="9" r="4.5" fill="#E30613" stroke="url(#gold)" stroke-width="1.5"/></g>
+    <g id="earrings"><line x1="-7" y1="-12" x2="-7" y2="-4" stroke="url(#gold)" stroke-width="2"/><circle cx="-7" cy="0" r="4" fill="#7fd0f0" stroke="url(#gold)" stroke-width="1.5"/><line x1="7" y1="-12" x2="7" y2="-4" stroke="url(#gold)" stroke-width="2"/><circle cx="7" cy="0" r="4" fill="#7fd0f0" stroke="url(#gold)" stroke-width="1.5"/></g>
+  </defs>
+
+  <!-- стена и пол -->
+  <rect width="1200" height="700" fill="url(#wall)"/>
+  <rect y="560" width="1200" height="140" fill="url(#floor)"/>
+  <g stroke="#d6c4b0" stroke-width="1" opacity=".6"><line x1="0" y1="610" x2="1200" y2="610"/><line x1="0" y1="660" x2="1200" y2="660"/></g>
+
+  <!-- фирменная вывеска -->
+  <rect x="0" y="0" width="1200" height="92" fill="url(#red)"/>
+  <rect x="0" y="92" width="1200" height="6" fill="url(#gold)"/>
+  <text x="600" y="62" text-anchor="middle" font-size="44" font-weight="900" fill="#fff" letter-spacing="6">585<tspan fill="#f0d27a">GOLD</tspan></text>
+  <!-- светильники -->
+  <g fill="#2a2a2a"><rect x="220" y="98" width="4" height="26"/><rect x="598" y="98" width="4" height="26"/><rect x="978" y="98" width="4" height="26"/></g>
+  <g fill="#f0d27a"><ellipse cx="222" cy="128" rx="26" ry="8"/><ellipse cx="600" cy="128" rx="26" ry="8"/><ellipse cx="980" cy="128" rx="26" ry="8"/></g>
+  <path d="M170 130 L274 130 L330 420 L114 420 Z" fill="url(#spot)" opacity=".5"/>
+  <path d="M928 130 L1032 130 L1088 420 L872 420 Z" fill="url(#spot)" opacity=".5"/>
+
+  <!-- настенные витрины -->
+  <g>
+    <rect x="60" y="170" width="300" height="190" rx="10" fill="#fff" stroke="#e7d8c6" stroke-width="3"/>
+    <rect x="72" y="182" width="276" height="166" rx="6" fill="#fdf9f3"/>
+    <line x1="72" y1="265" x2="348" y2="265" stroke="#e7d8c6" stroke-width="3"/>
+    <use href="#necklace" x="120" y="220"/><use href="#necklace" x="210" y="220"/><use href="#necklace" x="300" y="220"/>
+    <use href="#earrings" x="120" y="310"/><use href="#earrings" x="210" y="310"/><use href="#earrings" x="300" y="310"/>
+  </g>
+  <g>
+    <rect x="840" y="170" width="300" height="190" rx="10" fill="#fff" stroke="#e7d8c6" stroke-width="3"/>
+    <rect x="852" y="182" width="276" height="166" rx="6" fill="#fdf9f3"/>
+    <line x1="852" y1="265" x2="1128" y2="265" stroke="#e7d8c6" stroke-width="3"/>
+    <use href="#ring" x="900" y="232"/><use href="#ring" x="960" y="232"/><use href="#ring" x="1020" y="232"/><use href="#ring" x="1080" y="232"/>
+    <use href="#necklace" x="930" y="305"/><use href="#necklace" x="1050" y="305"/>
+  </g>
+
+  <!-- прилавок-витрина по центру -->
+  <g>
+    <rect x="520" y="440" width="420" height="130" rx="8" fill="url(#red)"/>
+    <rect x="520" y="440" width="420" height="10" fill="url(#gold)"/>
+    <rect x="530" y="392" width="400" height="50" rx="4" fill="url(#glass)" stroke="#c9dde6" stroke-width="2"/>
+    <use href="#ring" x="570" y="424"/><use href="#ring" x="620" y="424"/><use href="#earrings" x="680" y="426"/>
+    <use href="#ring" x="740" y="424"/><use href="#earrings" x="800" y="426"/><use href="#ring" x="860" y="424"/><use href="#ring" x="905" y="424"/>
+    <text x="730" y="520" text-anchor="middle" font-size="22" font-weight="800" fill="#f0d27a" letter-spacing="3">585GOLD</text>
+  </g>
+
+  <!-- реквизит мини-сценок -->
+  <g class="props">
+    <g class="pRing" transform="translate(705 372)" opacity="0"><g class="pop"><circle r="17" fill="none" stroke="url(#gold)" stroke-width="6"/><path d="M-8 -17 L0 -32 L8 -17 Z" fill="#fff" stroke="#9fd3ec" stroke-width="2"/></g></g>
+    <g class="pEar2" transform="translate(775 376)" opacity="0"><g class="pop"><line x1="-14" y1="-26" x2="-14" y2="-10" stroke="url(#gold)" stroke-width="4"/><circle cx="-14" cy="-2" r="9" fill="#7fd0f0" stroke="url(#gold)" stroke-width="3"/><line x1="14" y1="-26" x2="14" y2="-10" stroke="url(#gold)" stroke-width="4"/><circle cx="14" cy="-2" r="9" fill="#7fd0f0" stroke="url(#gold)" stroke-width="3"/></g></g>
+    <g class="pCase" transform="translate(630 366)" opacity="0"><g class="pop"><rect x="-28" y="-22" width="56" height="40" rx="6" fill="#a8101c"/><rect x="-28" y="-22" width="56" height="12" rx="4" fill="#E30613"/><rect x="-3" y="-22" width="6" height="40" fill="url(#gold)"/><text x="0" y="12" text-anchor="middle" font-size="8" font-weight="900" fill="#f0d27a">585</text></g></g>
+    <g class="pBottle" transform="translate(860 360)" opacity="0"><g class="pop"><rect x="-12" y="-20" width="24" height="44" rx="6" fill="#dff1f8" stroke="#8cc7de" stroke-width="2"/><rect x="-7" y="-32" width="14" height="13" rx="3" fill="#c9a227"/><rect x="-9" y="-4" width="18" height="12" rx="2" fill="#fff"/><text x="0" y="5" text-anchor="middle" font-size="6" font-weight="900" fill="#a8101c">GLOW</text></g></g>
+    <g class="pTag" transform="translate(905 175)" opacity="0"><g class="pop"><rect x="-80" y="-26" width="160" height="52" rx="14" fill="#fff" stroke="#E30613" stroke-width="4"/><text x="0" y="10" text-anchor="middle" font-size="28" font-weight="900" fill="#a8101c">38 900 ₽</text></g></g>
+    <g class="pTag2" transform="translate(905 175)" opacity="0"><g class="pop"><rect x="-96" y="-26" width="192" height="52" rx="14" fill="#fff" stroke="#0f8a5f" stroke-width="4"/><text x="0" y="10" text-anchor="middle" font-size="26" font-weight="900" fill="#0f8a5f">4 × 9 725 ₽</text></g></g>
+    <g class="pHeart" transform="translate(1075 170)" opacity="0"><g class="pop"><path d="M0 12 C-28 -8 -18 -30 0 -16 C18 -30 28 -8 0 12 Z" fill="#E30613"/></g></g>
+    <g class="pEarCounter" transform="translate(900 380) scale(1.7)" opacity="0"><g class="pop"><line x1="-10" y1="-18" x2="-10" y2="-8" stroke="url(#gold)" stroke-width="3"/><circle cx="-10" cy="-2" r="6" fill="#7fd0f0" stroke="url(#gold)" stroke-width="2"/><line x1="10" y1="-18" x2="10" y2="-8" stroke="url(#gold)" stroke-width="3"/><circle cx="10" cy="-2" r="6" fill="#7fd0f0" stroke="url(#gold)" stroke-width="2"/></g></g>
+  </g>
+  <!-- ============ ПРОДАВЕЦ ============ -->
+  <g class="sellerG" transform="translate(400 0)"><g class="sInner">
+    <ellipse cx="0" cy="646" rx="62" ry="10" fill="#000" opacity=".12"/>
+    <!-- ноги -->
+    <rect x="-24" y="540" width="17" height="96" rx="8" fill="#f1c7a5"/>
+    <rect x="7" y="540" width="17" height="96" rx="8" fill="#f1c7a5"/>
+    <!-- туфли -->
+    <path d="M-30 632 h26 a6 6 0 0 1 6 6 v4 h-38 a4 4 0 0 1 -4 -4 z" fill="#111"/>
+    <path d="M4 632 h26 a6 6 0 0 1 6 6 v4 h-38 a4 4 0 0 1 -4 -4 z" fill="#111"/>
+    <!-- юбка ниже колена -->
+    <path d="M-40 420 L40 420 L52 575 L-52 575 Z" fill="#1d1d22"/>
+    <path d="M-2 440 L-6 575" stroke="#000" stroke-width="2" opacity=".35"/>
+    <!-- блуза -->
+    <path d="M-48 322 Q-54 318 -46 305 Q-20 290 0 292 Q20 290 46 305 Q54 318 48 322 L42 428 L-42 428 Z" fill="#ffffff" stroke="#dcdcdc" stroke-width="2"/>
+    <line x1="0" y1="318" x2="0" y2="426" stroke="#e5e5e5" stroke-width="2"/>
+    <g fill="#d9d9d9"><circle cx="0" cy="345" r="2.5"/><circle cx="0" cy="370" r="2.5"/><circle cx="0" cy="395" r="2.5"/></g>
+    <!-- пояс -->
+    <rect x="-42" y="418" width="84" height="8" fill="#111"/>
+    <!-- рука слева (опущена) -->
+    <path d="M-46 306 Q-66 330 -66 380 L-64 440" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round"/>
+    <path d="M-46 306 Q-66 330 -66 380 L-64 440" fill="none" stroke="#dcdcdc" stroke-width="24" stroke-linecap="round" opacity=".35"/>
+    <path d="M-46 306 Q-66 330 -66 380 L-64 440" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
+    <circle cx="-64" cy="448" r="11" fill="#f1c7a5"/>
+    <!-- рука справа (жест к витрине) -->
+    <g class="armPoint">
+    <path d="M46 308 Q70 330 82 370 L112 390" fill="none" stroke="#dcdcdc" stroke-width="24" stroke-linecap="round" opacity=".35"/>
+    <path d="M46 308 Q70 330 82 370 L112 390" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
+    <ellipse cx="122" cy="392" rx="13" ry="9" fill="#f1c7a5"/>
+    </g>
+    <g class="armWave" style="display:none"><path d="M46 308 Q84 296 96 252" fill="none" stroke="#dcdcdc" stroke-width="24" stroke-linecap="round" opacity=".35"/><path d="M46 308 Q84 296 96 252" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round"/><ellipse cx="98" cy="240" rx="11" ry="13" fill="#f1c7a5"/></g>
+    <!-- шея -->
+    <rect x="-11" y="268" width="22" height="30" rx="8" fill="#eab896"/>
+    <!-- красный шейный платок, узел сбоку -->
+    <path d="M-24 290 Q0 304 24 290 L25 300 Q0 316 -25 300 Z" fill="#E30613"/>
+    <path d="M-25 296 Q0 312 25 296" stroke="#c80511" stroke-width="2" fill="none"/>
+    <path d="M-14 304 L-30 318 L-22 324 L-10 308 Z" fill="#E30613"/>
+    <path d="M-14 304 L-4 322 L4 318 L-8 302 Z" fill="#c80511"/>
+    <path d="M-12 306 L-26 332 L-16 334 Z" fill="#E30613"/>
+    <path d="M-10 306 L-2 336 L6 330 Z" fill="#c80511"/>
+    <ellipse cx="-12" cy="305" rx="6" ry="5" fill="#b0040f"/>
+    <!-- бейдж -->
+    <rect x="12" y="336" width="44" height="18" rx="3" fill="#fff" stroke="url(#gold)" stroke-width="2"/>
+    <text x="34" y="349" text-anchor="middle" font-size="9" font-weight="800" fill="#a8101c">ОЛЬГА</text>
+    <!-- голова -->
+    <ellipse cx="0" cy="240" rx="38" ry="43" fill="#f1c7a5"/>
+    <!-- каре -->
+    <path d="M-44 236 Q-48 190 -8 186 Q36 180 46 228 L46 276 Q40 282 32 276 L34 236 Q20 220 -4 214 Q-24 222 -34 236 L-34 276 Q-42 282 -46 276 Z" fill="#2e1f18"/>
+    <path d="M-36 226 Q-20 200 10 202 Q-10 212 -18 228 Z" fill="#43302a"/>
+    <!-- лицо -->
+    <ellipse cx="-13" cy="244" rx="4" ry="5" fill="#2b2b2b"/><ellipse cx="15" cy="244" rx="4" ry="5" fill="#2b2b2b"/>
+    <path class="sBrowL" d="M-19 233 q6 -4 12 0" stroke="#2e1f18" stroke-width="2.5" fill="none" stroke-linecap="round"/><path class="sBrowR" d="M9 233 q6 -4 12 0" stroke="#2e1f18" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-24" cy="258" rx="7" ry="4" fill="#f4a1a1" opacity=".55"/><ellipse cx="26" cy="258" rx="7" ry="4" fill="#f4a1a1" opacity=".55"/>
+    <path class="sMouth" d="M-10 264 Q2 274 14 264" stroke="#b03a2e" stroke-width="3" fill="none" stroke-linecap="round"/><path class="sMouthO" d="M-8 262 Q2 280 12 262 Q2 266 -8 262 Z" fill="#8a2020" opacity="0"/>
+    <circle cx="-38" cy="262" r="3" fill="url(#gold)"/><circle cx="38" cy="262" r="3" fill="url(#gold)"/>
+  </g></g>
+
+  <!-- ============ ПОКУПАТЕЛЬНИЦА ============ -->
+  <g class="clientG" transform="translate(1010 0)">
+    <ellipse cx="0" cy="646" rx="62" ry="10" fill="#000" opacity=".12"/>
+    <!-- брюки -->
+    <path d="M-30 470 L-8 470 L-12 636 L-30 636 Z" fill="#3c4a63"/>
+    <path d="M8 470 L30 470 L30 636 L12 636 Z" fill="#3c4a63"/>
+    <path d="M-36 632 h28 v10 h-34 a4 4 0 0 1 -4 -4 z" fill="#6b3f2a"/>
+    <path d="M6 632 h28 a6 6 0 0 1 6 6 v4 h-34 z" fill="#6b3f2a"/>
+    <!-- пальто -->
+    <path d="M-50 318 Q-54 312 -44 302 Q-20 290 0 292 Q20 290 44 302 Q54 312 50 318 L60 520 L-60 520 Z" fill="url(#coat)"/>
+    <path d="M0 300 L-14 520" stroke="#9c7650" stroke-width="3"/>
+    <path d="M-20 300 L0 340 L-4 300 Z M20 300 L0 340 L4 300 Z" fill="#a78058"/>
+    <rect x="-58" y="420" width="116" height="10" fill="#9c7650"/>
+    <!-- сумка -->
+    <path d="M50 400 Q62 370 76 400" fill="none" stroke="#7a2b2b" stroke-width="4"/>
+    <rect x="44" y="400" width="42" height="40" rx="6" fill="#8b2e2e"/>
+    <!-- руки: одна держит серьги у уха -->
+    <path d="M-44 310 Q-70 350 -60 400 Q-44 360 -40 330" fill="none" stroke="url(#coat)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M-44 306 Q-78 300 -52 250" fill="none" stroke="#b58d66" stroke-width="20" stroke-linecap="round"/>
+    <circle cx="-50" cy="244" r="10" fill="#f3d0b2"/>
+    <use class="cEar" href="#earrings" x="-50" y="228"/>
+    <path d="M44 306 Q62 350 58 400" fill="none" stroke="url(#coat)" stroke-width="22" stroke-linecap="round"/>
+    <circle cx="58" cy="404" r="10" fill="#f3d0b2"/>
+    <!-- шея и голова -->
+    <rect x="-10" y="268" width="20" height="28" rx="8" fill="#e9bf9f"/>
+    <ellipse cx="0" cy="240" rx="37" ry="42" fill="#f3d0b2"/>
+    <!-- волосы: длинные светлые, собраны -->
+    <path d="M-40 250 Q-46 186 0 184 Q46 186 40 250 Q36 222 18 212 Q-6 206 -24 216 Q-36 228 -40 250 Z" fill="#a8743f"/>
+    <path d="M34 214 Q66 236 54 300 Q48 262 30 240 Z" fill="#a8743f"/>
+    <!-- лицо -->
+    <ellipse cx="-12" cy="244" rx="4" ry="5" fill="#2b2b2b"/><ellipse cx="14" cy="244" rx="4" ry="5" fill="#2b2b2b"/>
+    <path class="cBrowL" d="M-18 232 q6 -3 12 0" stroke="#7a4f2a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path class="cBrowR" d="M8 232 q6 -3 12 0" stroke="#7a4f2a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-22" cy="258" rx="6" ry="3.5" fill="#f4a1a1" opacity=".5"/><ellipse cx="24" cy="258" rx="6" ry="3.5" fill="#f4a1a1" opacity=".5"/>
+    <path class="cMouth" d="M-8 266 Q2 262 12 266" stroke="#b03a2e" stroke-width="3" fill="none" stroke-linecap="round"/><path class="cMouthO" d="M-7 263 Q2 279 11 263 Q2 267 -7 263 Z" fill="#8a2020" opacity="0"/>
+  </g>
+
+  <!-- искры радости -->
+  <g class="spark" opacity="0" fill="#f0d27a">
+    <path d="M940 170 l6 14 14 6 -14 6 -6 14 -6 -14 -14 -6 14 -6z"/><path d="M1085 200 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z"/><path d="M905 250 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/><path d="M1100 140 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/>
+  </g>
+</svg>
+</template>
+
 <script>
   // ================= СОДЕРЖАНИЕ (правьте здесь) =================
   const STEPS = [
@@ -293,19 +492,176 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
 
+  // ===================== АНИМАЦИИ: мини-сценки, таймер, реакции, праздник =====================
+  const MINI_SVG = document.getElementById('miniTpl').innerHTML;
+  const FACE = {
+    s: { smile: { L: 'M-19 233 q6 -4 12 0', R: 'M9 233 q6 -4 12 0', M: 'M-10 264 Q2 274 14 264' } },
+    c: { worried: { L: 'M-18 233 L-6 228', R: 'M8 228 L20 233', M: 'M-8 267 Q2 262 12 267' },
+         frown:   { L: 'M-18 228 L-6 233', R: 'M8 233 L20 228', M: 'M-8 270 Q2 259 12 270' },
+         neutral: { L: 'M-18 232 q6 -3 12 0', R: 'M8 232 q6 -3 12 0', M: 'M-8 265 L12 265' },
+         happy:   { L: 'M-18 230 q6 -5 12 0', R: 'M8 230 q6 -5 12 0', M: 'M-10 261 Q2 276 14 261' } }
+  };
+  const CX = 1010, OUT = 1330;
+  const easeIO = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+  const popK = x => x <= 0 ? 0 : x >= 1 ? 1 : 1 + 2.2 * Math.pow(x - 1, 3) + 1.2 * Math.pow(x - 1, 2);
+  const dur = segs => segs.reduce((a, s) => a + s.d, 0);
+
+  // Сценарии мини-сценок: yes — фраза «✅ Так» из лайфхака
+  const SCENES = {
+    promo: yes => [{ d: .1, cx: OUT }, { d: 2.2, walkIn: true }, { d: 4.8, say: ['s', yes] }, { d: 3, say: ['c', '«В подарок! Покажете?»'], mc: 'happy', cap: '✅ Клиентка услышала выгоду и осталась' }],
+    ask:   yes => [{ d: 4.4, say: ['s', yes] }, { d: 3.4, say: ['c', '«Маме на юбилей. Она любит серьги»'], mc: 'happy' }, { d: 2.4, cap: '✅ Теперь понятно, что показывать' }],
+    fit:   yes => [{ d: 2.6, say: ['c', '«Можно посмотреть поближе?»'] }, { d: 4.2, say: ['s', yes], props: ['pRing'] }, { d: 3.2, say: ['c', '«Ой, как красиво сидит!»'], mc: 'happy', spark: true, cap: '✅ Примерка — шаг к покупке' }],
+    split: yes => [{ d: 2.6, props: ['pTag'], mc: 'worried', cap: 'Ирина смотрит на ценник…' }, { d: 5.8, say: ['s', yes], cap: null }, { d: 3.2, unprops: ['pTag'], props: ['pTag2'], say: ['c', '«О, так удобно!»'], mc: 'happy', cap: '✅ Барьер «дорого» снят заранее' }],
+    set:   yes => [{ d: 2.6, props: ['pRing'], say: ['c', '«Беру это кольцо!»'], mc: 'happy' }, { d: 5, say: ['s', yes], props: ['pEar2'] }, { d: 3.2, say: ['c', '«Правда, комплектом красивее!»'], spark: true, cap: '✅ Клиентка уходит с комплектом' }],
+    care:  yes => [{ d: 2.4, props: ['pRing'], say: ['c', '«Беру!»'], mc: 'happy' }, { d: 6, say: ['s', yes], props: ['pCase', 'pBottle'] }, { d: 3, say: ['c', '«Давайте! Спасибо за заботу»'], cap: '✅ Забота вместо «футляр нужен?»' }],
+    bye:   yes => [{ d: 5.4, say: ['s', yes], wave: true }, { d: 2.8, say: ['c', '«Спасибо! Обязательно зайду»'], mc: 'happy', props: ['pHeart'] }, { d: 2.6, walkOut: true, cap: '✅ Клиентка ушла с теплом — и вернётся' }]
+  };
+  const SCENE_KEYS = [[null], [null], ['timer', null, 'split'], ['set', 'care'], [null]]; // сценки только там, где анимация что-то показывает
+
+  function stAt(segs, t) {
+    const st = { ms: 'smile', mc: 'neutral', cx: CX, cap: null, spark: false, props: {}, hideEar: false, wave: false, say: null };
+    let acc = 0;
+    for (const s of segs) {
+      if (t < acc) break;
+      const p = Math.min(1, (t - acc) / s.d), active = t < acc + s.d;
+      if (s.cx != null) st.cx = s.cx;
+      if (s.mc) st.mc = s.mc; if (s.ms) st.ms = s.ms;
+      if ('cap' in s) st.cap = s.cap;
+      if (s.spark) st.spark = true; if (s.wave) st.wave = active; if (s.hideEar) st.hideEar = true;
+      (s.props || []).forEach(n => { if (!(n in st.props)) st.props[n] = acc; });
+      (s.unprops || []).forEach(n => delete st.props[n]);
+      if (s.walkIn) st.cx = OUT + (CX - OUT) * easeIO(p);
+      if (s.walkOut) st.cx = CX + (OUT - CX) * easeIO(p);
+      if (active && s.say) st.say = { who: s.say[0], text: s.say[1], p, local: t - acc, d: s.d };
+      acc += s.d;
+    }
+    st.t = t; st.walking = segs.some((s, i) => (s.walkIn || s.walkOut) && t >= segs.slice(0, i).reduce((a, x) => a + x.d, 0) && t < segs.slice(0, i + 1).reduce((a, x) => a + x.d, 0));
+    return st;
+  }
+  function drawMini(root, st) {
+    const q = c => root.querySelector('.' + c), t = st.t;
+    const fs = FACE.s.smile, fc = FACE.c[st.mc] || FACE.c.neutral;
+    q('sBrowL').setAttribute('d', fs.L); q('sBrowR').setAttribute('d', fs.R); q('sMouth').setAttribute('d', fs.M);
+    q('cBrowL').setAttribute('d', fc.L); q('cBrowR').setAttribute('d', fc.R); q('cMouth').setAttribute('d', fc.M);
+    const talk = w => st.say && st.say.who === w && st.say.p < .9 && Math.floor(st.say.local * 7) % 2 === 0;
+    q('sMouthO').setAttribute('opacity', talk('s') ? 1 : 0); q('sMouth').setAttribute('opacity', talk('s') ? 0 : 1);
+    q('cMouthO').setAttribute('opacity', talk('c') ? 1 : 0); q('cMouth').setAttribute('opacity', talk('c') ? 0 : 1);
+    q('sInner').setAttribute('transform', `translate(0 ${(Math.sin(t * 2.2) * 1.6).toFixed(2)})`);
+    q('armPoint').style.display = st.wave ? 'none' : ''; q('armWave').style.display = st.wave ? '' : 'none';
+    if (st.wave) q('armWave').setAttribute('transform', `rotate(${(Math.sin(t * 9) * 14).toFixed(1)} 46 308)`);
+    const bob = st.walking ? -Math.abs(Math.sin(t * 9)) * 6 : Math.sin(t * 2 + 1) * 1.4;
+    q('clientG').setAttribute('transform', `translate(${st.cx.toFixed(1)} ${bob.toFixed(2)})`);
+    q('cEar').setAttribute('opacity', st.hideEar ? 0 : 1);
+    q('spark').setAttribute('opacity', st.spark ? (0.55 + 0.45 * Math.sin(t * 6)).toFixed(2) : 0);
+    root.querySelectorAll('.props > g').forEach(g => {
+      const n = g.getAttribute('class'), on = n in st.props;
+      g.setAttribute('opacity', on ? 1 : 0);
+      if (on) g.querySelector('.pop').setAttribute('transform', `scale(${popK((t - st.props[n]) / 0.4).toFixed(3)})`);
+    });
+    ['s', 'c'].forEach(w => {
+      const b = root.querySelector('.mb-' + w); if (!b) return;
+      if (st.say && st.say.who === w) {
+        const txt = st.say.text, n = Math.min(txt.length, Math.ceil(txt.length * st.say.p / 0.45));
+        b.querySelector('.t').textContent = txt.slice(0, n); b.style.opacity = 1;
+      } else b.style.opacity = 0;
+    });
+    const cap = root.querySelector('.mcap'); if (!cap) return;
+    cap.textContent = st.cap || ''; cap.style.opacity = st.cap ? 1 : 0;
+    cap.classList.toggle('bad', !!(st.cap && st.cap.startsWith('❌')));
+    const sub = root.parentNode.querySelector('.msub');
+    if (sub) sub.innerHTML = st.say ? `<b>${st.say.who === 's' ? 'Ольга' : 'Ирина'}:</b> ${esc(st.say.text)}` : (st.cap ? esc(st.cap) : '&nbsp;');
+  }
+
+  let miniRaf = null, miniTimer = null;
+  function stopMini() { cancelAnimationFrame(miniRaf); clearInterval(miniTimer); document.querySelectorAll('.scene-slot').forEach(s => s.innerHTML = ''); document.querySelectorAll('.scene-btn').forEach(b => b.style.display = ''); }
+  function mountMini(slot) {
+    slot.innerHTML = `<div class="mini"><div class="mini-stage">${MINI_SVG}<div class="mb mb-s"><span class="who">Ольга</span><span class="t"></span></div><div class="mb mb-c"><span class="who">Ирина</span><span class="t"></span></div><div class="mcap"></div><div class="mcount"></div></div><div class="msub">&nbsp;</div><div class="mctl"></div></div>`;
+    return slot.querySelector('.mini-stage');
+  }
+  function playSegs(root, segs, onEnd) {
+    const D = dur(segs), t0 = performance.now();
+    const tick = now => { const t = Math.min((now - t0) / 1000, D - 0.001); drawMini(root, stAt(segs, t)); if (t < D - 0.002) miniRaf = requestAnimationFrame(tick); else onEnd && onEnd(); };
+    miniRaf = requestAnimationFrame(tick);
+  }
+  function openScene(btn) {
+    const key = btn.dataset.k, yes = btn.dataset.yes;
+    stopMini(); btn.style.display = 'none';
+    const slot = btn.nextElementSibling, root = mountMini(slot), ctl = slot.querySelector('.mctl');
+    const done = again => { ctl.innerHTML = `<button class="btn btn-ghost mini-again">↻ Ещё раз</button><button class="btn btn-ghost mini-close">✕ Закрыть</button>`; ctl.querySelector('.mini-again').onclick = again; ctl.querySelector('.mini-close').onclick = stopMini; };
+    if (key === 'timer') return runTimer(root, ctl, done);
+    const run = () => { ctl.innerHTML = ''; playSegs(root, SCENES[key](yes), () => done(run)); };
+    run();
+  }
+  // ⏱ Правило 3-х секунд: у продавца действительно 3 секунды
+  function runTimer(root, ctl, done) {
+    const cnt = root.querySelector('.mcount');
+    drawMini(root, stAt([{ d: 1, cap: 'Ирина взяла серьги в руки…' }], 0.1));
+    const start = () => {
+      let said = false, left = 3; const t0 = performance.now();
+      ctl.innerHTML = `<button class="btn btn-red mini-say">💬 Сказать: «Смотрите, как играет свет!»</button>`;
+      ctl.querySelector('.mini-say').onclick = () => { if (!said) { said = true; finish(true); } };
+      const loop = now => {
+        const t = (now - t0) / 1000; left = Math.max(0, 3 - t);
+        cnt.textContent = left > 0 ? Math.ceil(left) : ''; cnt.style.opacity = left > 0 ? 1 : 0;
+        drawMini(root, stAt([{ d: 10, cap: 'У вас 3 секунды!' }], t));
+        if (said) return;
+        if (left <= 0) { finish(false); return; }
+        miniRaf = requestAnimationFrame(loop);
+      };
+      miniRaf = requestAnimationFrame(loop);
+      const finish = ok => {
+        cancelAnimationFrame(miniRaf); cnt.style.opacity = 0; ctl.innerHTML = '';
+        const segs = ok
+          ? [{ d: 2.8, say: ['s', '«Смотрите, как играет свет!»'], spark: true }, { d: 3.2, say: ['c', '«Ой, а можно примерить?»'], mc: 'happy', cap: '✅ Успели за 3 секунды — Ирина примеряет' }]
+          : [{ d: 1.2, mc: 'neutral', cap: '…тишина…' }, { d: 3.4, hideEar: true, props: ['pEarCounter'], mc: 'frown', cap: '❌ Промолчали — серьги вернулись на витрину' }];
+        playSegs(root, segs, () => done(start));
+      };
+    };
+    ctl.innerHTML = `<button class="btn btn-red mini-start">▶ Проверить себя: у вас 3 секунды</button>`;
+    ctl.querySelector('.mini-start').onclick = start;
+  }
+  document.addEventListener('click', e => { const b = e.target.closest('.scene-btn'); if (b) openScene(b); });
+
+  // лицо клиента на карточках «до / после»
+  const faceSvg = mood => `<svg class="fface" viewBox="-44 -50 88 100" aria-hidden="true"><ellipse cx="0" cy="4" rx="34" ry="38" fill="#f3d0b2"/><path d="M-37 12 Q-42 -44 0 -46 Q42 -44 37 12 Q33 -18 16 -26 Q-6 -32 -22 -22 Q-34 -12 -37 12 Z" fill="#a8743f"/><ellipse cx="-12" cy="6" rx="4" ry="5" fill="#2b2b2b"/><ellipse cx="12" cy="6" rx="4" ry="5" fill="#2b2b2b"/>${mood === 'happy' ? '<path d="M-12 20 Q0 34 12 20" stroke="#b03a2e" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="-20" cy="18" rx="6" ry="3.5" fill="#f4a1a1"/><ellipse cx="20" cy="18" rx="6" ry="3.5" fill="#f4a1a1"/>' : '<path d="M-10 28 Q0 18 10 28" stroke="#b03a2e" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M-18 -6 L-6 -2 M18 -6 L6 -2" stroke="#7a4f2a" stroke-width="3" stroke-linecap="round"/>'}</svg>`;
+
+  // 🏆 праздник за идеальную смену
+  function celebrate() {
+    const ov = document.createElement('div'); ov.className = 'cele';
+    ov.innerHTML = `<canvas></canvas><div class="cele-card"><div class="cele-pic">${MINI_SVG.replace('viewBox="250 0 900 660"', 'viewBox="285 160 250 330"')}</div><div class="cele-t">🏆 Идеальная смена!</div><div class="cele-s">Все 6 лайфхаков в деле. Ольга вами гордится!</div><button class="btn btn-red cele-ok">Спасибо! 💎</button></div>`;
+    document.body.appendChild(ov);
+    const pic = ov.querySelector('.cele-pic'); pic.querySelector('.clientG').style.display = 'none';
+    const cv = ov.querySelector('canvas'), cx = cv.getContext('2d');
+    const fitC = () => { cv.width = innerWidth; cv.height = innerHeight; }; fitC();
+    const cols = ['#E30613', '#c9a227', '#f0d27a', '#ffffff', '#a8101c'];
+    const bits = Array.from({ length: 140 }, () => ({ x: Math.random() * cv.width, y: -Math.random() * cv.height * .6, w: 6 + Math.random() * 7, h: 8 + Math.random() * 10, vy: 2 + Math.random() * 3.5, vx: -1.5 + Math.random() * 3, r: Math.random() * 6, vr: -.2 + Math.random() * .4, c: cols[Math.floor(Math.random() * cols.length)] }));
+    const t0 = performance.now(); let raf;
+    const loop = now => {
+      const t = (now - t0) / 1000;
+      cx.clearRect(0, 0, cv.width, cv.height);
+      bits.forEach(b => { b.x += b.vx; b.y += b.vy; b.r += b.vr; cx.save(); cx.translate(b.x, b.y); cx.rotate(b.r); cx.fillStyle = b.c; cx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); cx.restore(); });
+      drawMini(pic, stAt([{ d: 100, wave: true }], t));
+      if (t < 60) raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    const close = () => { cancelAnimationFrame(raf); ov.remove(); };
+    ov.querySelector('.cele-ok').onclick = close; ov.onclick = e => { if (e.target === ov || e.target === cv) close(); };
+  }
+
   // 1. схема
   let cur = 0; const seen = new Set([0]);
   function drawFlow() {
+    stopMini();
     $('flow').innerHTML = STEPS.map((s, i) => `<button class="step ${i === cur ? 'active' : ''} ${seen.has(i) && i !== cur ? 'done' : ''}" data-i="${i}"><div class="dot">${s.icon}</div><div><div class="num">ШАГ ${i + 1}</div><div class="name">${s.name}</div></div></button>`).join('');
     $('flow').querySelectorAll('.step').forEach(b => b.onclick = () => go(+b.dataset.i));
     const s = STEPS[cur];
     $('panel').innerHTML = `
       <div class="panel-title">${s.icon} Шаг ${cur + 1}. ${s.name}</div>
       <div class="panel-goal">${s.goal}</div>
-      <div class="hacks">${s.hacks.map(h => `
+      <div class="hacks">${s.hacks.map((h, hi) => `
         <div class="hack"><h3>${h.t}</h3><div class="what">${h.what}</div>
           <div class="say"><div class="no"><small>❌ Не так</small>${esc(h.no)}</div><div class="yes"><small>✅ Так</small>${esc(h.yes)}</div></div>
-          <span class="effect">📈 ${h.eff}</span></div>`).join('')}</div>
+          <span class="effect">📈 ${h.eff}</span>${SCENE_KEYS[cur][hi] ? `<button class="scene-btn" data-k="${SCENE_KEYS[cur][hi]}" data-yes="${esc(h.yes)}">${SCENE_KEYS[cur][hi] === 'timer' ? '⏱ Проверить себя: 3 секунды' : '▶ Посмотреть, как это работает'}</button><div class="scene-slot"></div>` : ''}</div>`).join('')}</div>
       <div class="panel-nav"><button class="btn btn-ghost" id="prevB" ${cur === 0 ? 'disabled' : ''}>← Назад</button><button class="btn btn-red" id="nextB">${cur === STEPS.length - 1 ? 'К чек-листу ✅' : 'Следующий шаг →'}</button></div>`;
     $('prevB').onclick = () => go(cur - 1);
     $('nextB').onclick = () => cur === STEPS.length - 1 ? $('checkSection').scrollIntoView({ behavior: 'smooth' }) : go(cur + 1);
@@ -320,6 +676,8 @@
       <div class="face back"><div class="sit">${x.s}</div><div class="ph">${esc(x.yes)}</div><div class="why">💡 ${esc(x.why)}</div></div>
     </div></div>`).join('');
   document.querySelectorAll('.flip').forEach(f => f.onclick = () => f.classList.toggle('turned'));
+  document.querySelectorAll('.face.front').forEach(f => f.insertAdjacentHTML('afterbegin', faceSvg('sad')));
+  document.querySelectorAll('.face.back').forEach(f => f.insertAdjacentHTML('afterbegin', faceSvg('happy')));
   $('flipSwitch').querySelectorAll('button').forEach(b => b.onclick = () => {
     $('flipSwitch').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
     document.querySelectorAll('.flip').forEach(f => f.classList.toggle('turned', b.dataset.side === 'back'));
@@ -328,7 +686,7 @@
   $('printTable').innerHTML = '<tr><th>Ситуация</th><th>❌ Ошибка</th><th>✅ Правильно</th></tr>' + SWAPS.map(x => `<tr><td><b>${x.s}</b></td><td class="pr-no">${esc(x.no)}</td><td class="pr-yes">${esc(x.yes)}</td></tr>`).join('');
 
   // 3. чек-лист (запоминается в этом браузере до «Новой смены»)
-  let ticks = store.get('lh585_checks', []);
+  let ticks = store.get('lh585_checks', []), prevN = ticks.length, lhReady = false;
   function drawChecks() {
     $('checks').innerHTML = CHECKS.map((c, i) => `<li class="${ticks.includes(i) ? 'on' : ''}" data-i="${i}"><span class="box">${ticks.includes(i) ? '✓' : ''}</span><div><div class="act">${c[0]}</div><div class="res">→ ${c[1]}</div></div></li>`).join('');
     $('checks').querySelectorAll('li').forEach(li => li.onclick = () => { const i = +li.dataset.i; ticks = ticks.includes(i) ? ticks.filter(x => x !== i) : [...ticks, i]; store.set('lh585_checks', ticks); drawChecks(); });
@@ -338,9 +696,11 @@
     $('ringBar').style.stroke = n === total ? '#0f8a5f' : '#E30613';
     $('doneMsg').textContent = n === total ? '🏆 Идеальная смена! Все 6 пунктов выполнены' : n >= 4 ? '💪 Почти! Осталось совсем немного' : n === 0 ? 'Отмечайте пункты по ходу смены — отметки сохранятся на этом телефоне' : '';
     $('resetBtn').disabled = n === 0;
+    if (lhReady && n === total && prevN < total) celebrate();
+    prevN = n;
   }
   $('resetBtn').onclick = () => { ticks = []; store.set('lh585_checks', ticks); drawChecks(); $('doneMsg').textContent = '✨ Отметки сняты — чек-лист готов к новой смене'; };
-  drawChecks();
+  drawChecks(); lhReady = true;
 </script>
 </body>
 </html>
