@@ -394,7 +394,7 @@
         <div class="how-it-works">
             <div class="how-title">Как это работает</div>
             <ul class="how-list">
-                <li><span class="how-num">1</span><span>Вас ждёт <strong>смена из 6 клиентов</strong>, и к каждому нужен свой подход</span></li>
+                <li><span class="how-num">1</span><span>Вас ждёт <strong>смена из 9 клиентов</strong>, и к каждому нужен свой подход</span></li>
                 <li><span class="how-num">2</span><span><strong>Готовых вариантов ответа нет.</strong> Вы собираете реплики, находите ошибки, читаете клиента, собираете чек и отвечаете своими словами</span></li>
                 <li><span class="how-num">3</span><span>Одно задание <strong>на время</strong>, как в зале: клиент ждать не будет</span></li>
                 <li><span class="how-num">4</span><span>После каждого клиента вы узнаете, <strong>купил он или ушёл</strong>, и сколько принесли в кассу</span></li>
@@ -423,7 +423,7 @@
     <div id="examContainer" class="card hidden">
         <div class="progress-container">
             <div class="progress-text">
-                <span>Клиент <span class="current" id="sitNum">1</span> из 6</span>
+                <span>Клиент <span class="current" id="sitNum">1</span> из 9</span>
                 <span id="progressPercent">0%</span>
             </div>
             <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
@@ -504,6 +504,72 @@
 
     // ================= КЛИЕНТЫ СМЕНЫ =================
     const CLIENTS = [
+        // ---------- 0. ВХОД В МАГАЗИН ----------
+        {
+            icon: '🚪', title: 'Покупательница заходит в магазин', principle: 'Приветствие и начало контакта',
+            task: 'Собери начало', skill: 'Приветствие и контакт', potential: 15000,
+            situation: 'Женщина лет 30 заходит в магазин, осматривается и медленно идёт к витрине с кольцами. Сегодня в магазине действует акция: скидка 30% на бриллианты.',
+            etalon: '«Добрый день! Рады вас видеть. Сегодня у нас скидка 30% на бриллианты» → пауза 20–30 секунд, пока она осматривается → «Какое украшение выбираете — для себя или в подарок?» Порядок: приветствие → акция → пауза → открытый вопрос.',
+            render(area, done) {
+                const F = [
+                    { id: 'G', role: 'greet', text: 'Добрый день! Рады вас видеть.' },
+                    { id: 'P', role: 'promo', text: 'Сегодня у нас скидка 30% на бриллианты.' },
+                    { id: 'W', role: 'pause', text: '⏸ Пауза 20–30 секунд: даю ей осмотреться' },
+                    { id: 'Q', role: 'ask', text: 'Какое украшение выбираете — для себя или в подарок?' },
+                    { id: 'T1', role: 'trap', text: 'Вам помочь?', why: 'Закрытый вопрос: почти всегда в ответ «Нет, просто смотрю».' },
+                    { id: 'T2', role: 'trap', text: 'Цены у нас неокончательные, на кассе будет скидка.', why: 'Размытая акция разрушает доверие с первой минуты.' },
+                ];
+                let picked = [];
+                area.innerHTML = `
+                    <div class="client-line"><b>👤 Клиентка</b>${esc(this.situation)}</div>
+                    <div class="instruction">Соберите <b>первые минуты разговора</b> из фрагментов по порядку. Нажмите на фрагмент в цепочке, чтобы убрать его.</div><div class="tip">💡 Вспомните первые два этапа стандарта: приветствие и начало контакта.</div>
+                    <div class="build-zone empty" id="bz"></div>
+                    <div class="frag-pool" id="fp"></div>
+                    <div class="hint-err" id="err"></div>
+                    <button class="btn-primary" id="go">🗣️ Начать разговор</button>`;
+                const bz = $('bz'), fp = $('fp');
+                const pool = shuffle(F);
+                function draw() {
+                    fp.innerHTML = ''; bz.innerHTML = '';
+                    pool.forEach(f => {
+                        const d = document.createElement('div');
+                        d.className = 'frag' + (picked.includes(f.id) ? ' used' : '');
+                        d.textContent = f.text;
+                        d.onclick = () => { if (picked.length >= 5) { $('err').textContent = 'Не больше 5 фрагментов.'; return; } $('err').textContent = ''; picked.push(f.id); draw(); };
+                        fp.appendChild(d);
+                    });
+                    picked.forEach((id, i) => {
+                        const f = F.find(x => x.id === id);
+                        const d = document.createElement('div');
+                        d.className = 'frag'; d.dataset.id = id;
+                        d.innerHTML = `<span class="n">${i + 1}</span>${esc(f.text)}`;
+                        d.onclick = () => { picked = picked.filter(x => x !== id); draw(); };
+                        bz.appendChild(d);
+                    });
+                    bz.classList.toggle('empty', picked.length === 0);
+                }
+                draw();
+                $('go').onclick = () => {
+                    if (picked.length < 2) { $('err').textContent = 'Соберите хотя бы 2 фрагмента.'; return; }
+                    const roles = picked.map(id => F.find(f => f.id === id).role);
+                    const traps = picked.filter(id => id.startsWith('T'));
+                    const lines = []; let pts = 0;
+                    if (roles.includes('greet')) { pts++; lines.push('✅ Поздоровались (+1)'); } else lines.push('❌ Нет приветствия');
+                    if (roles.includes('promo')) { pts++; lines.push('✅ Назвали конкретную акцию (+1)'); } else lines.push('❌ Не назвали акцию: клиентка не услышала выгоду');
+                    if (roles.includes('ask')) { pts++; lines.push('✅ Задали открытый вопрос (+1)'); } else lines.push('❌ Нет вопроса: диалог не начался');
+                    const pos = r => roles.indexOf(r);
+                    const orderOk = ['greet', 'promo', 'pause', 'ask'].every(r => roles.includes(r)) && pos('greet') < pos('promo') && pos('promo') < pos('pause') && pos('pause') < pos('ask');
+                    if (orderOk) { pts++; lines.push('✅ Правильный порядок: приветствие → акция → пауза → вопрос (+1)'); }
+                    else lines.push('❌ Порядок: сначала приветствие и акция, затем пауза 20–30 секунд, и только потом вопрос');
+                    if (!traps.length) { pts++; lines.push('✅ Без фраз-ловушек (+1)'); }
+                    traps.forEach(id => { const f = F.find(x => x.id === id); lines.push('⚠️ Ловушка «' + f.text + '» — ' + f.why); });
+                    [...bz.children].forEach(el => { el.classList.add(el.dataset.id.startsWith('T') ? 'bad' : 'good'); });
+                    [...bz.children, ...fp.children].forEach(el => el.classList.add('locked'));
+                    $('go').style.display = 'none';
+                    done({ pts, max: 5, lines, userAnswer: picked.map(id => F.find(f => f.id === id).text).join(' → ') });
+                };
+            }
+        },
         // ---------- 1. СОБЕРИ РЕПЛИКУ ----------
         {
             icon: '😅', title: 'Мужчина ищет подарок на годовщину', principle: 'Выявление потребностей',
@@ -568,66 +634,6 @@
                 };
             }
         },
-
-        // ---------- 2. НАЙДИ ОШИБКУ ----------
-        {
-            icon: '💎', title: 'Постоянная клиентка «просто посмотреть»', principle: 'Работа с постоянным клиентом',
-            task: 'Найди ошибку', skill: 'Удержание и допродажа', potential: 24500,
-            situation: 'Марина, постоянная клиентка. Месяц назад купила кольцо с топазом. Сегодня зашла «просто посмотреть». Её обслуживала ваша коллега-стажёр.',
-            etalon: 'Как можно было сказать. Ошибка 1 → «Марина, у нас как раз пришли серьги с топазами — к вашему кольцу будут как комплект. Показать?» Ошибка 2 → «Понимаю, покупку вы не планировали. Давайте я отложу их для вас до субботы — спокойно решите, без спешки».',
-            render(area, done) {
-                const D = [
-                    { s: 'client', t: 'Марина: «Здравствуйте! Я просто посмотреть, что нового»' },
-                    { s: 'seller', t: '«Марина, добрый день! Рада вас видеть. Как вам кольцо с топазом, носите?»' },
-                    { s: 'client', t: 'Марина: «Да, почти не снимаю!»' },
-                    { s: 'seller', t: '«Замечательно! Тогда смотрите спокойно, не буду мешать. Если что, я у кассы.»', err: 1,
-                      why: 'Продавец отступила, хотя есть готовый повод: кольцо, которое клиентка любит. Нужно было предложить новинки к нему.' },
-                    { s: 'client', t: 'Марина сама останавливается у витрины с серьгами и рассматривает серьги с топазами.' },
-                    { s: 'seller', t: '«Это новая коллекция, пришла на этой неделе. Давайте примерим: к вашему кольцу будет комплект.»' },
-                    { s: 'client', t: 'Марина: «Ой, правда красиво… Но я сегодня не планировала тратиться».' },
-                    { s: 'seller', t: '«Понимаю! Только они последние, завтра может уже не быть. Лучше решить сейчас.»', err: 2,
-                      why: 'Давление и искусственный дефицит. Постоянная клиентка почувствует, что ей «впаривают», и доверие пострадает.' },
-                    { s: 'client', t: 'Марина: «Нет, я, наверное, в другой раз».' },
-                    { s: 'seller', t: '«Хорошо, Марина! Спасибо, что заглянули, всегда вам рады.»' }
-                ];
-                let sel = [];
-                area.innerHTML = `
-                    <div class="client-line"><b>📋 Ситуация</b>${esc(this.situation)}</div>
-                    <div class="instruction">Нажмите на реплики продавца, в которых есть ошибка. Сколько их, не скажем. За лишние отметки снимаются баллы.</div>
-                    <div class="dlg" id="dlg"></div>
-                    <div class="hint-err" id="err"></div>
-                    <button class="btn-primary" id="go">🔍 Проверить</button>`;
-                const dlg = $('dlg');
-                D.forEach((m, i) => {
-                    const d = document.createElement('div');
-                    d.className = 'msg ' + m.s + (m.s === 'seller' ? ' clickable' : '');
-                    d.innerHTML = `<div class="who">${m.s === 'client' ? '👤 Клиент' : '💼 Продавец'}</div>${esc(m.t)}`;
-                    if (m.s === 'seller') d.onclick = () => { sel = sel.includes(i) ? sel.filter(x => x !== i) : [...sel, i]; d.classList.toggle('selected'); };
-                    dlg.appendChild(d);
-                });
-                $('go').onclick = () => {
-                    if (!sel.length) { $('err').textContent = 'Отметьте хотя бы одну реплику.'; return; }
-                    $('err').textContent = '';
-                    const errIdx = D.map((m, i) => m.err ? i : -1).filter(i => i >= 0);
-                    const found = sel.filter(i => errIdx.includes(i)).length;
-                    const falseP = sel.filter(i => !errIdx.includes(i)).length;
-                    const findPts = Math.max(0, found * 2 - falseP);
-                    [...dlg.children].forEach((el, i) => {
-                        el.classList.remove('clickable'); el.onclick = null;
-                        if (errIdx.includes(i)) el.classList.add('correct');
-                        else if (sel.includes(i)) el.classList.add('wrong');
-                    });
-                    $('go').style.display = 'none';
-                    const lines = [
-                        `🔍 Найдено ошибок: ${found} из 2${falseP ? ', лишних отметок: ' + falseP + ' (−' + falseP + ')' : ''}`,
-                        (sel.includes(errIdx[0]) ? '✅ ' : '❌ Пропущена. ') + '<b>Ошибка 1:</b> ' + esc(D[errIdx[0]].why),
-                        (sel.includes(errIdx[1]) ? '✅ ' : '❌ Пропущена. ') + '<b>Ошибка 2:</b> ' + esc(D[errIdx[1]].why)
-                    ];
-                    done({ pts: findPts, max: 4, lines, userAnswer: `Найдено ошибок: ${found}/2, ложных отметок: ${falseP}` });
-                };
-            }
-        },
-
         // ---------- 3. ПРОЧИТАЙ КЛИЕНТА ----------
         {
             icon: '🕵️', title: 'Клиентка у витрины с серьгами', principle: 'Наблюдение и скрытая потребность',
@@ -685,7 +691,66 @@
                 };
             }
         },
-
+        // ---------- СЕРЕБРО ИЛИ ЗОЛОТО ----------
+        {
+            icon: '🥇', title: 'Серьги на каждый день', principle: 'Презентация и переход на золото',
+            task: 'Покажи и расскажи', skill: 'Презентация и золото', potential: 12500,
+            situation: 'Девушка лет 25 рассматривает серебряные пусеты за 6 900 ₽: «Мне на каждый день, чтобы не снимать — ни на ночь, ни в душ». Рядом лежат похожие пусеты из золота 585 за 12 500 ₽.',
+            etalon: 'Показать рядом серебро и золото и дать примерить оба. Фраза: «Раз вы хотите носить не снимая, посмотрите золотые: золото 585 не темнеет от воды и косметики — будут выглядеть как новые каждый день. Давайте примерим оба, сравните в зеркале». Без давления и без оценок её выбора.',
+            render(area, done) {
+                const P = [
+                    { id: 'sv', i: '⚪', n: 'Серебряные пусеты', p: 6900 },
+                    { id: 'au', i: '🟡', n: 'Золотые пусеты 585', p: 12500 },
+                    { id: 'di', i: '💎', n: 'Серьги с бриллиантами', p: 48000 },
+                    { id: 'bj', i: '🎀', n: 'Бижутерия-гвоздики', p: 1500 }
+                ];
+                const cat = shuffle(P);
+                let tray = [];
+                area.innerHTML = `
+                    <div class="client-line"><b>👤 Клиентка</b>${esc(this.situation)}</div>
+                    <div class="instruction"><b>Шаг 1.</b> Что вы положите перед ней на планшет для примерки? Не больше 2 изделий.</div>
+                    <div class="catalog" id="cat"></div>
+                    <div class="instruction"><b>Шаг 2.</b> Что вы скажете? Одна-две фразы своими словами.</div>
+                    <div class="tip">💡 Свяжите украшение с тем, как она хочет его носить, и предложите действие.</div><textarea class="answer-textarea" id="ans" placeholder="Ваша фраза клиентке..."></textarea>
+                    <div class="hint-err" id="err"></div>
+                    <button class="btn-primary" id="go">💍 Показать</button>`;
+                const catEl = $('cat');
+                cat.forEach(p => {
+                    const d = document.createElement('div');
+                    d.className = 'prod'; d.innerHTML = `<div class="pi">${p.i}</div><div class="pn">${esc(p.n)}</div><div class="pp">${rub(p.p)}</div>`;
+                    d.onclick = () => {
+                        if (tray.includes(p.id)) tray = tray.filter(x => x !== p.id);
+                        else { if (tray.length >= 2) { $('err').textContent = 'Не больше 2 изделий.'; return; } tray.push(p.id); }
+                        $('err').textContent = ''; d.classList.toggle('in');
+                    };
+                    catEl.appendChild(d);
+                });
+                noPaste($('ans'));
+                $('go').onclick = () => {
+                    const txt = $('ans').value.trim();
+                    if (!tray.length) { $('err').textContent = 'Выберите, что покажете.'; return; }
+                    if (txt.length < 15) { $('err').textContent = 'Напишите, что скажете клиентке.'; return; }
+                    const lines = []; let pts = 0;
+                    const both = tray.includes('sv') && tray.includes('au');
+                    if (both) { pts += 2; lines.push('✅ Положили рядом серебро и золото: она сама увидит разницу (+2)'); }
+                    else if (tray.includes('au')) { pts += 1; lines.push('➖ Показали золото, но без серебра рядом сравнить не с чем (+1)'); }
+                    else lines.push('❌ Золото не показали: клиентка не узнает, что есть вариант лучше под её задачу');
+                    if (tray.includes('di')) lines.push('⚠️ Серьги за 48 000 ₽ — не ступень выше, а прыжок: похоже на давление');
+                    if (tray.includes('bj')) lines.push('⚠️ Бижутерия не подойдёт для носки «не снимая»');
+                    const r = checkText(txt, [
+                        { label: 'Назвали выгоду под её задачу: не темнеет, можно не снимать, надолго', stems: ['не темне', 'не потемн', 'темнеет', 'не снима', 'не снимать', 'кажд', 'ежеднев', 'надолго', 'долго', 'годами', 'много лет', 'вода', 'воды', 'душ', 'не окисл', 'как нов', 'служ', 'носить посто', 'всегда'], pts: 2 },
+                        { label: 'Предложили примерить или сравнить', test: t => hasAny(t, ['пример', 'сравн', 'рядом', 'оба', 'обе', 'зеркал', 'давайте', 'посмотрите', 'надень']), pts: 1 }
+                    ], [
+                        { label: 'Обесценили её выбор или давили', stems: ['дешевк', 'дешёвк', 'серебро плох', 'серебро — плох', 'не хотите же', 'вы же не хотите', 'стыдно', 'несерьезн', 'несерьёзн'], pts: 1 }
+                    ]);
+                    lines.push(...r.lines);
+                    [...catEl.children].forEach(el => el.classList.add('locked'));
+                    $('ans').disabled = true; $('go').style.display = 'none';
+                    const names = tray.map(id => P.find(p => p.id === id).n).join(' + ');
+                    done({ pts: pts + r.pts, max: 5, lines, userAnswer: `Показала: ${names}. Фраза: ${txt}` });
+                };
+            }
+        },
         // ---------- 4. СОБЕРИ ЧЕК ----------
         {
             icon: '👗', title: 'Мама невесты', principle: 'Допродажа и комплект',
@@ -751,7 +816,6 @@
                 };
             }
         },
-
         // ---------- 5. «ДОРОГО» НА ВРЕМЯ ----------
         {
             icon: '⏱️', title: '«За такие деньги я в отпуск съезжу»', principle: 'Работа с возражением «дорого»',
@@ -796,7 +860,119 @@
                 $('go').onclick = () => { if ($('ans').value.trim().length < 5) return; finish(); };
             }
         },
-
+        // ---------- СИГНАЛЫ ПОКУПКИ ----------
+        {
+            icon: '🎁', title: 'Кулон для жены', principle: 'Завершение сделки и прощание',
+            task: 'Поймай момент', skill: 'Закрытие и прощание', potential: 21000,
+            etalon: 'Сигналы покупки: второй раз спрашивает цену, уточняет про цепочку подлиннее, держит кулон и улыбается. Взгляд на часы и слова про синий цвет — не сигналы. Фраза: «Отличный выбор, топаз как раз её цвет! Давайте подберём цепочку 50 см и оформим — через пять минут подарок будет готов». Прощание: «Уверена, жена будет рада! Заходите — подберём к кулону серьги».',
+            render(area, done) {
+                const S = [
+                    { t: 'Мужчина выбирает подарок жене, вы показали три кулона.', plain: true },
+                    { t: 'Второй раз спрашивает цену кулона с топазом.', sig: true },
+                    { t: 'Говорит, что жена любит синий цвет.', sig: false },
+                    { t: 'Уточняет, можно ли взять цепочку подлиннее.', sig: true },
+                    { t: 'Бросает взгляд на часы.', sig: false },
+                    { t: 'Держит кулон на ладони и улыбается.', sig: true }
+                ];
+                let picked = [];
+                area.innerHTML = `
+                    <div class="instruction"><b>Шаг 1.</b> Нажмите на детали, которые говорят: <b>клиент готов купить</b>. Есть и лишние.</div>
+                    <div class="story" id="story"></div>
+                    <div class="instruction"><b>Шаг 2.</b> Что вы скажете, чтобы завершить покупку? И как попрощаетесь, когда он будет уходить?</div>
+                    <div class="tip">💡 Не спрашивайте, берёт ли он, а предложите следующее действие.</div><textarea class="answer-textarea" id="ans" placeholder="Я скажу: «...». Прощаясь: «...»"></textarea>
+                    <div class="hint-err" id="err"></div>
+                    <button class="btn-primary" id="go">🤝 Завершить</button>`;
+                const st = $('story');
+                S.forEach((s, i) => {
+                    const sp = document.createElement('span');
+                    sp.textContent = s.t + ' ';
+                    if (!s.plain) { sp.className = 'detail'; sp.onclick = () => { picked = picked.includes(i) ? picked.filter(x => x !== i) : [...picked, i]; sp.classList.toggle('picked'); }; }
+                    st.appendChild(sp); st.appendChild(document.createTextNode(' '));
+                });
+                noPaste($('ans'));
+                $('go').onclick = () => {
+                    const txt = $('ans').value.trim();
+                    if (!picked.length) { $('err').textContent = 'Отметьте детали в описании.'; return; }
+                    if (txt.length < 15) { $('err').textContent = 'Напишите, как завершите покупку и попрощаетесь.'; return; }
+                    const sigs = S.map((s, i) => s.sig ? i : -1).filter(i => i >= 0);
+                    const hit = picked.filter(i => sigs.includes(i)).length;
+                    const fal = picked.filter(i => !sigs.includes(i)).length;
+                    const clickPts = Math.max(0, hit - fal);
+                    const spans = st.querySelectorAll('span');
+                    S.forEach((s, i) => { const el = spans[i]; el.onclick = null; el.classList.remove('picked', 'detail');
+                        if (s.plain) return; el.classList.add('detail');
+                        if (s.sig && picked.includes(i)) el.classList.add('sig'); else if (s.sig) el.classList.add('miss'); else if (picked.includes(i)) el.classList.add('false'); });
+                    const r = checkText(txt, [
+                        { label: 'Предложили оформить действием («давайте оформим / к кассе»)', stems: ['давайте оформ', 'оформим', 'оформляем', 'оформлю', 'к кассе', 'упакуем', 'упакую', 'пробью', 'пробьем', 'пробьём', 'давайте подбер', 'подберем цеп', 'подберём цеп', 'давайте возьм'], pts: 2 },
+                        { label: 'Напомнили выгоду: подарок, её цвет, радость жены', stems: ['жен', 'подар', 'синий', 'синего', 'её цвет', 'ее цвет', 'топаз', 'рада', 'обрадует', 'понравит', 'отличный выбор', 'прекрасный выбор'], pts: 1 },
+                        { label: 'Тепло попрощались и пригласили вернуться', stems: ['заходите', 'приходите', 'ждем', 'ждём', 'будем рады', 'рады видеть', 'возвращайтесь', 'до встречи', 'хорошего', 'спасибо'], pts: 1 }
+                    ], [
+                        { label: 'Спросили «берёте?» или отпустили «подумать»', stems: ['берете?', 'берёте?', 'будете брать', 'ну что', 'подумайте', 'не торопитесь'], pts: 1 }
+                    ]);
+                    $('ans').disabled = true; $('go').style.display = 'none';
+                    const lines = [`🔎 Сигналы покупки: найдено ${hit} из 3${fal ? ', лишних: ' + fal : ''} (+${clickPts})`, ...r.lines];
+                    done({ pts: clickPts + r.pts, max: 7, lines, userAnswer: `Сигналы: ${picked.map(i => S[i].t).join(' / ')}. Ответ: ${txt}` });
+                };
+            }
+        },
+        // ---------- 2. НАЙДИ ОШИБКУ ----------
+        {
+            icon: '💎', title: 'Постоянная клиентка «просто посмотреть»', principle: 'Работа с постоянным клиентом',
+            task: 'Найди ошибку', skill: 'Удержание и допродажа', potential: 24500,
+            situation: 'Марина, постоянная клиентка. Месяц назад купила кольцо с топазом. Сегодня зашла «просто посмотреть». Её обслуживала ваша коллега-стажёр.',
+            etalon: 'Как можно было сказать. Ошибка 1 → «Марина, у нас как раз пришли серьги с топазами — к вашему кольцу будут как комплект. Показать?» Ошибка 2 → «Понимаю, покупку вы не планировали. Давайте я отложу их для вас до субботы — спокойно решите, без спешки».',
+            render(area, done) {
+                const D = [
+                    { s: 'client', t: 'Марина: «Здравствуйте! Я просто посмотреть, что нового»' },
+                    { s: 'seller', t: '«Марина, добрый день! Рада вас видеть. Как вам кольцо с топазом, носите?»' },
+                    { s: 'client', t: 'Марина: «Да, почти не снимаю!»' },
+                    { s: 'seller', t: '«Замечательно! Тогда смотрите спокойно, не буду мешать. Если что, я у кассы.»', err: 1,
+                      why: 'Продавец отступила, хотя есть готовый повод: кольцо, которое клиентка любит. Нужно было предложить новинки к нему.' },
+                    { s: 'client', t: 'Марина сама останавливается у витрины с серьгами и рассматривает серьги с топазами.' },
+                    { s: 'seller', t: '«Это новая коллекция, пришла на этой неделе. Давайте примерим: к вашему кольцу будет комплект.»' },
+                    { s: 'client', t: 'Марина: «Ой, правда красиво… Но я сегодня не планировала тратиться».' },
+                    { s: 'seller', t: '«Понимаю! Только они последние, завтра может уже не быть. Лучше решить сейчас.»', err: 2,
+                      why: 'Давление и искусственный дефицит. Постоянная клиентка почувствует, что ей «впаривают», и доверие пострадает.' },
+                    { s: 'client', t: 'Марина: «Нет, я, наверное, в другой раз».' },
+                    { s: 'seller', t: '«Хорошо, Марина! Спасибо, что заглянули, всегда вам рады.»' }
+                ];
+                let sel = [];
+                area.innerHTML = `
+                    <div class="client-line"><b>📋 Ситуация</b>${esc(this.situation)}</div>
+                    <div class="instruction">Нажмите на реплики продавца, в которых есть ошибка. Сколько их, не скажем. За лишние отметки снимаются баллы.</div>
+                    <div class="dlg" id="dlg"></div>
+                    <div class="hint-err" id="err"></div>
+                    <button class="btn-primary" id="go">🔍 Проверить</button>`;
+                const dlg = $('dlg');
+                D.forEach((m, i) => {
+                    const d = document.createElement('div');
+                    d.className = 'msg ' + m.s + (m.s === 'seller' ? ' clickable' : '');
+                    d.innerHTML = `<div class="who">${m.s === 'client' ? '👤 Клиент' : '💼 Продавец'}</div>${esc(m.t)}`;
+                    if (m.s === 'seller') d.onclick = () => { sel = sel.includes(i) ? sel.filter(x => x !== i) : [...sel, i]; d.classList.toggle('selected'); };
+                    dlg.appendChild(d);
+                });
+                $('go').onclick = () => {
+                    if (!sel.length) { $('err').textContent = 'Отметьте хотя бы одну реплику.'; return; }
+                    $('err').textContent = '';
+                    const errIdx = D.map((m, i) => m.err ? i : -1).filter(i => i >= 0);
+                    const found = sel.filter(i => errIdx.includes(i)).length;
+                    const falseP = sel.filter(i => !errIdx.includes(i)).length;
+                    const findPts = Math.max(0, found * 2 - falseP);
+                    [...dlg.children].forEach((el, i) => {
+                        el.classList.remove('clickable'); el.onclick = null;
+                        if (errIdx.includes(i)) el.classList.add('correct');
+                        else if (sel.includes(i)) el.classList.add('wrong');
+                    });
+                    $('go').style.display = 'none';
+                    const lines = [
+                        `🔍 Найдено ошибок: ${found} из 2${falseP ? ', лишних отметок: ' + falseP + ' (−' + falseP + ')' : ''}`,
+                        (sel.includes(errIdx[0]) ? '✅ ' : '❌ Пропущена. ') + '<b>Ошибка 1:</b> ' + esc(D[errIdx[0]].why),
+                        (sel.includes(errIdx[1]) ? '✅ ' : '❌ Пропущена. ') + '<b>Ошибка 2:</b> ' + esc(D[errIdx[1]].why)
+                    ];
+                    done({ pts: findPts, max: 4, lines, userAnswer: `Найдено ошибок: ${found}/2, ложных отметок: ${falseP}` });
+                };
+            }
+        },
         // ---------- 6. ПОРЯДОК ДЕЙСТВИЙ ----------
         {
             icon: '🔙', title: 'Вернулась, а кольцо уже продано', principle: 'Алгоритм: не отпускай без альтернативы',
