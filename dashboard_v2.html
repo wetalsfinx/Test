@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>585GOLD | Аналитика обучения</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #c41e3a; --red-dk: #8b1a2c; --gold: #c9a227; --gold-lt: #f6ecc9;
+    --ink: #1e2a3a; --ink-2: #475569; --ink-3: #64748b; --ink-4: #94a3b8;
+    --bg: #f6f3f1; --card: #fff; --line: #e8e2de; --soft: #f5f1ee;
+    --ok: #15803d; --ok-bg: rgba(22,163,74,.14); --mid: #b45309; --mid-bg: rgba(245,158,11,.2); --bad: #b91c1c; --bad-bg: rgba(220,38,38,.14);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.45; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 18px 16px 60px; }
+  header { background: linear-gradient(135deg, var(--red), var(--red-dk)); color: #fff; border-radius: 22px; padding: 18px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header .brand { font-weight: 900; font-size: 22px; letter-spacing: 1px; } header .brand b { color: #ffd98a; }
+  header .sub { opacity: .85; font-size: 14px; }
+  header .right { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  header select { padding: 9px 12px; border-radius: 12px; border: none; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink); max-width: 260px; }
+  .hbtn { background: #fff; color: var(--red); border: none; border-radius: 12px; padding: 9px 14px; font-weight: 800; font-family: inherit; font-size: 14px; cursor: pointer; }
+  .status { font-size: 12.5px; opacity: .85; }
+  nav.tabs { display: flex; gap: 6px; margin: 14px 0; background: var(--card); padding: 6px; border-radius: 16px; border: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; position: sticky; top: 0; z-index: 5; }
+  nav.tabs button { flex: 1; min-width: max-content; border: none; background: none; padding: 11px 16px; border-radius: 11px; font-family: inherit; font-weight: 700; font-size: 14px; color: var(--ink-3); cursor: pointer; }
+  nav.tabs button.on { background: linear-gradient(135deg, var(--red), var(--red-dk)); color: #fff; }
+  section.tab { display: none; } section.tab.on { display: block; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px 22px; margin-bottom: 16px; }
+  .card h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .hint { color: var(--ink-3); font-size: 13px; margin-bottom: 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; }
+  .kpi .l { font-size: 12px; font-weight: 800; color: var(--ink-3); text-transform: uppercase; letter-spacing: .5px; }
+  .kpi .v { font-size: 32px; font-weight: 900; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+  .kpi .v.up { color: var(--ok); } .kpi .v.down { color: var(--bad); }
+  .kpi .s { font-size: 12.5px; color: var(--ink-4); }
+  .grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; } .grid2 > * { min-width: 0; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: minmax(0,1fr); } }
+
+  /* воронка */
+  .funnel { display: grid; gap: 10px; }
+  .fstep { display: grid; grid-template-columns: 170px 1fr 90px; align-items: center; gap: 12px; }
+  .fstep .n { font-weight: 800; font-size: 14px; } .fstep .n small { display: block; font-weight: 500; color: var(--ink-4); font-size: 12px; }
+  .fbar { height: 30px; background: var(--soft); border-radius: 9px; overflow: hidden; }
+  .fbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--red), #e2556b); border-radius: 9px; }
+  .fstep .c { font-weight: 900; font-size: 18px; text-align: right; font-variant-numeric: tabular-nums; } .fstep .c small { display: block; font-size: 12px; color: var(--ink-4); font-weight: 600; }
+
+  /* таблицы */
+  .tw { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--ink-3); padding: 10px 10px; border-bottom: 2px solid var(--line); white-space: nowrap; }
+  th.sort { cursor: pointer; user-select: none; } th.sort:hover { color: var(--red); } th.sort.on { color: var(--red); }
+  td { padding: 10px 10px; border-bottom: 1px solid var(--soft); vertical-align: middle; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: #fcf9f7; }
+  .pill { display: inline-block; min-width: 52px; text-align: center; padding: 4px 9px; border-radius: 20px; font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .pill.good { background: var(--ok-bg); color: var(--ok); } .pill.mid { background: var(--mid-bg); color: var(--mid); } .pill.bad { background: var(--bad-bg); color: var(--bad); } .pill.none { background: var(--soft); color: var(--ink-4); font-weight: 600; }
+  .delta { font-weight: 800; font-size: 13px; } .delta.up { color: var(--ok); } .delta.down { color: var(--bad); } .delta.zero { color: var(--ink-4); }
+  .lvl { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .lvl.gold { background: linear-gradient(135deg, #fde68a, #fbbf24); color: #78350f; } .lvl.silver { background: #e5e7eb; color: #374151; } .lvl.bronze { background: #fed7aa; color: #7c2d12; }
+  .medal { font-size: 18px; } .pos { color: var(--ink-4); font-weight: 800; }
+  .muted { color: var(--ink-4); font-size: 12.5px; }
+  .bar-in { display: flex; align-items: center; gap: 8px; } .bar-in .b { flex: 1; height: 7px; background: var(--soft); border-radius: 5px; overflow: hidden; min-width: 60px; } .bar-in .b i { display: block; height: 100%; background: var(--gold); border-radius: 5px; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .toolbar input, .toolbar select { padding: 9px 12px; border: 2px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 14px; background: #fff; }
+  .btn { border: 1px solid var(--line); background: #fff; color: var(--ink-2); padding: 9px 14px; border-radius: 12px; font-family: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+  .btn:hover { border-color: var(--red); color: var(--red); } .btn.red { background: var(--red); color: #fff; border-color: var(--red); }
+  .seg { display: inline-flex; background: var(--soft); border-radius: 30px; padding: 4px; flex-wrap: wrap; }
+  .seg button { border: none; background: none; padding: 8px 14px; border-radius: 30px; font-family: inherit; font-weight: 700; font-size: 13px; color: var(--ink-3); cursor: pointer; }
+  .seg button.on { background: #fff; color: var(--red); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+
+  /* карта навыков */
+  table.hm { border-collapse: separate; border-spacing: 4px; }
+  table.hm th { border: none; text-align: center; padding: 6px; white-space: normal; min-width: 96px; }
+  table.hm th.st { text-align: left; min-width: 180px; }
+  table.hm td { border: none; padding: 0; }
+  .cell { border-radius: 10px; padding: 10px 6px; text-align: center; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; cursor: default; }
+  .cell small { display: block; font-size: 11.5px; font-weight: 700; margin-top: 2px; }
+  .cell.good { background: var(--ok-bg); color: var(--ok); } .cell.mid { background: var(--mid-bg); color: var(--mid); } .cell.bad { background: var(--bad-bg); color: var(--bad); } .cell.none { background: var(--soft); color: var(--ink-4); font-weight: 600; }
+  .cell.gup { background: rgba(22,163,74,.16); color: var(--ok); } .cell.gdown { background: rgba(220,38,38,.14); color: var(--bad); } .cell.gzero { background: var(--soft); color: var(--ink-3); }
+  .storename { font-weight: 800; font-size: 13.5px; } .storename small { display: block; color: var(--ink-4); font-weight: 500; font-size: 11.5px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-3); margin-top: 10px; }
+  .legend i { display: inline-block; width: 13px; height: 13px; border-radius: 4px; vertical-align: -2px; margin-right: 5px; }
+  .insights { display: grid; gap: 8px; }
+  .ins { padding: 11px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; background: var(--soft); border-left: 4px solid var(--ink-4); }
+  .ins.good { background: rgba(22,163,74,.08); border-color: #16a34a; } .ins.warn { background: rgba(245,158,11,.1); border-color: #f59e0b; } .ins.bad { background: rgba(220,38,38,.07); border-color: #dc2626; }
+  .ins a { color: var(--red); font-weight: 700; text-decoration: none; }
+
+  /* сотрудник */
+  .emp-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .avatar { width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, var(--red), var(--gold)); color: #fff; font-weight: 900; font-size: 22px; display: flex; align-items: center; justify-content: center; }
+  .emp-name { font-size: 22px; font-weight: 900; } .emp-meta { color: var(--ink-3); font-size: 13.5px; }
+  .path { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 8px; align-items: stretch; margin-top: 16px; }
+  .pbox { background: var(--soft); border-radius: 16px; padding: 14px 16px; } .pbox.empty { opacity: .6; border: 2px dashed var(--line); background: #fff; }
+  .pbox .t { font-size: 13px; font-weight: 800; color: var(--ink-2); } .pbox .v { font-size: 30px; font-weight: 900; margin: 2px 0; } .pbox .s { font-size: 12px; color: var(--ink-4); }
+  .parrow { display: flex; align-items: center; color: var(--ink-4); font-size: 22px; font-weight: 900; }
+  @media (max-width: 700px) { .path { grid-template-columns: 1fr; } .parrow { display: none; } .fstep { grid-template-columns: 110px 1fr 64px; } }
+  .skrow { display: grid; grid-template-columns: 190px 1fr 110px; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--soft); }
+  .skrow .nm { font-weight: 700; font-size: 14px; }
+  .twobars { display: grid; gap: 4px; } .twobars .b { height: 9px; background: var(--soft); border-radius: 5px; overflow: hidden; } .twobars .b i { display: block; height: 100%; border-radius: 5px; }
+  .twobars .b.before i { background: #b8bfca; } .twobars .b.after i { background: var(--red); }
+  @media (max-width: 600px) { .skrow { grid-template-columns: 1fr; } }
+  .empty { text-align: center; color: var(--ink-4); padding: 26px 0; font-size: 14px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { background: var(--soft); border-radius: 20px; padding: 4px 10px; font-size: 12.5px; }
+  .days { display: flex; align-items: flex-end; gap: 5px; height: 130px; }
+  .day { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+  .day i { display: block; width: 100%; max-width: 30px; background: var(--red); border-radius: 4px 4px 0 0; min-height: 2px; }
+  .day b { font-size: 11px; color: var(--ink-2); } .day span { font-size: 10px; color: var(--ink-4); margin-top: 4px; white-space: nowrap; }
+  .trow { display: grid; grid-template-columns: 1fr auto 86px; gap: 6px; align-items: center; font-size: 13px; padding: 3px 0; } .trow small { font-size: 11px; text-align: right; }
+  .db-row { display: grid; grid-template-columns: 210px 1fr 200px; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--soft); }
+  .db-row .nm { font-weight: 800; font-size: 14px; } .db-row .nm small { display: block; font-weight: 500; color: var(--ink-4); font-size: 12px; }
+  .db-track { position: relative; height: 34px; background: linear-gradient(90deg, rgba(220,38,38,.07) 0 60%, rgba(245,158,11,.09) 60% 80%, rgba(22,163,74,.08) 80% 100%); border-radius: 8px; }
+  .db-track .ln { position: absolute; top: 15px; height: 4px; border-radius: 2px; }
+  .db-track .dot { position: absolute; top: 8px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  .db-track .dot.a { background: #94a3b8; } .db-track .dot.b { background: var(--red); }
+  .db-track .tick { position: absolute; bottom: -16px; font-size: 10px; color: var(--ink-4); transform: translateX(-50%); }
+  .db-val { font-size: 14px; font-variant-numeric: tabular-nums; } .db-val b { font-size: 17px; }
+  .db-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); margin: 6px 0 4px; } .db-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: -2px; margin-right: 6px; border: 2px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; }
+  .how { background: #fff8f0; border: 1px solid #f3d9b8; border-radius: 12px; padding: 12px 16px; font-size: 14px; line-height: 1.55; color: var(--ink-2); margin: 10px 0 14px; }
+  .gcell { border-radius: 10px; padding: 8px 6px; text-align: center; font-variant-numeric: tabular-nums; }
+  .gcell .ft { font-size: 13px; font-weight: 700; color: var(--ink-2); } .gcell .ft b { font-size: 15px; }
+  .gcell .dl { font-size: 12px; font-weight: 800; margin-top: 2px; }
+  .gcell.gup { background: rgba(22,163,74,.12); } .gcell.gup .dl { color: var(--ok); } .gcell.gdown { background: rgba(220,38,38,.1); } .gcell.gdown .dl { color: var(--bad); } .gcell.gzero, .gcell.none { background: var(--soft); } .gcell.gzero .dl { color: var(--ink-4); } .gcell.none { color: var(--ink-4); font-weight: 600; }
+  @media (max-width: 700px) { .db-row { grid-template-columns: 1fr; gap: 6px; } .db-val { margin-top: 14px; } }
+  .modal-bg { position: fixed; inset: 0; background: rgba(20,10,12,.55); display: none; align-items: flex-start; justify-content: center; padding: 30px 12px; overflow-y: auto; z-index: 50; }
+  .modal-bg.on { display: flex; }
+  .modal { background: #fff; border-radius: 18px; max-width: 860px; width: 100%; padding: 22px 24px; box-shadow: 0 20px 60px rgba(0,0,0,.3); position: relative; }
+  .modal .x { position: absolute; top: 12px; right: 14px; border: none; background: var(--soft); width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+  .qa { border: 1px solid var(--soft); border-radius: 14px; padding: 14px 16px; margin-top: 12px; }
+  .qa-h { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; } .qa-h .t { font-weight: 800; font-size: 15px; flex: 1; min-width: 200px; }
+  .qa-sit { color: var(--ink-3); font-size: 13px; margin: 6px 0 10px; }
+  .qa-lbl { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-4); margin-top: 8px; }
+  .qa-ans { background: #fff4f5; border-left: 4px solid var(--red); border-radius: 8px; padding: 9px 12px; font-size: 14px; line-height: 1.5; margin-top: 4px; white-space: pre-wrap; }
+  .qa-et { background: rgba(22,163,74,.07); border-left: 4px solid #16a34a; border-radius: 8px; padding: 9px 12px; font-size: 13.5px; line-height: 1.5; margin-top: 4px; color: var(--ink-2); }
+  .qa-out { font-size: 13px; color: var(--ink-2); }
+  .qa-line { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.45; padding: 5px 0; }
+  .qa-line .mk { flex: 0 0 22px; text-align: center; }
+  .qa-line.ok .tx { color: var(--ok); font-weight: 600; } .qa-line.no .tx { color: var(--bad); font-weight: 600; } .qa-line.dim .tx { color: var(--ink-3); }
+  .msg { border-radius: 10px; padding: 7px 11px; font-size: 13.5px; margin-top: 5px; line-height: 1.45; }
+  .msg.client { background: var(--soft); color: var(--ink-2); } .msg.seller { background: #fff; border: 1px solid #eee; }
+  .msg.hit { border: 2px solid #16a34a; background: rgba(22,163,74,.07); } .msg.miss { border: 2px dashed #dc2626; } .msg.fp { border: 2px solid #f59e0b; background: rgba(245,158,11,.08); }
+  .msg .tag { font-size: 11px; font-weight: 800; display: block; margin-bottom: 2px; }
+  .ans-pick { width: 100%; max-width: 520px; font-size: 15px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--red); background: #fff; font-weight: 700; }
+  .btn.sm { padding: 5px 10px; font-size: 12.5px; }
+  .warn-box { background: #fff8e6; border: 1px solid #f6d58b; border-radius: 12px; padding: 10px 14px; font-size: 13px; color: #7a5b00; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации</div></div>
+    <div class="right">
+      <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
+      <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
+      <span class="status" id="status">Загрузка…</span>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-t="over" class="on">🏠 Обзор</button>
+    <button data-t="rank">🏆 Рейтинг</button>
+    <button data-t="skills">🎯 Навыки</button>
+    <button data-t="emp">👤 Сотрудник</button>
+    <button data-t="lh">💎 Лайфхаки</button>
+    <button data-t="data">⚙️ Данные</button>
+  </nav>
+
+  <!-- ============ ОБЗОР ============ -->
+  <section class="tab on" id="t-over">
+    <div class="kpis" id="ovKpis"></div>
+    <div class="grid2">
+      <div class="card"><h2>🪜 Путь обучения</h2><p class="hint">Сколько сотрудников дошли до каждого этапа.</p><div class="funnel" id="ovFunnel"></div></div>
+      <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождений тестов, тренажёров и аттестации по дням.</p><div id="ovDays"></div></div>
+    </div>
+    <div class="card"><h2>🎯 Тренажёры — каждый отдельно</h2><p class="hint">Первая попытка — реальный уровень, лучшая — после пересдач. Нажмите на тренажёр, чтобы открыть разбор по ситуациям.</p><div class="tw" id="ovTrainers"></div></div>
+    <div class="card"><h2>🏙️ Рейтинг магазинов</h2><p class="hint">По среднему результату аттестации. Нажмите на магазин, чтобы отфильтровать весь дашборд.</p><div class="tw" id="ovStores"></div></div>
+    <div class="grid2">
+      <div class="card"><h2>⚠️ Нужна поддержка</h2><p class="hint">Попадают сюда, если аттестация ниже 50% <b>или</b> аттестация хуже входного теста. «Изменение» = аттестация минус входной тест.</p><div class="tw" id="ovRisk"></div></div>
+      <div class="card"><h2>⏳ Ещё не аттестованы</h2><p class="hint">Проходили тест или тренажёры, но аттестацию «Одна смена» пока нет.</p><div class="tw" id="ovTodo"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ РЕЙТИНГ ============ -->
+  <section class="tab" id="t-rank">
+    <div class="card">
+      <h2>🏆 Рейтинг сотрудников</h2>
+      <p class="hint">Одна строка — один сотрудник. Входной тест и каждый тренажёр — по первой попытке (под ней: сколько попыток и лучший результат), аттестация — последняя. Нажмите на заголовок, чтобы отсортировать, на строку — чтобы открыть карточку.</p>
+      <div class="toolbar"><input id="rkSearch" placeholder="🔍 Поиск по имени"><div class="seg" id="rkStage"><button data-v="all" class="on">Все</button><button data-v="exam">Прошли аттестацию</button><button data-v="noexam">Без аттестации</button></div><button class="btn" id="rkCsv">📥 CSV</button></div>
+      <div class="tw" id="rkTable"></div>
+    </div>
+  </section>
+
+  <!-- ============ НАВЫКИ ============ -->
+  <section class="tab" id="t-skills">
+    <div class="card">
+      <h2>🎯 Навыки по магазинам</h2>
+      <p class="hint">6 сквозных навыков продавца. Каждый тест и тренажёр сводится к ним, поэтому их можно сравнить от входного теста до аттестации.</p>
+      <div class="toolbar"><div class="seg" id="skMode"><button data-v="growth" class="on">📈 Было → Стало</button><button data-v="test">📝 Входной тест</button><button data-v="train">🎯 Тренажёры</button><button data-v="exam">🏆 Аттестация</button></div><select id="skTr" style="display:none"></select></div>
+      <div id="skGrowth"></div>
+      <div class="tw" id="skMatrix"></div>
+      <div class="legend" id="skLegend"></div>
+    </div>
+    <div class="card"><h2>💡 Главное</h2><div class="insights" id="skInsights"></div></div>
+    <div class="card">
+      <h2>🔎 Подробно по тесту или тренажёру</h2>
+      <p class="hint">Результат по каждому вопросу или ситуации. Учитывается первая попытка каждого сотрудника — реальный уровень до пересдач.</p>
+      <div class="toolbar"><select id="dtTool"></select></div>
+      <div class="tw" id="dtMatrix"></div>
+    </div>
+  </section>
+
+  <!-- ============ СОТРУДНИК ============ -->
+  <section class="tab" id="t-emp">
+    <div class="card">
+      <div class="toolbar"><input id="empSearch" placeholder="🔍 Найти сотрудника" list="empList" style="min-width:280px"><datalist id="empList"></datalist></div>
+      <div id="empCard"><div class="empty">Выберите сотрудника в поиске или нажмите на строку в рейтинге</div></div>
+    </div>
+  </section>
+
+  <!-- ============ ЛАЙФХАКИ ============ -->
+  <section class="tab" id="t-lh">
+    <div class="kpis" id="lhKpis"></div>
+    <div class="card"><h2>📅 Открытия по дням</h2><div id="lhDays"></div></div>
+    <div class="card"><h2>🏙️ Магазины</h2><div class="tw" id="lhStores"></div></div>
+    <div class="card"><h2>👤 Сотрудники</h2><div class="tw" id="lhPeople"></div></div>
+  </section>
+
+  <!-- ============ ДАННЫЕ ============ -->
+  <section class="tab" id="t-data">
+    <div class="card">
+      <h2>🔗 Похожие имена</h2>
+      <p class="hint">Одинаковые имена с разным написанием (заглавные буквы, ё/е, порядок слов, отчество) дашборд уже склеивает сам. Здесь — имена, которые отличаются на 1–2 буквы: проверьте и объедините, если это один человек.</p>
+      <div id="dtSuggest"></div>
+      <h2 style="margin-top:18px">✅ Объединено автоматически и вручную</h2>
+      <div id="dtMerged"></div>
+    </div>
+    <div class="card">
+      <h2>🗂️ Все записи</h2>
+      <p class="hint">Здесь можно удалить тестовые или ошибочные прохождения. Удаление необратимо.</p>
+      <div class="toolbar"><input id="recSearch" placeholder="🔍 Имя или магазин"><select id="recType"><option value="">Все виды</option></select><button class="btn" id="recCsv">📥 Все записи в CSV</button></div>
+      <div class="tw" id="recTable"></div>
+    </div>
+  </section>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal"><button class="x" id="modalX">✕</button><div id="modalBody"></div></div></div>
+<script>
+// ===================== НАСТРОЙКИ =====================
+const STORES = ['Екатеринбург', 'Владимир', 'Чайковский', 'Тольятти', 'СПб, Заневский, 67, ТК Заневский Каскад', 'СПб, Стародеревенская, 36, ТД Крокус'];
+const SK = [
+  { k: 'K1', n: 'Контакт и сервис', short: 'Контакт', tr: { name: 'Сервис с человеческим лицом', url: 'service_trainer.html' } },
+  { k: 'K2', n: 'Выявление потребностей', short: 'Выявление', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
+  { k: 'K3', n: 'Презентация', short: 'Презентация', tr: { name: 'Адаптация под тип клиента', url: 'client_type_trainer.html' } },
+  { k: 'K4', n: 'Цена и возражения', short: 'Возражения', tr: { name: 'сценка «Дорого»', url: 'dorogo_trainer.html' } },
+  { k: 'K5', n: 'Допродажа', short: 'Допродажа', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
+  { k: 'K6', n: 'Завершение и удержание', short: 'Завершение', tr: { name: 'Найди ошибку в диалоге', url: 'error_finder.html' } }
+];
+const SKN = Object.fromEntries(SK.map(s => [s.k, s]));
+const TOOLS = {
+  test: 'Входной тест', trainer: 'Тренировка диалога', crosssell: 'Тренажёр допродаж', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов',
+  algorithm: 'Алгоритм продаж', service: 'Сервис', final_exam_1: 'Аттестация «Одна смена»', final_exam_old: 'Аттестация (старая)'
+};
+const TRAINERS = ['trainer', 'crosssell', 'errorfinder', 'clienttype', 'algorithm', 'service'];
+const TSHORT = { trainer: 'Диалог', crosssell: 'Допродажи', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов', algorithm: 'Алгоритм', service: 'Сервис' };
+const TICON = { trainer: '💬', crosssell: '🛍️', errorfinder: '🔍', clienttype: '🧑‍🤝‍🧑', algorithm: '🧭', service: '🤝' };
+const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт и сервис' };
+const activeTr = () => TRAINERS.filter(t => RECS.some(r => r.type === t));
+const COLS = [['test', 'test'], ['dialog', 'trainer'], ['crosssell', 'crosssell'], ['errorfinder', 'errorfinder'], ['clienttype', 'clienttype'], ['service', 'service'], ['algorithm', 'algorithm'], ['final_exam', 'final_exam'], ['final_exam_1', 'final_exam_1']];
+const TEST_TOPICS = ['Приветствие и контакт', 'Выявление бюджета', 'Дополнительные товары', 'Выбор материала', 'Сопутствующие товары', 'Возражение «дорого»', 'Альтернатива, нет размера', 'Эмоциональная презентация', 'Дополнительные модели', 'Рассрочка (Сплит)', 'Инициатива, молчаливый клиент', 'Завершение сделки', '«Я подумаю»'];
+const TEST_SK = ['K1', 'K2', 'K5', 'K3', 'K5', 'K4', 'K6', 'K3', 'K3', 'K4', 'K1', 'K6', 'K4'];
+const RULES = [['Проявляй инициативу', 'K1'], ['Задавай вопросы ДО показа', 'K2'], ['Презентуй с эмоцией', 'K3'], ['Предлагай примерку', 'K3'], ['Не отпускай без альтернативы', 'K6'], ['Завершай с теплотой', 'K6']];
+const EF_SK = { 'Холодный клиент': 'K1', 'Подарок жене': 'K2', 'Дорого!': 'K4', 'Просто смотрю': 'K2', 'Допродажа на кассе': 'K5', 'А что есть ещё?': 'K3', 'Беру': 'K5' };
+const ALG_SK = { 'Классический путь покупателя': 'K2', 'Растерянный мужчина с подарком': 'K2', 'Клиент говорит ДОРОГО': 'K4', 'Допродажа на кассе': 'K5', 'Молчаливый клиент': 'K1', 'Постоянный клиент': 'K6', 'Возврат после «подумаю»': 'K4' };
+const EX_SK = { 'Выявление потребностей': 'K2', 'Удержание и допродажа': 'K6', 'Наблюдательность': 'K2', 'Допродажа': 'K5', 'Работа с возражениями': 'K4', 'Алгоритм продажи': 'K6' };
+
+// Пункты каждого вида: [название пункта, навык, значение 0–100]
+function itemsOf(r) {
+  const x = r.raw;
+  switch (r.type) {
+    case 'test': return (x.answers || []).map(a => { const i = a.originalIndex ?? (a.questionNum - 1); return [TEST_TOPICS[i] || ('Вопрос ' + (i + 1)), TEST_SK[i] || 'K3', a.correct ? 100 : 0]; });
+    case 'trainer': return RULES.map(([n, k]) => [n, k, (x.rules_applied || []).includes(n) ? 100 : 0]);
+    case 'crosssell': return (x.scenarios || []).map(s => [s.scenario, 'K5', s.isCorrect ? 100 : 0]);
+    case 'errorfinder': return (x.scenarios || []).map(s => [s.scenario, EF_SK[s.scenario] || 'K3', s.percent != null ? s.percent : Math.round((s.score || 0) / (s.maxScore || 1) * 100)]);
+    case 'clienttype': return (x.scenarios || []).map(s => [s.clientType || s.scenario, 'K3', s.isCorrect ? 100 : 0]);
+    case 'algorithm': return (x.scenarios || []).map(s => [s.scenario, ALG_SK[s.scenario] || 'K6', s.percent || 0]);
+    case 'service': return (x.answers || []).filter(a => a.principle).map(a => [a.principle, 'K1', a.isCorrect ? 100 : 0]);
+    case 'final_exam_1': return (x.answers || []).filter(a => a.skill).map(a => [a.skill, EX_SK[a.skill] || 'K6', a.percentTask || 0]);
+    default: return [];
+  }
+}
+
+// ===================== УТИЛИТЫ =====================
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null;
+const cls = v => v == null ? 'none' : v >= 80 ? 'good' : v >= 60 ? 'mid' : 'bad';
+const pill = v => `<span class="pill ${cls(v)}">${v == null ? '—' : v + '%'}</span>`;
+const delta = d => d == null ? '<span class="delta zero">—</span>' : `<span class="delta ${d > 0 ? 'up' : d < 0 ? 'down' : 'zero'}">${d > 0 ? '▲ +' : d < 0 ? '▼ ' : ''}${d}</span>`;
+const fmtD = d => new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const rub = n => Math.round(n || 0).toLocaleString('ru-RU') + ' ₽';
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const cap = s => s.replace(/(^|\s|-)\S/g, c => c.toUpperCase());
+const levelOf = p => p >= 85 ? ['Мастер продаж', 'gold'] : p >= 70 ? ['Специалист по сервису', 'silver'] : p >= 50 ? ['Продавец-консультант', 'bronze'] : null;
+
+// ---- имена: автоматическое склеивание ----
+function normKey(name) {
+  let t = String(name || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я\s-]/g, ' ').split(/\s+/).filter(Boolean);
+  if (t.length >= 3) t = t.filter(w => !/(вна|вич|ична|ична|инична)$/.test(w) || t.length <= 2);
+  if (t.length > 2) t = t.slice(0, 2);
+  return t.sort().join(' ');
+}
+let MERGE = store.get('dash2_merge', {});
+const rootKey = k => { let g = 0; while (MERGE[k] && g++ < 10) k = MERGE[k]; return k; };
+function lev(a, b) { const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; }
+
+// ===================== ДАННЫЕ =====================
+let db = null, RECS = [], LH = [], PEOPLE = {}, STORE = '', lastLoad = null;
+try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); } catch (e) { console.error(e); }
+
+async function load() {
+  $('status').textContent = 'Загрузка…';
+  if (!db) { $('status').textContent = '⚠️ База не загрузилась — откройте по ссылке github.io'; return; }
+  const recs = [];
+  for (const [col, type] of COLS) {
+    try {
+      const snap = await db.collection('results').doc(col).collection('items').get();
+      snap.forEach(d => {
+        const x = d.data();
+        let t = type;
+        if (col === 'final_exam') t = x.exam_version === 'shift_v1' ? 'final_exam_1' : 'final_exam_old';
+        if (!x.user_name || x.percent == null) return;
+        recs.push({ col, docId: d.id, type: t, name: String(x.user_name).trim().replace(/\s+/g, ' '), city: x.city || 'Не указан', percent: Math.max(0, Math.min(100, Math.round(+x.percent || 0))), date: x.date || new Date(0).toISOString(), raw: x });
+      });
+    } catch (e) { console.warn(col, e.message); }
+  }
+  try { const s = await db.collection('results').doc('lifehacks').collection('items').get(); LH = []; s.forEach(d => LH.push(d.data())); } catch (e) { LH = []; }
+  RECS = recs.sort((a, b) => new Date(a.date) - new Date(b.date));
+  lastLoad = new Date();
+  build();
+}
+
+function build() {
+  // сотрудники
+  PEOPLE = {};
+  RECS.forEach(r => {
+    const k = rootKey(normKey(r.name)); r.key = k;
+    const p = PEOPLE[k] = PEOPLE[k] || { key: k, names: {}, recs: [], city: r.city };
+    p.names[r.name] = (p.names[r.name] || 0) + 1; p.recs.push(r); p.city = r.city;
+  });
+  Object.values(PEOPLE).forEach(p => {
+    const best = Object.entries(p.names).sort((a, b) => b[1] - a[1] || (/[А-ЯЁ]/.test(b[0][0]) - /[А-ЯЁ]/.test(a[0][0])) || b[0].length - a[0].length)[0][0];
+    p.name = cap(best.toLowerCase());
+    const by = t => p.recs.filter(r => r.type === t);
+    const tests = by('test'); p.test = tests[0] || null; p.testBest = tests.length ? Math.max(...tests.map(r => r.percent)) : null;
+    p.tools = {};
+    TRAINERS.forEach(t => { const a = by(t); if (a.length) p.tools[t] = { first: a[0].percent, best: Math.max(...a.map(r => r.percent)), n: a.length, firstRec: a[0] }; });
+    const firsts = Object.values(p.tools).map(x => x.first);
+    p.train = avg(firsts); p.trainN = firsts.length;
+    const ex = by('final_exam_1'); p.exam = ex.length ? ex[ex.length - 1] : null; p.examN = ex.length;
+    p.old = by('final_exam_old').slice(-1)[0] || null;
+    p.growth = p.test && p.exam ? p.exam.percent - p.test.percent : null;
+    p.level = p.exam ? levelOf(p.exam.percent) : null;
+    p.revenue = p.exam ? (p.exam.raw.revenue || 0) : null;
+    p.last = p.recs[p.recs.length - 1].date;
+    // навыки по этапам
+    const acc = recs => { const m = {}; recs.forEach(r => itemsOf(r).forEach(([, k, v]) => (m[k] = m[k] || []).push(v))); return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, avg(v)])); };
+    p.skTest = p.test ? acc([p.test]) : {};
+    p.skTrain = acc(Object.values(p.tools).map(x => x.firstRec));
+    p.skTool = Object.fromEntries(Object.entries(p.tools).map(([t, x]) => [t, acc([x.firstRec])]));
+    p.skExam = p.exam ? acc([p.exam]) : {};
+  });
+  // фильтр магазинов
+  const cities = [...new Set(Object.values(PEOPLE).map(p => p.city))];
+  const all = STORES.concat(cities.filter(c => !STORES.includes(c)));
+  $('storeSel').innerHTML = '<option value="">🏙️ Все магазины</option>' + all.map(c => `<option ${c === STORE ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  $('status').textContent = `✅ ${RECS.length} прохождений · ${Object.keys(PEOPLE).length} сотрудников · ${lastLoad.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+  renderAll();
+}
+const people = () => Object.values(PEOPLE).filter(p => !STORE || p.city === STORE);
+function renderAll() { renderOverview(); renderRank(); renderSkills(); renderEmpList(); renderLH(); renderData(); }
+
+// ===================== ОБЗОР =====================
+function renderOverview() {
+  const P = people(), withExam = P.filter(p => p.exam), withBoth = P.filter(p => p.growth != null);
+  const g = avg(withBoth.map(p => p.growth));
+  $('ovKpis').innerHTML = [
+    ['👥 В обучении', P.length, 'сотрудников проходили хоть что-то'],
+    ['🏆 Аттестованы', `${withExam.length}`, P.length ? `${Math.round(withExam.length / P.length * 100)}% сотрудников · средний балл ${avg(withExam.map(p => p.exam.percent)) ?? '—'}%` : '—'],
+    ['📈 Рост после обучения', g == null ? '—' : (g >= 0 ? '+' : '') + g + ' п.п.', withBoth.length ? `входной тест → аттестация, ${withBoth.length} чел.` : 'нужны и тест, и аттестация', g == null ? '' : g >= 0 ? 'up' : 'down'],
+    ['🎯 Тренажёры', `${avg(P.map(p => p.trainN)) != null ? (P.reduce((a, p) => a + p.trainN, 0) / Math.max(1, P.length)).toFixed(1).replace('.', ',') : '—'} <small style="font-size:16px;color:var(--ink-3)">из ${activeTr().length}</small>`, 'в среднем тренажёров на сотрудника · подробно ниже']
+  ].map(k => `<div class="kpi"><div class="l">${k[0]}</div><div class="v ${k[3] || ''}">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
+
+  const st = [['📝 Входной тест', P.filter(p => p.test).length, 'знание стандартов']].concat(activeTr().map(t => [TICON[t] + ' ' + TSHORT[t], P.filter(p => p.tools[t]).length, 'тренажёр'])).concat([['🏆 Аттестация', withExam.length, '«Одна смена в 585GOLD»']]);
+  const mx = Math.max(1, P.length);
+  $('ovFunnel').innerHTML = st.map(s => `<div class="fstep"><div class="n">${s[0]}<small>${s[2]}</small></div><div class="fbar"><i style="width:${s[1] / mx * 100}%"></i></div><div class="c">${s[1]}<small>${P.length ? Math.round(s[1] / P.length * 100) : 0}%</small></div></div>`).join('');
+
+  // активность
+  const R = RECS.filter(r => !STORE || r.city === STORE), days = [];
+  for (let i = 13; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); days.push(d); }
+  const cnt = days.map(d => R.filter(r => { const x = new Date(r.date); return x >= d && x < new Date(+d + 864e5); }).length), m2 = Math.max(1, ...cnt);
+  $('ovDays').innerHTML = `<div class="days">${days.map((d, i) => `<div class="day" title="${d.toLocaleDateString('ru-RU')}: ${cnt[i]}"><b>${cnt[i] || ''}</b><i style="height:${cnt[i] / m2 * 100}%"></i><span>${d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span></div>`).join('')}</div>`;
+
+  // тренажёры по отдельности
+  const AT = activeTr();
+  $('ovTrainers').innerHTML = AT.length ? `<table><thead><tr><th>Тренажёр</th><th>Что тренирует</th><th class="num">Прошли</th><th class="num">1-я попытка</th><th class="num">Лучшая</th><th class="num">Попыток на чел.</th><th>Охват сотрудников</th></tr></thead><tbody>${AT.map(t => { const ps = P.filter(p => p.tools[t]), n = ps.length, tries = ps.reduce((a, p) => a + p.tools[t].n, 0), cov = P.length ? Math.round(n / P.length * 100) : 0;
+    return `<tr class="click" data-t="${t}"><td><b>${TICON[t]} ${TOOLS[t]}</b></td><td class="muted">${TSKILL[t]}</td><td class="num">${n}</td><td class="num">${pill(avg(ps.map(p => p.tools[t].first)))}</td><td class="num">${pill(avg(ps.map(p => p.tools[t].best)))}</td><td class="num">${n ? (tries / n).toFixed(1).replace('.', ',') : '—'}</td><td><div class="bar-in"><div class="b"><i style="width:${cov}%"></i></div><span class="muted">${n} из ${P.length}</span></div></td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">Тренажёры ещё никто не проходил</div>';
+  $('ovTrainers').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => { showTab('skills'); $('dtTool').value = tr.dataset.t; renderDetail(); setTimeout(() => $('dtTool').scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); });
+
+  // магазины
+  const AP = Object.values(PEOPLE);
+  const cities = STORES.concat([...new Set(AP.map(p => p.city))].filter(c => !STORES.includes(c)));
+  const rows = cities.map(c => { const ps = AP.filter(p => p.city === c), ex = ps.filter(p => p.exam), gr = ps.filter(p => p.growth != null);
+    return { c, n: ps.length, test: avg(ps.filter(p => p.test).map(p => p.test.percent)), tr: Object.fromEntries(AT.map(t => [t, avg(ps.filter(p => p.tools[t]).map(p => p.tools[t].first))])), exam: avg(ex.map(p => p.exam.percent)), cov: ps.length ? Math.round(ex.length / ps.length * 100) : 0, exN: ex.length, g: avg(gr.map(p => p.growth)) }; })
+    .sort((a, b) => (b.exam ?? -1) - (a.exam ?? -1) || b.n - a.n);
+  const medal = i => ['🥇', '🥈', '🥉'][i] || `<span class="pos">${i + 1}</span>`;
+  $('ovStores').innerHTML = `<table><thead><tr><th></th><th>Магазин</th><th class="num">Сотр.</th><th class="num">Вход</th>${AT.map(t => `<th class="num" title="${TOOLS[t]}, первая попытка">${TICON[t]} ${TSHORT[t]}</th>`).join('')}<th class="num">Аттестация</th><th class="num">Рост</th><th>Охват аттестацией</th></tr></thead><tbody>${rows.map((r, i) => `<tr class="click" data-c="${esc(r.c)}" style="${r.c === STORE ? 'background:#fff4f5' : ''}"><td class="medal">${r.exam != null ? medal(i) : ''}</td><td><b>${esc(r.c)}</b></td><td class="num">${r.n}</td><td class="num">${pill(r.test)}</td>${AT.map(t => `<td class="num">${pill(r.tr[t])}</td>`).join('')}<td class="num">${pill(r.exam)}</td><td class="num">${delta(r.g)}</td><td><div class="bar-in"><div class="b"><i style="width:${r.cov}%"></i></div><span class="muted">${r.exN} из ${r.n}</span></div></td></tr>`).join('')}</tbody></table>`;
+  $('ovStores').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => setStore(tr.dataset.c === STORE ? '' : tr.dataset.c));
+
+  // риск и незавершённые
+  const risk = P.filter(p => (p.exam && p.exam.percent < 50) || (p.growth != null && p.growth < 0)).sort((a, b) => (a.exam?.percent ?? 0) - (b.exam?.percent ?? 0));
+  $('ovRisk').innerHTML = risk.length ? `<table><thead><tr><th>Сотрудник</th><th class="num">Входной тест</th><th class="num">Аттестация</th><th class="num">Изменение</th></tr></thead><tbody>${risk.slice(0, 12).map(p => { const why = p.exam && p.exam.percent < 50 ? 'аттестация ниже 50%' : 'аттестация хуже входного теста';
+    return `<tr class="click" data-k="${esc(p.key)}"><td><b>${esc(p.name)}</b><div class="muted">${esc(p.city)} · ${why}</div></td><td class="num">${pill(p.test ? p.test.percent : null)}</td><td class="num">${pill(p.exam ? p.exam.percent : null)}</td><td class="num">${p.growth != null ? delta(p.growth) + '<div class="muted">п.п.</div>' : delta(null)}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">🎉 Таких сотрудников нет</div>';
+  const todo = P.filter(p => !p.exam).sort((a, b) => new Date(b.last) - new Date(a.last));
+  $('ovTodo').innerHTML = todo.length ? `<table><tbody>${todo.slice(0, 12).map(p => `<tr class="click" data-k="${esc(p.key)}"><td><b>${esc(p.name)}</b><div class="muted">${esc(p.city)}</div></td><td class="muted">${p.test ? 'тест ✓' : ''} ${Object.keys(p.tools).map(t => TICON[t]).join(' ')}</td><td class="muted num">${fmtD(p.last)}</td></tr>`).join('')}</tbody></table>${todo.length > 12 ? `<div class="muted" style="margin-top:8px">…и ещё ${todo.length - 12}</div>` : ''}` : '<div class="empty">🎉 Все аттестованы</div>';
+  document.querySelectorAll('#ovRisk tr.click, #ovTodo tr.click').forEach(tr => tr.onclick = () => openEmp(tr.dataset.k));
+}
+
+// ===================== РЕЙТИНГ =====================
+let rkSort = 'exam', rkDir = -1, rkStage = 'all';
+function rkRows() {
+  const q = $('rkSearch').value.trim().toLowerCase();
+  return people().filter(p => !q || p.name.toLowerCase().includes(q)).filter(p => rkStage === 'all' || (rkStage === 'exam' ? p.exam : !p.exam))
+    .map(p => ({ p, name: p.name, city: p.city, test: p.test ? p.test.percent : null, ...Object.fromEntries(TRAINERS.map(t => ['t_' + t, p.tools[t] ? p.tools[t].first : null])), exam: p.exam ? p.exam.percent : null, growth: p.growth, revenue: p.revenue }));
+}
+function renderRank() {
+  const rows = rkRows();
+  const val = r => r[rkSort];
+  rows.sort((a, b) => { const x = val(a), y = val(b); if (typeof x === 'string') return rkDir * x.localeCompare(y, 'ru'); if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return rkDir * (x - y) || ((b.exam ?? -1) - (a.exam ?? -1)); });
+  const H = (k, t, num) => `<th class="sort ${num ? 'num' : ''} ${rkSort === k ? 'on' : ''}" data-k="${k}">${t}${rkSort === k ? (rkDir < 0 ? ' ▼' : ' ▲') : ''}</th>`;
+  const medal = i => ['🥇', '🥈', '🥉'][i] || `<span class="pos">${i + 1}</span>`;
+  const ranked = !['name', 'city'].includes(rkSort); const AT = activeTr();
+  $('rkTable').innerHTML = rows.length ? `<table><thead><tr><th></th>${H('name', 'Сотрудник')}${H('city', 'Магазин')}${H('test', 'Вход', 1)}${AT.map(t => H('t_' + t, TICON[t] + ' ' + TSHORT[t], 1)).join('')}${H('exam', 'Аттестация', 1)}${H('growth', 'Рост', 1)}<th>Уровень</th>${H('revenue', 'Выручка смены', 1)}</tr></thead><tbody>${rows.map((r, i) => `<tr class="click" data-k="${esc(r.p.key)}"><td class="medal">${ranked && val(r) != null && rkDir < 0 ? medal(i) : ''}</td><td><b>${esc(r.name)}</b><div><button class="btn sm" data-ans="${esc(r.p.key)}" style="margin-top:4px">📄 Ответы ▾</button></div></td><td class="muted">${esc(r.city)}</td><td class="num">${pill(r.test)}</td>${AT.map(t => `<td class="num">${pill(r['t_' + t])}${r.p.tools[t] && r.p.tools[t].n > 1 ? `<div class="muted" title="попыток / лучшая">×${r.p.tools[t].n} · ${r.p.tools[t].best}%</div>` : ''}</td>`).join('')}<td class="num">${pill(r.exam)}</td><td class="num">${delta(r.growth)}</td><td>${r.p.level ? `<span class="lvl ${r.p.level[1]}">${r.p.level[0]}</span>` : '<span class="muted">—</span>'}</td><td class="num">${r.revenue != null ? rub(r.revenue) : '<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">Нет сотрудников по этим условиям</div>';
+  $('rkTable').querySelectorAll('th.sort').forEach(th => th.onclick = () => { const k = th.dataset.k; if (rkSort === k) rkDir = -rkDir; else { rkSort = k; rkDir = (k === 'name' || k === 'city') ? 1 : -1; } renderRank(); });
+  $('rkTable').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => openEmp(tr.dataset.k));
+  $('rkTable').querySelectorAll('button[data-ans]').forEach(b => b.onclick = e => { e.stopPropagation(); openRecs(b.dataset.ans); });
+}
+function csv(rows, name) {
+  const s = '﻿' + rows.map(r => r.map(v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`).join(';')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([s], { type: 'text/csv;charset=utf-8' })); a.download = name; a.click();
+}
+
+// ===================== НАВЫКИ =====================
+let skMode = 'growth';
+function storeSkill(ps, stage) { const m = {}; ps.forEach(p => { const s = typeof stage === 'function' ? stage(p) : p[stage]; if (!s) return; Object.entries(s).forEach(([k, v]) => { if (v != null) (m[k] = m[k] || []).push(v); }); }); return Object.fromEntries(SK.map(s => [s.k, { v: avg(m[s.k] || []), n: (m[s.k] || []).length }])); }
+function renderSkills() {
+  const AP = Object.values(PEOPLE);
+  const cities = (STORE ? [STORE] : STORES.concat([...new Set(AP.map(p => p.city))].filter(c => !STORES.includes(c)))).filter(c => AP.some(p => p.city === c));
+  const groups = cities.map(c => ({ c, ps: AP.filter(p => p.city === c) }));
+  if (!STORE && groups.length > 1) groups.push({ c: 'Все магазины', ps: AP, all: true });
+  const AT = activeTr(), tcur = $('skTr').value;
+  $('skTr').style.display = skMode === 'train' ? '' : 'none';
+  $('skTr').innerHTML = '<option value="">Все тренажёры вместе</option>' + AT.map(t => `<option value="${t}" ${t === tcur ? 'selected' : ''}>${TICON[t]} ${TOOLS[t]}</option>`).join('');
+  const EXK = new Set(Object.values(EX_SK)), SKG = SK.filter(s => EXK.has(s.k));
+  const COLSK = skMode === 'growth' ? SKG : SK;
+  const cellFor = (ps) => {
+    if (skMode === 'growth') {
+      const both = ps.filter(p => p.test && p.exam);
+      const t = storeSkill(both, 'skTest'), e = storeSkill(both, 'skExam');
+      return SKG.map(s => { const a = t[s.k].v, b = e[s.k].v; if (a == null || b == null) return `<td><div class="gcell none" title="Нет сотрудников, прошедших и тест, и аттестацию">нет данных</div></td>`; const d = b - a;
+        return `<td><div class="gcell ${d > 2 ? 'gup' : d < -2 ? 'gdown' : 'gzero'}" title="${s.n}: входной тест ${a}% → аттестация ${b}% (${both.length} чел.)"><div class="ft">${a}% → <b>${b}%</b></div><div class="dl">${d > 2 ? '▲ вырос на ' + d : d < -2 ? '▼ упал на ' + (-d) : '≈ без изменений'}</div></div></td>`; }).join('');
+    }
+    const tsel = $('skTr').value, stage = skMode === 'test' ? 'skTest' : skMode === 'train' ? (tsel ? (p => p.skTool[tsel]) : 'skTrain') : 'skExam', r = storeSkill(ps, stage);
+    return SK.map(s => `<td><div class="cell ${cls(r[s.k].v)}" title="${s.n}: ${r[s.k].v == null ? 'нет данных' : r[s.k].v + '%'} (${r[s.k].n} чел.)">${r[s.k].v == null ? '—' : r[s.k].v + '%'}</div></td>`).join('');
+  };
+  // наглядный блок «было → стало»
+  if (skMode === 'growth') {
+    const P = people(), both = P.filter(p => p.test && p.exam), t = storeSkill(both, 'skTest'), e = storeSkill(both, 'skExam');
+    const rows = SKG.map(s => { const a = t[s.k].v, b = e[s.k].v; if (a == null || b == null) return `<div class="db-row"><div class="nm">${s.n}</div><div class="muted">нет данных</div><div></div></div>`; const d = b - a, lo = Math.min(a, b), hi = Math.max(a, b), col = d > 2 ? '#16a34a' : d < -2 ? '#dc2626' : '#94a3b8';
+      return `<div class="db-row"><div class="nm">${s.n}<small>${both.length} чел.</small></div><div class="db-track"><div class="ln" style="left:${lo}%;width:${hi - lo}%;background:${col}"></div><div class="dot a" style="left:${a}%" title="Входной тест ${a}%"></div><div class="dot b" style="left:${b}%" title="Аттестация ${b}%"></div>${[0, 50, 100].map(x => `<span class="tick" style="left:${x}%">${x}%</span>`).join('')}</div><div class="db-val">${a}% → <b>${b}%</b> ${delta(d)}</div></div>`; }).join('');
+    const miss = SK.filter(s => !EXK.has(s.k)).map(s => '«' + s.n + '»').join(' и ');
+    $('skGrowth').innerHTML = `<div class="how">📌 <b>Как читать.</b> Берём одних и тех же людей — тех, кто прошёл <b>и входной тест, и аттестацию «Одна смена»</b> (сейчас: ${both.length} чел.${STORE ? ', ' + esc(STORE) : ''}). По каждому навыку смотрим, сколько процентов они набрали <b>в начале</b> (входной тест) и <b>в конце</b> (аттестация). Точка правее — навык лучше.</div>
+      <div class="db-legend"><span><i style="background:#94a3b8"></i>Входной тест — было</span><span><i style="background:var(--red)"></i>Аттестация — стало</span><span style="color:var(--ok);font-weight:700">зелёная линия — навык вырос</span><span style="color:var(--bad);font-weight:700">красная — упал</span></div>
+      ${both.length ? rows : '<div class="empty">Пока нет сотрудников, прошедших и входной тест, и аттестацию</div>'}
+      <p class="hint" style="margin-top:22px">ℹ️ ${miss} в аттестации не проверяются — их уровень смотрите в режиме «🎯 Тренажёры».</p>
+      <h2 style="margin:22px 0 4px">🏙️ По магазинам</h2><p class="hint">В каждой ячейке: входной тест → аттестация и на сколько изменилось.</p>`;
+  } else $('skGrowth').innerHTML = '';
+  $('skMatrix').innerHTML = groups.length ? `<table class="hm"><thead><tr><th class="st">Магазин</th>${COLSK.map(s => `<th title="${s.n}">${s.n}</th>`).join('')}</tr></thead><tbody>${groups.map(g => `<tr><td><div class="storename" style="${g.all ? 'font-style:italic;color:var(--ink-2)' : ''}">${esc(g.c)}<small>${g.ps.length} чел.</small></div></td>${cellFor(g.ps)}</tr>`).join('')}</tbody></table>` : '<div class="empty">Нет данных</div>';
+  $('skLegend').innerHTML = skMode === 'growth'
+    ? '<span><i style="background:rgba(22,163,74,.3)"></i>вырос</span><span><i style="background:#e8e2de"></i>без изменений (±2)</span><span><i style="background:rgba(220,38,38,.3)"></i>упал</span>'
+    : '<span><i style="background:rgba(22,163,74,.3)"></i>80% и выше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>ниже 60%</span>';
+
+  // выводы
+  const P = people(), both = P.filter(p => p.test && p.exam);
+  const t = storeSkill(both, 'skTest'), e = storeSkill(both, 'skExam'), now = storeSkill(P.filter(p => p.exam), 'skExam'), tr = storeSkill(P, 'skTrain');
+  const ins = [];
+  const growths = SK.map(s => ({ s, d: t[s.k].v != null && e[s.k].v != null ? e[s.k].v - t[s.k].v : null })).filter(x => x.d != null).sort((a, b) => b.d - a.d);
+  if (growths.length) { const top = growths[0], low = growths[growths.length - 1];
+    if (top.d > 0) ins.push(['good', `📈 Больше всего вырос навык <b>«${top.s.n}»</b>: ${t[top.s.k].v}% → ${e[top.s.k].v}% (+${top.d} п.п.).`]);
+    if (low.d < 0) ins.push(['bad', `📉 Просел навык <b>«${low.s.n}»</b>: ${t[low.s.k].v}% → ${e[low.s.k].v}%. Стоит повторить — <a href="${low.s.tr.url}" target="_blank">${low.s.tr.name} ↗</a>.`]); }
+  const weakNow = SK.map(s => ({ s, v: now[s.k].v ?? tr[s.k].v })).filter(x => x.v != null).sort((a, b) => a.v - b.v)[0];
+  if (weakNow && weakNow.v < 80) ins.push(['warn', `🎯 Самый слабый навык сейчас — <b>«${weakNow.s.n}»</b> (${weakNow.v}%). Дайте командам <a href="${weakNow.s.tr.url}" target="_blank">${weakNow.s.tr.name} ↗</a>.`]);
+  cities.forEach(c => { const ps = AP.filter(p => p.city === c); const r = storeSkill(ps.filter(p => p.exam), 'skExam'), r2 = storeSkill(ps, 'skTrain');
+    const w = SK.map(s => ({ s, v: r[s.k].v ?? r2[s.k].v })).filter(x => x.v != null).sort((a, b) => a.v - b.v)[0];
+    if (w && w.v < 70) ins.push(['warn', `🏙️ <b>${esc(c)}</b>: слабее всего «${w.s.n}» (${w.v}%) → <a href="${w.s.tr.url}" target="_blank">${w.s.tr.name} ↗</a>`]); });
+  if (!both.length) ins.push(['', 'ℹ️ Чтобы увидеть рост «вход → аттестация», нужны сотрудники, прошедшие и входной тест, и аттестацию «Одна смена».']);
+  $('skInsights').innerHTML = ins.length ? ins.map(i => `<div class="ins ${i[0]}">${i[1]}</div>`).join('') : '<div class="empty">Пока недостаточно данных для выводов</div>';
+
+  // подробно
+  const tools = Object.keys(TOOLS).filter(t => t !== 'final_exam_old' && RECS.some(r => r.type === t));
+  const cur = $('dtTool').value || tools[0];
+  $('dtTool').innerHTML = tools.map(t => `<option value="${t}" ${t === cur ? 'selected' : ''}>${TOOLS[t]} (${RECS.filter(r => r.type === t).length})</option>`).join('');
+  renderDetail();
+}
+function renderDetail() {
+  const tool = $('dtTool').value; if (!tool) { $('dtMatrix').innerHTML = ''; return; }
+  const firstBy = {}; RECS.filter(r => r.type === tool && (!STORE || r.city === STORE)).forEach(r => { const k = rootKey(normKey(r.name)); if (!firstBy[k] || (tool === 'final_exam_1' ? new Date(r.date) > new Date(firstBy[k].date) : false)) firstBy[k] = r; });
+  const recs = Object.values(firstBy), items = [], cellM = {};
+  recs.forEach(r => itemsOf(r).forEach(([n, k, v]) => { if (!items.find(x => x.n === n)) items.push({ n, k }); const key = r.city + '|' + n; (cellM[key] = cellM[key] || []).push(v); }));
+  const cities = [...new Set(recs.map(r => r.city))].sort((a, b) => STORES.indexOf(a) - STORES.indexOf(b));
+  if (!items.length) { $('dtMatrix').innerHTML = '<div class="empty">В этих результатах нет разбивки по пунктам</div>'; return; }
+  const allV = n => avg(recs.flatMap(r => itemsOf(r).filter(x => x[0] === n).map(x => x[2])));
+  $('dtMatrix').innerHTML = `<table class="hm"><thead><tr><th class="st">Магазин</th>${items.map(it => `<th title="${esc(it.n)} · навык: ${SKN[it.k].n}">${esc(it.n.length > 22 ? it.n.slice(0, 21) + '…' : it.n)}</th>`).join('')}</tr></thead><tbody>${cities.map(c => `<tr><td><div class="storename">${esc(c)}<small>${recs.filter(r => r.city === c).length} чел.</small></div></td>${items.map(it => { const v = avg(cellM[c + '|' + it.n] || []); return `<td><div class="cell ${cls(v)}" title="${esc(c)} · ${esc(it.n)}">${v == null ? '—' : v + '%'}</div></td>`; }).join('')}</tr>`).join('')}${cities.length > 1 ? `<tr><td><div class="storename" style="font-style:italic">Все<small>${recs.length} чел.</small></div></td>${items.map(it => { const v = allV(it.n); return `<td><div class="cell ${cls(v)}">${v == null ? '—' : v + '%'}</div></td>`; }).join('')}</tr>` : ''}</tbody></table>`;
+}
+
+// ===================== СОТРУДНИК =====================
+function renderEmpList() { $('empList').innerHTML = Object.values(PEOPLE).sort((a, b) => a.name.localeCompare(b.name, 'ru')).map(p => `<option value="${esc(p.name)} — ${esc(p.city)}">`).join(''); }
+function openEmp(key) { showTab('emp'); const p = PEOPLE[key]; if (!p) return; $('empSearch').value = p.name + ' — ' + p.city; renderEmp(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function renderEmp(p) { setTimeout(() => { const a = $('empAllAns'); if (a) a.onclick = e => { e.preventDefault(); openAnswers(p.key, 0); }; $('empCard').querySelectorAll('button[data-rec]').forEach(b => b.onclick = () => openRecs(p.key, +b.dataset.rec)); }, 0);
+  const box = (t, v, s, empty) => `<div class="pbox ${empty ? 'empty' : ''}"><div class="t">${t}</div><div class="v" style="color:${empty ? 'var(--ink-4)' : cls(v) === 'good' ? 'var(--ok)' : cls(v) === 'mid' ? 'var(--mid)' : 'var(--bad)'}">${empty ? '—' : v + '%'}</div><div class="s">${s}</div></div>`;
+  const tn = Object.keys(p.tools).length;
+  const skill = SK.map(s => { const a = p.skTest[s.k], m = p.skTrain[s.k], b = p.skExam[s.k]; const before = a ?? null, after = b ?? m ?? null;
+    return `<div class="skrow"><div class="nm">${s.n}</div><div class="twobars"><div class="b before" title="Входной тест"><i style="width:${before ?? 0}%"></i></div><div class="b after" title="${b != null ? 'Аттестация' : 'Тренажёры'}"><i style="width:${after ?? 0}%"></i></div></div><div class="num">${before ?? '—'} → <b>${after ?? '—'}</b> ${before != null && after != null ? delta(after - before) : ''}</div></div>`; }).join('');
+  const toolRows = Object.keys(TOOLS).map(t => { const a = p.recs.filter(r => r.type === t); if (!a.length) return ''; const f = a[0].percent, b = Math.max(...a.map(r => r.percent)), l = a[a.length - 1].percent;
+    return `<tr><td><b>${TOOLS[t]}</b></td><td class="num">${a.length}</td><td class="num">${pill(f)}</td><td class="num">${pill(b)}</td><td class="num">${pill(l)}</td><td class="muted">${fmtD(a[a.length - 1].date)}</td><td><button class="btn sm" data-rec="${p.recs.indexOf(a[a.length - 1])}">📄 Ответы</button></td></tr>`; }).join('');
+  $('empCard').innerHTML = `
+    <div class="emp-head"><div class="avatar">${esc(p.name.split(' ').map(w => w[0]).slice(0, 2).join(''))}</div><div><div class="emp-name">${esc(p.name)}</div><div class="emp-meta">🏙️ ${esc(p.city)} · ${p.recs.length} прохождений · последнее ${fmtD(p.last)}</div></div>${p.level ? `<span class="lvl ${p.level[1]}" style="margin-left:auto;font-size:14px;padding:6px 14px">🏆 ${p.level[0]}</span>` : ''}</div>
+    <div class="path">
+      ${box('📝 Входной тест', p.test?.percent, p.test ? (p.recs.filter(r => r.type === 'test').length > 1 ? 'первая попытка, лучшая ' + p.testBest + '%' : '1 попытка') : 'не проходил', !p.test)}
+      <div class="parrow">→</div>
+      <div class="pbox ${tn ? '' : 'empty'}"><div class="t">🎯 Тренажёры · ${tn} из ${activeTr().length}</div>${activeTr().map(t => { const x = p.tools[t]; return `<div class="trow"><span>${TICON[t]} ${TSHORT[t]}</span>${x ? `${pill(x.first)}${x.n > 1 ? `<small class="muted">×${x.n} · лучш. ${x.best}%</small>` : '<small></small>'}` : '<span class="muted">—</span><small></small>'}</div>`; }).join('')}</div>
+      <div class="parrow">→</div>
+      ${box('🏆 Аттестация', p.exam?.percent, p.exam ? `«Одна смена»${p.revenue != null ? ' · выручка ' + rub(p.revenue) : ''}` : (p.old ? `старая: ${p.old.percent}% (самооценка)` : 'не проходил'), !p.exam)}
+    </div>
+    ${p.growth != null ? `<div class="ins ${p.growth >= 10 ? 'good' : p.growth < 0 ? 'bad' : ''}" style="margin-top:12px">${p.growth >= 0 ? '▲' : '▼'} <b>${p.growth > 0 ? '+' : ''}${p.growth} п.п.</b> от входного теста до аттестации${p.growth >= 10 ? ' — обучение дало заметный рост' : p.growth < 0 ? ' — стоит разобрать с сотрудником' : ''}</div>` : ''}
+    <h2 style="margin:22px 0 4px">🎯 Навыки: было → стало</h2><p class="hint">Серая полоска — входной тест, красная — аттестация (если её нет — тренажёры).</p>${skill}
+    <h2 style="margin:22px 0 10px">📋 Все тесты и тренажёры</h2><div class="tw"><table><thead><tr><th>Вид</th><th class="num">Попыток</th><th class="num">Первая</th><th class="num">Лучшая</th><th class="num">Последняя</th><th>Когда</th><th></th></tr></thead><tbody>${toolRows}</tbody></table></div>
+    ${p.exam ? `<h2 style="margin:22px 0 4px">🏆 Ответы на аттестации «Одна смена»</h2><p class="hint">${fmtD(p.exam.date)} · итог ${p.exam.percent}%${p.examN > 1 ? ` · последняя из ${p.examN} попыток — <a href="#" id="empAllAns">смотреть все попытки</a>` : ''}</p>${answersHtml(p.exam)}` : ''}
+    ${Object.keys(p.names).length > 1 ? `<div class="muted" style="margin-top:12px">🔗 Объединены написания: ${Object.keys(p.names).map(esc).join(' · ')}</div>` : ''}`;
+}
+
+// ===================== ОТВЕТЫ: ТЕСТ, ТРЕНАЖЁРЫ, АТТЕСТАЦИЯ =====================
+// тексты вопросов и ситуаций взяты из самих тренажёров (для тех, что сохраняют только номер ответа)
+const REF = {"dq":[{"c":"Клиент зашёл, молча смотрит на витрину с кольцами около 25 секунд. Что делаете?","o":["«Добрый день! Выбираете что-то конкретное или просто смотрите?»","«Добрый день. У нас сегодня скидка 30% на бриллианты. Какое изделие выбираете? Для себя или в подарок?»","«Здравствуйте! Если нужна помощь — обращайтесь» (и отхожу)"],"k":1},{"c":"Клиент: «Хочу подарить жене кольцо, бюджет до 40 000 ₽». Что делаете?","o":["«Отлично! Давайте посмотрим вот эту коллекцию — она как раз в вашем бюджете»","«А для какого случая? Что ей нравится?»","«40 тысяч — хороший бюджет. Покажу несколько вариантов в нейтральном стиле, а вы выберете»"],"k":1},{"c":"Клиент: «Годовщина 10 лет. Жена любит винтажный стиль». Показываете кольцо. Что говорите?","o":["«Это кольцо из нашей винтажной коллекции. Очень качественная огранка, хорошая цена»","«Такие кольца сейчас хорошо покупают — это тренд сезона»","«Это кольцо будет напоминать о вашей годовщине каждый раз, когда вы на него посмотрите. Оно создано для таких моментов»"],"k":2},{"c":"Клиент заинтересовался: «Да, это близко. Можно посмотреть?»","o":["«Хотите, чтобы я показала это кольцо поближе?»","«Давайте посмотрим на него вблизи — так вы сразу увидите, как оно прекрасно. Давайте примерим?»","«У нас есть зеркало вон там — можете померить, если захотите»"],"k":1},{"c":"Клиент посмотрел кольцо, улыбается: «Красиво… но размера 16,5 нет в наличии». Что делаете?","o":["«Давайте покажу похожие кольца, которые есть в наличии, а также каталог на заказ — сможем заказать точно под размер»","«Как жаль! Давайте посмотрим, что ещё есть в этой витрине»","«Можем заказать с доставкой через 2-3 недели. Внесёте предоплату?»"],"k":0},{"c":"Клиент выбрал похожую модель, оформил заказ. Прощается. Что говорите?","o":["«Спасибо за покупку! Хорошего дня»","«Будем рады видеть вас снова. У нас обновления коллекции каждую неделю»","«Спасибо, что зашли к нам! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»"],"k":2}],"ef":{"Холодный клиент":[{"s":"client","t":"Клиент заходит в магазин, молча проходит к витрине с кольцами и начинает рассматривать.","e":false,"r":""},{"s":"seller","t":"Добрый день! У нас в магазине акция...","e":false,"r":""},{"s":"seller","t":"Вот у нас как раз новая коллекция колец с бриллиантами, посмотрите эту модель — она сейчас по акции.","e":true,"r":"Сначала задайте вопрос: «Какое изделие выбираете? Для себя или в подарок?»"},{"s":"client","t":"Клиент кивает, но продолжает молча смотреть на витрину.","e":false,"r":""},{"s":"seller","t":"Какие украшения интересуют? Для себя выбираете или в подарок?","e":false,"r":""}],"Подарок жене":[{"s":"client","t":"Мужчина: «Мне нужно кольцо в подарок жене, бюджет до 50 тысяч».","e":false,"r":""},{"s":"seller","t":"Отлично! А какой стиль она предпочитает: классику или что-то более современное?","e":false,"r":""},{"s":"client","t":"Мужчина: «Ну, она любит простое, без лишних камней».","e":false,"r":""},{"s":"seller","t":"Поняла. Вот эта модель как раз 48 тысяч, золото 585 пробы, вес 3 грамма, фианиты.","e":true,"r":"Предложите вариант, соответствующий запросу: «Тогда обратите внимание на эти гладкие модели или кольца с минималистичным дизайном»."},{"s":"client","t":"Мужчина: «Хм, а что-нибудь попроще есть?»","e":false,"r":""},{"s":"seller","t":"Конечно, давайте посмотрим на кольца без камней или модели с одним камнем.","e":false,"r":""}],"Дорого!":[{"s":"client","t":"Клиентка: «Красивое кольцо, но дороговато... Я думала, дешевле будет».","e":false,"r":""},{"s":"seller","t":"Так это же золото с бриллиантом, а не бижутерия! Цена полностью оправдана качеством.","e":true,"r":"Присоединитесь к чувству: «Понимаю, цена важна. А с чем вы сравниваете? Может быть, посмотрим альтернативные варианты?»"},{"s":"client","t":"Клиентка: «Ну не знаю, мне нужно подумать».","e":false,"r":""},{"s":"seller","t":"Я вас понимаю, покупка должна радовать. А с чем вы сравниваете? Вы уже присматривали что-нибудь?","e":false,"r":""}],"Просто смотрю":[{"s":"client","t":"Клиентка: «Я просто смотрю, мне пока ничего не нужно».","e":false,"r":""},{"s":"seller","t":"Конечно, смотрите с удовольствием! Кстати, у нас как раз новое поступление. Вы для себя присматриваете или в подарок?","e":false,"r":""},{"s":"client","t":"Клиентка: «Для себя».","e":false,"r":""},{"s":"seller","t":"Хорошо, смотрите. Если что — я рядом у кассы.","e":true,"r":"Мягко направьте: «Понимаю. Могу рассказать о наших хитах продаж, которые отлично смотрятся на каждый день»."}],"Допродажа на кассе":[{"s":"client","t":"Клиентка выбрала золотые серьги-пусеты. «Всё, давайте оформлять, мне очень понравилось.»","e":false,"r":""},{"s":"seller","t":"Прекрасный выбор! Они будут вас радовать каждый день.","e":false,"r":""},{"s":"client","t":"Спасибо.","e":false,"r":""},{"s":"seller","t":"Пробивать чек?","e":true,"r":"Скажите: «Чтобы серьги всегда сияли как новые, позвольте добавить к покупке нашу профессиональную салфетку для чистки золота. Она стоит всего 300 рублей, но продлевает жизнь украшению на годы. Добавим в чек?»"},{"s":"client","t":"Клиентка: «Да, оплата картой».","e":false,"r":""},{"s":"seller","t":"Чтобы серьги всегда сияли как новые, позвольте добавить к покупке нашу профессиональную салфетку для чистки золота. Она стоит всего 300 рублей, но продлевает жизнь украшению на годы. Добавим в чек?","e":false,"r":""}],"А что есть ещё?":[{"s":"client","t":"Клиентка: «Мне нравится это кольцо, но посмотрю я ещё что-нибудь».","e":false,"r":""},{"s":"seller","t":"Конечно! А что именно вам понравилось в этой модели: камень, форма шинки?","e":false,"r":""},{"s":"client","t":"Клиентка: «Ну, мне нравится, что оно не слишком широкое и легкое».","e":false,"r":""},{"s":"seller","t":"Поняла! Вот ещё 10 колец из этой витрины, посмотрите все, вдруг что-то приглянется.","e":true,"r":"Сузьте выбор на основе критериев: «Тогда давайте посмотрим эти 2-3 изящные модели, они как раз легкие и аккуратные»."}],"Беру":[{"s":"client","t":"Клиентка: «Всё, беру это кольцо!»","e":false,"r":""},{"s":"seller","t":"Отлично! Что-то еще может?","e":true,"r":"Скажите: «Отличный выбор! Давайте подберём к кольцу футляр и средство для ухода, чтобы оно всегда сияло. Или, может быть, серьги из этой же коллекции?»"},{"s":"client","t":"Клиентка: «Нет, спасибо, только кольцо».","e":false,"r":""},{"s":"seller","t":"Хорошо, тогда пройдем к кассе. Давайте выберем футляр для вашего нового украшения!","e":false,"r":""}]},"ct":{"Холодный клиент":{"sit":"Мужчина 40-50 лет, внимательно изучает бирки, читает состав. Говорит уверенно, использует термины. — «А какой здесь вес и чистота камня? И огранка какая — круглая или принцесса?»","o":["«Ой, это просто сказка! Это кольцо подарит вашей даме море эмоций и заставит её сердце биться чаще!»","«Вес изделия 3.2 грамма, золото 585 пробы. Камень — фианит огранки «круглая», 57 граней, что даёт отличное светопреломление. Давайте примерим, чтобы оценить посадку?»","«Честно говоря, я не очень разбираюсь в этих деталях, но кольцо красивое. Могу показать другие модели?»"]},"Растерянный мужчина (подарок)":{"sit":"Мужчина 30-45 лет, стоит у витрины, выглядит растерянным. Покупает подарок жене. Не разбирается в украшениях. — «Мне нужно что-то на годовщину, бюджет 30 тысяч, но я вообще не разбираюсь в этом. Помогите выбрать»","o":["«У нас огромный выбор! Вот посмотрите эту витрину, а ещё у нас есть электронный каталог. Давайте я покажу!»","«Понимаю, это важный подарок. Давайте я покажу вам 2-3 наших хита продаж в этом бюджете, которые гарантированно нравятся женщинам».","«Ну, если не разбираетесь, возьмите самое дорогое в бюджете — точно не прогадаете».","«А может, подарочный сертификат? Так она сама выберет, что хочет»."]},"Эмоциональная девушка":{"sit":"Девушка 20-35 лет, меряет украшение, улыбается, смотрит в зеркало. Важны эмоции и ощущения. — «Ой, мне так нравится, как оно переливается... Но дороговато для меня»","o":["«Да, это все таки 2 грамма, сделаем скидку по карте. Можем оформить в рассрочку».","«Вам очень идёт! Это кольцо действительно создано, чтобы притягивать взгляды. Представляете, как красиво оно будет смотреться на вашей руке на важном мероприятии? Можем посмотреть варианты в другом бюджете с похожим эффектом».","«Ну, качество требует вложений. Зато это золото, а не бижутерия»."]},"Рациональный скептик":{"sit":"Клиент долго сравнивает цены, хмурится, задаёт каверзные вопросы. Ищет выгоду и аргументы. — «А почему это кольцо дороже того, что на соседней витрине? Выглядит почти так же»","o":["«Потому что это более престижная коллекция, вы же не хотите сэкономить на качестве?»","«Отличный вопрос. Здесь используется более сложное плетение, которое не цепляет одежду, и камни закреплены так, что не выпадут при ежедневной носке. Это инвестиция в долговечность».","«Ну, цены разные бывают. Могу показать подешевле, если хотите»."]},"Молчаливый наблюдатель":{"sit":"Клиент зашёл, молча ходит вдоль витрин, не смотрит на продавца. Нужно аккуратно начать диалог. — (молчит, просто смотрит)","o":["«Добрый день! Чем могу помочь? Что вас интересует?»","«Добрый день! У нас сегодня акция - скидка 15% на все кольца. Какое изделие выбираете — для себя или в подарок?»","(Молча наблюдает, не подходит)","«Здравствуйте! Если нужна будет помощь — обращайтесь, я рядом»."]},"Торопливый":{"sit":"Клиент зашёл на минуту, смотрит на часы, говорит быстро. Нужно быстро понять потребность и предложить решение. — «Мне нужно быстро выбрать серьги в подарок, бюджет 20 тысяч, через час встреча»","o":["«Ой, у нас такой большой выбор! Давайте я покажу вам все наши коллекции, у нас есть классика, модерн, винтаж...»","«Поняла, времени мало. Давайте сразу к делу — вот 3 наших бестселлера в этом бюджете. Они точно понравятся. Выбирайте!»","«За час мы точно успеем! Давайте начнём с того, какой стиль она предпочитает — золото или серебро?»"]},"Постоянный клиент":{"sit":"Клиент уже покупал в этом магазине, узнаёт продавца. Важно показать, что его помнят и ценят. — «Здравствуйте! Я у вас месяц назад покупала кольцо, помните? Хочу посмотреть, что нового»","o":["«Здравствуйте! Да, конечно. Вот наша новая коллекция, посмотрите всё».","«Здравствуйте! Конечно помню, вы брали кольцо с фианитами. Как оно, носите с удовольствием? У нас как раз новое поступление — давайте покажу, что может дополнить вашу коллекцию».","«Здравствуйте! Рады вас видеть. Что подбираете сегодня?»"]}},"alg":{"Классический путь покупателя":{"steps":["Установить зрительный контакт","Приветствие + крючок (акция)","Выявить потребность (себе/в подарок)","Подобрать 2-3 варианта под запрос","Презентация с эмоцией","Предложить примерку","Завершение сделки"],"traps":[]},"Растерянный мужчина с подарком":{"steps":["Приветствие","Уточнить получателя и повод","Выявить стиль и бюджет","Предложить 2-3 готовых решения","Дать примерить лучшее","Красивая подарочная упаковка"],"traps":["Показать всю витрину сразу","Предложить сертификат вместо выбора"]},"Клиент говорит ДОРОГО":{"steps":["Присоединение к эмоции","Выяснить критерии сравнения","Презентация уникальной ценности","Предложить рассрочку / Сплит","Завершение сделки"],"traps":["Оправдывать цену («это золото, не бижутерия»)"]},"Допродажа на кассе":{"steps":["Похвала выбора","Предложить дополнение","Аргументация через заботу","Примерка дополнения","Оформление расширенного чека"],"traps":["Сразу пробить чек"]},"Молчаливый клиент":{"steps":["Дать 20-30 секунд освоиться","Мягкий подход сбоку","Крючок-вопрос","Презентация хитов продаж","Предложить примерку"],"traps":["Настойчивые вопросы о покупке"]},"Постоянный клиент":{"steps":["Персональное приветствие по имени","Вопрос о прошлой покупке","Показать новинки под её стиль","Предложить комплект к её покупке","Тёплое завершение"],"traps":["Формальное «чем могу помочь?»"]},"Возврат после «подумаю»":{"steps":["Тёплое приветствие («рада, что вернулись!»)","Уточнение сомнений","Дополнительная аргументация","Предложение бонуса","Завершение с позитивом"],"traps":["Давление: «оно последнее, берите»"]}},"fe":[{"p":"Работа с ценой","s":"Клиентка меряет кольцо, смотрит на ценник и тихо вздыхает. Вы видите, что украшение ей очень понравилось, но цена смущает. Она не говорит ничего, просто продолжает держать кольцо в руке."},{"p":"Выявление потребностей","s":"Мужчина заходит в магазин и говорит: «Мне нужно что-нибудь для жены. Я вообще не разбираюсь в украшениях, выберите мне сами». Он явно растерян и хочет поскорее уйти."},{"p":"Удержание клиента","s":"Клиентка говорит: «Я подумаю и вернусь». Вы видите, что украшение ей очень понравилось, она долго его меряла, улыбалась. Но сейчас уходит."},{"p":"Маленькие жесты внимания","s":"Клиентка меряет цепь, но у неё не получается застегнуть ее самой — конструкция сложная. Она смущённо просит: «Помогите, пожалуйста, я не могу справиться»."},{"p":"Работа с возражением","s":"Клиент спрашивает: «А у вас скидки бывают? Я в другом магазине видел дешевле». Вы знаете, что сейчас акций нет, но клиент явно настроен на торг."},{"p":"Построение отношений","s":"Постоянная клиентка зашла в магазин. Она покупает у вас регулярно, но сегодня явно не планирует покупку — просто хочет поболтать, рассказать про жизнь."},{"p":"Помощь в выборе","s":"Клиентка выбирает между двумя кольцами одинаковой цены. Оба ей нравятся, она не может решиться. Уже 15 минут меряет то одно, то другое."}],"cs":{"Кольцо с бриллиантом":"Клиентка выбрала и примерила золотое кольцо с бриллиантом, оно ей очень понравилось. — «Да, беру его, оно прекрасное!»","Золотая цепочка":"Мужчина выбирает золотую цепочку себе в подарок. — «Вот эта цепочка мне нравится, её и возьму».","Подарок маме":"Клиент выбрал серьги в подарок маме на юбилей. — «Да, маме точно понравится. Беру».","Дорогие серьги":"Клиентка приобретает дорогие золотые серьги с фианитами. — «Они красивые, но я боюсь, что быстро потемнеют».","Растерянный клиент":"Клиент ходит по магазину уже 15 минут, но не может ничего выбрать. — «Я не знаю, что выбрать, тут всё какое-то не то...»","Молчаливый клиент":"Клиент рассматривает витрину, но на вопросы отвечает односложно. — «Да просто смотрю...»","Серьги-пусеты":"Девушка выбрала классические серьги-пусеты с камнем. — «Возьму вот эти пусеты».","Серебряная цепь":"Покупатель берёт недорогую серебряную цепь. — «Мне только эту цепь, пожалуйста».","Пара просто смотрит":"Пара зашла в магазин, держатся за руки, улыбаются, но пока ничего не примеряют. — «Мы пока просто гуляем, смотрим».","Постоянный клиент":"Знакомая клиентка, которая покупала кольцо месяц назад, зашла в магазин. — «Здравствуйте! Решила заглянуть, посмотреть, что у вас новенького»."}};
+const qa = (title, v, body, extra) => `<div class="qa"><div class="qa-h"><span class="t">${title}</span>${extra || ''}${v != null ? pill(v) : ''}</div>${body}</div>`;
+const line = (cls, mk, tx) => `<div class="qa-line ${cls}"><span class="mk">${mk}</span><span class="tx">${tx}</span></div>`;
+const choiceLines = (opts, sel, cor) => opts.map((o, i) => i === sel && i === cor ? line('ok', '✅', esc(o) + ' <small class="muted">— выбрал, верно</small>') : i === sel ? line('no', '❌', esc(o) + ' <small class="muted">— выбрал</small>') : i === cor ? line('ok', '✔️', esc(o) + ' <small class="muted">— правильный</small>') : line('dim', '·', esc(o))).join('');
+function recAnswersHtml(r) {
+  const x = r.raw, A = x.answers || [], S = x.scenarios || [];
+  switch (r.type) {
+    case 'test': return A.length ? A.slice().sort((a, b) => (a.questionNum || 0) - (b.questionNum || 0)).map((a, i) => qa(`${a.icon || ''} Вопрос ${i + 1}`, a.correct ? 100 : 0, `<div class="qa-sit">${esc(a.questionText || TEST_TOPICS[a.originalIndex] || '')}</div>${line(a.correct ? 'ok' : 'no', a.correct ? '✅' : '❌', 'Ответ: ' + esc(a.selectedText || '—'))}${a.correct ? '' : line('ok', '✔️', 'Правильно: ' + esc(a.correctText || '—'))}`)).join('') : '';
+    case 'trainer': return A.length ? A.map((a, i) => { const q = REF.dq[a.question]; if (!q) return ''; return qa(`Шаг ${i + 1}`, a.correct ? 100 : 0, `<div class="qa-sit">${esc(q.c)}</div>${choiceLines(q.o, a.selected, q.k)}`); }).join('') : '';
+    case 'crosssell': return S.map(c => qa(`${c.icon || ''} ${esc(c.scenario)}`, c.isCorrect ? 100 : 0, `${REF.cs[c.scenario] ? `<div class="qa-sit">${esc(REF.cs[c.scenario])}</div>` : ''}${line(c.isCorrect ? 'ok' : 'no', c.isCorrect ? '✅' : '❌', 'Ответ: ' + esc(c.selectedText || '—'))}${c.isCorrect ? '' : line('ok', '✔️', 'Лучший вариант: ' + esc(c.correctText || '—'))}`)).join('');
+    case 'clienttype': return S.map(c => { const rf = REF.ct[c.scenario]; return qa(`${c.clientIcon || ''} ${esc(c.scenario)}`, c.isCorrect ? 100 : 0, `${rf ? `<div class="qa-sit">${esc(rf.sit)}</div>${choiceLines(rf.o, c.selectedOption, c.correctOption)}` : line(c.isCorrect ? 'ok' : 'no', c.isCorrect ? '✅' : '❌', c.isCorrect ? 'Выбрал верный подход' : 'Выбрал неверный подход')}`, c.clientType ? `<span class="muted">${esc(c.clientType)}</span>` : ''); }).join('');
+    case 'errorfinder': return S.map(c => { const d = REF.ef[c.scenario], sel = c.selectedErrors || [], cor = c.correctErrors || [];
+      const found = sel.filter(i => cor.includes(i)).length, fp = sel.filter(i => !cor.includes(i)).length;
+      const body = d ? d.map((m, i) => { const isSel = sel.includes(i), isErr = cor.includes(i); const k = isErr && isSel ? 'hit' : isErr ? 'miss' : isSel ? 'fp' : ''; const tag = k === 'hit' ? '<span class="tag" style="color:var(--ok)">✅ нашёл ошибку</span>' : k === 'miss' ? '<span class="tag" style="color:var(--bad)">⚠️ пропустил ошибку</span>' : k === 'fp' ? '<span class="tag" style="color:var(--mid)">✋ отметил лишнее</span>' : '';
+        return `<div class="msg ${m.s} ${k}">${tag}<b>${m.s === 'client' ? '👤' : '🧑‍💼'}</b> ${esc(m.t)}${isErr && m.r ? `<div class="muted" style="margin-top:4px">📌 Как надо: ${esc(m.r)}</div>` : ''}</div>`; }).join('') : '';
+      return qa(esc(c.scenario), c.percent, `<div class="qa-out">Нашёл ${found} из ${cor.length} ошибок${fp ? ` · лишних отметок: ${fp}` : ''}</div>${body}`); }).join('');
+    case 'algorithm': return S.map(c => { const rf = REF.alg[c.scenario]; return qa(esc(c.scenario), c.percent, `<div class="qa-out">Верно выстроено шагов: <b>${c.score ?? '?'} из ${c.max ?? '?'}</b>${c.trapsPlaced ? ` · ловушек в цепочке: <b style="color:var(--bad)">${c.trapsPlaced}</b>` : ''}${c.perfect ? ' · 🏆 идеально' : ''}</div>${rf ? `<div class="qa-lbl">Правильный порядок</div>${rf.steps.map((t, i) => line('dim', i + 1 + '.', esc(t))).join('')}` : ''}<div class="muted" style="margin-top:6px">Тренажёр сохраняет только количество верных шагов, сам порядок сотрудника не сохраняется.</div>`); }).join('');
+    case 'final_exam_1': return answersHtml(r);
+    case 'final_exam_old': return A.map((a, i) => { const rf = REF.fe[a.situation] || {}; const se = { perfect: ['✅ оценил: полностью', 'good'], partial: ['🟡 оценил: частично', 'mid'], miss: ['❌ оценил: не справился', 'bad'] }[a.selfEval] || ['', 'none'];
+      return qa(`Ситуация ${i + 1}. ${esc(a.principle || rf.p || '')}`, null, `${rf.s ? `<div class="qa-sit">${esc(rf.s)}</div>` : ''}<div class="qa-lbl">Ответ сотрудника</div><div class="qa-ans">${esc(a.userAnswer || '—')}</div>${a.etalon ? `<details style="margin-top:6px"><summary class="muted" style="cursor:pointer">✅ Эталон</summary><div class="qa-et">${esc(a.etalon)}</div></details>` : ''}`, `<span class="pill ${se[1]}">${se[0]}</span>`); }).join('');
+    default: return '';
+  }
+}
+function openRecs(key, recIdx) {
+  const p = PEOPLE[key]; if (!p) return;
+  const list = p.recs.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
+  let cur = recIdx != null ? p.recs[recIdx] : (list.find(r => r.type === 'final_exam_1') || list[0]);
+  const draw = () => {
+    const nOf = r => { const same = p.recs.filter(x => x.type === r.type); return same.length > 1 ? ` · попытка ${same.indexOf(r) + 1} из ${same.length}` : ''; };
+    const body = recAnswersHtml(cur);
+    $('modalBody').innerHTML = `<h2 style="margin:0 40px 6px 0">📄 ${esc(p.name)} — ответы</h2><div class="muted" style="margin-bottom:10px">${esc(p.city)} · ${p.recs.length} прохождений</div>
+      <select class="ans-pick" id="ansPick">${['test', ...TRAINERS, 'final_exam_1', 'final_exam_old'].filter(t => list.some(r => r.type === t)).map(t => `<optgroup label="${TOOLS[t]}">${list.filter(r => r.type === t).map(r => `<option value="${p.recs.indexOf(r)}" ${r === cur ? 'selected' : ''}>${TOOLS[t]} — ${r.percent}% · ${fmtD(r.date)}${nOf(r)}</option>`).join('')}</optgroup>`).join('')}</select>
+      <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="font-size:17px">${TOOLS[cur.type] || cur.type}</b>${pill(cur.percent)}<span class="muted">${fmtD(cur.date)}${nOf(cur)}${cur.type === 'final_exam_1' ? ' · выручка смены ' + rub(cur.raw.revenue) : ''}</span></div>
+      ${body || '<div class="empty">В этой записи нет подробных ответов — сохранён только итоговый процент</div>'}`;
+    $('ansPick').onchange = e => { cur = p.recs[+e.target.value]; draw(); $('modalBg').scrollTop = 0; };
+  };
+  draw(); $('modalBg').classList.add('on'); document.body.style.overflow = 'hidden';
+}
+
+// ===================== ОТВЕТЫ АТТЕСТАЦИИ =====================
+function answersHtml(rec) {
+  const A = rec.raw.answers || [];
+  if (!A.length) return '<div class="empty">В этой записи нет ответов</div>';
+  return A.map((a, i) => `<div class="qa"><div class="qa-h"><span class="t">Клиент ${i + 1}. ${esc((a.situation || '').split(':')[0])}</span>${a.skill ? `<span class="muted">${esc(a.skill)}</span>` : ''}${pill(a.percentTask)}<span class="muted">${a.points ?? '?'} из ${a.max ?? '?'} б.</span></div>
+    ${a.situation && a.situation.includes(':') ? `<div class="qa-sit">${esc(a.situation.split(':').slice(1).join(':').trim())}</div>` : ''}
+    ${a.task ? `<div class="qa-lbl">Задание</div><div class="qa-out">${esc(a.task)}</div>` : ''}
+    <div class="qa-lbl">Ответ сотрудника</div><div class="qa-ans">${esc(a.userAnswer || '—')}</div>
+    ${a.outcome ? `<div class="qa-out" style="margin-top:6px">Итог: <b>${esc(a.outcome)}</b>${a.revenue ? ' · ' + rub(a.revenue) : ''}</div>` : ''}
+    ${a.etalon ? `<details style="margin-top:6px"><summary class="muted" style="cursor:pointer">✅ Как можно было ответить</summary><div class="qa-et">${esc(a.etalon)}</div></details>` : ''}</div>`).join('');
+}
+function openAnswers(key, idx) {
+  const p = PEOPLE[key]; if (!p) return; const ex = p.recs.filter(r => r.type === 'final_exam_1'); const rec = ex[idx ?? ex.length - 1]; if (!rec) return;
+  $('modalBody').innerHTML = `<h2 style="margin:0 40px 4px 0">🏆 ${esc(p.name)} — ответы аттестации</h2><div class="muted">${esc(p.city)} · ${fmtD(rec.date)} · итог ${rec.percent}% · выручка смены ${rub(rec.raw.revenue)}${ex.length > 1 ? ` · попытка ${ex.indexOf(rec) + 1} из ${ex.length}` : ''}</div>
+    ${ex.length > 1 ? `<div class="toolbar" style="margin-top:10px">${ex.map((r, i) => `<button class="btn sm ${r === rec ? 'red' : ''}" data-i="${i}">Попытка ${i + 1}: ${r.percent}%</button>`).join('')}</div>` : ''}${answersHtml(rec)}`;
+  $('modalBody').querySelectorAll('button[data-i]').forEach(b => b.onclick = () => openAnswers(key, +b.dataset.i));
+  $('modalBg').classList.add('on'); document.body.style.overflow = 'hidden';
+}
+function closeModal() { $('modalBg').classList.remove('on'); document.body.style.overflow = ''; }
+
+// ===================== ЛАЙФХАКИ =====================
+function renderLH() {
+  const ev = LH.filter(e => !STORE || e.city === STORE).sort((a, b) => new Date(a.date) - new Date(b.date)), opens = ev.filter(e => e.event === 'open');
+  const P = {};
+  ev.forEach(e => { const k = rootKey(normKey(e.user_name)); const p = P[k] = P[k] || { name: PEOPLE[k]?.name || cap(String(e.user_name).toLowerCase()), city: e.city, opens: 0, scenes: new Set(), tOk: 0, tAll: 0, perfect: 0, last: e.date };
+    p.city = e.city; p.last = e.date; if (e.event === 'open') p.opens++; if (e.event === 'scene') p.scenes.add(e.detail); if (e.event === 'timer') { p.tAll++; if (e.detail === 'ok') p.tOk++; } if (e.event === 'perfect') p.perfect++; });
+  const L = Object.values(P), tAll = L.reduce((a, p) => a + p.tAll, 0), tOk = L.reduce((a, p) => a + p.tOk, 0), cities = new Set(L.map(p => p.city));
+  $('lhKpis').innerHTML = [['Открытий', opens.length, opens.length ? Math.round(opens.filter(o => o.device === 'phone').length / opens.length * 100) + '% с телефона' : 'пока никто не открывал'], ['Сотрудников', L.length, 'открыли хотя бы раз'], ['Магазинов', `${STORES.filter(s => cities.has(s)).length} из ${STORES.length}`, 'где открывали'], ['Тест «3 секунды»', tAll ? Math.round(tOk / tAll * 100) + '%' : '—', tAll ? `успели ${tOk} из ${tAll}` : 'ещё не проходили'], ['Идеальных смен', L.reduce((a, p) => a + p.perfect, 0), 'чек-лист 6 из 6']]
+    .map(k => `<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
+  const days = []; for (let i = 13; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); days.push(d); }
+  const cnt = days.map(d => opens.filter(o => { const x = new Date(o.date); return x >= d && x < new Date(+d + 864e5); }).length), mx = Math.max(1, ...cnt);
+  $('lhDays').innerHTML = `<div class="days">${days.map((d, i) => `<div class="day"><b>${cnt[i] || ''}</b><i style="height:${cnt[i] / mx * 100}%"></i><span>${d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span></div>`).join('')}</div>`;
+  const all = STORE ? [STORE] : STORES.concat([...cities].filter(c => !STORES.includes(c)));
+  $('lhStores').innerHTML = `<table><thead><tr><th>Магазин</th><th class="num">Сотрудников</th><th class="num">Открытий</th><th class="num">«3 секунды»</th><th class="num">Идеальных смен</th><th>Последний визит</th></tr></thead><tbody>${all.map(c => { const ps = L.filter(p => p.city === c); if (!ps.length) return `<tr><td class="muted">${esc(c)}</td><td class="num muted">0</td><td class="num muted">0</td><td class="num muted">—</td><td class="num muted">—</td><td class="muted">ещё не открывали</td></tr>`;
+    const ta = ps.reduce((a, p) => a + p.tAll, 0), to = ps.reduce((a, p) => a + p.tOk, 0); return `<tr><td><b>${esc(c)}</b></td><td class="num">${ps.length}</td><td class="num">${ps.reduce((a, p) => a + p.opens, 0)}</td><td class="num">${ta ? Math.round(to / ta * 100) + '%' : '—'}</td><td class="num">${ps.reduce((a, p) => a + p.perfect, 0)}</td><td>${fmtD(ps.map(p => p.last).sort().pop())}</td></tr>`; }).join('')}</tbody></table>`;
+  $('lhPeople').innerHTML = L.length ? `<table><thead><tr><th>Сотрудник</th><th>Магазин</th><th class="num">Открытий</th><th class="num">Сценок</th><th>«3 секунды»</th><th>Идеальная смена</th><th>Последний визит</th></tr></thead><tbody>${L.sort((a, b) => new Date(b.last) - new Date(a.last)).map(p => `<tr><td><b>${esc(p.name)}</b></td><td class="muted">${esc(p.city)}</td><td class="num">${p.opens}</td><td class="num">${p.scenes.size}</td><td>${p.tAll ? (p.tOk ? '<span class="pill good">✓ успел</span>' : '<span class="pill none">не успел</span>') : '<span class="muted">—</span>'}</td><td>${p.perfect ? '<span class="pill good">🏆 да</span>' : '<span class="muted">—</span>'}</td><td class="muted">${fmtD(p.last)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">📭 Пока никто не открывал лайфхаки</div>';
+}
+
+// ===================== ДАННЫЕ =====================
+function renderData() {
+  // похожие имена
+  const keys = Object.keys(PEOPLE), sugg = [];
+  for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) { const a = keys[i], b = keys[j]; if (Math.abs(a.length - b.length) > 2) continue; const d = lev(a, b); if (d > 0 && d <= 2) sugg.push([a, b, d]); }
+  $('dtSuggest').innerHTML = sugg.length ? `<table><tbody>${sugg.map(([a, b]) => `<tr><td><b>${esc(PEOPLE[a].name)}</b> <span class="muted">${esc(PEOPLE[a].city)}, ${PEOPLE[a].recs.length} зап.</span></td><td>и</td><td><b>${esc(PEOPLE[b].name)}</b> <span class="muted">${esc(PEOPLE[b].city)}, ${PEOPLE[b].recs.length} зап.</span></td><td><button class="btn red" data-a="${esc(a)}" data-b="${esc(b)}">🔗 Это один человек</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">✨ Похожих имён не найдено</div>';
+  $('dtSuggest').querySelectorAll('button[data-a]').forEach(bt => bt.onclick = () => { const a = bt.dataset.a, b = bt.dataset.b; const keep = PEOPLE[a].recs.length >= PEOPLE[b].recs.length ? a : b, drop = keep === a ? b : a; MERGE[drop] = keep; store.set('dash2_merge', MERGE); build(); });
+  const merged = Object.values(PEOPLE).filter(p => Object.keys(p.names).length > 1);
+  $('dtMerged').innerHTML = (merged.length ? `<div class="chips">${merged.map(p => `<span class="chip" title="${Object.keys(p.names).map(esc).join(' · ')}">✓ <b>${esc(p.name)}</b> ← ${Object.keys(p.names).length} написания</span>`).join('')}</div>` : '<div class="muted">Пока ничего</div>') +
+    (Object.keys(MERGE).length ? `<div style="margin-top:10px"><button class="btn" id="unmerge">↩ Отменить ручные объединения (${Object.keys(MERGE).length})</button></div>` : '');
+  if ($('unmerge')) $('unmerge').onclick = () => { if (confirm('Отменить все ручные объединения имён?')) { MERGE = {}; store.set('dash2_merge', MERGE); build(); } };
+  const types = [...new Set(RECS.map(r => r.type))];
+  const cur = $('recType').value; $('recType').innerHTML = '<option value="">Все виды</option>' + types.map(t => `<option value="${t}" ${t === cur ? 'selected' : ''}>${TOOLS[t] || t}</option>`).join('');
+  renderRecs();
+}
+function renderRecs() {
+  const q = $('recSearch').value.trim().toLowerCase(), t = $('recType').value;
+  const rows = RECS.filter(r => (!t || r.type === t) && (!q || (r.name + ' ' + r.city).toLowerCase().includes(q))).slice().reverse();
+  $('recTable').innerHTML = `<table><thead><tr><th>Когда</th><th>Сотрудник</th><th>Магазин</th><th>Вид</th><th class="num">Результат</th><th></th></tr></thead><tbody>${rows.slice(0, 80).map(r => `<tr><td class="muted">${fmtD(r.date)}</td><td>${esc(r.name)}</td><td class="muted">${esc(r.city)}</td><td>${TOOLS[r.type] || r.type}</td><td class="num">${pill(r.percent)}</td><td style="white-space:nowrap"><button class="btn" data-view="${esc(r.docId)}|${r.col}" title="Посмотреть ответы">👁</button> <button class="btn" data-col="${r.col}" data-id="${esc(r.docId)}">🗑️</button></td></tr>`).join('')}</tbody></table>${rows.length > 80 ? `<div class="muted" style="margin-top:8px">Показаны последние 80 из ${rows.length}. Уточните поиск.</div>` : ''}`;
+  $('recTable').querySelectorAll('button[data-view]').forEach(bt => bt.onclick = () => { const [id, col] = bt.dataset.view.split('|'); const r = RECS.find(x => x.docId === id && x.col === col); if (r) openRecs(r.key, PEOPLE[r.key].recs.indexOf(r)); });
+  $('recTable').querySelectorAll('button[data-id]').forEach(bt => bt.onclick = async () => {
+    const r = RECS.find(x => x.docId === bt.dataset.id && x.col === bt.dataset.col); if (!r) return;
+    if (!confirm(`Удалить навсегда?\n${r.name} · ${TOOLS[r.type] || r.type} · ${r.percent}% · ${fmtD(r.date)}`)) return;
+    try { await db.collection('results').doc(r.col).collection('items').doc(r.docId).delete(); RECS = RECS.filter(x => x !== r); build(); } catch (e) { alert('Не удалось удалить: ' + e.message); }
+  });
+}
+
+// ===================== НАВИГАЦИЯ =====================
+function showTab(t) { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('on', s.id === 't-' + t)); store.set('dash2_tab', t); }
+function setStore(c) { STORE = c; $('storeSel').value = c; renderAll(); }
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => showTab(b.dataset.t));
+$('storeSel').onchange = e => setStore(e.target.value);
+$('reloadBtn').onclick = load;
+$('rkSearch').oninput = renderRank;
+$('rkStage').querySelectorAll('button').forEach(b => b.onclick = () => { rkStage = b.dataset.v; $('rkStage').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderRank(); });
+$('rkCsv').onclick = () => { const AT = activeTr(); csv([['Сотрудник', 'Магазин', 'Входной тест %'].concat(AT.map(t => TOOLS[t] + ' %')).concat(['Аттестация %', 'Рост п.п.', 'Уровень', 'Выручка смены'])].concat(rkRows().map(r => [r.name, r.city, r.test].concat(AT.map(t => r['t_' + t])).concat([r.exam, r.growth, r.p.level ? r.p.level[0] : '', r.revenue]))), 'рейтинг_585gold.csv'); };
+$('skMode').querySelectorAll('button').forEach(b => b.onclick = () => { skMode = b.dataset.v; $('skMode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderSkills(); });
+$('dtTool').onchange = renderDetail; $('modalX').onclick = closeModal; $('modalBg').onclick = e => { if (e.target === $('modalBg')) closeModal(); }; document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); }); $('skTr').onchange = renderSkills;
+$('empSearch').oninput = () => { const v = $('empSearch').value; const p = Object.values(PEOPLE).find(p => p.name + ' — ' + p.city === v) || (v.length > 2 ? Object.values(PEOPLE).find(p => p.name.toLowerCase().startsWith(v.toLowerCase())) : null); if (p) renderEmp(p); };
+$('recSearch').oninput = renderRecs; $('recType').onchange = renderRecs;
+$('recCsv').onclick = () => csv([['Дата', 'Сотрудник', 'Магазин', 'Вид', 'Результат %']].concat(RECS.map(r => [new Date(r.date).toLocaleString('ru-RU'), r.name, r.city, TOOLS[r.type] || r.type, r.percent])), 'все_записи_585gold.csv');
+showTab(store.get('dash2_tab', 'over'));
+load();
+</script>
+</body>
+</html>
