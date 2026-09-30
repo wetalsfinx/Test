@@ -75,7 +75,7 @@
 
   /* карта навыков */
   table.hm { border-collapse: separate; border-spacing: 4px; }
-  table.hm th { border: none; text-align: center; padding: 6px; white-space: normal; min-width: 96px; }
+  table.hm th { border: none; text-align: center; padding: 6px; white-space: normal; min-width: 78px; }
   table.hm th.st { text-align: left; min-width: 180px; }
   table.hm td { border: none; padding: 0; }
   .cell { border-radius: 10px; padding: 10px 6px; text-align: center; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; cursor: default; }
@@ -199,7 +199,7 @@
   <section class="tab" id="t-skills">
     <div class="card">
       <h2>🎯 Навыки по магазинам</h2>
-      <p class="hint">6 сквозных навыков продавца. Каждый тест и тренажёр сводится к ним, поэтому их можно сравнить от входного теста до аттестации.</p>
+      <p class="hint">11 навыков продавца — этапы стандарта обслуживания. Каждый вопрос теста, ситуация тренажёра и клиент аттестации относятся к одному из них.</p>
       <div class="toolbar"><div class="seg" id="skMode"><button data-v="growth" class="on">📈 Было → Стало</button><button data-v="test">📝 Входной тест</button><button data-v="train">🎯 Тренажёры</button><button data-v="exam">🏆 Аттестация</button></div><select id="skTr" style="display:none"></select></div>
       <div id="skGrowth"></div>
       <div class="tw" id="skMatrix"></div>
@@ -253,12 +253,17 @@
 // ===================== НАСТРОЙКИ =====================
 const STORES = ['Екатеринбург', 'Владимир', 'Чайковский', 'Тольятти', 'СПб, Заневский, 67, ТК Заневский Каскад', 'СПб, Стародеревенская, 36, ТД Крокус'];
 const SK = [
-  { k: 'K1', n: 'Контакт и сервис', short: 'Контакт', tr: { name: 'Сервис с человеческим лицом', url: 'service_trainer.html' } },
-  { k: 'K2', n: 'Выявление потребностей', short: 'Выявление', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
-  { k: 'K3', n: 'Презентация', short: 'Презентация', tr: { name: 'Адаптация под тип клиента', url: 'client_type_trainer.html' } },
-  { k: 'K4', n: 'Цена и возражения', short: 'Возражения', tr: { name: 'сценка «Дорого»', url: 'dorogo_trainer.html' } },
-  { k: 'K5', n: 'Допродажа', short: 'Допродажа', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
-  { k: 'K6', n: 'Завершение и удержание', short: 'Завершение', tr: { name: 'Найди ошибку в диалоге', url: 'error_finder.html' } }
+  { k: 'K1', n: 'Приветствие и речевая пластинка', short: 'Приветствие', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
+  { k: 'K2', n: 'Инициатива и контакт', short: 'Контакт', tr: { name: 'Типы клиентов', url: 'client_type_trainer.html' } },
+  { k: 'K3', n: 'Выявление потребностей', short: 'Потребности', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
+  { k: 'K4', n: 'Презентация: ХПВ и примерка', short: 'Презентация', tr: { name: 'Типы клиентов', url: 'client_type_trainer.html' } },
+  { k: 'K5', n: 'Повышение ценности и золото', short: 'Ценность', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
+  { k: 'K6', n: 'Допродажа: комплект и уход', short: 'Допродажа', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
+  { k: 'K7', n: 'Финансовые инструменты', short: 'Финансы', tr: { name: 'Лайфхаки', url: 'lifehacks.html' } },
+  { k: 'K8', n: 'Работа с возражениями', short: 'Возражения', tr: { name: 'сценка «Дорого»', url: 'dorogo_trainer.html' } },
+  { k: 'K9', n: 'Альтернатива и каталог', short: 'Альтернатива', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
+  { k: 'K10', n: 'Завершение сделки', short: 'Закрытие', tr: { name: 'Алгоритм продаж', url: 'algorithm_trainer.html' } },
+  { k: 'K11', n: 'Прощание и сервис', short: 'Сервис', tr: { name: 'Сервис с человеческим лицом', url: 'service_trainer.html' } }
 ];
 const SKN = Object.fromEntries(SK.map(s => [s.k, s]));
 const TOOLS = {
@@ -272,24 +277,26 @@ const TSKILL = { trainer: 'выявление, презентация, заве�
 const activeTr = () => TRAINERS.filter(t => RECS.some(r => r.type === t));
 const COLS = [['test', 'test'], ['dialog', 'trainer'], ['crosssell', 'crosssell'], ['errorfinder', 'errorfinder'], ['clienttype', 'clienttype'], ['service', 'service'], ['algorithm', 'algorithm'], ['final_exam', 'final_exam'], ['final_exam_1', 'final_exam_1']];
 const TEST_TOPICS = ['Приветствие и контакт', 'Выявление бюджета', 'Дополнительные товары', 'Выбор материала', 'Сопутствующие товары', 'Возражение «дорого»', 'Альтернатива, нет размера', 'Эмоциональная презентация', 'Дополнительные модели', 'Рассрочка (Сплит)', 'Инициатива, молчаливый клиент', 'Завершение сделки', '«Я подумаю»'];
-const TEST_SK = ['K1', 'K2', 'K5', 'K3', 'K5', 'K4', 'K6', 'K3', 'K3', 'K4', 'K1', 'K6', 'K4'];
-const RULES = [['Проявляй инициативу', 'K1'], ['Задавай вопросы ДО показа', 'K2'], ['Презентуй с эмоцией', 'K3'], ['Предлагай примерку', 'K3'], ['Не отпускай без альтернативы', 'K6'], ['Завершай с теплотой', 'K6']];
-const EF_SK = { 'Холодный клиент': 'K1', 'Подарок жене': 'K2', 'Дорого!': 'K4', 'Просто смотрю': 'K2', 'Допродажа на кассе': 'K5', 'А что есть ещё?': 'K3', 'Беру': 'K5' };
-const ALG_SK = { 'Классический путь покупателя': 'K2', 'Растерянный мужчина с подарком': 'K2', 'Клиент говорит ДОРОГО': 'K4', 'Допродажа на кассе': 'K5', 'Молчаливый клиент': 'K1', 'Постоянный клиент': 'K6', 'Возврат после «подумаю»': 'K4' };
-const EX_SK = { 'Выявление потребностей': 'K2', 'Удержание и допродажа': 'K6', 'Наблюдательность': 'K2', 'Допродажа': 'K5', 'Работа с возражениями': 'K4', 'Алгоритм продажи': 'K6' };
+const TEST_SK = ['K1', 'K3', 'K6', 'K5', 'K6', 'K8', 'K9', 'K4', 'K2', 'K7', 'K2', 'K10', 'K8'];
+const RULES = [['Проявляй инициативу', 'K2'], ['Задавай вопросы ДО показа', 'K3'], ['Презентуй с эмоцией', 'K4'], ['Предлагай примерку', 'K4'], ['Не отпускай без альтернативы', 'K9'], ['Завершай с теплотой', 'K11']];
+const EF_SK = { 'Холодный клиент': 'K2', 'Подарок жене': 'K3', 'Дорого!': 'K8', 'Просто смотрю': 'K2', 'Допродажа на кассе': 'K6', 'А что есть ещё?': 'K4', 'Беру': 'K10' };
+const CT_SK = { 'Холодный клиент': 'K2', 'Молчаливый наблюдатель': 'K2', 'Постоянный клиент': 'K11' };
+const CS_SK = { 'Серебряная цепь': 'K5' };
+const ALG_SK = { 'Классический путь покупателя': 'K10', 'Растерянный мужчина с подарком': 'K3', 'Клиент говорит ДОРОГО': 'K8', 'Допродажа на кассе': 'K6', 'Молчаливый клиент': 'K2', 'Постоянный клиент': 'K11', 'Возврат после «подумаю»': 'K8' };
+const EX_SK = { 'Приветствие и контакт': ['K1', 'K2'], 'Выявление потребностей': 'K3', 'Наблюдательность': 'K3', 'Презентация и золото': ['K4', 'K5'], 'Допродажа': 'K6', 'Работа с возражениями': ['K8', 'K7'], 'Закрытие и прощание': ['K10', 'K11'], 'Удержание и допродажа': ['K6', 'K11'], 'Алгоритм продажи': 'K9' };
 
 // Пункты каждого вида: [название пункта, навык, значение 0–100]
 function itemsOf(r) {
   const x = r.raw;
   switch (r.type) {
-    case 'test': return (x.answers || []).map(a => { const i = a.originalIndex ?? (a.questionNum - 1); return [TEST_TOPICS[i] || ('Вопрос ' + (i + 1)), TEST_SK[i] || 'K3', a.correct ? 100 : 0]; });
+    case 'test': return (x.answers || []).map(a => { const i = a.originalIndex ?? (a.questionNum - 1); return [TEST_TOPICS[i] || ('Вопрос ' + (i + 1)), TEST_SK[i] || 'K4', a.correct ? 100 : 0]; });
     case 'trainer': return RULES.map(([n, k]) => [n, k, (x.rules_applied || []).includes(n) ? 100 : 0]);
-    case 'crosssell': return (x.scenarios || []).map(s => [s.scenario, 'K5', s.isCorrect ? 100 : 0]);
-    case 'errorfinder': return (x.scenarios || []).map(s => [s.scenario, EF_SK[s.scenario] || 'K3', s.percent != null ? s.percent : Math.round((s.score || 0) / (s.maxScore || 1) * 100)]);
-    case 'clienttype': return (x.scenarios || []).map(s => [s.clientType || s.scenario, 'K3', s.isCorrect ? 100 : 0]);
-    case 'algorithm': return (x.scenarios || []).map(s => [s.scenario, ALG_SK[s.scenario] || 'K6', s.percent || 0]);
-    case 'service': return (x.answers || []).filter(a => a.principle).map(a => [a.principle, 'K1', a.isCorrect ? 100 : 0]);
-    case 'final_exam_1': return (x.answers || []).filter(a => a.skill).map(a => [a.skill, EX_SK[a.skill] || 'K6', a.percentTask || 0]);
+    case 'crosssell': return (x.scenarios || []).map(s => [s.scenario, CS_SK[s.scenario] || 'K6', s.isCorrect ? 100 : 0]);
+    case 'errorfinder': return (x.scenarios || []).map(s => [s.scenario, EF_SK[s.scenario] || 'K4', s.percent != null ? s.percent : Math.round((s.score || 0) / (s.maxScore || 1) * 100)]);
+    case 'clienttype': return (x.scenarios || []).map(s => [s.scenario || s.clientType, CT_SK[s.scenario] || 'K4', s.isCorrect ? 100 : 0]);
+    case 'algorithm': return (x.scenarios || []).map(s => [s.scenario, ALG_SK[s.scenario] || 'K10', s.percent || 0]);
+    case 'service': return (x.answers || []).filter(a => a.principle).map(a => [a.principle, 'K11', a.isCorrect ? 100 : 0]);
+    case 'final_exam_1': return (x.answers || []).filter(a => a.skill).flatMap(a => [].concat(EX_SK[a.skill] || 'K10').map(k => [a.skill, k, a.percentTask || 0]));
     default: return [];
   }
 }
@@ -465,7 +472,7 @@ function renderSkills() {
   const AT = activeTr(), tcur = $('skTr').value;
   $('skTr').style.display = skMode === 'train' ? '' : 'none';
   $('skTr').innerHTML = '<option value="">Все тренажёры вместе</option>' + AT.map(t => `<option value="${t}" ${t === tcur ? 'selected' : ''}>${TICON[t]} ${TOOLS[t]}</option>`).join('');
-  const EXK = new Set(Object.values(EX_SK)), SKG = SK.filter(s => EXK.has(s.k));
+  const EXK = new Set(Object.values(EX_SK).flat()), SKG = SK.filter(s => EXK.has(s.k));
   const COLSK = skMode === 'growth' ? SKG : SK;
   const cellFor = (ps) => {
     if (skMode === 'growth') {
@@ -482,14 +489,14 @@ function renderSkills() {
     const P = people(), both = P.filter(p => p.test && p.exam), t = storeSkill(both, 'skTest'), e = storeSkill(both, 'skExam');
     const rows = SKG.map(s => { const a = t[s.k].v, b = e[s.k].v; if (a == null || b == null) return `<div class="db-row"><div class="nm">${s.n}</div><div class="muted">нет данных</div><div></div></div>`; const d = b - a, lo = Math.min(a, b), hi = Math.max(a, b), col = d > 2 ? '#16a34a' : d < -2 ? '#dc2626' : '#94a3b8';
       return `<div class="db-row"><div class="nm">${s.n}<small>${both.length} чел.</small></div><div class="db-track"><div class="ln" style="left:${lo}%;width:${hi - lo}%;background:${col}"></div><div class="dot a" style="left:${a}%" title="Входной тест ${a}%"></div><div class="dot b" style="left:${b}%" title="Аттестация ${b}%"></div>${[0, 50, 100].map(x => `<span class="tick" style="left:${x}%">${x}%</span>`).join('')}</div><div class="db-val">${a}% → <b>${b}%</b> ${delta(d)}</div></div>`; }).join('');
-    const miss = SK.filter(s => !EXK.has(s.k)).map(s => '«' + s.n + '»').join(' и ');
+    const miss = SK.filter(s => !EXK.has(s.k)).map(s => '«' + s.n + '»').join(', ');
     $('skGrowth').innerHTML = `<div class="how">📌 <b>Как читать.</b> Берём одних и тех же людей — тех, кто прошёл <b>и входной тест, и аттестацию «Одна смена»</b> (сейчас: ${both.length} чел.${STORE ? ', ' + esc(STORE) : ''}). По каждому навыку смотрим, сколько процентов они набрали <b>в начале</b> (входной тест) и <b>в конце</b> (аттестация). Точка правее — навык лучше.</div>
       <div class="db-legend"><span><i style="background:#94a3b8"></i>Входной тест — было</span><span><i style="background:var(--red)"></i>Аттестация — стало</span><span style="color:var(--ok);font-weight:700">зелёная линия — навык вырос</span><span style="color:var(--bad);font-weight:700">красная — упал</span></div>
       ${both.length ? rows : '<div class="empty">Пока нет сотрудников, прошедших и входной тест, и аттестацию</div>'}
-      <p class="hint" style="margin-top:22px">ℹ️ ${miss} в аттестации не проверяются — их уровень смотрите в режиме «🎯 Тренажёры».</p>
+      ${miss ? `<p class="hint" style="margin-top:22px">ℹ️ ${miss} в аттестации не проверяются — их уровень смотрите в режиме «🎯 Тренажёры».</p>` : ''}
       <h2 style="margin:22px 0 4px">🏙️ По магазинам</h2><p class="hint">В каждой ячейке: входной тест → аттестация и на сколько изменилось.</p>`;
   } else $('skGrowth').innerHTML = '';
-  $('skMatrix').innerHTML = groups.length ? `<table class="hm"><thead><tr><th class="st">Магазин</th>${COLSK.map(s => `<th title="${s.n}">${s.n}</th>`).join('')}</tr></thead><tbody>${groups.map(g => `<tr><td><div class="storename" style="${g.all ? 'font-style:italic;color:var(--ink-2)' : ''}">${esc(g.c)}<small>${g.ps.length} чел.</small></div></td>${cellFor(g.ps)}</tr>`).join('')}</tbody></table>` : '<div class="empty">Нет данных</div>';
+  $('skMatrix').innerHTML = groups.length ? `<table class="hm"><thead><tr><th class="st">Магазин</th>${COLSK.map(s => `<th title="${s.n}">${s.short}</th>`).join('')}</tr></thead><tbody>${groups.map(g => `<tr><td><div class="storename" style="${g.all ? 'font-style:italic;color:var(--ink-2)' : ''}">${esc(g.c)}<small>${g.ps.length} чел.</small></div></td>${cellFor(g.ps)}</tr>`).join('')}</tbody></table>` : '<div class="empty">Нет данных</div>';
   $('skLegend').innerHTML = skMode === 'growth'
     ? '<span><i style="background:rgba(22,163,74,.3)"></i>вырос</span><span><i style="background:#e8e2de"></i>без изменений (±2)</span><span><i style="background:rgba(220,38,38,.3)"></i>упал</span>'
     : '<span><i style="background:rgba(22,163,74,.3)"></i>80% и выше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>ниже 60%</span>';
@@ -572,6 +579,7 @@ function recAnswersHtml(r) {
         return `<div class="msg ${m.s} ${k}">${tag}<b>${m.s === 'client' ? '👤' : '🧑‍💼'}</b> ${esc(m.t)}${isErr && m.r ? `<div class="muted" style="margin-top:4px">📌 Как надо: ${esc(m.r)}</div>` : ''}</div>`; }).join('') : '';
       return qa(esc(c.scenario), c.percent, `<div class="qa-out">Нашёл ${found} из ${cor.length} ошибок${fp ? ` · лишних отметок: ${fp}` : ''}</div>${body}`); }).join('');
     case 'algorithm': return S.map(c => { const rf = REF.alg[c.scenario]; return qa(esc(c.scenario), c.percent, `<div class="qa-out">Верно выстроено шагов: <b>${c.score ?? '?'} из ${c.max ?? '?'}</b>${c.trapsPlaced ? ` · ловушек в цепочке: <b style="color:var(--bad)">${c.trapsPlaced}</b>` : ''}${c.perfect ? ' · 🏆 идеально' : ''}</div>${rf ? `<div class="qa-lbl">Правильный порядок</div>${rf.steps.map((t, i) => line('dim', i + 1 + '.', esc(t))).join('')}` : ''}<div class="muted" style="margin-top:6px">Тренажёр сохраняет только количество верных шагов, сам порядок сотрудника не сохраняется.</div>`); }).join('');
+    case 'service': return A.map((a, i) => { const good = a.correct === 'good'; return qa(`${i + 1}. ${esc(a.principle || '')}`, a.isCorrect ? 100 : 0, `${a.situation ? `<div class="qa-sit">${esc(a.situation)}</div>` : ''}${a.action ? `<div class="qa-lbl">Что сделал продавец</div><div class="qa-out">${esc(a.action)}</div>` : ''}${line(a.isCorrect ? 'ok' : 'no', a.isCorrect ? '✅' : '❌', 'Оценка сотрудника: ' + (a.selected === 'good' ? '👍 хорошо' : '👎 плохо'))}${a.isCorrect ? '' : line('ok', '✔️', 'Правильно: ' + (good ? '👍 хорошо' : '👎 плохо'))}`); }).join('');
     case 'final_exam_1': return answersHtml(r);
     case 'final_exam_old': return A.map((a, i) => { const rf = REF.fe[a.situation] || {}; const se = { perfect: ['✅ оценил: полностью', 'good'], partial: ['🟡 оценил: частично', 'mid'], miss: ['❌ оценил: не справился', 'bad'] }[a.selfEval] || ['', 'none'];
       return qa(`Ситуация ${i + 1}. ${esc(a.principle || rf.p || '')}`, null, `${rf.s ? `<div class="qa-sit">${esc(rf.s)}</div>` : ''}<div class="qa-lbl">Ответ сотрудника</div><div class="qa-ans">${esc(a.userAnswer || '—')}</div>${a.etalon ? `<details style="margin-top:6px"><summary class="muted" style="cursor:pointer">✅ Эталон</summary><div class="qa-et">${esc(a.etalon)}</div></details>` : ''}`, `<span class="pill ${se[1]}">${se[0]}</span>`); }).join('');
