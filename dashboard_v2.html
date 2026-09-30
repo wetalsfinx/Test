@@ -148,6 +148,26 @@
   .ans-pick { width: 100%; max-width: 520px; font-size: 15px; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--red); background: #fff; font-weight: 700; }
   .btn.sm { padding: 5px 10px; font-size: 12.5px; }
   .warn-box { background: #fff8e6; border: 1px solid #f6d58b; border-radius: 12px; padding: 10px 14px; font-size: 13px; color: #7a5b00; margin-bottom: 12px; }
+  .rs-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+  .rs-chip { border: 2px solid var(--line); background: #fff; border-radius: 20px; padding: 6px 12px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink-2); cursor: pointer; }
+  .rs-chip b { color: var(--red); margin-left: 4px; } .rs-chip.on { background: var(--red); border-color: var(--red); color: #fff; } .rs-chip.on b { color: #fff; }
+  .rs-sel { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; min-height: 0; margin-bottom: 10px; }
+  .rs-sel .cnt { font-weight: 800; font-size: 14px; }
+  .rs-pager { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; margin-top: 12px; }
+  .rs-pager .pg { display: flex; gap: 4px; flex-wrap: wrap; } .rs-pager .pg button { min-width: 36px; padding: 7px 10px; } .rs-pager .pg button.on { background: var(--red); color: #fff; border-color: var(--red); }
+  .rs-ev { display: inline-block; padding: 3px 9px; border-radius: 20px; background: rgba(212,160,23,.16); color: #8a6200; font-weight: 800; font-size: 12px; }
+  td.ck, th.ck { width: 34px; text-align: center; } td.ck input, th.ck input { width: 17px; height: 17px; accent-color: var(--red); cursor: pointer; }
+  tr.selr td { background: rgba(220,38,38,.05); }
+  .card.danger { border: 2px solid rgba(220,38,38,.35); }
+  .dz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 8px; }
+  .dz-step { display: flex; gap: 12px; background: var(--soft); border-radius: 14px; padding: 14px; min-width: 0; }
+  .dz-step > div:last-child { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; } .dz-step small { color: var(--ink-4); font-size: 12px; }
+  .dz-n { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--red); color: #fff; font-weight: 900; display: grid; place-items: center; }
+  .dz-ck { font-size: 13.5px; display: flex; gap: 6px; align-items: center; cursor: pointer; } .dz-ck input { accent-color: var(--red); width: 16px; height: 16px; }
+  #dzWord { padding: 9px 12px; border: 2px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 14px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .dz-bar { height: 10px; background: var(--line); border-radius: 6px; overflow: hidden; margin-top: 12px; } .dz-bar i { display: block; height: 100%; background: var(--red); transition: width .2s; }
+  @media (max-width: 640px) { .rs-bar > * { flex: 1 1 100%; min-width: 0; max-width: 100%; } .rs-bar input { min-width: 0 !important; } }
 </style>
 </head>
 <body>
@@ -241,9 +261,31 @@
     </div>
     <div class="card">
       <h2>🗂️ Все записи</h2>
-      <p class="hint">Здесь можно удалить тестовые или ошибочные прохождения. Удаление необратимо.</p>
-      <div class="toolbar"><input id="recSearch" placeholder="🔍 Имя или магазин"><select id="recType"><option value="">Все виды</option></select><button class="btn" id="recCsv">📥 Все записи в CSV</button></div>
+      <p class="hint">Фильтруйте по магазину, виду и периоду. Отметьте записи галочками, чтобы удалить сразу несколько. Удаление необратимо.</p>
+      <div class="rs-chips" id="recChips"></div>
+      <div class="toolbar rs-bar">
+        <input id="recSearch" placeholder="🔍 Имя сотрудника">
+        <select id="recStore"><option value="">🏙️ Все магазины</option></select>
+        <select id="recType"><option value="">📚 Все виды</option></select>
+        <select id="recPeriod"><option value="">📅 За всё время</option><option value="1">Сегодня</option><option value="7">7 дней</option><option value="30">30 дней</option></select>
+        <select id="recSort"><option value="new">↓ Сначала новые</option><option value="old">↑ Сначала старые</option><option value="hi">Результат: выше</option><option value="lo">Результат: ниже</option><option value="name">По имени А–Я</option></select>
+        <button class="btn" id="recReset">✕ Сбросить</button>
+      </div>
+      <div class="rs-sel" id="recSel"></div>
       <div class="tw" id="recTable"></div>
+      <div class="rs-pager" id="recPager"></div>
+    </div>
+    <div class="card danger">
+      <h2>⚠️ Очистить базу</h2>
+      <p class="hint">Удаляет результаты из базы навсегда — например, перед стартом с новыми магазинами. Сначала обязательно сохраните копию.</p>
+      <div class="dz-grid">
+        <div class="dz-step"><div class="dz-n">1</div><div><b>Сохранить копию</b><small>Все записи, включая лайфхаки, в файл Excel (CSV)</small><button class="btn" id="dzCsv">📥 Скачать копию</button></div></div>
+        <div class="dz-step"><div class="dz-n">2</div><div><b>Что удалить</b>
+          <label class="dz-ck"><input type="checkbox" id="dzRes" checked> Тест, тренажёры и аттестация <span class="muted" id="dzResN"></span></label>
+          <label class="dz-ck"><input type="checkbox" id="dzLh" checked> Посещения лайфхаков <span class="muted" id="dzLhN"></span></label></div></div>
+        <div class="dz-step"><div class="dz-n">3</div><div><b>Подтвердить</b><small>Введите слово <code>УДАЛИТЬ</code></small><input id="dzWord" placeholder="введите слово здесь" autocomplete="off"><button class="btn red" id="dzGo" disabled>🗑️ Удалить всё</button></div></div>
+      </div>
+      <div id="dzProg"></div>
     </div>
   </section>
 </div>
@@ -345,7 +387,7 @@ async function load() {
       });
     } catch (e) { console.warn(col, e.message); }
   }
-  try { const s = await db.collection('results').doc('lifehacks').collection('items').get(); LH = []; s.forEach(d => LH.push(d.data())); } catch (e) { LH = []; }
+  try { const s = await db.collection('results').doc('lifehacks').collection('items').get(); LH = []; s.forEach(d => LH.push(Object.assign({}, d.data(), { _id: d.id }))); } catch (e) { LH = []; }
   RECS = recs.sort((a, b) => new Date(a.date) - new Date(b.date));
   lastLoad = new Date();
   build();
@@ -651,21 +693,108 @@ function renderData() {
   $('dtMerged').innerHTML = (merged.length ? `<div class="chips">${merged.map(p => `<span class="chip" title="${Object.keys(p.names).map(esc).join(' · ')}">✓ <b>${esc(p.name)}</b> ← ${Object.keys(p.names).length} написания</span>`).join('')}</div>` : '<div class="muted">Пока ничего</div>') +
     (Object.keys(MERGE).length ? `<div style="margin-top:10px"><button class="btn" id="unmerge">↩ Отменить ручные объединения (${Object.keys(MERGE).length})</button></div>` : '');
   if ($('unmerge')) $('unmerge').onclick = () => { if (confirm('Отменить все ручные объединения имён?')) { MERGE = {}; store.set('dash2_merge', MERGE); build(); } };
-  const types = [...new Set(RECS.map(r => r.type))];
-  const cur = $('recType').value; $('recType').innerHTML = '<option value="">Все виды</option>' + types.map(t => `<option value="${t}" ${t === cur ? 'selected' : ''}>${TOOLS[t] || t}</option>`).join('');
+  fillRecFilters();
   renderRecs();
 }
-function renderRecs() {
-  const q = $('recSearch').value.trim().toLowerCase(), t = $('recType').value;
-  const rows = RECS.filter(r => (!t || r.type === t) && (!q || (r.name + ' ' + r.city).toLowerCase().includes(q))).slice().reverse();
-  $('recTable').innerHTML = `<table><thead><tr><th>Когда</th><th>Сотрудник</th><th>Магазин</th><th>Вид</th><th class="num">Результат</th><th></th></tr></thead><tbody>${rows.slice(0, 80).map(r => `<tr><td class="muted">${fmtD(r.date)}</td><td>${esc(r.name)}</td><td class="muted">${esc(r.city)}</td><td>${TOOLS[r.type] || r.type}</td><td class="num">${pill(r.percent)}</td><td style="white-space:nowrap"><button class="btn" data-view="${esc(r.docId)}|${r.col}" title="Посмотреть ответы">👁</button> <button class="btn" data-col="${r.col}" data-id="${esc(r.docId)}">🗑️</button></td></tr>`).join('')}</tbody></table>${rows.length > 80 ? `<div class="muted" style="margin-top:8px">Показаны последние 80 из ${rows.length}. Уточните поиск.</div>` : ''}`;
-  $('recTable').querySelectorAll('button[data-view]').forEach(bt => bt.onclick = () => { const [id, col] = bt.dataset.view.split('|'); const r = RECS.find(x => x.docId === id && x.col === col); if (r) openRecs(r.key, PEOPLE[r.key].recs.indexOf(r)); });
-  $('recTable').querySelectorAll('button[data-id]').forEach(bt => bt.onclick = async () => {
-    const r = RECS.find(x => x.docId === bt.dataset.id && x.col === bt.dataset.col); if (!r) return;
-    if (!confirm(`Удалить навсегда?\n${r.name} · ${TOOLS[r.type] || r.type} · ${r.percent}% · ${fmtD(r.date)}`)) return;
-    try { await db.collection('results').doc(r.col).collection('items').doc(r.docId).delete(); RECS = RECS.filter(x => x !== r); build(); } catch (e) { alert('Не удалось удалить: ' + e.message); }
-  });
+// ---------- Все записи: фильтры, страницы, выбор, удаление ----------
+const LH_EV = { open: '👀 Открыл', scene: '🎭 Сценка', timer: '⏱️ «3 секунды»', perfect: '🏆 Идеальная смена' };
+const typeLabel = t => t === 'lifehacks' ? '💡 Лайфхаки' : (TOOLS[t] || t);
+let recPage = 1, recPer = 50; const SEL = new Set();
+const rid = r => r.col + '|' + r.docId;
+function allRows() {
+  const lh = LH.filter(e => e._id && e.user_name).map(e => { const k = rootKey(normKey(String(e.user_name).trim())); return { col: 'lifehacks', docId: e._id, type: 'lifehacks', key: k, name: PEOPLE[k]?.name || cap(String(e.user_name).trim().toLowerCase()), city: e.city || 'Не указан', percent: null, date: e.date || new Date(0).toISOString(), ev: e.event, detail: e.detail || '' }; });
+  return RECS.concat(lh);
 }
+function lhText(r) { let d = r.detail; if (r.ev === 'timer') d = d === 'ok' ? 'успел' : 'не успел'; if (r.ev === 'open') d = d === 'first' ? 'впервые' : ''; return `<span class="rs-ev">${LH_EV[r.ev] || r.ev}</span>${d ? ` <span class="muted">${esc(d)}</span>` : ''}`; }
+function fillRecFilters() {
+  const rows = allRows();
+  const cities = [...new Set(rows.map(r => r.city))], all = STORES.filter(s => cities.includes(s)).concat(cities.filter(c => !STORES.includes(c)).sort());
+  const cs = $('recStore').value; $('recStore').innerHTML = '<option value="">🏙️ Все магазины</option>' + all.map(c => `<option ${c === cs ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  const order = ['test'].concat(TRAINERS, ['final_exam_1', 'final_exam_old', 'lifehacks']), types = order.filter(t => rows.some(r => r.type === t)).concat([...new Set(rows.map(r => r.type))].filter(t => !order.includes(t)));
+  const ct = $('recType').value; $('recType').innerHTML = '<option value="">📚 Все виды</option>' + types.map(t => `<option value="${t}" ${t === ct ? 'selected' : ''}>${typeLabel(t)}</option>`).join('');
+  const ids = new Set(rows.map(rid)); [...SEL].forEach(x => { if (!ids.has(x)) SEL.delete(x); });
+  $('dzResN').textContent = `(${RECS.length})`; $('dzLhN').textContent = `(${LH.length})`;
+  renderRecs();
+}
+function recFiltered(ignoreType) {
+  const q = $('recSearch').value.trim().toLowerCase(), c = $('recStore').value, t = ignoreType ? '' : $('recType').value, p = +$('recPeriod').value;
+  let from = 0; if (p) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (p - 1)); from = +d; }
+  return allRows().filter(r => (!c || r.city === c) && (!t || r.type === t) && (!q || r.name.toLowerCase().includes(q)) && (!from || new Date(r.date) >= from));
+}
+function renderRecs() {
+  // чипсы по видам
+  const base = recFiltered(true), ct = $('recType').value, cnt = {}; base.forEach(r => cnt[r.type] = (cnt[r.type] || 0) + 1);
+  const opts = [...$('recType').options].map(o => o.value);
+  $('recChips').innerHTML = opts.filter(v => !v || cnt[v]).map(v => `<button class="rs-chip ${v === ct ? 'on' : ''}" data-t="${v}">${v ? typeLabel(v) : 'Все'}<b>${v ? cnt[v] : base.length}</b></button>`).join('');
+  $('recChips').querySelectorAll('button').forEach(b => b.onclick = () => { $('recType').value = b.dataset.t; recPage = 1; renderRecs(); });
+  // сортировка
+  const s = $('recSort').value, rows = recFiltered();
+  const cmp = { new: (a, b) => new Date(b.date) - new Date(a.date), old: (a, b) => new Date(a.date) - new Date(b.date), hi: (a, b) => (b.percent ?? -1) - (a.percent ?? -1), lo: (a, b) => (a.percent ?? 999) - (b.percent ?? 999), name: (a, b) => a.name.localeCompare(b.name, 'ru') }[s];
+  rows.sort(cmp);
+  const per = recPer || rows.length || 1, pages = Math.max(1, Math.ceil(rows.length / per)); if (recPage > pages) recPage = pages;
+  const view = rows.slice((recPage - 1) * per, recPage * per), allOn = view.length && view.every(r => SEL.has(rid(r)));
+  // панель выбора
+  const selRows = allRows().filter(r => SEL.has(rid(r))), fSel = rows.filter(r => SEL.has(rid(r))).length;
+  $('recSel').innerHTML = `${SEL.size ? `<span class="cnt">☑ Выбрано: ${SEL.size}</span><button class="btn red" id="rsDel">🗑️ Удалить выбранные</button><button class="btn" id="rsClr">Снять выбор</button>` : ''}
+    ${rows.length && fSel < rows.length ? `<button class="btn" id="rsAll">☑ Выбрать все по фильтру (${rows.length})</button>` : ''}
+    ${rows.length ? `<button class="btn" id="rsCsv">📥 CSV по фильтру (${rows.length})</button>` : ''}`;
+  // таблица
+  $('recTable').innerHTML = rows.length ? `<table><thead><tr><th class="ck"><input type="checkbox" id="rsPage" ${allOn ? 'checked' : ''} title="Выбрать все на странице"></th><th>Когда</th><th>Сотрудник</th><th>Магазин</th><th>Вид</th><th class="num">Результат</th><th></th></tr></thead><tbody>${view.map(r => { const on = SEL.has(rid(r)); return `<tr class="${on ? 'selr' : ''}"><td class="ck"><input type="checkbox" data-s="${esc(rid(r))}" ${on ? 'checked' : ''}></td><td class="muted" style="white-space:nowrap">${fmtD(r.date)}</td><td><b>${esc(r.name)}</b></td><td class="muted">${esc(r.city)}</td><td>${typeLabel(r.type)}</td><td class="num">${r.type === 'lifehacks' ? lhText(r) : pill(r.percent)}</td><td style="white-space:nowrap">${r.type === 'lifehacks' ? '<button class="btn" style="visibility:hidden">👁</button> ' : `<button class="btn" data-view="${esc(rid(r))}" title="Посмотреть ответы">👁</button> `}<button class="btn" data-del="${esc(rid(r))}" title="Удалить">🗑️</button></td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">🔎 По этим фильтрам записей нет</div>';
+  // пагинация
+  const pb = []; for (let i = 1; i <= pages; i++) if (i === 1 || i === pages || Math.abs(i - recPage) <= 2) pb.push(i); else if (pb[pb.length - 1] !== '…') pb.push('…');
+  $('recPager').innerHTML = rows.length ? `<span class="muted">Показаны ${(recPage - 1) * per + 1}–${Math.min(recPage * per, rows.length)} из ${rows.length}</span>
+    <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${pages > 1 ? `<span class="pg"><button class="btn" data-p="${recPage - 1}" ${recPage === 1 ? 'disabled' : ''}>‹</button>${pb.map(i => i === '…' ? '<span class="muted" style="padding:7px 4px">…</span>' : `<button class="btn ${i === recPage ? 'on' : ''}" data-p="${i}">${i}</button>`).join('')}<button class="btn" data-p="${recPage + 1}" ${recPage === pages ? 'disabled' : ''}>›</button></span>` : ''}
+    <select id="rsPer" class="btn">${[25, 50, 100, 0].map(n => `<option value="${n}" ${n === recPer ? 'selected' : ''}>${n ? 'по ' + n : 'все сразу'}</option>`).join('')}</select></span>` : '';
+  // обработчики
+  const byId = id => allRows().find(r => rid(r) === id);
+  $('recTable').querySelectorAll('input[data-s]').forEach(c => c.onchange = () => { c.checked ? SEL.add(c.dataset.s) : SEL.delete(c.dataset.s); renderRecs(); });
+  if ($('rsPage')) $('rsPage').onchange = e => { view.forEach(r => e.target.checked ? SEL.add(rid(r)) : SEL.delete(rid(r))); renderRecs(); };
+  $('recTable').querySelectorAll('button[data-view]').forEach(bt => bt.onclick = () => { const r = byId(bt.dataset.view); if (r && PEOPLE[r.key]) openRecs(r.key, PEOPLE[r.key].recs.indexOf(r)); });
+  $('recTable').querySelectorAll('button[data-del]').forEach(bt => bt.onclick = async () => { const r = byId(bt.dataset.del); if (!r) return;
+    if (!confirm(`Удалить навсегда?\n${r.name} · ${typeLabel(r.type)} · ${r.percent != null ? r.percent + '%' : (LH_EV[r.ev] || r.ev)} · ${fmtD(r.date)}`)) return; await delRows([r], $('recSel')); });
+  $('recPager').querySelectorAll('button[data-p]').forEach(b => b.onclick = () => { recPage = +b.dataset.p; renderRecs(); $('recTable').scrollIntoView({ block: 'start', behavior: 'smooth' }); });
+  if ($('rsPer')) $('rsPer').onchange = e => { recPer = +e.target.value; recPage = 1; renderRecs(); };
+  if ($('rsAll')) $('rsAll').onclick = () => { rows.forEach(r => SEL.add(rid(r))); renderRecs(); };
+  if ($('rsClr')) $('rsClr').onclick = () => { SEL.clear(); renderRecs(); };
+  if ($('rsCsv')) $('rsCsv').onclick = () => recCsv(rows, 'записи_по_фильтру_585gold.csv');
+  if ($('rsDel')) $('rsDel').onclick = async () => { if (!confirm(`Удалить навсегда выбранные записи: ${selRows.length}?\n\nЭто действие нельзя отменить.`)) return; await delRows(selRows, $('recSel')); };
+}
+function recCsv(rows, name) { csv([['Дата', 'Сотрудник', 'Магазин', 'Вид', 'Результат %', 'Событие лайфхаков']].concat(rows.map(r => [new Date(r.date).toLocaleString('ru-RU'), r.name, r.city, typeLabel(r.type).replace('💡 ', ''), r.percent ?? '', r.type === 'lifehacks' ? (LH_EV[r.ev] || r.ev).replace(/^\S+ /, '') + (r.detail ? ' ' + r.detail : '') : ''])), name); }
+function progHtml(done, all, txt) { return `<div class="muted" style="margin-top:10px">${txt} ${done} из ${all}…</div><div class="dz-bar"><i style="width:${all ? done / all * 100 : 100}%"></i></div>`; }
+async function delDocs(list, box) { // list: [[col, id]]
+  let done = 0, fail = 0; const N = list.length; box.innerHTML = progHtml(0, N, '🗑️ Удаляю');
+  for (let i = 0; i < N; i += 10) {
+    await Promise.all(list.slice(i, i + 10).map(([c, id]) => db.collection('results').doc(c).collection('items').doc(id).delete().then(() => done++, () => fail++)));
+    box.innerHTML = progHtml(done + fail, N, '🗑️ Удаляю');
+  }
+  return { done, fail };
+}
+async function delRows(rows, box) {
+  const { done, fail } = await delDocs(rows.map(r => [r.col, r.docId]), box);
+  const gone = new Set(rows.map(rid)); rows.forEach(r => SEL.delete(rid(r)));
+  RECS = RECS.filter(r => !gone.has(rid(r))); LH = LH.filter(e => !gone.has('lifehacks|' + e._id));
+  if (fail) alert(`Удалено ${done}, не удалось: ${fail}. Нажмите «Обновить» и попробуйте ещё раз.`);
+  build();
+}
+// обработчики фильтров
+['recSearch'].forEach(id => $(id).oninput = () => { recPage = 1; renderRecs(); });
+['recStore', 'recType', 'recPeriod', 'recSort'].forEach(id => $(id).onchange = () => { recPage = 1; renderRecs(); });
+$('recReset').onclick = () => { $('recSearch').value = ''; ['recStore', 'recType', 'recPeriod'].forEach(id => $(id).value = ''); $('recSort').value = 'new'; recPage = 1; renderRecs(); };
+// очистка базы
+$('dzCsv').onclick = () => recCsv(allRows().sort((a, b) => new Date(a.date) - new Date(b.date)), `копия_базы_585gold_${new Date().toISOString().slice(0, 10)}.csv`);
+const dzCheck = () => { $('dzGo').disabled = !($('dzWord').value.trim().toUpperCase() === 'УДАЛИТЬ' && ($('dzRes').checked || $('dzLh').checked)); };
+$('dzWord').oninput = dzCheck; $('dzRes').onchange = dzCheck; $('dzLh').onchange = dzCheck;
+$('dzGo').onclick = async () => {
+  const what = [$('dzRes').checked ? 'тест, тренажёры и аттестацию' : '', $('dzLh').checked ? 'посещения лайфхаков' : ''].filter(Boolean).join(' и ');
+  if (!confirm(`Последнее предупреждение!\n\nБудут удалены навсегда: ${what}.\nВосстановить данные будет нельзя.\n\nКопию сохранили?`)) return;
+  $('dzGo').disabled = true; const box = $('dzProg'); box.innerHTML = '<div class="muted" style="margin-top:10px">⏳ Собираю записи из базы…</div>';
+  const cols = [...new Set(($('dzRes').checked ? COLS.map(c => c[0]) : []).concat($('dzLh').checked ? ['lifehacks'] : []))], list = [];
+  try { for (const c of cols) { const s = await db.collection('results').doc(c).collection('items').get(); s.forEach(d => list.push([c, d.id])); } }
+  catch (e) { box.innerHTML = `<div class="empty">⚠️ Не удалось прочитать базу: ${esc(e.message)}</div>`; return; }
+  const { done, fail } = await delDocs(list, box);
+  box.innerHTML = fail ? `<div class="empty">⚠️ Удалено ${done}, не удалось ${fail}. Нажмите «Обновить» и повторите.</div>` : `<div class="empty">✅ База очищена: удалено ${done} записей</div>`;
+  $('dzWord').value = ''; SEL.clear(); await load();
+};
 
 // ===================== НАВИГАЦИЯ =====================
 function showTab(t) { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('on', s.id === 't-' + t)); store.set('dash2_tab', t); }
@@ -679,8 +808,6 @@ $('rkCsv').onclick = () => { const AT = activeTr(); csv([['Сотрудник', 
 $('skMode').querySelectorAll('button').forEach(b => b.onclick = () => { skMode = b.dataset.v; $('skMode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderSkills(); });
 $('dtTool').onchange = renderDetail; $('modalX').onclick = closeModal; $('modalBg').onclick = e => { if (e.target === $('modalBg')) closeModal(); }; document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); }); $('skTr').onchange = renderSkills;
 $('empSearch').oninput = () => { const v = $('empSearch').value; const p = Object.values(PEOPLE).find(p => p.name + ' — ' + p.city === v) || (v.length > 2 ? Object.values(PEOPLE).find(p => p.name.toLowerCase().startsWith(v.toLowerCase())) : null); if (p) renderEmp(p); };
-$('recSearch').oninput = renderRecs; $('recType').onchange = renderRecs;
-$('recCsv').onclick = () => csv([['Дата', 'Сотрудник', 'Магазин', 'Вид', 'Результат %']].concat(RECS.map(r => [new Date(r.date).toLocaleString('ru-RU'), r.name, r.city, TOOLS[r.type] || r.type, r.percent])), 'все_записи_585gold.csv');
 showTab(store.get('dash2_tab', 'over'));
 load();
 </script>
