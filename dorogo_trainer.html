@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажёр «Дорого» | 585GOLD</title>
+<style>
+  :root { --red: #E30613; --red-dk: #a8101c; --gold: #c9a227; --ink: #1f2430; --ink-2: #4b5260; --ink-3: #8a909c; --bg: #faf7f5; --line: #eee6e2; --ok: #0f8a5f; --ok-bg: #e8f6ef; --bad: #c41c2a; --bad-bg: #fdecee; --mid: #b45309; --mid-bg: #fff4dc; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--ink); -webkit-tap-highlight-color: transparent; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 16px 16px 40px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .brand { font-weight: 900; letter-spacing: 2px; color: var(--red); font-size: 13px; }
+  .top h1 { font-size: clamp(20px, 3.4vw, 28px); font-weight: 900; }
+  .found { font-size: 13px; font-weight: 700; color: var(--ink-2); background: #fff; border: 1px solid var(--line); padding: 6px 12px; border-radius: 20px; }
+
+  /* сцена фиксированного размера 1280×720, масштабируется под экран */
+  .stage-box { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(80,20,20,.12); background: #fbf6f0; }
+  #stage { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; overflow: hidden; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
+  #stage svg { position: absolute; inset: 0; }
+  .bubble { position: absolute; max-width: 420px; background: #fff; border-radius: 22px; padding: 16px 20px; font-size: 25px; line-height: 1.32; font-weight: 600; color: var(--ink); box-shadow: 0 8px 24px rgba(0,0,0,.14); opacity: 0; transition: opacity .15s; }
+  .bubble::after { content: ''; position: absolute; bottom: -16px; width: 0; height: 0; border: 12px solid transparent; border-top: 16px solid #fff; }
+  .bubble .who { display: block; font-size: 15px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  #bS { left: 175px; top: 60px; border: 3px solid var(--red); } #bS .who { color: var(--red); } #bS::after { left: 180px; border-top-color: var(--red); }
+  #bC { right: 60px; top: 60px; border: 3px solid #8b5a2b; } #bC .who { color: #8b5a2b; } #bC::after { right: 110px; border-top-color: #8b5a2b; }
+  .caption { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); padding: 14px 26px; border-radius: 40px; font-size: 26px; font-weight: 800; white-space: nowrap; opacity: 0; transition: opacity .2s; box-shadow: 0 8px 20px rgba(0,0,0,.15); }
+  .caption.bad { background: var(--bad); color: #fff; } .caption.good { background: var(--ok); color: #fff; } .caption.info { background: #fff; color: var(--ink); border: 3px solid var(--gold); }
+  .card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; padding: 40px; }
+  .card.red { background: linear-gradient(135deg, #E30613, #a8101c); color: #fff; }
+  .card.green { background: linear-gradient(135deg, #10a36e, #0b6b48); color: #fff; }
+  .card.dark { background: rgba(20,20,28,.88); color: #fff; }
+  .card.gold { background: linear-gradient(135deg, #E30613, #a8101c); color: #fff; }
+  .card .ct { font-size: 64px; font-weight: 900; line-height: 1.1; }
+  .card .cs { font-size: 28px; font-weight: 600; margin-top: 16px; opacity: .95; }
+  .card .brandline { font-size: 22px; font-weight: 900; letter-spacing: 6px; color: #ffd98a; margin-bottom: 18px; }
+  .formula { display: flex; gap: 14px; margin-top: 26px; flex-wrap: wrap; justify-content: center; }
+  .formula div { background: rgba(255,255,255,.14); border: 2px solid rgba(255,217,138,.6); border-radius: 18px; padding: 14px 18px; font-size: 24px; font-weight: 800; }
+  .formula b { display: block; color: #ffd98a; font-size: 30px; }
+
+  /* панель под сценой */
+  .panel { margin-top: 14px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; min-height: 86px; }
+  .sub { font-size: 17px; line-height: 1.45; }
+  .sub .w { font-weight: 800; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 2px; }
+  .sub .w.s { color: var(--red); } .sub .w.c { color: #8b5a2b; } .sub .w.i { color: var(--ink-3); }
+  .q { font-size: 18px; font-weight: 800; margin-bottom: 12px; }
+  .opts { display: grid; gap: 10px; }
+  .opt { text-align: left; border: 2px solid var(--line); background: #fffdfb; border-radius: 14px; padding: 13px 16px; font-family: inherit; font-size: 15.5px; line-height: 1.4; color: var(--ink); cursor: pointer; transition: all .15s; display: flex; gap: 12px; align-items: flex-start; }
+  .opt:hover { border-color: var(--red); transform: translateY(-1px); }
+  .opt .l { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--red); color: #fff; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .end { border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; }
+  .end.win { background: var(--ok-bg); border: 2px solid #bfe6d2; } .end.mid { background: var(--mid-bg); border: 2px solid #f6d58b; } .end.lose { background: var(--bad-bg); border: 2px solid #f6c8cd; }
+  .end h3 { font-size: 20px; font-weight: 900; margin-bottom: 6px; }
+  .end p { font-size: 15.5px; line-height: 1.5; color: var(--ink-2); }
+  .rule { background: #fff8e6; border-left: 4px solid var(--gold); border-radius: 10px; padding: 12px 14px; font-size: 14.5px; line-height: 1.5; margin-bottom: 12px; }
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { border: none; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 15px; padding: 12px 18px; border-radius: 14px; }
+  .btn-red { background: var(--red); color: #fff; } .btn-ghost { background: #fff; color: var(--ink-2); border: 1px solid var(--line); }
+  .start { text-align: center; padding: 8px 0; }
+  .start p { color: var(--ink-2); margin-bottom: 12px; font-size: 15.5px; }
+  .skip { float: right; font-size: 13px; color: var(--ink-3); background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 700; }
+  body.capture * { transition: none !important; }
+  body.capture { background: #000; } body.capture .wrap { max-width: none; padding: 0; } body.capture .top, body.capture .panel { display: none; }
+  body.capture .stage-box { width: 1280px; height: 720px; border-radius: 0; box-shadow: none; aspect-ratio: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><div class="brand">585GOLD · ТРЕНАЖЁР</div><h1>Клиент говорит «дорого»</h1></div>
+    <div class="found" id="found">Найдено концовок: 0 из 5</div>
+  </div>
+  <div class="stage-box" id="box">
+    <div id="stage">
+      <svg id="svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1280" height="720" preserveAspectRatio="xMidYMid slice" font-family="Inter, Arial, sans-serif">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf6f0"/><stop offset="1" stop-color="#f1e7dc"/></linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9dccd"/><stop offset="1" stop-color="#dccbb8"/></linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E30613"/><stop offset="1" stop-color="#a8101c"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".85"/><stop offset="1" stop-color="#dcebf2" stop-opacity=".55"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8891c"/><stop offset=".5" stop-color="#f0d27a"/><stop offset="1" stop-color="#b8891c"/></linearGradient>
+    <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a27a"/><stop offset="1" stop-color="#b58d66"/></linearGradient>
+    <radialGradient id="spot" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="#fff6d8" stop-opacity=".9"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient>
+    <g id="ring"><circle r="9" fill="none" stroke="url(#gold)" stroke-width="3.5"/><path d="M-4 -9 L0 -16 L4 -9 Z" fill="#fff" stroke="#9fd3ec" stroke-width="1"/></g>
+    <g id="necklace"><path d="M-22 -12 Q0 22 22 -12" fill="none" stroke="url(#gold)" stroke-width="2.5"/><circle cx="0" cy="9" r="4.5" fill="#E30613" stroke="url(#gold)" stroke-width="1.5"/></g>
+    <g id="earrings"><line x1="-7" y1="-12" x2="-7" y2="-4" stroke="url(#gold)" stroke-width="2"/><circle cx="-7" cy="0" r="4" fill="#7fd0f0" stroke="url(#gold)" stroke-width="1.5"/><line x1="7" y1="-12" x2="7" y2="-4" stroke="url(#gold)" stroke-width="2"/><circle cx="7" cy="0" r="4" fill="#7fd0f0" stroke="url(#gold)" stroke-width="1.5"/></g>
+  </defs>
+
+  <!-- стена и пол -->
+  <rect width="1200" height="700" fill="url(#wall)"/>
+  <rect y="560" width="1200" height="140" fill="url(#floor)"/>
+  <g stroke="#d6c4b0" stroke-width="1" opacity=".6"><line x1="0" y1="610" x2="1200" y2="610"/><line x1="0" y1="660" x2="1200" y2="660"/></g>
+
+  <!-- фирменная вывеска -->
+  <rect x="0" y="0" width="1200" height="92" fill="url(#red)"/>
+  <rect x="0" y="92" width="1200" height="6" fill="url(#gold)"/>
+  <text x="600" y="62" text-anchor="middle" font-size="44" font-weight="900" fill="#fff" letter-spacing="6">585<tspan fill="#f0d27a">GOLD</tspan></text>
+  <!-- светильники -->
+  <g fill="#2a2a2a"><rect x="220" y="98" width="4" height="26"/><rect x="598" y="98" width="4" height="26"/><rect x="978" y="98" width="4" height="26"/></g>
+  <g fill="#f0d27a"><ellipse cx="222" cy="128" rx="26" ry="8"/><ellipse cx="600" cy="128" rx="26" ry="8"/><ellipse cx="980" cy="128" rx="26" ry="8"/></g>
+  <path d="M170 130 L274 130 L330 420 L114 420 Z" fill="url(#spot)" opacity=".5"/>
+  <path d="M928 130 L1032 130 L1088 420 L872 420 Z" fill="url(#spot)" opacity=".5"/>
+
+  <!-- настенные витрины -->
+  <g>
+    <rect x="60" y="170" width="300" height="190" rx="10" fill="#fff" stroke="#e7d8c6" stroke-width="3"/>
+    <rect x="72" y="182" width="276" height="166" rx="6" fill="#fdf9f3"/>
+    <line x1="72" y1="265" x2="348" y2="265" stroke="#e7d8c6" stroke-width="3"/>
+    <use href="#necklace" x="120" y="220"/><use href="#necklace" x="210" y="220"/><use href="#necklace" x="300" y="220"/>
+    <use href="#earrings" x="120" y="310"/><use href="#earrings" x="210" y="310"/><use href="#earrings" x="300" y="310"/>
+  </g>
+  <g>
+    <rect x="840" y="170" width="300" height="190" rx="10" fill="#fff" stroke="#e7d8c6" stroke-width="3"/>
+    <rect x="852" y="182" width="276" height="166" rx="6" fill="#fdf9f3"/>
+    <line x1="852" y1="265" x2="1128" y2="265" stroke="#e7d8c6" stroke-width="3"/>
+    <use href="#ring" x="900" y="232"/><use href="#ring" x="960" y="232"/><use href="#ring" x="1020" y="232"/><use href="#ring" x="1080" y="232"/>
+    <use href="#necklace" x="930" y="305"/><use href="#necklace" x="1050" y="305"/>
+  </g>
+
+  <!-- прилавок-витрина по центру -->
+  <g>
+    <rect x="520" y="440" width="420" height="130" rx="8" fill="url(#red)"/>
+    <rect x="520" y="440" width="420" height="10" fill="url(#gold)"/>
+    <rect x="530" y="392" width="400" height="50" rx="4" fill="url(#glass)" stroke="#c9dde6" stroke-width="2"/>
+    <use href="#ring" x="570" y="424"/><use href="#ring" x="620" y="424"/><use href="#earrings" x="680" y="426"/>
+    <use href="#ring" x="740" y="424"/><use href="#earrings" x="800" y="426"/><use href="#ring" x="860" y="424"/><use href="#ring" x="905" y="424"/>
+    <text x="730" y="520" text-anchor="middle" font-size="22" font-weight="800" fill="#f0d27a" letter-spacing="3">585GOLD</text>
+  </g>
+
+  <!-- ============ ПРОДАВЕЦ ============ -->
+  <g id="seller" transform="translate(400 0)"><g id="sInner">
+    <ellipse cx="0" cy="646" rx="62" ry="10" fill="#000" opacity=".12"/>
+    <!-- ноги -->
+    <rect x="-24" y="540" width="17" height="96" rx="8" fill="#f1c7a5"/>
+    <rect x="7" y="540" width="17" height="96" rx="8" fill="#f1c7a5"/>
+    <!-- туфли -->
+    <path d="M-30 632 h26 a6 6 0 0 1 6 6 v4 h-38 a4 4 0 0 1 -4 -4 z" fill="#111"/>
+    <path d="M4 632 h26 a6 6 0 0 1 6 6 v4 h-38 a4 4 0 0 1 -4 -4 z" fill="#111"/>
+    <!-- юбка ниже колена -->
+    <path d="M-40 420 L40 420 L52 575 L-52 575 Z" fill="#1d1d22"/>
+    <path d="M-2 440 L-6 575" stroke="#000" stroke-width="2" opacity=".35"/>
+    <!-- блуза -->
+    <path d="M-48 322 Q-54 318 -46 305 Q-20 290 0 292 Q20 290 46 305 Q54 318 48 322 L42 428 L-42 428 Z" fill="#ffffff" stroke="#dcdcdc" stroke-width="2"/>
+    <line x1="0" y1="318" x2="0" y2="426" stroke="#e5e5e5" stroke-width="2"/>
+    <g fill="#d9d9d9"><circle cx="0" cy="345" r="2.5"/><circle cx="0" cy="370" r="2.5"/><circle cx="0" cy="395" r="2.5"/></g>
+    <!-- пояс -->
+    <rect x="-42" y="418" width="84" height="8" fill="#111"/>
+    <!-- рука слева (опущена) -->
+    <path d="M-46 306 Q-66 330 -66 380 L-64 440" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round"/>
+    <path d="M-46 306 Q-66 330 -66 380 L-64 440" fill="none" stroke="#dcdcdc" stroke-width="24" stroke-linecap="round" opacity=".35"/>
+    <path d="M-46 306 Q-66 330 -66 380 L-64 440" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
+    <circle cx="-64" cy="448" r="11" fill="#f1c7a5"/>
+    <!-- рука справа (жест к витрине) -->
+    <path d="M46 308 Q70 330 82 370 L112 390" fill="none" stroke="#dcdcdc" stroke-width="24" stroke-linecap="round" opacity=".35"/>
+    <path d="M46 308 Q70 330 82 370 L112 390" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
+    <ellipse cx="122" cy="392" rx="13" ry="9" fill="#f1c7a5"/>
+    <!-- шея -->
+    <rect x="-11" y="268" width="22" height="30" rx="8" fill="#eab896"/>
+    <!-- красный шейный платок, узел сбоку -->
+    <path d="M-24 290 Q0 304 24 290 L25 300 Q0 316 -25 300 Z" fill="#E30613"/>
+    <path d="M-25 296 Q0 312 25 296" stroke="#c80511" stroke-width="2" fill="none"/>
+    <path d="M-14 304 L-30 318 L-22 324 L-10 308 Z" fill="#E30613"/>
+    <path d="M-14 304 L-4 322 L4 318 L-8 302 Z" fill="#c80511"/>
+    <path d="M-12 306 L-26 332 L-16 334 Z" fill="#E30613"/>
+    <path d="M-10 306 L-2 336 L6 330 Z" fill="#c80511"/>
+    <ellipse cx="-12" cy="305" rx="6" ry="5" fill="#b0040f"/>
+    <!-- бейдж -->
+    <rect x="12" y="336" width="44" height="18" rx="3" fill="#fff" stroke="url(#gold)" stroke-width="2"/>
+    <text x="34" y="349" text-anchor="middle" font-size="9" font-weight="800" fill="#a8101c">ОЛЬГА</text>
+    <!-- голова -->
+    <ellipse cx="0" cy="240" rx="38" ry="43" fill="#f1c7a5"/>
+    <!-- каре -->
+    <path d="M-44 236 Q-48 190 -8 186 Q36 180 46 228 L46 276 Q40 282 32 276 L34 236 Q20 220 -4 214 Q-24 222 -34 236 L-34 276 Q-42 282 -46 276 Z" fill="#2e1f18"/>
+    <path d="M-36 226 Q-20 200 10 202 Q-10 212 -18 228 Z" fill="#43302a"/>
+    <!-- лицо -->
+    <ellipse cx="-13" cy="244" rx="4" ry="5" fill="#2b2b2b"/><ellipse cx="15" cy="244" rx="4" ry="5" fill="#2b2b2b"/>
+    <path id="sBrowL" d="M-19 233 q6 -4 12 0" stroke="#2e1f18" stroke-width="2.5" fill="none" stroke-linecap="round"/><path id="sBrowR" d="M9 233 q6 -4 12 0" stroke="#2e1f18" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-24" cy="258" rx="7" ry="4" fill="#f4a1a1" opacity=".55"/><ellipse cx="26" cy="258" rx="7" ry="4" fill="#f4a1a1" opacity=".55"/>
+    <path id="sMouth" d="M-10 264 Q2 274 14 264" stroke="#b03a2e" stroke-width="3" fill="none" stroke-linecap="round"/><path id="sMouthO" d="M-8 262 Q2 280 12 262 Q2 266 -8 262 Z" fill="#8a2020" opacity="0"/>
+    <circle cx="-38" cy="262" r="3" fill="url(#gold)"/><circle cx="38" cy="262" r="3" fill="url(#gold)"/>
+  </g></g>
+
+  <!-- ============ ПОКУПАТЕЛЬНИЦА ============ -->
+  <g id="client" transform="translate(1010 0)">
+    <ellipse cx="0" cy="646" rx="62" ry="10" fill="#000" opacity=".12"/>
+    <!-- брюки -->
+    <path d="M-30 470 L-8 470 L-12 636 L-30 636 Z" fill="#3c4a63"/>
+    <path d="M8 470 L30 470 L30 636 L12 636 Z" fill="#3c4a63"/>
+    <path d="M-36 632 h28 v10 h-34 a4 4 0 0 1 -4 -4 z" fill="#6b3f2a"/>
+    <path d="M6 632 h28 a6 6 0 0 1 6 6 v4 h-34 z" fill="#6b3f2a"/>
+    <!-- пальто -->
+    <path d="M-50 318 Q-54 312 -44 302 Q-20 290 0 292 Q20 290 44 302 Q54 312 50 318 L60 520 L-60 520 Z" fill="url(#coat)"/>
+    <path d="M0 300 L-14 520" stroke="#9c7650" stroke-width="3"/>
+    <path d="M-20 300 L0 340 L-4 300 Z M20 300 L0 340 L4 300 Z" fill="#a78058"/>
+    <rect x="-58" y="420" width="116" height="10" fill="#9c7650"/>
+    <!-- сумка -->
+    <path d="M50 400 Q62 370 76 400" fill="none" stroke="#7a2b2b" stroke-width="4"/>
+    <rect x="44" y="400" width="42" height="40" rx="6" fill="#8b2e2e"/>
+    <!-- руки: одна держит серьги у уха -->
+    <path d="M-44 310 Q-70 350 -60 400 Q-44 360 -40 330" fill="none" stroke="url(#coat)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M-44 306 Q-78 300 -52 250" fill="none" stroke="#b58d66" stroke-width="20" stroke-linecap="round"/>
+    <circle cx="-50" cy="244" r="10" fill="#f3d0b2"/>
+    <use href="#earrings" x="-50" y="228" transform="scale(1)"/>
+    <path d="M44 306 Q62 350 58 400" fill="none" stroke="url(#coat)" stroke-width="22" stroke-linecap="round"/>
+    <circle cx="58" cy="404" r="10" fill="#f3d0b2"/>
+    <!-- шея и голова -->
+    <rect x="-10" y="268" width="20" height="28" rx="8" fill="#e9bf9f"/>
+    <ellipse cx="0" cy="240" rx="37" ry="42" fill="#f3d0b2"/>
+    <!-- волосы: длинные светлые, собраны -->
+    <path d="M-40 250 Q-46 186 0 184 Q46 186 40 250 Q36 222 18 212 Q-6 206 -24 216 Q-36 228 -40 250 Z" fill="#a8743f"/>
+    <path d="M34 214 Q66 236 54 300 Q48 262 30 240 Z" fill="#a8743f"/>
+    <!-- лицо -->
+    <ellipse cx="-12" cy="244" rx="4" ry="5" fill="#2b2b2b"/><ellipse cx="14" cy="244" rx="4" ry="5" fill="#2b2b2b"/>
+    <path id="cBrowL" d="M-18 232 q6 -3 12 0" stroke="#7a4f2a" stroke-width="2.5" fill="none" stroke-linecap="round"/><path id="cBrowR" d="M8 232 q6 -3 12 0" stroke="#7a4f2a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-22" cy="258" rx="6" ry="3.5" fill="#f4a1a1" opacity=".5"/><ellipse cx="24" cy="258" rx="6" ry="3.5" fill="#f4a1a1" opacity=".5"/>
+    <path id="cMouth" d="M-8 266 Q2 262 12 266" stroke="#b03a2e" stroke-width="3" fill="none" stroke-linecap="round"/><path id="cMouthO" d="M-7 263 Q2 279 11 263 Q2 267 -7 263 Z" fill="#8a2020" opacity="0"/>
+  </g>
+
+  <!-- искры радости -->
+  <g id="spark" opacity="0" fill="#f0d27a">
+    <path d="M940 170 l6 14 14 6 -14 6 -6 14 -6 -14 -14 -6 14 -6z"/><path d="M1085 200 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z"/><path d="M905 250 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/><path d="M1100 140 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/>
+  </g>
+</svg>
+
+      <div class="bubble" id="bS"><span class="who">Ольга</span><span class="t"></span></div>
+      <div class="bubble" id="bC"><span class="who">Ирина</span><span class="t"></span></div>
+      <div class="caption" id="cap"></div>
+      <div class="card" id="card"><div class="brandline" id="cardBrand"></div><div class="ct" id="cardT"></div><div class="cs" id="cardS"></div><div id="cardX"></div></div>
+    </div>
+  </div>
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+// ===================== ПЕРСОНАЖИ: выражения лица =====================
+const FACE = {
+  s: { smile: { L: 'M-19 233 q6 -4 12 0', R: 'M9 233 q6 -4 12 0', M: 'M-10 264 Q2 274 14 264' },
+       stern: { L: 'M-19 229 l12 5', R: 'M9 234 l12 -5', M: 'M-9 268 L13 268' } },
+  c: { worried: { L: 'M-18 233 L-6 228', R: 'M8 228 L20 233', M: 'M-8 267 Q2 262 12 267' },
+       frown:   { L: 'M-18 228 L-6 233', R: 'M8 233 L20 228', M: 'M-8 270 Q2 259 12 270' },
+       neutral: { L: 'M-18 232 q6 -3 12 0', R: 'M8 232 q6 -3 12 0', M: 'M-8 265 L12 265' },
+       happy:   { L: 'M-18 230 q6 -5 12 0', R: 'M8 230 q6 -5 12 0', M: 'M-10 261 Q2 276 14 261' } }
+};
+const CLIENT_X = 1010;
+
+// ===================== СЦЕНАРИИ =====================
+// Сегмент: d — длительность (сек); say — {who:'s'|'c', text}; ms/mc — настроение; cap — подпись (сохраняется до смены, null — убрать);
+// card — заставка на весь экран; walk — клиент уходит; reset — вернуть сцену в начало; spark — искры радости
+const T = {
+  intro:   { d: 3.2, cap: { k: 'info', t: 'Ирина примерила серьги с бриллиантами — 38 900 ₽' }, ms: 'smile', mc: 'neutral' },
+  dorogo:  { d: 3.4, say: { who: 'c', text: '«Красиво… но дороговато»' }, mc: 'worried', cap: null },
+  justify: { d: 4.2, say: { who: 's', text: '«Так это же бриллианты, а не бижутерия! Цена оправдана»' }, ms: 'stern' },
+  think:   { d: 3.0, say: { who: 'c', text: '«Хм… Я, пожалуй, подумаю»' }, mc: 'frown' },
+  leaveBad:{ d: 2.8, walk: true, cap: { k: 'bad', t: '❌ Оправдывать цену = спорить с клиентом' } },
+  cheaper: { d: 4.2, say: { who: 's', text: '«Давайте покажу серьги подешевле — вот эти за 15 000»' }, ms: 'smile' },
+  notSame: { d: 3.6, say: { who: 'c', text: '«Ну… эти мне не так нравятся. Я, наверное, в другой раз»' }, mc: 'neutral' },
+  leaveMid:{ d: 2.8, walk: true, cap: { k: 'bad', t: '❌ Мы решили за клиентку, что ей дорого' } },
+  join:    { d: 4.2, say: { who: 's', text: '«Понимаю, сумма серьёзная. А с чем сравниваете?»' }, ms: 'smile', cap: { k: 'good', t: '✅ Присоединиться и уточнить' } },
+  budget:  { d: 3.2, say: { who: 'c', text: '«Думала уложиться тысяч в 30»' }, mc: 'neutral', cap: null },
+  asYouLike:{ d: 4.0, say: { who: 's', text: '«Ну, дешевле с бриллиантами не бывает. Как хотите»' }, ms: 'stern' },
+  goAway:  { d: 2.6, say: { who: 'c', text: '«Тогда я пойду»' }, mc: 'frown' },
+  leave2:  { d: 2.8, walk: true, cap: { k: 'bad', t: '❌ Клиентку оставили одну с сомнением' } },
+  inBudget:{ d: 4.0, say: { who: 's', text: '«Тогда вот серьги за 29 000 — как раз в бюджете»' }, ms: 'smile' },
+  takeThese:{ d: 3.4, say: { who: 'c', text: '«Хорошо… возьму эти»' }, mc: 'neutral', cap: { k: 'info', t: '🟡 Продажа есть, но не те серьги, что понравились' } },
+  value:   { d: 6.0, say: { who: 's', text: '«Такие серьги будут с вами годами. А Сплит можно оформить на 4 платежа без переплат — около 9 700 ₽ в месяц»' }, ms: 'smile', cap: { k: 'good', t: '✅ Ценность + удобная оплата' } },
+  tryAgain:{ d: 3.0, say: { who: 's', text: '«Давайте ещё раз примерим?»' } },
+  buy:     { d: 3.4, say: { who: 'c', text: '«Давайте оформим!»' }, mc: 'happy', spark: true, cap: { k: 'good', t: '🎉 Ирина купила серьги, которые ей понравились' } }
+};
+const SUMMARY = { d: 7, card: { cls: 'gold', brand: '585GOLD', t: 'Формула ответа на «дорого»', formula: true } };
+
+// Видео: линейный сценарий
+const VIDEO = [
+  { d: 3.2, card: { cls: 'red', brand: '585GOLD · ТРЕНАЖЁР', t: 'Клиент говорит «дорого»', s: 'Смотрим два ответа продавца' } },
+  T.intro, T.dorogo,
+  { d: 2.2, card: { cls: 'red', t: '❌ Как НЕ надо' } },
+  T.justify, T.think, T.leaveBad,
+  { d: 2.2, card: { cls: 'dark', t: '⏪ Перемотаем назад…' }, reset: true, cap: null, ms: 'smile', mc: 'neutral' },
+  { d: 2.2, card: { cls: 'green', t: '✅ А теперь — как надо' } },
+  T.dorogo, T.join, T.budget, T.value, T.tryAgain, T.buy,
+  SUMMARY
+];
+
+// Интерактив: граф узлов
+const NODES = {
+  start: { segs: [T.intro, T.dorogo], ask: 'Ирина: «Красиво… но дороговато». Что ответит Ольга?',
+    opts: [ ['«Так это же бриллианты, а не бижутерия! Цена оправдана»', 'A'], ['«Давайте покажу серьги подешевле — вот эти за 15 000»', 'B'], ['«Понимаю, сумма серьёзная. А с чем сравниваете?»', 'C'] ] },
+  A: { segs: [T.justify, T.think, T.leaveBad], end: { id: 'A', k: 'lose', t: '❌ Ирина ушла', p: 'Оправдывая цену, продавец спорит с клиенткой: получается, что она «не понимает ценности». Человек защищается и уходит «подумать».' } },
+  B: { segs: [T.cheaper, T.notSame, T.leaveMid], end: { id: 'B', k: 'mid', t: '🟡 Ирина ушла «в другой раз»', p: 'Продавец сам решил, что клиентке дорого, и обесценил серьги, которые ей понравились. Сначала нужно уточнить, что именно смущает.' } },
+  C: { segs: [T.join, T.budget], ask: 'Ирина: «Думала уложиться тысяч в 30». Что дальше?',
+    opts: [ ['«Ну, дешевле с бриллиантами не бывает. Как хотите»', 'C1'], ['«Тогда вот серьги за 29 000 — как раз в бюджете»', 'C2'], ['«Такие серьги будут с вами годами. А Сплит — 4 платежа без переплат, около 9 700 ₽ в месяц. Давайте ещё раз примерим?»', 'C3'] ] },
+  C1: { segs: [T.asYouLike, T.goAway, T.leave2], end: { id: 'C1', k: 'lose', t: '❌ Ирина ушла', p: 'Начали хорошо, но на бюджете сдались. «Как хотите» звучит как равнодушие — клиентку оставили одну с сомнением.' } },
+  C2: { segs: [T.inBudget, T.takeThese], end: { id: 'C2', k: 'mid', t: '🟡 Купила, но не то, что хотела', p: 'Продажа есть, но чек ниже, а Ирина уходит без серёг, которые ей понравились. Удобная оплата помогла бы сохранить её выбор.' } },
+  C3: { segs: [T.value, T.tryAgain, T.buy], end: { id: 'C3', k: 'win', t: '🎉 Ирина купила серьги мечты!', p: 'Ольга присоединилась, уточнила бюджет, показала ценность и предложила удобную оплату. Клиентка не спорит с ценой — она решает, как ей удобнее платить.' } }
+};
+const ALL_ENDS = ['A', 'B', 'C1', 'C2', 'C3'];
+
+// ===================== ДВИЖОК =====================
+const $ = id => document.getElementById(id);
+const setD = (id, d) => $(id).setAttribute('d', d);
+const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+const total = segs => segs.reduce((a, s) => a + s.d, 0);
+const BASE = { ms: 'smile', mc: 'neutral', cx: CLIENT_X, cap: null, spark: 0 };
+
+function stateAt(segs, t, base) {
+  const st = Object.assign({}, base), start0 = 0; let acc = 0;
+  st.say = null; st.card = null; st.talk = false;
+  for (const s of segs) {
+    if (t < acc) break;
+    const p = Math.min(1, (t - acc) / s.d), active = t < acc + s.d;
+    if (s.reset) { st.cx = CLIENT_X; st.spark = 0; }
+    if (s.ms) st.ms = s.ms; if (s.mc) st.mc = s.mc;
+    if ('cap' in s) st.cap = s.cap;
+    if (s.spark) st.spark = 1;
+    if (s.walk) st.cx = (s.walkFrom ?? CLIENT_X) + (1500 - (s.walkFrom ?? CLIENT_X)) * ease(p);
+    if (active) {
+      st.local = t - acc; st.p = p;
+      if (s.say) st.say = Object.assign({ p, local: t - acc, d: s.d }, s.say);
+      if (s.card) st.card = Object.assign({ p, local: t - acc, d: s.d }, s.card);
+    }
+    acc += s.d;
+  }
+  st.t = t;
+  return st;
+}
+
+function draw(st) {
+  const t = st.t;
+  // продавец
+  const fs = FACE.s[st.ms] || FACE.s.smile, fc = FACE.c[st.mc] || FACE.c.neutral;
+  setD('sBrowL', fs.L); setD('sBrowR', fs.R); setD('sMouth', fs.M);
+  setD('cBrowL', fc.L); setD('cBrowR', fc.R); setD('cMouth', fc.M);
+  const sTalk = st.say && st.say.who === 's' && st.say.p < .9 && Math.floor(st.say.local * 7) % 2 === 0;
+  const cTalk = st.say && st.say.who === 'c' && st.say.p < .9 && Math.floor(st.say.local * 7) % 2 === 0;
+  $('sMouthO').setAttribute('opacity', sTalk ? 1 : 0); $('sMouth').setAttribute('opacity', sTalk ? 0 : 1);
+  $('cMouthO').setAttribute('opacity', cTalk ? 1 : 0); $('cMouth').setAttribute('opacity', cTalk ? 0 : 1);
+  $('sInner').setAttribute('transform', `translate(0 ${(Math.sin(t * 2.2) * 1.6).toFixed(2)})`);
+  const walking = st.cx !== CLIENT_X;
+  const bob = walking ? Math.abs(Math.sin(t * 9)) * -6 : Math.sin(t * 2 + 1) * 1.4;
+  $('client').setAttribute('transform', `translate(${st.cx.toFixed(1)} ${bob.toFixed(2)})`);
+  $('spark').setAttribute('opacity', st.spark ? (0.55 + 0.45 * Math.sin(t * 6)).toFixed(2) : 0);
+  // реплики
+  ['s', 'c'].forEach(w => {
+    const b = $(w === 's' ? 'bS' : 'bC');
+    if (st.say && st.say.who === w) {
+      const txt = st.say.text, n = Math.min(txt.length, Math.ceil(txt.length * st.say.p / 0.45));
+      b.querySelector('.t').textContent = txt.slice(0, n);
+      b.style.opacity = Math.min(1, st.say.local / 0.2, (st.say.d - st.say.local) / 0.2);
+    } else b.style.opacity = 0;
+  });
+  // подпись
+  const cap = $('cap');
+  if (st.cap) { cap.className = 'caption ' + st.cap.k; cap.textContent = st.cap.t; cap.style.opacity = 1; } else cap.style.opacity = 0;
+  // заставка
+  const card = $('card');
+  if (st.card) {
+    card.className = 'card ' + st.card.cls;
+    $('cardBrand').textContent = st.card.brand || ''; $('cardT').textContent = st.card.t; $('cardS').textContent = st.card.s || '';
+    $('cardX').innerHTML = st.card.formula ? '<div class="formula"><div><b>1</b>Присоединиться</div><div><b>2</b>Уточнить</div><div><b>3</b>Показать ценность</div><div><b>4</b>Удобная оплата</div></div><div class="cs" style="margin-top:24px">Клиент не спорит с ценой — он выбирает, как удобнее платить</div>' : '';
+    const fade = Math.min(1, st.card.local / 0.3, (st.card.d - st.card.local) / 0.3);
+    card.style.opacity = st.card.formula ? Math.min(1, st.card.local / 0.4) : fade;
+  } else card.style.opacity = 0;
+  return st;
+}
+
+// масштабирование сцены
+function fit() { const w = $('box').clientWidth; $('stage').style.transform = `scale(${w / 1280})`; }
+window.addEventListener('resize', fit);
+
+// ===================== РЕЖИМ ЗАПИСИ ВИДЕО =====================
+const params = new URLSearchParams(location.search);
+if (params.get('capture')) {
+  document.body.classList.add('capture');
+  window.VIDEO_TOTAL = total(VIDEO);
+  window.renderFrame = t => draw(stateAt(VIDEO, t, BASE));
+  fit(); renderFrame(0);
+} else {
+  // ===================== ИНТЕРАКТИВ =====================
+  let base = Object.assign({}, BASE), raf = null, lastChoiceNode = null, found = [];
+  try { found = JSON.parse(localStorage.getItem('dorogo585_found') || '[]'); } catch (e) {}
+  const showFound = () => $('found').textContent = `Найдено концовок: ${found.length} из ${ALL_ENDS.length}`;
+  showFound(); fit();
+
+  function endState(segs, b) { const st = stateAt(segs, total(segs) - 0.001, b); st.say = null; st.card = null; return st; }
+  function play(key) {
+    const node = NODES[key], segs = node.segs, dur = total(segs), t0 = performance.now();
+    cancelAnimationFrame(raf);
+    $('panel').innerHTML = '<div class="sub" id="sub"></div><button class="skip" id="skipBtn">Пропустить ⏭</button>';
+    let skip = false; $('skipBtn').onclick = () => skip = true;
+    const tick = now => {
+      let t = (now - t0) / 1000; if (skip) t = dur;
+      const st = draw(stateAt(segs, Math.min(t, dur - 0.001), base));
+      const sub = $('sub');
+      if (sub) sub.innerHTML = st.say ? `<span class="w ${st.say.who}">${st.say.who === 's' ? 'Ольга' : 'Ирина'}</span>${st.say.text}` : (st.cap ? `<span class="w i">Подсказка</span>${st.cap.t}` : '');
+      if (t < dur) { raf = requestAnimationFrame(tick); return; }
+      base = endState(segs, base);
+      if (node.ask) { lastChoiceNode = key; ask(node); } else finish(node.end);
+    };
+    raf = requestAnimationFrame(tick);
+  }
+  function ask(node) {
+    $('panel').innerHTML = `<div class="q">🤔 ${node.ask}</div><div class="opts">${node.opts.map((o, i) => `<button class="opt" data-n="${o[1]}"><span class="l">${'АБВ'[i]}</span><span>${o[0]}</span></button>`).join('')}</div>`;
+    $('panel').querySelectorAll('.opt').forEach(b => b.onclick = () => play(b.dataset.n));
+  }
+  function finish(end) {
+    if (!found.includes(end.id)) { found.push(end.id); try { localStorage.setItem('dorogo585_found', JSON.stringify(found)); } catch (e) {} }
+    showFound();
+    if (end.k === 'win') { const st = draw(stateAt([SUMMARY], 0.8, base)); }
+    $('panel').innerHTML = `<div class="end ${end.k}"><h3>${end.t}</h3><p>${end.p}</p></div>
+      <div class="rule">💡 <b>Формула ответа на «дорого»:</b> присоединиться → уточнить → показать ценность → предложить удобную оплату.</div>
+      <div class="btns"><button class="btn btn-red" id="againBtn">↩ Попробовать другой ответ</button><button class="btn btn-ghost" id="restartBtn">⏮ Сначала</button></div>`;
+    $('againBtn').onclick = () => {
+      const path = lastChoiceNode === 'C' ? NODES.start.segs.concat(NODES.C.segs) : NODES.start.segs;
+      base = endState(path, Object.assign({}, BASE));
+      draw(Object.assign({}, base, { say: null, card: null, t: 0 }));
+      ask(NODES[lastChoiceNode]);
+    };
+    $('restartBtn').onclick = () => { base = Object.assign({}, BASE); play('start'); };
+  }
+  // стартовый экран
+  draw(stateAt([{ d: 1, card: { cls: 'red', brand: '585GOLD · ТРЕНАЖЁР', t: 'Клиент говорит «дорого»', s: 'Вы — продавец Ольга. Выбирайте ответ и смотрите, чем всё закончится' } }], 0.5, BASE));
+  $('panel').innerHTML = `<div class="start"><p>Сценка с двумя развилками и пятью разными концовками. Найдёте все?</p><button class="btn btn-red" id="goBtn">▶ Начать</button></div>`;
+  $('goBtn').onclick = () => play('start');
+}
+</script>
+</body>
+</html>
