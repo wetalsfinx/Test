@@ -7,7 +7,7 @@
     
     <!-- 🔥 FIREBASE -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -161,13 +161,13 @@
         <div class="register-form" id="registerForm">
             <input type="text" id="userName" placeholder="Введите имя и фамилию" autocomplete="off">
             <select id="userCity">
-                <option value="">Выберите город</option>
-                <option value="Уфа">Уфа</option>
+                <option value="">Выберите магазин</option>
                 <option value="Екатеринбург">Екатеринбург</option>
-                <option value="Санкт-Петербург, Московский, 2">Санкт-Петербург, Московский, 2</option>
-                <option value="Санкт-Петербург, Новаторов, 112">Санкт-Петербург, Новаторов, 112</option>
-                <option value="Калининград">Калининград</option>
-                <option value="Нижний Тагил">Нижний Тагил</option>
+                <option value="Владимир">Владимир</option>
+                <option value="Чайковский">Чайковский</option>
+                <option value="Тольятти">Тольятти</option>
+                <option value="СПб, Заневский, 67, ТК Заневский Каскад">СПб, Заневский, 67, ТК Заневский Каскад</option>
+                <option value="СПб, Стародеревенская, 36, ТД Крокус">СПб, Стародеревенская, 36, ТД Крокус</option>
             </select>
             <button class="btn-primary" onclick="startGame()">🚀 Начать тренировку</button>
         </div>
@@ -214,20 +214,27 @@
         appId: "1:195469188947:web:af9671f88b0e70eceecba6"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const db = firebase.firestore();
+    // Результаты пишем в ту же базу, что и остальные тренажёры, — их видит дашборд
+    function saveResult(result) {
+        return Promise.race([
+            db.collection('results').doc('service').collection('items').add(result),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))
+        ]);
+    }
 
     // ========== 🔄 АВТОДОЗАГРУЗКА ==========
     window.addEventListener('load', async () => {
         const backup = JSON.parse(localStorage.getItem('service_backup') || '[]');
         if (backup.length > 0) {
             console.log(`🔄 Найдено ${backup.length} несохранённых результатов. Отправляем...`);
+            const left = [];
             for (let result of backup) {
                 try {
-                    const newRef = db.ref('results/service').push();
-                    await newRef.set(result);
-                } catch(e) { console.error(' Ошибка:', e.message); }
+                    await saveResult(result);
+                } catch(e) { console.error('Ошибка:', e.message); left.push(result); }
             }
-            localStorage.removeItem('service_backup');
+            localStorage.setItem('service_backup', JSON.stringify(left));
         }
     });
 
@@ -264,7 +271,7 @@
         const name = document.getElementById('userName').value.trim();
         const city = document.getElementById('userCity').value;
         if (!name) { alert('Введите имя'); return; }
-        if (!city) { alert('Выберите город'); return; }
+        if (!city) { alert('Выберите магазин'); return; }
         
         currentUserName = name;
         currentUserCity = city;
@@ -307,6 +314,8 @@
         
         answers.push({
             principle: scenario.principle,
+            situation: scenario.situation,
+            action: scenario.action,
             selected: choice,
             correct: scenario.correct,
             isCorrect: isCorrect
@@ -402,8 +411,7 @@
             localBackup.push(resultData);
             localStorage.setItem('service_backup', JSON.stringify(localBackup));
             
-            const newRef = db.ref('results/service').push();
-            await newRef.set(resultData);
+            await saveResult(resultData);
             
             const backup = JSON.parse(localStorage.getItem('service_backup') || '[]');
             localStorage.setItem('service_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
