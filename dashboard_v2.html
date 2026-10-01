@@ -168,6 +168,17 @@
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   .dz-bar { height: 10px; background: var(--line); border-radius: 6px; overflow: hidden; margin-top: 12px; } .dz-bar i { display: block; height: 100%; background: var(--red); transition: width .2s; }
   @media (max-width: 640px) { .rs-bar > * { flex: 1 1 100%; min-width: 0; max-width: 100%; } .rs-bar input { min-width: 0 !important; } }
+  .ts-kpis .kpi .v { font-size: 26px; } .ts-kpis { margin: 12px 0 14px; }
+  .ts-seg { flex-wrap: wrap; margin-top: 4px; }
+  .ts-cov { display: flex; align-items: center; gap: 8px; min-width: 130px; } .ts-cov b { font-size: 13px; min-width: 38px; }
+  .ts-bar { flex: 1; height: 10px; background: var(--soft); border-radius: 6px; overflow: hidden; min-width: 60px; } .ts-bar i { display: block; height: 100%; border-radius: 6px; }
+  .ts-bar i.good, .ts-dist i.good { background: #22c55e; } .ts-bar i.mid, .ts-dist i.mid { background: #f59e0b; } .ts-bar i.bad, .ts-dist i.bad { background: #ef4444; } .ts-bar i.none { background: var(--line); }
+  .ts-dist { display: flex; height: 22px; border-radius: 8px; overflow: hidden; min-width: 110px; } .ts-dist i { display: grid; place-items: center; color: #fff; font-style: normal; font-size: 11.5px; font-weight: 800; }
+  tr.ts-all td { background: var(--soft); font-weight: 700; }
+  .ts-qs { display: grid; gap: 7px; margin-top: 8px; } .ts-q { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr) 46px; gap: 10px; align-items: center; font-size: 13.5px; } .ts-q b { text-align: right; } .ts-q .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  tr.ts-all .ts-bar { background: #fff; }
+  @media (max-width: 640px) { .ts-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .ts-kpis .kpi { padding: 12px; } .ts-kpis .kpi .v { font-size: 22px; } .ts-kpis .kpi:first-child { grid-column: 1 / -1; } }
+  @media (max-width: 640px) { .ts-q { grid-template-columns: minmax(0, 1fr) 70px 40px; } }
 </style>
 <script src="stores.js"></script>
 </head>
@@ -194,6 +205,12 @@
   <!-- ============ ОБЗОР ============ -->
   <section class="tab on" id="t-over">
     <div class="kpis" id="ovKpis"></div>
+    <div class="card"><h2>📊 Сводка по тесту, тренажёрам и аттестации</h2><p class="hint" id="tsHint"></p>
+      <div class="seg ts-seg" id="tsSeg"></div>
+      <div class="kpis ts-kpis" id="tsKpis"></div>
+      <div class="tw" id="tsTable"></div>
+      <h2 style="margin-top:18px;font-size:15px" id="tsQh"></h2><div id="tsQs"></div>
+    </div>
     <div class="grid2">
       <div class="card"><h2>🪜 Путь обучения</h2><p class="hint">Сколько сотрудников дошли до каждого этапа.</p><div class="funnel" id="ovFunnel"></div></div>
       <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождений тестов, тренажёров и аттестации по дням.</p><div id="ovDays"></div></div>
@@ -436,6 +453,7 @@ function renderAll() { renderOverview(); renderRank(); renderSkills(); renderEmp
 
 // ===================== ОБЗОР =====================
 function renderOverview() {
+  renderTestSum();
   const P = people(), withExam = P.filter(p => p.exam), withBoth = P.filter(p => p.growth != null);
   const g = avg(withBoth.map(p => p.growth));
   $('ovKpis').innerHTML = [
@@ -797,6 +815,42 @@ $('dzGo').onclick = async () => {
   box.innerHTML = fail ? `<div class="empty">⚠️ Удалено ${done}, не удалось ${fail}. Нажмите «Обновить» и повторите.</div>` : `<div class="empty">✅ База очищена: удалено ${done} записей</div>`;
   $('dzWord').value = ''; SEL.clear(); await load();
 };
+
+
+// ===================== СВОДКА ПО ИНСТРУМЕНТАМ =====================
+let tsType = store.get('dash2_ts', 'test');
+const tsTypes = () => ['test'].concat(TRAINERS.filter(t => RECS.some(r => r.type === t)), ['final_exam_1']);
+const tsLabel = t => t === 'test' ? '📝 Входной тест' : t === 'final_exam_1' ? '🏆 Аттестация' : TICON[t] + ' ' + TSHORT[t];
+const tsRec = (p, t) => t === 'test' ? p.test : t === 'final_exam_1' ? p.exam : (p.tools[t] ? p.tools[t].firstRec : null);
+function renderTestSum() {
+  const types = tsTypes(); if (!types.includes(tsType)) tsType = 'test';
+  $('tsSeg').innerHTML = types.map(t => `<button data-v="${t}" class="${t === tsType ? 'on' : ''}">${tsLabel(t)}</button>`).join('');
+  $('tsSeg').querySelectorAll('button').forEach(b => b.onclick = () => { tsType = b.dataset.v; store.set('dash2_ts', tsType); renderTestSum(); });
+  $('tsHint').textContent = tsType === 'test' ? 'Первая попытка каждого сотрудника.' : tsType === 'final_exam_1' ? 'Последняя попытка аттестации «Одна смена».' : `${TOOLS[tsType]}: первая попытка каждого сотрудника — реальный уровень до пересдач.`;
+  const AP = Object.values(PEOPLE).filter(p => !STORE || p.city === STORE);
+  const cities = STORE ? [STORE] : STORES.concat([...new Set(AP.filter(p => tsRec(p, tsType)).map(p => p.city))].filter(c => !STORES.includes(c)));
+  const row = (c, ps, isAll) => {
+    const v = ps.map(p => tsRec(p, tsType)).filter(Boolean).map(r => r.percent);
+    return { c, isAll, n: v.length, avg: avg(v), min: v.length ? Math.min(...v) : null, max: v.length ? Math.max(...v) : null, g: v.filter(x => x >= 80).length, m: v.filter(x => x >= 60 && x < 80).length, b: v.filter(x => x < 60).length };
+  };
+  const rows = cities.map(c => row(c, AP.filter(p => p.city === c))), all = row('Все магазины', AP, true);
+  const pc = x => all.n ? Math.round(x / all.n * 100) + '% прошедших' : '—';
+  $('tsKpis').innerHTML = [
+    ['Прошли', all.n, all.n ? `сотрудников · магазинов: ${rows.filter(r => r.n).length} из ${cities.length}` : 'пока никто'],
+    ['Средний результат', all.avg == null ? '—' : all.avg + '%', all.n ? `от ${all.min}% до ${all.max}%` : 'пока нет результатов'],
+    ['🟢 80% и выше', all.g, pc(all.g)], ['🟡 60–79%', all.m, pc(all.m)], ['🔴 ниже 60%', all.b, pc(all.b)],
+  ].map(k => `<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
+  const dist = r => r.n ? `<div class="ts-dist" title="80%+: ${r.g} · 60–79%: ${r.m} · ниже 60%: ${r.b}">${r.g ? `<i class="good" style="flex:${r.g}">${r.g}</i>` : ''}${r.m ? `<i class="mid" style="flex:${r.m}">${r.m}</i>` : ''}${r.b ? `<i class="bad" style="flex:${r.b}">${r.b}</i>` : ''}</div>` : '<span class="muted">—</span>';
+  const tr = r => `<tr class="${r.isAll ? 'ts-all' : ''}"><td><b>${esc(r.c)}</b></td><td class="num"><b>${r.n || '<span class="muted">0</span>'}</b></td><td class="num">${pill(r.avg)}</td><td class="num muted">${r.n ? r.min + '–' + r.max + '%' : '—'}</td><td>${dist(r)}</td></tr>`;
+  $('tsTable').innerHTML = `<table><thead><tr><th>Магазин</th><th class="num">Прошли, чел.</th><th class="num">Средний</th><th class="num">Мин–макс</th><th>🟢 / 🟡 / 🔴</th></tr></thead><tbody>${rows.map(tr).join('')}${cities.length > 1 ? tr(all) : ''}</tbody></table>`;
+  // вопросы / ситуации
+  const qm = {}, order = [];
+  AP.map(p => tsRec(p, tsType)).filter(Boolean).forEach(r => itemsOf(r).forEach(([n, , v]) => { if (!qm[n]) { qm[n] = []; order.push(n); } qm[n].push(v); }));
+  const isTest = tsType === 'test';
+  const qs = order.map(n => ({ n: isTest && TEST_TOPICS.indexOf(n) >= 0 ? (TEST_TOPICS.indexOf(n) + 1) + '. ' + n : n, v: avg(qm[n]) })).sort((a, b) => a.v - b.v);
+  $('tsQh').textContent = isTest ? '📊 Вопросы теста: от трудных к лёгким' : tsType === 'final_exam_1' ? '📊 Клиенты аттестации: от трудных к лёгким' : '📊 Ситуации тренажёра: от трудных к лёгким';
+  $('tsQs').innerHTML = qs.length ? `<div class="ts-qs">${qs.map(q => `<div class="ts-q"><span class="nm" title="${esc(q.n)}">${esc(q.n)}</span><div class="ts-bar"><i class="${cls(q.v)}" style="width:${Math.max(q.v, 2)}%"></i></div><b>${q.v}%</b></div>`).join('')}</div><p class="hint" style="margin-top:8px">${isTest ? '% сотрудников, ответивших верно' : 'Средний результат по ситуации'}. Сверху — самое трудное: на это стоит сделать акцент в обучении.</p>` : '<div class="empty">Появится после первых прохождений</div>';
+}
 
 // ===================== НАВИГАЦИЯ =====================
 function showTab(t) { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('on', s.id === 't-' + t)); store.set('dash2_tab', t); }
