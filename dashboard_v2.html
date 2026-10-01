@@ -169,6 +169,7 @@
   .dz-bar { height: 10px; background: var(--line); border-radius: 6px; overflow: hidden; margin-top: 12px; } .dz-bar i { display: block; height: 100%; background: var(--red); transition: width .2s; }
   @media (max-width: 640px) { .rs-bar > * { flex: 1 1 100%; min-width: 0; max-width: 100%; } .rs-bar input { min-width: 0 !important; } }
 </style>
+<script src="stores.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -293,7 +294,7 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><button class="x" id="modalX">✕</button><div id="modalBody"></div></div></div>
 <script>
 // ===================== НАСТРОЙКИ =====================
-const STORES = ['Екатеринбург', 'Владимир', 'Чайковский', 'Тольятти', 'СПб, Заневский, 67, ТК Заневский Каскад', 'СПб, Стародеревенская, 36, ТД Крокус'];
+const STORES = (window.STORES_585 || ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик']);
 const SK = [
   { k: 'K1', n: 'Приветствие и речевая пластинка', short: 'Приветствие', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
   { k: 'K2', n: 'Инициатива и контакт', short: 'Контакт', tr: { name: 'Типы клиентов', url: 'client_type_trainer.html' } },

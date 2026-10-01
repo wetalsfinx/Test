@@ -358,6 +358,7 @@
             .profile-score { margin-left: 0; width: 100%; text-align: center; }
         }
     </style>
+<script src="stores.js"></script>
 </head>
 <body>
 <div class="container">
@@ -612,7 +613,7 @@
     const db = firebase.firestore();
 
     // 🔥 Единый список новых магазинов для всех разделов
-    const NEW_STORES = ['Екатеринбург','Владимир','Чайковский','Тольятти','СПб, Заневский, 67, ТК Заневский Каскад','СПб, Стародеревенская, 36, ТД Крокус'];
+    const NEW_STORES = (window.STORES_585 || ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик']);
     const CITY_SETS = {
         final_exam: NEW_STORES,
         final_exam_1: NEW_STORES,
@@ -1000,7 +1001,7 @@
 
 
     // ================= 💎 ЛАЙФХАКИ: кто открыл и что делал =================
-    const LH_STORES = ['Екатеринбург', 'Владимир', 'Чайковский', 'Тольятти', 'СПб, Заневский, 67, ТК Заневский Каскад', 'СПб, Стародеревенская, 36, ТД Крокус'];
+    const LH_STORES = (window.STORES_585 || ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик']);
     function renderLifehacksTab() {
         const ev = lhData.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
         const opens = ev.filter(e => e.event === 'open');

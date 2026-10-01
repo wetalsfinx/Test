@@ -208,6 +208,7 @@
     .pr-no { color: #c41c2a; } .pr-yes { color: #0f8a5f; font-weight: 600; }
   }
 </style>
+<script src="stores.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -510,7 +511,7 @@
   const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
 
   // ===================== КТО ЗАШЁЛ: регистрация и статистика =====================
-  const STORES = ['Екатеринбург', 'Владимир', 'Чайковский', 'Тольятти', 'СПб, Заневский, 67, ТК Заневский Каскад', 'СПб, Стародеревенская, 36, ТД Крокус'];
+  const STORES = (window.STORES_585 || ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик']);
   const PAGE_VERSION = 'lifehacks_v5';
   let db = null;
   try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); } catch (e) { console.warn('Статистика недоступна:', e); }
