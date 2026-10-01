@@ -509,7 +509,8 @@ let skMode = 'growth';
 function storeSkill(ps, stage) { const m = {}; ps.forEach(p => { const s = typeof stage === 'function' ? stage(p) : p[stage]; if (!s) return; Object.entries(s).forEach(([k, v]) => { if (v != null) (m[k] = m[k] || []).push(v); }); }); return Object.fromEntries(SK.map(s => [s.k, { v: avg(m[s.k] || []), n: (m[s.k] || []).length }])); }
 function renderSkills() {
   const AP = Object.values(PEOPLE);
-  const cities = (STORE ? [STORE] : STORES.concat([...new Set(AP.map(p => p.city))].filter(c => !STORES.includes(c)))).filter(c => AP.some(p => p.city === c));
+  // магазины из stores.js показываем всегда (даже без результатов), прежние — только если есть данные
+  const cities = STORE ? [STORE] : STORES.concat([...new Set(AP.map(p => p.city))].filter(c => !STORES.includes(c)));
   const groups = cities.map(c => ({ c, ps: AP.filter(p => p.city === c) }));
   if (!STORE && groups.length > 1) groups.push({ c: 'Все магазины', ps: AP, all: true });
   const AT = activeTr(), tcur = $('skTr').value;
