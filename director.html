@@ -200,7 +200,7 @@ function render(all) {
   const st = STG.map(([k], i) => cnt[i] ? skAvg(ps.filter(p => i === 0 ? p.test : i === 1 ? p.train : p.exam), k) : null);
   const last = [2, 1, 0].find(i => st[i]); // последний пройденный этап
   const net = last != null ? skAvg(all.filter(p => last === 0 ? p.test : last === 1 ? p.train : p.exam), STG[last][0]) : null;
-  let html = `<header class="hero"><div class="brand">585GOLD · НАВЫКИ КОМАНДЫ</div><h1>${esc(MY)}</h1><p>Как развиваются навыки вашей команды: входной тест → тренажёры → аттестация. Только общий результат магазина, без имён.</p><span class="upd">🔄 Данные на ${now} — обновляются сами при каждом открытии</span></header>
+  let html = `<header class="hero"><div class="brand">585GOLD · НАВЫКИ КОМАНДЫ</div><h1>${esc(MY)}</h1><p>Как развиваются навыки вашей команды: входной тест → тренажёры → аттестация. Только общий результат магазина, без имён.</p><span class="upd">🔄 Данные на ${now} · обновляются сами каждые 15 минут</span></header>
   <section><h2>Сколько человек прошли</h2><div class="stages">${STG.map(([, l], i) => `<div class="stg ${cnt[i] ? 'on' : ''}"><div class="l">${l}</div><div class="v">${cnt[i]}</div><div class="s">${cnt[i] ? 'сотрудников' : 'пока никто'}</div></div>`).join('')}</div></section>`;
   if (last == null) {
     html += `<section><div class="card empty">📭 Пока никто из команды не прошёл входной тест.<br>Как только появятся первые результаты — здесь будет картина навыков.</div></section>`;
@@ -220,7 +220,12 @@ function render(all) {
 (async () => {
   if (!MY) { renderPicker(); return; }
   if (!db) { $('app').innerHTML = '<div class="empty">⚠️ Не удалось подключиться к базе. Обновите страницу.</div>'; return; }
-  try { render(await loadPeople()); } catch (e) { $('app').innerHTML = '<div class="empty">⚠️ Ошибка загрузки: ' + esc(e.message) + '</div>'; }
+  let last = 0, busy = false;
+  const refresh = async () => { if (busy) return; busy = true; try { const y = window.scrollY; render(await loadPeople()); window.scrollTo(0, y); last = Date.now(); } catch (e) { if (!last) $('app').innerHTML = '<div class="empty">⚠️ Ошибка загрузки: ' + esc(e.message) + '</div>'; } busy = false; };
+  await refresh();
+  // автообновление: каждые 15 минут, пока страница открыта, и сразу при возврате на вкладку, если данные старше 5 минут
+  setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, 15 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - last > 5 * 60 * 1000) refresh(); });
 })();
 </script>
 </body>
