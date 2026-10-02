@@ -68,6 +68,7 @@
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
   .toolbar input, .toolbar select { padding: 9px 12px; border: 2px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 14px; background: #fff; }
   a.btn { display: inline-block; text-decoration: none; }
+  .att { font-size: 11px; color: var(--ink-4); margin-top: 3px; white-space: nowrap; font-weight: 600; } .att.many { color: #9a5b00; background: rgba(245,158,11,.16); border-radius: 8px; padding: 1px 6px; display: inline-block; }
   .emp-bar { flex-wrap: nowrap; } .emp-sel { flex: 1; min-width: 0; max-width: 420px; padding: 10px 12px; border: 2px solid var(--line); border-radius: 12px; font: inherit; font-weight: 700; font-size: 14.5px; background: #fff; cursor: pointer; } .emp-sel:focus { outline: none; border-color: var(--red); } .emp-bar .btn { padding: 9px 13px; } #empPos { white-space: nowrap; font-size: 13px; }
   .dl-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); } .dl-row:first-child { border-top: none; } .dl-row span { white-space: nowrap; }
   .btn { border: 1px solid var(--line); background: #fff; color: var(--ink-2); padding: 9px 14px; border-radius: 12px; font-family: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; }
@@ -231,7 +232,7 @@
   <section class="tab" id="t-rank">
     <div class="card">
       <h2>🏆 Рейтинг сотрудников</h2>
-      <p class="hint">Одна строка — один сотрудник. Входной тест и каждый тренажёр — по первой попытке (под ней: сколько попыток и лучший результат), аттестация — последняя. Нажмите на заголовок, чтобы отсортировать, на строку — чтобы открыть карточку.</p>
+      <p class="hint">Одна строка — один сотрудник. Входной тест и каждый тренажёр — по первой попытке, аттестация — по последней. Под результатом — сколько было попыток; 🔁 — если больше одной (и лучший результат). Нажмите на заголовок, чтобы отсортировать, на строку — чтобы открыть карточку.</p>
       <div class="toolbar"><input id="rkSearch" placeholder="🔍 Поиск по имени"><div class="seg" id="rkStage"><button data-v="all" class="on">Все</button><button data-v="exam">Прошли аттестацию</button><button data-v="noexam">Без аттестации</button></div><button class="btn" id="rkCsv">📥 CSV</button></div>
       <div class="tw" id="rkTable"></div>
     </div>
@@ -509,6 +510,8 @@ function rkRows() {
   return people().filter(p => !q || p.name.toLowerCase().includes(q)).filter(p => rkStage === 'all' || (rkStage === 'exam' ? p.exam : !p.exam))
     .map(p => ({ p, name: p.name, city: p.city, test: p.test ? p.test.percent : null, ...Object.fromEntries(TRAINERS.map(t => ['t_' + t, p.tools[t] ? p.tools[t].first : null])), exam: p.exam ? p.exam.percent : null, growth: p.growth, revenue: p.revenue }));
 }
+const plAtt = n => n % 10 === 1 && n % 100 !== 11 ? 'попытка' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'попытки' : 'попыток';
+const attN = (rs, last) => { const n = rs.length; if (!n) return ''; if (n === 1) return '<div class="att">1 попытка</div>'; const best = Math.max(...rs.map(x => x.percent)); return `<div class="att many" title="${last ? 'в таблице — последняя попытка' : 'в таблице — первая попытка'}; лучшая — ${best}%">🔁 ${n} ${plAtt(n)} · лучш. ${best}%</div>`; };
 function renderRank() {
   const rows = rkRows();
   const val = r => r[rkSort];
@@ -516,7 +519,7 @@ function renderRank() {
   const H = (k, t, num) => `<th class="sort ${num ? 'num' : ''} ${rkSort === k ? 'on' : ''}" data-k="${k}">${t}${rkSort === k ? (rkDir < 0 ? ' ▼' : ' ▲') : ''}</th>`;
   const medal = i => ['🥇', '🥈', '🥉'][i] || `<span class="pos">${i + 1}</span>`;
   const ranked = !['name', 'city'].includes(rkSort); const AT = activeTr();
-  $('rkTable').innerHTML = rows.length ? `<table><thead><tr><th></th>${H('name', 'Сотрудник')}${H('city', 'Магазин')}${H('test', 'Вход', 1)}${AT.map(t => H('t_' + t, TICON[t] + ' ' + TSHORT[t], 1)).join('')}${H('exam', 'Аттестация', 1)}${H('growth', 'Рост', 1)}<th>Уровень</th>${H('revenue', 'Выручка смены', 1)}</tr></thead><tbody>${rows.map((r, i) => `<tr class="click" data-k="${esc(r.p.key)}"><td class="medal">${ranked && val(r) != null && rkDir < 0 ? medal(i) : ''}</td><td><b>${esc(r.name)}</b><div><button class="btn sm" data-ans="${esc(r.p.key)}" style="margin-top:4px">📄 Ответы ▾</button></div></td><td class="muted">${esc(r.city)}</td><td class="num">${pill(r.test)}</td>${AT.map(t => `<td class="num">${pill(r['t_' + t])}${r.p.tools[t] && r.p.tools[t].n > 1 ? `<div class="muted" title="попыток / лучшая">×${r.p.tools[t].n} · ${r.p.tools[t].best}%</div>` : ''}</td>`).join('')}<td class="num">${pill(r.exam)}</td><td class="num">${delta(r.growth)}</td><td>${r.p.level ? `<span class="lvl ${r.p.level[1]}">${r.p.level[0]}</span>` : '<span class="muted">—</span>'}</td><td class="num">${r.revenue != null ? rub(r.revenue) : '<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">Нет сотрудников по этим условиям</div>';
+  $('rkTable').innerHTML = rows.length ? `<table><thead><tr><th></th>${H('name', 'Сотрудник')}${H('city', 'Магазин')}${H('test', 'Вход', 1)}${AT.map(t => H('t_' + t, TICON[t] + ' ' + TSHORT[t], 1)).join('')}${H('exam', 'Аттестация', 1)}${H('growth', 'Рост', 1)}<th>Уровень</th>${H('revenue', 'Выручка смены', 1)}</tr></thead><tbody>${rows.map((r, i) => `<tr class="click" data-k="${esc(r.p.key)}"><td class="medal">${ranked && val(r) != null && rkDir < 0 ? medal(i) : ''}</td><td><b>${esc(r.name)}</b><div><button class="btn sm" data-ans="${esc(r.p.key)}" style="margin-top:4px">📄 Ответы ▾</button></div></td><td class="muted">${esc(r.city)}</td><td class="num">${pill(r.test)}${attN(r.p.recs.filter(x => x.type === 'test'))}</td>${AT.map(t => `<td class="num">${pill(r['t_' + t])}${attN(r.p.recs.filter(x => x.type === t))}</td>`).join('')}<td class="num">${pill(r.exam)}${attN(r.p.recs.filter(x => x.type === 'final_exam_1'), true)}</td><td class="num">${delta(r.growth)}</td><td>${r.p.level ? `<span class="lvl ${r.p.level[1]}">${r.p.level[0]}</span>` : '<span class="muted">—</span>'}</td><td class="num">${r.revenue != null ? rub(r.revenue) : '<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">Нет сотрудников по этим условиям</div>';
   $('rkTable').querySelectorAll('th.sort').forEach(th => th.onclick = () => { const k = th.dataset.k; if (rkSort === k) rkDir = -rkDir; else { rkSort = k; rkDir = (k === 'name' || k === 'city') ? 1 : -1; } renderRank(); });
   $('rkTable').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => openEmp(tr.dataset.k));
   $('rkTable').querySelectorAll('button[data-ans]').forEach(b => b.onclick = e => { e.stopPropagation(); openRecs(b.dataset.ans); });

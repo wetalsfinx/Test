@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Навыки команды | 585GOLD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="stores.js"></script>
+<style>
+:root{--red:#E30613;--red-dk:#a8101c;--gold:#c9a227;--gold-lt:#f6ecc9;--ink:#1f2430;--ink-2:#4b5260;--ink-3:#8a909c;--bg:#faf7f5;--card:#fff;--line:#eee6e2;--soft:#f5f1ee;--ok:#15803d;--ok-bg:rgba(22,163,74,.14);--mid:#b45309;--mid-bg:rgba(245,158,11,.2);--bad:#b91c1c;--bad-bg:rgba(220,38,38,.14)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+.wrap{max-width:980px;margin:0 auto;padding:18px 16px 56px}
+.hero{background:linear-gradient(135deg,var(--red) 0%,var(--red-dk) 100%);color:#fff;border-radius:26px;padding:26px 26px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,39,.45),transparent 70%)}
+.brand{font-size:12px;font-weight:800;letter-spacing:2px;color:#ffd98a;position:relative;z-index:1}
+.hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(26px,5vw,38px);line-height:1.1;margin:8px 0 6px;position:relative;z-index:1}
+.hero p{opacity:.93;font-size:15px;max-width:620px;position:relative;z-index:1}
+.upd{display:inline-block;margin-top:12px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:5px 12px;border-radius:30px;font-size:12.5px;font-weight:600;position:relative;z-index:1}
+section{margin-top:22px}
+h2{font-size:19px;font-weight:800;margin-bottom:10px}
+.hint{color:var(--ink-3);font-size:13px;margin:-4px 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px 20px;box-shadow:0 6px 24px rgba(80,20,20,.05)}
+.stages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stg{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;border-top:4px solid var(--line)}
+.stg.on{border-top-color:var(--red)}
+.stg .l{font-size:12px;font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.4px}
+.stg .v{font-size:28px;font-weight:900;margin:2px 0}
+.stg .s{font-size:12.5px;color:var(--ink-3)}
+.tw{overflow-x:auto;border-radius:16px;border:1px solid var(--line);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:var(--soft);color:var(--ink-2);text-align:center;padding:10px 8px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+th:first-child{text-align:left;padding-left:14px}
+td{padding:8px;border-top:1px solid var(--line);text-align:center;vertical-align:middle}
+td:first-child{text-align:left;font-weight:700;padding-left:14px;min-width:180px}
+td:first-child small{display:block;font-weight:500;color:var(--ink-3);font-size:11.5px}
+.cell{border-radius:10px;padding:8px 4px;font-weight:800;font-size:14.5px;min-width:62px}
+.cell.good{background:var(--ok-bg);color:var(--ok)}.cell.mid{background:var(--mid-bg);color:var(--mid)}.cell.bad{background:var(--bad-bg);color:var(--bad)}.cell.none{background:var(--soft);color:var(--ink-3);font-weight:600}
+.dl{font-weight:800;font-size:13.5px;white-space:nowrap}.dl.up{color:var(--ok)}.dl.down{color:var(--bad)}.dl.zero{color:var(--ink-3)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12.5px;color:var(--ink-3)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:5px;vertical-align:-1px}
+.focus{display:grid;gap:12px}
+.fc{border:2px solid var(--red);border-radius:20px;padding:16px 18px;background:#fff}
+.fc h3{font-size:16px;color:var(--red);margin-bottom:4px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.fc h3 .pc{font-size:13px;color:var(--ink-3);font-weight:700}
+.fc p{font-size:14px;color:var(--ink-2);margin-top:4px}
+.fc .ex{margin-top:8px;background:var(--gold-lt);border-radius:12px;padding:10px 12px;font-size:13.5px;color:#5c4500}
+.fc .ex b{color:#7a5b00}
+.note{background:var(--gold-lt);border-radius:16px;padding:12px 16px;font-size:13.5px;color:#5c4500;margin-top:22px}
+.empty{text-align:center;color:var(--ink-3);padding:26px 10px}
+.pick{display:grid;gap:8px}
+.pick a{display:block;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--ink);font-weight:700;text-decoration:none}
+.pick a:hover{border-color:var(--red)}
+.foot{text-align:center;color:var(--ink-3);font-size:12px;margin-top:22px}
+@media (max-width:640px){.stages{grid-template-columns:1fr}.hero{padding:22px 18px;border-radius:22px}.card{padding:14px}td:first-child{min-width:140px}.cell{min-width:52px;font-size:13.5px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="empty">⏳ Загрузка…</div></div>
+<script>
+// ===================== НАСТРОЙКИ =====================
+const STORES = (window.STORES_585 || ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик']);
+const SK = [
+  { k: 'K1', n: 'Приветствие и речевая пластинка', short: 'Приветствие', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
+  { k: 'K2', n: 'Инициатива и контакт', short: 'Контакт', tr: { name: 'Типы клиентов', url: 'client_type_trainer.html' } },
+  { k: 'K3', n: 'Выявление потребностей', short: 'Потребности', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
+  { k: 'K4', n: 'Презентация: ХПВ и примерка', short: 'Презентация', tr: { name: 'Типы клиентов', url: 'client_type_trainer.html' } },
+  { k: 'K5', n: 'Повышение ценности и золото', short: 'Ценность', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
+  { k: 'K6', n: 'Допродажа: комплект и уход', short: 'Допродажа', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
+  { k: 'K7', n: 'Финансовые инструменты', short: 'Финансы', tr: { name: 'Лайфхаки', url: 'lifehacks.html' } },
+  { k: 'K8', n: 'Работа с возражениями', short: 'Возражения', tr: { name: 'сценка «Дорого»', url: 'dorogo_trainer.html' } },
+  { k: 'K9', n: 'Альтернатива и каталог', short: 'Альтернатива', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
+  { k: 'K10', n: 'Завершение сделки', short: 'Закрытие', tr: { name: 'Алгоритм продаж', url: 'algorithm_trainer.html' } },
+  { k: 'K11', n: 'Прощание и сервис', short: 'Сервис', tr: { name: 'Сервис с человеческим лицом', url: 'service_trainer.html' } }
+];
+const SKN = Object.fromEntries(SK.map(s => [s.k, s]));
+const TOOLS = {
+  test: 'Входной тест', trainer: 'Тренировка диалога', crosssell: 'Тренажёр допродаж', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов',
+  algorithm: 'Алгоритм продаж', service: 'Сервис', final_exam_1: 'Аттестация «Одна смена»', final_exam_old: 'Аттестация (старая)'
+};
+const TRAINERS = ['trainer', 'crosssell', 'errorfinder', 'clienttype', 'algorithm', 'service'];
+const TSHORT = { trainer: 'Диалог', crosssell: 'Допродажи', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов', algorithm: 'Алгоритм', service: 'Сервис' };
+const TICON = { trainer: '💬', crosssell: '🛍️', errorfinder: '🔍', clienttype: '🧑‍🤝‍🧑', algorithm: '🧭', service: '🤝' };
+const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт и сервис' };
+const activeTr = () => TRAINERS.filter(t => RECS.some(r => r.type === t));
+const COLS = [['test', 'test'], ['dialog', 'trainer'], ['crosssell', 'crosssell'], ['errorfinder', 'errorfinder'], ['clienttype', 'clienttype'], ['service', 'service'], ['algorithm', 'algorithm'], ['final_exam', 'final_exam'], ['final_exam_1', 'final_exam_1']];
+const TEST_TOPICS = ['Приветствие и контакт', 'Выявление бюджета', 'Дополнительные товары', 'Выбор материала', 'Сопутствующие товары', 'Возражение «дорого»', 'Альтернатива, нет размера', 'Эмоциональная презентация', 'Дополнительные модели', 'Рассрочка (Сплит)', 'Инициатива, молчаливый клиент', 'Завершение сделки', '«Я подумаю»'];
+const TEST_SK = ['K1', 'K3', 'K6', 'K5', 'K6', 'K8', 'K9', 'K4', 'K2', 'K7', 'K2', 'K10', 'K8'];
+const RULES = [['Проявляй инициативу', 'K2'], ['Задавай вопросы ДО показа', 'K3'], ['Презентуй с эмоцией', 'K4'], ['Предлагай примерку', 'K4'], ['Не отпускай без альтернативы', 'K9'], ['Завершай с теплотой', 'K11']];
+const EF_SK = { 'Холодный клиент': 'K2', 'Подарок жене': 'K3', 'Дорого!': 'K8', 'Просто смотрю': 'K2', 'Допродажа на кассе': 'K6', 'А что есть ещё?': 'K4', 'Беру': 'K10' };
+const CT_SK = { 'Холодный клиент': 'K2', 'Молчаливый наблюдатель': 'K2', 'Постоянный клиент': 'K11' };
+const CS_SK = { 'Серебряная цепь': 'K5' };
+const ALG_SK = { 'Классический путь покупателя': 'K10', 'Растерянный мужчина с подарком': 'K3', 'Клиент говорит ДОРОГО': 'K8', 'Допродажа на кассе': 'K6', 'Молчаливый клиент': 'K2', 'Постоянный клиент': 'K11', 'Возврат после «подумаю»': 'K8' };
+const EX_SK = { 'Приветствие и контакт': ['K1', 'K2'], 'Выявление потребностей': 'K3', 'Наблюдательность': 'K3', 'Презентация и золото': ['K4', 'K5'], 'Допродажа': 'K6', 'Работа с возражениями': ['K8', 'K7'], 'Закрытие и прощание': ['K10', 'K11'], 'Удержание и допродажа': ['K6', 'K11'], 'Алгоритм продажи': 'K9' };
+
+// Пункты каждого вида: [название пункта, навык, значение 0–100]
+function itemsOf(r) {
+  const x = r.raw;
+  switch (r.type) {
+    case 'test': return (x.answers || []).map(a => { const i = a.originalIndex ?? (a.questionNum - 1); return [TEST_TOPICS[i] || ('Вопрос ' + (i + 1)), TEST_SK[i] || 'K4', a.correct ? 100 : 0]; });
+    case 'trainer': return RULES.map(([n, k]) => [n, k, (x.rules_applied || []).includes(n) ? 100 : 0]);
+    case 'crosssell': return (x.scenarios || []).map(s => [s.scenario, CS_SK[s.scenario] || 'K6', s.isCorrect ? 100 : 0]);
+    case 'errorfinder': return (x.scenarios || []).map(s => [s.scenario, EF_SK[s.scenario] || 'K4', s.percent != null ? s.percent : Math.round((s.score || 0) / (s.maxScore || 1) * 100)]);
+    case 'clienttype': return (x.scenarios || []).map(s => [s.scenario || s.clientType, CT_SK[s.scenario] || 'K4', s.isCorrect ? 100 : 0]);
+    case 'algorithm': return (x.scenarios || []).map(s => [s.scenario, ALG_SK[s.scenario] || 'K10', s.percent || 0]);
+    case 'service': return (x.answers || []).filter(a => a.principle).map(a => [a.principle, 'K11', a.isCorrect ? 100 : 0]);
+    case 'final_exam_1': return (x.answers || []).filter(a => a.skill).flatMap(a => [].concat(EX_SK[a.skill] || 'K10').map(k => [a.skill, k, a.percentTask || 0]));
+    default: return [];
+  }
+}
+
+// ===================== УТИЛИТЫ =====================
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null;
+const cls = v => v == null ? 'none' : v >= 80 ? 'good' : v >= 60 ? 'mid' : 'bad';
+const pill = v => `<span class="pill ${cls(v)}">${v == null ? '—' : v + '%'}</span>`;
+const delta = d => d == null ? '<span class="delta zero">—</span>' : `<span class="delta ${d > 0 ? 'up' : d < 0 ? 'down' : 'zero'}">${d > 0 ? '▲ +' : d < 0 ? '▼ ' : ''}${d}</span>`;
+const fmtD = d => new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const rub = n => Math.round(n || 0).toLocaleString('ru-RU') + ' ₽';
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const cap = s => s.replace(/(^|\s|-)\S/g, c => c.toUpperCase());
+const levelOf = p => p >= 85 ? ['Мастер продаж', 'gold'] : p >= 70 ? ['Специалист по сервису', 'silver'] : p >= 50 ? ['Продавец-консультант', 'bronze'] : null;
+
+// ---- имена: автоматическое склеивание ----
+function normKey(name) {
+  let t = String(name || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я\s-]/g, ' ').split(/\s+/).filter(Boolean);
+  if (t.length >= 3) t = t.filter(w => !/(вна|вич|ична|ична|инична)$/.test(w) || t.length <= 2);
+  if (t.length > 2) t = t.slice(0, 2);
+  return t.sort().join(' ');
+}
+let MERGE = store.get('dash2_merge', {});
+const rootKey = k => { let g = 0; while (MERGE[k] && g++ < 10) k = MERGE[k]; return k; };
+function lev(a, b) { const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; }
+
+// ===================== СТРАНИЦА ДИРЕКТОРА =====================
+const FOCUS = {
+  K1: ['Речевая пластинка', 'Каждому клиенту — приветствие и конкретная акция сразу при встрече.', 'На пятиминутке каждый по очереди произносит пластинку с сегодняшней акцией. Коллеги оценивают: звучит ли выгода конкретно?'],
+  K2: ['Инициатива в диалоге · Неконтактный покупатель', 'Продавец подходит первым и ведёт диалог, а не ждёт вопроса.', 'Сценка в паре: «Я просто посмотреть». Продавец даёт 2–3 минуты и заходит с «крючком» — акцией или новинкой.'],
+  K3: ['Искусство задавать вопросы · Без вопроса о бюджете', '2–3 вопроса до показа товара: повод, стиль, предпочтения. О бюджете не спрашиваем.', 'Игра «3 вопроса»: один — клиент с подарком, другой задаёт 3 открытых вопроса и только потом показывает украшение.'],
+  K4: ['Презентация ХПВ и примерка · Знание товара', 'Характеристика → преимущество → выгода. И обязательно примерка с зеркалом.', 'Каждый берёт с витрины одно изделие и за 30 секунд презентует его по ХПВ, заканчивая фразой «Давайте примерим».'],
+  K5: ['Повышение ценности +20% и золото', 'После вопросов — два варианта: в стиле клиента и чуть лучше.', 'Сценка: клиент выбрал серебро. Продавец показывает золото рядом и одной фразой объясняет разницу.'],
+  K6: ['Второе украшение и уход', 'Сразу после выбора — парное украшение, футляр и уход как забота.', 'Найдите на витрине 3 пары «кольцо + серьги» и отработайте фразу «Давайте подберём в комплект».'],
+  K7: ['Финансовые инструменты', 'Сплит и рассрочку называем в пластинке, в презентации до цены и на «дорого».', 'Каждый вслух: «Для такого выбора есть Сплит — 4 платежа без переплат, оформим за 2 минуты».'],
+  K8: ['Возражение «Дорого» · Другие возражения', 'Выслушать → понять → согласиться → аргументировать. Не спорим.', 'Сценка: «Дорого, в другом месте видела дешевле». Продавец проходит все 4 шага, не оправдываясь.'],
+  K9: ['Альтернатива и электронный каталог', 'Не «нет», а решение: похожая модель, вариант лучше или заказ из каталога.', 'Сценка: «А есть 17-й размер?» — размера нет. Продавец предлагает альтернативу и каталог.'],
+  K10: ['Закрытие сделки · «Я подумаю»', 'Видим сигнал покупки — делаем комплимент выбору и говорим «Давайте оформим!».', 'Сценка: клиентка любуется кольцом, но молчит. Продавец замечает сигнал и уверенно закрывает сделку.'],
+  K11: ['Сервис и постоянный клиент', 'Обращение по имени, маленькие жесты и тёплое прощание — даже без покупки.', 'За смену каждый узнаёт имя хотя бы у 3 клиентов и прощается с ними по имени.'],
+};
+const STG = [['skTest', '📝 Входной тест'], ['skTrain', '🎯 Тренажёры'], ['skExam', '🏆 Аттестация']];
+let db = null;
+try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); } catch (e) { console.error(e); }
+const MY = new URLSearchParams(location.search).get('m') || '';
+
+async function loadPeople() {
+  const recs = [];
+  for (const [col, type] of COLS) {
+    try {
+      const snap = await db.collection('results').doc(col).collection('items').get();
+      snap.forEach(d => { const x = d.data(); let t = type; if (col === 'final_exam') t = x.exam_version === 'shift_v1' ? 'final_exam_1' : 'final_exam_old'; if (!x.user_name || x.percent == null) return;
+        recs.push({ type: t, name: String(x.user_name).trim(), city: x.city || '', percent: +x.percent || 0, date: x.date || new Date(0).toISOString(), raw: x }); });
+    } catch (e) { }
+  }
+  recs.sort((a, b) => new Date(a.date) - new Date(b.date));
+  const P = {};
+  recs.forEach(r => { const k = rootKey(normKey(r.name)); (P[k] = P[k] || { recs: [], city: r.city }).recs.push(r); P[k].city = r.city; });
+  const acc = rs => { const m = {}; rs.forEach(r => itemsOf(r).forEach(([, k, v]) => [].concat(k).forEach(kk => (m[kk] = m[kk] || []).push(v)))); return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, avg(v)])); };
+  Object.values(P).forEach(p => {
+    const by = t => p.recs.filter(r => r.type === t);
+    const t0 = by('test')[0]; p.test = !!t0; p.skTest = t0 ? acc([t0]) : {};
+    const firsts = TRAINERS.map(t => by(t)[0]).filter(Boolean); p.train = firsts.length > 0; p.skTrain = acc(firsts);
+    const ex = by('final_exam_1'); p.exam = ex.length > 0; p.skExam = ex.length ? acc([ex[ex.length - 1]]) : {};
+  });
+  return Object.values(P);
+}
+const skAvg = (ps, stage) => Object.fromEntries(SK.map(s => [s.k, avg(ps.map(p => p[stage][s.k]).filter(v => v != null))]));
+const cell = v => `<div class="cell ${cls(v)}">${v == null ? '—' : v + '%'}</div>`;
+
+function renderPicker() {
+  const base = location.href.split('?')[0];
+  $('app').innerHTML = `<header class="hero"><div class="brand">585GOLD · НАВЫКИ КОМАНДЫ</div><h1>Выберите магазин</h1><p>Откройте страницу своего магазина. Ссылку можно сохранить в закладки — данные обновляются сами.</p></header>
+    <section><div class="pick">${STORES.map(s => `<a href="${base}?m=${encodeURIComponent(s)}">🏬 ${esc(s)}</a>`).join('')}</div></section>`;
+}
+function render(all) {
+  const ps = all.filter(p => p.city === MY), now = new Date().toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const cnt = [ps.filter(p => p.test).length, ps.filter(p => p.train).length, ps.filter(p => p.exam).length];
+  const st = STG.map(([k], i) => cnt[i] ? skAvg(ps.filter(p => i === 0 ? p.test : i === 1 ? p.train : p.exam), k) : null);
+  const last = [2, 1, 0].find(i => st[i]); // последний пройденный этап
+  const net = last != null ? skAvg(all.filter(p => last === 0 ? p.test : last === 1 ? p.train : p.exam), STG[last][0]) : null;
+  let html = `<header class="hero"><div class="brand">585GOLD · НАВЫКИ КОМАНДЫ</div><h1>${esc(MY)}</h1><p>Как развиваются навыки вашей команды: входной тест → тренажёры → аттестация. Только общий результат магазина, без имён.</p><span class="upd">🔄 Данные на ${now} — обновляются сами при каждом открытии</span></header>
+  <section><h2>Сколько человек прошли</h2><div class="stages">${STG.map(([, l], i) => `<div class="stg ${cnt[i] ? 'on' : ''}"><div class="l">${l}</div><div class="v">${cnt[i]}</div><div class="s">${cnt[i] ? 'сотрудников' : 'пока никто'}</div></div>`).join('')}</div></section>`;
+  if (last == null) {
+    html += `<section><div class="card empty">📭 Пока никто из команды не прошёл входной тест.<br>Как только появятся первые результаты — здесь будет картина навыков.</div></section>`;
+  } else {
+    html += `<section><h2>11 навыков продавца</h2><p class="hint">Средний результат команды по каждому навыку на каждом этапе. «Изменение» — от входного теста до последнего этапа, где навык проверялся.</p>
+    <div class="tw"><table><thead><tr><th>Навык</th>${STG.map(([, l]) => `<th>${l}</th>`).join('')}<th>Изменение</th></tr></thead><tbody>${SK.map(s => {
+      const v = st.map(x => x ? x[s.k] : null), a = v[0], li = [2, 1].find(i => v[i] != null), b = li != null ? v[li] : null, d = a != null && b != null ? b - a : null;
+      return `<tr><td>${esc(s.n)}${net && net[s.k] != null ? `<small>по сети: ${net[s.k]}%</small>` : ''}</td>${v.map(cell).map(c => `<td>${c}</td>`).join('')}<td>${d == null ? '<span class="dl zero">—</span>' : `<span class="dl ${d > 2 ? 'up' : d < -2 ? 'down' : 'zero'}">${d > 2 ? '▲ +' + d : d < -2 ? '▼ ' + d : '≈ ' + (d > 0 ? '+' : '') + d}</span>`}</td></tr>`; }).join('')}</tbody></table></div>
+    <div class="legend"><span><i style="background:var(--ok-bg)"></i>80% и выше</span><span><i style="background:var(--mid-bg)"></i>60–79%</span><span><i style="background:var(--bad-bg)"></i>ниже 60% — зона роста</span></div></section>`;
+    const latest = k => { for (const i of [2, 1, 0]) if (st[i] && st[i][k] != null) return st[i][k]; return null; };
+    const weak = SK.map(s => ({ s, v: latest(s.k) })).filter(x => x.v != null && x.v < 80).sort((a, b) => a.v - b.v).slice(0, 3);
+    html += `<section><h2>🎯 На что сделать упор</h2><p class="hint">Самые слабые навыки команды сейчас. Потренируйте их на пятиминутке — по 3–5 минут в паре.</p>${weak.length ? `<div class="focus">${weak.map(({ s, v }) => { const f = FOCUS[s.k]; return `<div class="fc"><h3>${esc(s.n)} <span class="pc">${v}%</span></h3><p>${esc(f[1])}</p><div class="ex"><b>Упражнение:</b> ${esc(f[2])}</div><p style="font-size:12.5px;color:var(--ink-3)">📎 Памятка: «${esc(f[0])}»</p></div>`; }).join('')}</div>` : '<div class="card empty">🎉 Все навыки на уровне 80% и выше. Так держать!</div>'}</section>`;
+  }
+  html += `<div class="note">💡 Страница показывает только общий результат команды. Личные результаты сотрудников здесь не отображаются.</div><p class="foot">💎 585GOLD | Команда обучения</p>`;
+  $('app').innerHTML = html;
+}
+(async () => {
+  if (!MY) { renderPicker(); return; }
+  if (!db) { $('app').innerHTML = '<div class="empty">⚠️ Не удалось подключиться к базе. Обновите страницу.</div>'; return; }
+  try { render(await loadPeople()); } catch (e) { $('app').innerHTML = '<div class="empty">⚠️ Ошибка загрузки: ' + esc(e.message) + '</div>'; }
+})();
+</script>
+</body>
+</html>
