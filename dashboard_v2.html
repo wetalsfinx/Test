@@ -67,6 +67,9 @@
   .bar-in { display: flex; align-items: center; gap: 8px; } .bar-in .b { flex: 1; height: 7px; background: var(--soft); border-radius: 5px; overflow: hidden; min-width: 60px; } .bar-in .b i { display: block; height: 100%; background: var(--gold); border-radius: 5px; }
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
   .toolbar input, .toolbar select { padding: 9px 12px; border: 2px solid var(--line); border-radius: 12px; font-family: inherit; font-size: 14px; background: #fff; }
+  a.btn { display: inline-block; text-decoration: none; }
+  .emp-bar { flex-wrap: nowrap; } .emp-sel { flex: 1; min-width: 0; max-width: 420px; padding: 10px 12px; border: 2px solid var(--line); border-radius: 12px; font: inherit; font-weight: 700; font-size: 14.5px; background: #fff; cursor: pointer; } .emp-sel:focus { outline: none; border-color: var(--red); } .emp-bar .btn { padding: 9px 13px; } #empPos { white-space: nowrap; font-size: 13px; }
+  .dl-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); } .dl-row:first-child { border-top: none; } .dl-row span { white-space: nowrap; }
   .btn { border: 1px solid var(--line); background: #fff; color: var(--ink-2); padding: 9px 14px; border-radius: 12px; font-family: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; }
   .btn:hover { border-color: var(--red); color: var(--red); } .btn.red { background: var(--red); color: #fff; border-color: var(--red); }
   .seg { display: inline-flex; background: var(--soft); border-radius: 30px; padding: 4px; flex-wrap: wrap; }
@@ -221,6 +224,7 @@
       <div class="card"><h2>⚠️ Нужна поддержка</h2><p class="hint">Попадают сюда, если аттестация ниже 50% <b>или</b> аттестация хуже входного теста. «Изменение» = аттестация минус входной тест.</p><div class="tw" id="ovRisk"></div></div>
       <div class="card"><h2>⏳ Ещё не аттестованы</h2><p class="hint">Проходили тест или тренажёры, но аттестацию «Одна смена» пока нет.</p><div class="tw" id="ovTodo"></div></div>
     </div>
+    <div class="card"><h2>🔗 Страницы для директоров</h2><p class="hint">Навыки магазина в целом — вход → тренажёры → аттестация, без имён и баллов сотрудников. Данные обновляются сами при каждом открытии: ссылку достаточно отправить директору один раз.</p><div id="ovDir"></div></div>
   </section>
 
   <!-- ============ РЕЙТИНГ ============ -->
@@ -255,7 +259,7 @@
   <!-- ============ СОТРУДНИК ============ -->
   <section class="tab" id="t-emp">
     <div class="card">
-      <div class="toolbar"><input id="empSearch" placeholder="🔍 Найти сотрудника" list="empList" style="min-width:280px"><datalist id="empList"></datalist></div>
+      <div class="toolbar emp-bar"><button class="btn" id="empPrev" title="Предыдущий сотрудник">◀</button><select id="empSel" class="emp-sel"></select><button class="btn" id="empNext" title="Следующий сотрудник">▶</button><span class="muted" id="empPos"></span></div>
       <div id="empCard"><div class="empty">Выберите сотрудника в поиске или нажмите на строку в рейтинге</div></div>
     </div>
   </section>
@@ -453,7 +457,7 @@ function renderAll() { renderOverview(); renderRank(); renderSkills(); renderEmp
 
 // ===================== ОБЗОР =====================
 function renderOverview() {
-  renderTestSum();
+  renderTestSum(); renderDirLinks();
   const P = people(), withExam = P.filter(p => p.exam), withBoth = P.filter(p => p.growth != null);
   const g = avg(withBoth.map(p => p.growth));
   $('ovKpis').innerHTML = [
@@ -597,8 +601,16 @@ function renderDetail() {
 }
 
 // ===================== СОТРУДНИК =====================
-function renderEmpList() { $('empList').innerHTML = Object.values(PEOPLE).sort((a, b) => a.name.localeCompare(b.name, 'ru')).map(p => `<option value="${esc(p.name)} — ${esc(p.city)}">`).join(''); }
-function openEmp(key) { showTab('emp'); const p = PEOPLE[key]; if (!p) return; $('empSearch').value = p.name + ' — ' + p.city; renderEmp(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+let EMP = '';
+const empOrder = () => { const ps = people(), cs = STORES.concat([...new Set(ps.map(p => p.city))].filter(c => !STORES.includes(c))); return cs.flatMap(c => ps.filter(p => p.city === c).sort((a, b) => a.name.localeCompare(b.name, 'ru'))); };
+function renderEmpList() {
+  const L = empOrder(), cs = [...new Set(L.map(p => p.city))];
+  $('empSel').innerHTML = '<option value="">👤 Выберите сотрудника (' + L.length + ')</option>' + cs.map(c => `<optgroup label="🏬 ${esc(c)}">${L.filter(p => p.city === c).map(p => `<option value="${esc(p.key)}" ${p.key === EMP ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</optgroup>`).join('');
+  const i = L.findIndex(p => p.key === EMP); $('empPos').textContent = i >= 0 ? `${i + 1} из ${L.length}` : '';
+  $('empPrev').disabled = i <= 0; $('empNext').disabled = i < 0 ? !L.length : i >= L.length - 1;
+}
+function stepEmp(d) { const L = empOrder(), i = L.findIndex(p => p.key === EMP), n = i < 0 ? (d > 0 ? 0 : -1) : i + d; if (L[n]) openEmp(L[n].key); }
+function openEmp(key) { showTab('emp'); const p = PEOPLE[key]; if (!p) return; EMP = key; renderEmpList(); renderEmp(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 function renderEmp(p) { setTimeout(() => { const a = $('empAllAns'); if (a) a.onclick = e => { e.preventDefault(); openAnswers(p.key, 0); }; $('empCard').querySelectorAll('button[data-rec]').forEach(b => b.onclick = () => openRecs(p.key, +b.dataset.rec)); }, 0);
   const box = (t, v, s, empty) => `<div class="pbox ${empty ? 'empty' : ''}"><div class="t">${t}</div><div class="v" style="color:${empty ? 'var(--ink-4)' : cls(v) === 'good' ? 'var(--ok)' : cls(v) === 'mid' ? 'var(--mid)' : 'var(--bad)'}">${empty ? '—' : v + '%'}</div><div class="s">${s}</div></div>`;
   const tn = Object.keys(p.tools).length;
@@ -852,6 +864,17 @@ function renderTestSum() {
   $('tsQs').innerHTML = qs.length ? `<div class="ts-qs">${qs.map(q => `<div class="ts-q"><span class="nm" title="${esc(q.n)}">${esc(q.n)}</span><div class="ts-bar"><i class="${cls(q.v)}" style="width:${Math.max(q.v, 2)}%"></i></div><b>${q.v}%</b></div>`).join('')}</div><p class="hint" style="margin-top:8px">${isTest ? '% сотрудников, ответивших верно' : 'Средний результат по ситуации'}. Сверху — самое трудное: на это стоит сделать акцент в обучении.</p>` : '<div class="empty">Появится после первых прохождений</div>';
 }
 
+// ===================== ССЫЛКИ ДЛЯ ДИРЕКТОРОВ =====================
+function renderDirLinks() {
+  const base = location.href.split('?')[0].replace(/[^/]*$/, '') + 'director.html?m=';
+  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><b>🏬 ${esc(c)}</b><span><a class="btn" href="${base + encodeURIComponent(c)}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Копировать ссылку</button></span></div>`).join('');
+  $('ovDir').querySelectorAll('button[data-dl]').forEach(b => b.onclick = async () => {
+    const url = base + encodeURIComponent(STORES[+b.dataset.dl]);
+    try { await navigator.clipboard.writeText(url); } catch (e) { const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e2) {} t.remove(); }
+    const o = b.textContent; b.textContent = '✅ Скопировано'; setTimeout(() => b.textContent = o, 1500);
+  });
+}
+
 // ===================== НАВИГАЦИЯ =====================
 function showTab(t) { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('on', s.id === 't-' + t)); store.set('dash2_tab', t); }
 function setStore(c) { STORE = c; $('storeSel').value = c; renderAll(); }
@@ -863,7 +886,8 @@ $('rkStage').querySelectorAll('button').forEach(b => b.onclick = () => { rkStage
 $('rkCsv').onclick = () => { const AT = activeTr(); csv([['Сотрудник', 'Магазин', 'Входной тест %'].concat(AT.map(t => TOOLS[t] + ' %')).concat(['Аттестация %', 'Рост п.п.', 'Уровень', 'Выручка смены'])].concat(rkRows().map(r => [r.name, r.city, r.test].concat(AT.map(t => r['t_' + t])).concat([r.exam, r.growth, r.p.level ? r.p.level[0] : '', r.revenue]))), 'рейтинг_585gold.csv'); };
 $('skMode').querySelectorAll('button').forEach(b => b.onclick = () => { skMode = b.dataset.v; $('skMode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderSkills(); });
 $('dtTool').onchange = renderDetail; $('modalX').onclick = closeModal; $('modalBg').onclick = e => { if (e.target === $('modalBg')) closeModal(); }; document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); }); $('skTr').onchange = renderSkills;
-$('empSearch').oninput = () => { const v = $('empSearch').value; const p = Object.values(PEOPLE).find(p => p.name + ' — ' + p.city === v) || (v.length > 2 ? Object.values(PEOPLE).find(p => p.name.toLowerCase().startsWith(v.toLowerCase())) : null); if (p) renderEmp(p); };
+$('empSel').onchange = e => { if (e.target.value) openEmp(e.target.value); }; $('empPrev').onclick = () => stepEmp(-1); $('empNext').onclick = () => stepEmp(1);
+document.addEventListener('keydown', e => { if (!document.getElementById('t-emp').classList.contains('on') || /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) || document.getElementById('modalBg').classList.contains('on')) return; if (e.key === 'ArrowLeft') stepEmp(-1); if (e.key === 'ArrowRight') stepEmp(1); });
 showTab(store.get('dash2_tab', 'over'));
 load();
 </script>
