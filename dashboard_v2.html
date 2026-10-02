@@ -870,9 +870,10 @@ function renderTestSum() {
 // ===================== ССЫЛКИ ДЛЯ ДИРЕКТОРОВ =====================
 function renderDirLinks() {
   const base = location.href.split('?')[0].replace(/[^/]*$/, '') + 'director.html?m=';
-  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><b>🏬 ${esc(c)}</b><span><a class="btn" href="${base + encodeURIComponent(c)}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Копировать ссылку</button></span></div>`).join('');
+  const ver = '&v=' + new Date().toISOString().slice(2, 10).replace(/-/g, ''); // чтобы браузер не показывал старую копию страницы
+  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><b>🏬 ${esc(c)}</b><span><a class="btn" href="${base + encodeURIComponent(c) + ver}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Копировать ссылку</button></span></div>`).join('');
   $('ovDir').querySelectorAll('button[data-dl]').forEach(b => b.onclick = async () => {
-    const url = base + encodeURIComponent(STORES[+b.dataset.dl]);
+    const url = base + encodeURIComponent(STORES[+b.dataset.dl]) + ver;
     try { await navigator.clipboard.writeText(url); } catch (e) { const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e2) {} t.remove(); }
     const o = b.textContent; b.textContent = '✅ Скопировано'; setTimeout(() => b.textContent = o, 1500);
   });
