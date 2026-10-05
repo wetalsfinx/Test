@@ -277,7 +277,7 @@
   <section class="tab" id="t-data">
     <div class="card">
       <h2>🔗 Похожие имена</h2>
-      <p class="hint">Одинаковые имена с разным написанием (заглавные буквы, ё/е, порядок слов, отчество) дашборд уже склеивает сам. Здесь — имена, которые отличаются на 1–2 буквы: проверьте и объедините, если это один человек.</p>
+      <p class="hint">Одинаковые имена с разным написанием (заглавные буквы, ё/е, порядок слов, отчество) в одном магазине дашборд склеивает сам. Тёзки из разных магазинов считаются разными людьми. Здесь — имена, которые отличаются на 1–2 буквы, и одинаковые имена в разных магазинах: проверьте и объедините, если это один человек.</p>
       <div id="dtSuggest"></div>
       <h2 style="margin-top:18px">✅ Объединено автоматически и вручную</h2>
       <div id="dtMerged"></div>
@@ -345,7 +345,7 @@ const TEST_TOPICS = ['Приветствие и контакт', 'Выявлен
 const TEST_SK = ['K1', 'K3', 'K6', 'K5', 'K6', 'K8', 'K9', 'K4', 'K2', 'K7', 'K2', 'K10', 'K8'];
 const RULES = [['Проявляй инициативу', 'K2'], ['Задавай вопросы ДО показа', 'K3'], ['Презентуй с эмоцией', 'K4'], ['Предлагай примерку', 'K4'], ['Не отпускай без альтернативы', 'K9'], ['Завершай с теплотой', 'K11']];
 const EF_SK = { 'Холодный клиент': 'K2', 'Подарок жене': 'K3', 'Дорого!': 'K8', 'Просто смотрю': 'K2', 'Допродажа на кассе': 'K6', 'А что есть ещё?': 'K4', 'Беру': 'K10' };
-const CT_SK = { 'Холодный клиент': 'K2', 'Молчаливый наблюдатель': 'K2', 'Постоянный клиент': 'K11' };
+const CT_SK = { 'Холодный клиент': 'K2', 'Молчаливый наблюдатель': 'K2', 'Постоянный клиент': 'K11', 'Растерянный мужчина (подарок)': 'K3' };
 const CS_SK = { 'Серебряная цепь': 'K5' };
 const ALG_SK = { 'Классический путь покупателя': 'K10', 'Растерянный мужчина с подарком': 'K3', 'Клиент говорит ДОРОГО': 'K8', 'Допродажа на кассе': 'K6', 'Молчаливый клиент': 'K2', 'Постоянный клиент': 'K11', 'Возврат после «подумаю»': 'K8' };
 const EX_SK = { 'Приветствие и контакт': ['K1', 'K2'], 'Выявление потребностей': 'K3', 'Наблюдательность': 'K3', 'Презентация и золото': ['K4', 'K5'], 'Допродажа': 'K6', 'Работа с возражениями': ['K8', 'K7'], 'Закрытие и прощание': ['K10', 'K11'], 'Удержание и допродажа': ['K6', 'K11'], 'Алгоритм продажи': 'K9' };
@@ -386,6 +386,8 @@ function normKey(name) {
   if (t.length > 2) t = t.slice(0, 2);
   return t.sort().join(' ');
 }
+// ключ сотрудника = имя + магазин: тёзки из разных магазинов не склеиваются
+const pkey = (name, city) => normKey(name) + '|' + String(city || '').trim();
 let MERGE = store.get('dash2_merge', {});
 const rootKey = k => { let g = 0; while (MERGE[k] && g++ < 10) k = MERGE[k]; return k; };
 function lev(a, b) { const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; }
@@ -420,7 +422,7 @@ function build() {
   // сотрудники
   PEOPLE = {};
   RECS.forEach(r => {
-    const k = rootKey(normKey(r.name)); r.key = k;
+    const k = rootKey(pkey(r.name, r.city)); r.key = k;
     const p = PEOPLE[k] = PEOPLE[k] || { key: k, names: {}, recs: [], city: r.city };
     p.names[r.name] = (p.names[r.name] || 0) + 1; p.recs.push(r); p.city = r.city;
   });
@@ -594,7 +596,7 @@ function renderSkills() {
 }
 function renderDetail() {
   const tool = $('dtTool').value; if (!tool) { $('dtMatrix').innerHTML = ''; return; }
-  const firstBy = {}; RECS.filter(r => r.type === tool && (!STORE || r.city === STORE)).forEach(r => { const k = rootKey(normKey(r.name)); if (!firstBy[k] || (tool === 'final_exam_1' ? new Date(r.date) > new Date(firstBy[k].date) : false)) firstBy[k] = r; });
+  const firstBy = {}; RECS.filter(r => r.type === tool && (!STORE || r.city === STORE)).forEach(r => { const k = rootKey(pkey(r.name, r.city)); if (!firstBy[k] || (tool === 'final_exam_1' ? new Date(r.date) > new Date(firstBy[k].date) : false)) firstBy[k] = r; });
   const recs = Object.values(firstBy), items = [], cellM = {};
   recs.forEach(r => itemsOf(r).forEach(([n, k, v]) => { if (!items.find(x => x.n === n)) items.push({ n, k }); const key = r.city + '|' + n; (cellM[key] = cellM[key] || []).push(v); }));
   const cities = [...new Set(recs.map(r => r.city))].sort((a, b) => STORES.indexOf(a) - STORES.indexOf(b));
@@ -646,7 +648,7 @@ const choiceLines = (opts, sel, cor) => opts.map((o, i) => i === sel && i === co
 function recAnswersHtml(r) {
   const x = r.raw, A = x.answers || [], S = x.scenarios || [];
   switch (r.type) {
-    case 'test': return A.length ? A.slice().sort((a, b) => (a.questionNum || 0) - (b.questionNum || 0)).map((a, i) => qa(`${a.icon || ''} Вопрос ${i + 1}`, a.correct ? 100 : 0, `<div class="qa-sit">${esc(a.questionText || TEST_TOPICS[a.originalIndex] || '')}</div>${line(a.correct ? 'ok' : 'no', a.correct ? '✅' : '❌', 'Ответ: ' + esc(a.selectedText || '—'))}${a.correct ? '' : line('ok', '✔️', 'Правильно: ' + esc(a.correctText || '—'))}`)).join('') : '';
+    case 'test': return A.length ? A.slice().sort((a, b) => (a.originalIndex ?? 99) - (b.originalIndex ?? 99) || (a.questionNum || 0) - (b.questionNum || 0)).map((a, i) => { const oi = a.originalIndex, has = oi != null && oi >= 0, sk = has && TEST_SK[oi] ? SKN[TEST_SK[oi]] : null; return qa(`${a.icon || ''} Вопрос ${has ? oi + 1 : i + 1}${has && TEST_TOPICS[oi] ? ' · ' + esc(TEST_TOPICS[oi]) : ''}`, a.correct ? 100 : 0, `${sk ? `<div class="qa-lbl">Навык: ${esc(sk.n)}${a.questionNum ? ` · у сотрудника шёл ${a.questionNum}-м` : ''}</div>` : ''}<div class="qa-sit">${esc(a.questionText || TEST_TOPICS[a.originalIndex] || '')}</div>${line(a.correct ? 'ok' : 'no', a.correct ? '✅' : '❌', 'Ответ: ' + esc(a.selectedText || '—'))}${a.correct ? '' : line('ok', '✔️', 'Правильно: ' + esc(a.correctText || '—'))}`); }).join('') : '';
     case 'trainer': return A.length ? A.map((a, i) => { const q = REF.dq[a.question]; if (!q) return ''; return qa(`Шаг ${i + 1}`, a.correct ? 100 : 0, `<div class="qa-sit">${esc(q.c)}</div>${choiceLines(q.o, a.selected, q.k)}`); }).join('') : '';
     case 'crosssell': return S.map(c => qa(`${c.icon || ''} ${esc(c.scenario)}`, c.isCorrect ? 100 : 0, `${REF.cs[c.scenario] ? `<div class="qa-sit">${esc(REF.cs[c.scenario])}</div>` : ''}${line(c.isCorrect ? 'ok' : 'no', c.isCorrect ? '✅' : '❌', 'Ответ: ' + esc(c.selectedText || '—'))}${c.isCorrect ? '' : line('ok', '✔️', 'Лучший вариант: ' + esc(c.correctText || '—'))}`)).join('');
     case 'clienttype': return S.map(c => { const rf = REF.ct[c.scenario]; return qa(`${c.clientIcon || ''} ${esc(c.scenario)}`, c.isCorrect ? 100 : 0, `${rf ? `<div class="qa-sit">${esc(rf.sit)}</div>${choiceLines(rf.o, c.selectedOption, c.correctOption)}` : line(c.isCorrect ? 'ok' : 'no', c.isCorrect ? '✅' : '❌', c.isCorrect ? 'Выбрал верный подход' : 'Выбрал неверный подход')}`, c.clientType ? `<span class="muted">${esc(c.clientType)}</span>` : ''); }).join('');
@@ -703,7 +705,7 @@ function closeModal() { $('modalBg').classList.remove('on'); document.body.style
 function renderLH() {
   const ev = LH.filter(e => !STORE || e.city === STORE).sort((a, b) => new Date(a.date) - new Date(b.date)), opens = ev.filter(e => e.event === 'open');
   const P = {};
-  ev.forEach(e => { const k = rootKey(normKey(e.user_name)); const p = P[k] = P[k] || { name: PEOPLE[k]?.name || cap(String(e.user_name).toLowerCase()), city: e.city, opens: 0, scenes: new Set(), tOk: 0, tAll: 0, perfect: 0, last: e.date };
+  ev.forEach(e => { const k = rootKey(pkey(e.user_name, e.city)); const p = P[k] = P[k] || { name: PEOPLE[k]?.name || cap(String(e.user_name).toLowerCase()), city: e.city, opens: 0, scenes: new Set(), tOk: 0, tAll: 0, perfect: 0, last: e.date };
     p.city = e.city; p.last = e.date; if (e.event === 'open') p.opens++; if (e.event === 'scene') p.scenes.add(e.detail); if (e.event === 'timer') { p.tAll++; if (e.detail === 'ok') p.tOk++; } if (e.event === 'perfect') p.perfect++; });
   const L = Object.values(P), tAll = L.reduce((a, p) => a + p.tAll, 0), tOk = L.reduce((a, p) => a + p.tOk, 0), cities = new Set(L.map(p => p.city));
   $('lhKpis').innerHTML = [['Открытий', opens.length, opens.length ? Math.round(opens.filter(o => o.device === 'phone').length / opens.length * 100) + '% с телефона' : 'пока никто не открывал'], ['Сотрудников', L.length, 'открыли хотя бы раз'], ['Магазинов', `${STORES.filter(s => cities.has(s)).length} из ${STORES.length}`, 'где открывали'], ['Тест «3 секунды»', tAll ? Math.round(tOk / tAll * 100) + '%' : '—', tAll ? `успели ${tOk} из ${tAll}` : 'ещё не проходили'], ['Идеальных смен', L.reduce((a, p) => a + p.perfect, 0), 'чек-лист 6 из 6']]
@@ -721,8 +723,8 @@ function renderLH() {
 function renderData() {
   // похожие имена
   const keys = Object.keys(PEOPLE), sugg = [];
-  for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) { const a = keys[i], b = keys[j]; if (Math.abs(a.length - b.length) > 2) continue; const d = lev(a, b); if (d > 0 && d <= 2) sugg.push([a, b, d]); }
-  $('dtSuggest').innerHTML = sugg.length ? `<table><tbody>${sugg.map(([a, b]) => `<tr><td><b>${esc(PEOPLE[a].name)}</b> <span class="muted">${esc(PEOPLE[a].city)}, ${PEOPLE[a].recs.length} зап.</span></td><td>и</td><td><b>${esc(PEOPLE[b].name)}</b> <span class="muted">${esc(PEOPLE[b].city)}, ${PEOPLE[b].recs.length} зап.</span></td><td><button class="btn red" data-a="${esc(a)}" data-b="${esc(b)}">🔗 Это один человек</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">✨ Похожих имён не найдено</div>';
+  for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) { const a = keys[i], b = keys[j], [na, ca] = a.split('|'), [nb, cb] = b.split('|'); if (ca === cb) { if (Math.abs(na.length - nb.length) > 2) continue; const d = lev(na, nb); if (d > 0 && d <= 2) sugg.push([a, b, d]); } else if (na === nb) sugg.push([a, b, 0]); }
+  $('dtSuggest').innerHTML = sugg.length ? `<table><tbody>${sugg.map(([a, b, d]) => `<tr><td>${d === 0 ? '<div class="muted" style="font-size:11.5px">🏬 одно имя в двух магазинах — тёзки или один человек?</div>' : ''}<b>${esc(PEOPLE[a].name)}</b> <span class="muted">${esc(PEOPLE[a].city)}, ${PEOPLE[a].recs.length} зап.</span></td><td>и</td><td><b>${esc(PEOPLE[b].name)}</b> <span class="muted">${esc(PEOPLE[b].city)}, ${PEOPLE[b].recs.length} зап.</span></td><td><button class="btn red" data-a="${esc(a)}" data-b="${esc(b)}">🔗 Это один человек</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">✨ Похожих имён не найдено</div>';
   $('dtSuggest').querySelectorAll('button[data-a]').forEach(bt => bt.onclick = () => { const a = bt.dataset.a, b = bt.dataset.b; const keep = PEOPLE[a].recs.length >= PEOPLE[b].recs.length ? a : b, drop = keep === a ? b : a; MERGE[drop] = keep; store.set('dash2_merge', MERGE); build(); });
   const merged = Object.values(PEOPLE).filter(p => Object.keys(p.names).length > 1);
   $('dtMerged').innerHTML = (merged.length ? `<div class="chips">${merged.map(p => `<span class="chip" title="${Object.keys(p.names).map(esc).join(' · ')}">✓ <b>${esc(p.name)}</b> ← ${Object.keys(p.names).length} написания</span>`).join('')}</div>` : '<div class="muted">Пока ничего</div>') +
@@ -737,7 +739,7 @@ const typeLabel = t => t === 'lifehacks' ? '💡 Лайфхаки' : (TOOLS[t] |
 let recPage = 1, recPer = 50; const SEL = new Set();
 const rid = r => r.col + '|' + r.docId;
 function allRows() {
-  const lh = LH.filter(e => e._id && e.user_name).map(e => { const k = rootKey(normKey(String(e.user_name).trim())); return { col: 'lifehacks', docId: e._id, type: 'lifehacks', key: k, name: PEOPLE[k]?.name || cap(String(e.user_name).trim().toLowerCase()), city: e.city || 'Не указан', percent: null, date: e.date || new Date(0).toISOString(), ev: e.event, detail: e.detail || '' }; });
+  const lh = LH.filter(e => e._id && e.user_name).map(e => { const k = rootKey(pkey(String(e.user_name).trim(), e.city)); return { col: 'lifehacks', docId: e._id, type: 'lifehacks', key: k, name: PEOPLE[k]?.name || cap(String(e.user_name).trim().toLowerCase()), city: e.city || 'Не указан', percent: null, date: e.date || new Date(0).toISOString(), ev: e.event, detail: e.detail || '' }; });
   return RECS.concat(lh);
 }
 function lhText(r) { let d = r.detail; if (r.ev === 'timer') d = d === 'ok' ? 'успел' : 'не успел'; if (r.ev === 'open') d = d === 'first' ? 'впервые' : ''; return `<span class="rs-ev">${LH_EV[r.ev] || r.ev}</span>${d ? ` <span class="muted">${esc(d)}</span>` : ''}`; }
