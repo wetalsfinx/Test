@@ -98,7 +98,7 @@ const activeTr = () => TRAINERS.filter(t => RECS.some(r => r.type === t));
 const COLS = [['test', 'test'], ['dialog', 'trainer'], ['crosssell', 'crosssell'], ['errorfinder', 'errorfinder'], ['clienttype', 'clienttype'], ['service', 'service'], ['algorithm', 'algorithm'], ['final_exam', 'final_exam'], ['final_exam_1', 'final_exam_1']];
 const TEST_TOPICS = ['Приветствие и контакт', 'Выявление бюджета', 'Дополнительные товары', 'Выбор материала', 'Сопутствующие товары', 'Возражение «дорого»', 'Альтернатива, нет размера', 'Эмоциональная презентация', 'Дополнительные модели', 'Рассрочка (Сплит)', 'Инициатива, молчаливый клиент', 'Завершение сделки', '«Я подумаю»'];
 const TEST_SK = ['K1', 'K3', 'K6', 'K5', 'K6', 'K8', 'K9', 'K4', 'K2', 'K7', 'K2', 'K10', 'K8'];
-const RULES = [['Проявляй инициативу', 'K2'], ['Задавай вопросы ДО показа', 'K3'], ['Презентуй с эмоцией', 'K4'], ['Предлагай примерку', 'K4'], ['Не отпускай без альтернативы', 'K9'], ['Предлагай второе украшение', 'K6'], ['Предлагай футляр и уход', 'K6'], ['Завершай с теплотой', 'K11']];
+const RULES = [['Проявляй инициативу', 'K1'], ['Проявляй инициативу', 'K2'], ['Задавай вопросы ДО показа', 'K3'], ['Презентуй с эмоцией', 'K4'], ['Предлагай примерку', 'K4'], ['Показывай вариант лучше', 'K5'], ['Называй Сплит до цены', 'K7'], ['Отрабатывай «дорого»', 'K8'], ['Не отпускай без альтернативы', 'K9'], ['Закрывай сделку', 'K10'], ['Предлагай второе украшение', 'K6'], ['Предлагай футляр и уход', 'K6'], ['Завершай с теплотой', 'K11']];
 const EF_SK = { 'Холодный клиент': 'K2', 'Подарок жене': 'K3', 'Дорого!': 'K8', 'Просто смотрю': 'K2', 'Допродажа на кассе': 'K6', 'А что есть ещё?': 'K4', 'Беру': 'K10' };
 const CT_SK = { 'Холодный клиент': 'K2', 'Молчаливый наблюдатель': 'K2', 'Постоянный клиент': 'K11', 'Растерянный мужчина (подарок)': 'K3' };
 const CS_SK = { 'Серебряная цепь': 'K5' };
@@ -110,7 +110,7 @@ function itemsOf(r) {
   const x = r.raw;
   switch (r.type) {
     case 'test': return (x.answers || []).map(a => { const i = a.originalIndex ?? (a.questionNum - 1); return [TEST_TOPICS[i] || ('Вопрос ' + (i + 1)), TEST_SK[i] || 'K4', a.correct ? 100 : 0]; });
-    case 'trainer': return RULES.filter(([n]) => (n !== 'Предлагай второе украшение' || (x.total || 6) >= 7) && (n !== 'Предлагай футляр и уход' || (x.total || 6) >= 8)).map(([n, k]) => [n, k, (x.rules_applied || []).includes(n) ? 100 : 0]); // старые прохождения — 6 правил
+    case 'trainer': return RULES.filter(([n]) => (n !== 'Предлагай второе украшение' || (x.total || 6) >= 7) && (n !== 'Предлагай футляр и уход' || (x.total || 6) >= 8) && (!['Показывай вариант лучше', 'Называй Сплит до цены', 'Отрабатывай «дорого»', 'Закрывай сделку'].includes(n) || (x.total || 6) >= 12)).map(([n, k]) => [n, k, (x.rules_applied || []).includes(n) ? 100 : 0]); // старые прохождения — 6 правил
     case 'crosssell': return (x.scenarios || []).map(s => [s.scenario, CS_SK[s.scenario] || 'K6', s.isCorrect ? 100 : 0]);
     case 'errorfinder': return (x.scenarios || []).map(s => [s.scenario, EF_SK[s.scenario] || 'K4', s.percent != null ? s.percent : Math.round((s.score || 0) / (s.maxScore || 1) * 100)]);
     case 'clienttype': return (x.scenarios || []).map(s => [s.scenario || s.clientType, CT_SK[s.scenario] || 'K4', s.isCorrect ? 100 : 0]);
