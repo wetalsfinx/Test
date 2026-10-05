@@ -178,6 +178,36 @@
         
         .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        .chat-card { background: #fff; border-radius: 28px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid rgba(196,30,58,0.08); }
+        .chat-top { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: #fff; position: sticky; top: 0; z-index: 5; }
+        .cl-av { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.18); display: grid; place-items: center; font-size: 24px; flex: none; }
+        .cl-info { flex: 1; min-width: 0; } .cl-info b { display: block; font-size: 15px; } .cl-info small { opacity: .85; font-size: 12px; }
+        .mood { display: flex; align-items: center; gap: 8px; position: relative; } .mood span:first-child { font-size: 26px; transition: transform .3s; }
+        .mood-bar { width: 90px; height: 10px; background: rgba(255,255,255,0.25); border-radius: 6px; overflow: hidden; }
+        .mood-bar i { display: block; height: 100%; width: 50%; border-radius: 6px; transition: width .6s, background .6s; background: #fbbf24; }
+        .mood-bar i.good { background: #22c55e; } .mood-bar i.mid { background: #fbbf24; } .mood-bar i.bad { background: #f87171; }
+        .mood-pop { position: absolute; right: 0; top: -6px; font-weight: 900; font-size: 15px; animation: pop 1.2s forwards; }
+        .mood-pop.up { color: #bbf7d0; } .mood-pop.down { color: #fecaca; }
+        @keyframes pop { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-22px); } }
+        .chat { padding: 18px 16px 8px; display: flex; flex-direction: column; gap: 10px; min-height: 260px; background: #fbf8f6; }
+        .msg { max-width: 82%; padding: 11px 15px; border-radius: 18px; font-size: 15px; line-height: 1.45; animation: msgin .3s; }
+        @keyframes msgin { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        .msg.c { align-self: flex-start; background: #fff; border: 1px solid #eee3df; border-bottom-left-radius: 6px; color: #1e2a3a; }
+        .msg.s { align-self: flex-end; background: linear-gradient(135deg, #c41e3a 0%, #a5182f 100%); color: #fff; border-bottom-right-radius: 6px; }
+        .msg.n { align-self: center; max-width: 92%; background: none; padding: 2px 8px; text-align: center; }
+        .msg.n span { display: inline-block; background: #f3ece8; color: #6b5d58; font-size: 13px; padding: 6px 12px; border-radius: 12px; font-style: italic; }
+        .msg.typing { display: flex; gap: 4px; padding: 14px 16px; } .msg.typing i { width: 7px; height: 7px; border-radius: 50%; background: #c9b8b2; animation: dot 1s infinite; }
+        .msg.typing i:nth-child(2) { animation-delay: .15s; } .msg.typing i:nth-child(3) { animation-delay: .3s; }
+        @keyframes dot { 0%, 60%, 100% { transform: none; opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }
+        .replies { padding: 10px 16px 18px; display: grid; gap: 8px; background: #fbf8f6; }
+        .replies-h { font-size: 12px; font-weight: 800; color: #8a7a74; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+        .reply { text-align: left; background: #fff; border: 2px solid #eadbd6; border-radius: 16px; padding: 12px 14px; font: inherit; font-size: 14.5px; color: #1e2a3a; cursor: pointer; transition: border-color .15s, transform .1s; }
+        .reply:hover { border-color: #c41e3a; } .reply:active { transform: scale(.99); }
+        .rec-item.ok { border-left: 4px solid #22c55e; } .rec-item.no { border-left: 4px solid #ef4444; } .rec-item.skip { opacity: .6; }
+        .rec-you { font-size: 14px; color: #475569; margin: 6px 0; }
+        .rec-tip span { display: block; margin-top: 6px; color: #64748b; font-size: 13px; }
+        @media (max-width: 600px) { .msg { max-width: 90%; font-size: 14.5px; } .mood-bar { width: 60px; } .chat-top { padding: 12px; } }
     </style>
 </head>
 <body>
@@ -185,7 +215,7 @@
     <div class="header">
         <div class="logo-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7.5 3h9L21 9l-9 12L3 9l4.5-6z" fill="#ffffff"/><path d="M3 9H21M12 21L8 9M12 21L16 9M7.5 3L8 9M16.5 3L16 9" stroke="rgba(196,30,58,0.35)" stroke-width="1"/></svg> 585GOLD | Тренировка диалога</div>
         <h1>Диалог с клиентом</h1>
-        <p class="subtitle">Примените все 6 правил продажи в живом диалоге</p>
+        <p class="subtitle">Живой диалог: выбирайте реплики и следите за настроением клиента. Ошибки не подсвечиваются — клиент просто охладевает.</p>
     </div>
 
     <div id="regScreen" class="card">
@@ -212,21 +242,11 @@
     </div>
 
     <div id="quizScreen" class="hidden">
-        <div class="card">
-            <div class="progress-container">
-                <div class="progress-text">
-                    <span>Ситуация <span class="current" id="qNum">1</span> из <span id="qTotal">6</span></span>
-                    <span id="progressPercent">0%</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
-            </div>
-            <div id="questionContainer"></div>
-            <div class="applied-wrap">
-                <span class="applied-title">🏆 Применённые правила</span>
-                <div class="applied-list" id="appliedRulesList"><span class="applied-empty">(пока ни одного)</span></div>
-            </div>
-            <div id="optionsContainer"></div>
-            <button class="btn-primary" id="nextBtn" style="margin-top: 24px;" disabled>➡️ Далее</button>
+        <div class="chat-card">
+            <div class="chat-top"><div class="cl-av" id="clAv">🙂</div><div class="cl-info"><b id="clWho"></b><small id="clStage"></small></div>
+                <div class="mood" title="Настроение клиента"><span id="moodEmo">🙂</span><div class="mood-bar"><i id="moodFill"></i></div></div></div>
+            <div class="chat" id="chat"></div>
+            <div class="replies" id="replies"></div>
         </div>
     </div>
 
@@ -276,11 +296,7 @@
         { id: "warmClosing", name: "Завершай с теплотой", icon: "👋", label: "Тёплое завершение", rec: "Завершайте с теплотой: «Спасибо, что зашли! Если будете выбирать подарки — заходите, вместе найдём что-то особенное»." }
     ];
 
-    // Пул: по 3 ситуации на каждое правило. В каждом прохождении — по одной случайной на правило, варианты ответа перемешаны.
-    const POOL = {"initiative": [{"client": "Клиентка зашла и уже секунд 25 молча рассматривает витрину с кольцами. Ваши первые слова?", "choices": ["«Добрый день! Подсказать вам что-нибудь по кольцам? Здесь вся новая коллекция»", "«Добрый день! Сегодня скидка 30% на бриллианты. Какое изделие выбираете — для себя или в подарок?»", "«Добрый день! Сегодня скидка 30% на бриллианты. Смотрите спокойно, не тороплю — я рядом, если что, сразу зовите»", "«Добрый день! Вам кольцо для себя? У нас как раз сейчас хорошие скидки на многое»"], "correct": 1}, {"client": "Две подруги зашли вместе, оживлённо обсуждают витрину и смеются. Ваши действия?", "choices": ["«Добрый день, девушки! Смотрите спокойно, не буду мешать — если что, подскажу»", "«Добрый день! Можно я покажу вам наши новинки? Их как раз вчера привезли»", "«Добрый день! Сегодня скидка 30% на бриллианты. Выбираете для одной из вас или в подарок?»", "«Добрый день, девушки! У нас сейчас действует много акций — спросите меня, если что-то из витрины заинтересует»"], "correct": 2}, {"client": "Клиент сказал: «Я просто посмотреть». Прошло 2–3 минуты, он задержался у витрины с серьгами. Ваши действия?", "choices": ["Жду ещё — он ведь сам сказал, что смотрит, второй подход покажется навязчивым", "«Можно показать вам эти серьги поближе? Если хотите, конечно»", "«Вижу, вам приглянулись серьги — давайте покажу их ближе, на свету они играют иначе»", "«Вы уже определились с выбором? Могу подсказать цену на любую пару и рассказать про действующие акции»"], "correct": 2}], "askBeforeShow": [{"client": "Клиент: «Хочу подарить жене кольцо, бюджет до 40 000 ₽». Что делаете?", "choices": ["«Отлично! Вот эта коллекция как раз в вашем бюджете — давайте покажу самые красивые»", "«Для какого случая выбираете? И что ей ближе — классика или что-то необычное?»", "«Хороший бюджет! Покажу три самых популярных кольца — на них точно не ошибётесь»", "«А какой размер у жены? Тогда я сразу подберу кольца из того, что есть в наличии»"], "correct": 1}, {"client": "Мужчина: «Мне нужны серьги, недорогие, до 15 000». Что делаете?", "choices": ["«Покажу вам три пары до 15 000 — все очень удачные, выберете по душе»", "«В золоте до 15 000 есть отличные пусеты — сейчас покажу вам лучшие»", "«Для кого выбираете? Какой у неё стиль — классика или что-то современное?»", "«За 18 000 есть пары заметно интереснее — может, посмотрим чуть выше бюджета?»"], "correct": 2}, {"client": "Клиентка: «Ищу подарок дочке на 18 лет». Вы знаете, что у молодёжи сейчас хит — пусеты с фианитами. Что делаете?", "choices": ["«На какую сумму рассчитываете? Подберу лучшее в этих пределах»", "«Пусеты с фианитами — абсолютный хит у молодёжи, сейчас покажу»", "«Давайте покажу вам всё, что у нас есть для молодёжи: пусеты, кольца, цепочки, — а выберете сами, что ей подойдёт»", "«Какой у дочки стиль? Что она носит каждый день — что-то яркое или минимализм?»"], "correct": 3}], "emotionalHPW": [{"client": "Клиент: «Годовщина 10 лет. Жена любит винтажный стиль». Показываете кольцо. Что говорите?", "choices": ["«Это кольцо из винтажной коллекции: огранка ручной работы, золото 585 пробы»", "«Это кольцо будет напоминать ей о ваших 10 годах вместе каждый раз, когда она на него посмотрит»", "«Это настоящий хит сезона — винтажные модели сейчас покупают чаще всего, так что жене оно точно понравится»", "«Посмотрите, какая огранка — это очень качественное изделие, и цена хорошая»"], "correct": 1}, {"client": "Клиентка выбирает себе цепочку и спрашивает: «А она не порвётся?» Что отвечаете?", "choices": ["«Не порвётся: золото 585 пробы и гарантия 2 года, можете не переживать»", "«Это плетение бисмарк — одно из самых прочных: звенья двойные, плотные, и порвать такую цепочку практически невозможно»", "«Плетение очень прочное — можно носить каждый день не снимая, и через годы она будет так же блестеть»", "«Если вдруг что-то случится — отремонтируем по гарантии, это бесплатно»"], "correct": 2}, {"client": "Мужчина выбирает кулон маме на 60-летие. Что говорите о кулоне?", "choices": ["«Кулон с фианитом 57 граней — посмотрите, как красиво он играет на свету»", "«Этот кулон мама будет носить у сердца — и каждый раз вспоминать ваш праздник»", "«Классическая модель — такие нравятся почти всем мамам, беспроигрышный вариант»", "«Золото 585 пробы, вес 2,1 грамма — очень выгодная цена за грамм»"], "correct": 1}], "fittingOffer": [{"client": "Клиентка заинтересовалась кольцом: «Да, это близко к тому, что хочу. Можно посмотреть?»", "choices": ["«Конечно! Хотите его примерить? Зеркало у нас вон там, у окна, — там самое удачное освещение»", "«Конечно, вот, возьмите — посмотрите поближе, оно лёгкое и удобное»", "«Давайте примерим — и сразу в зеркало, так увидите, как оно смотрится именно на вас»", "«Можно и примерить, если хотите, — я помогу подобрать размер»"], "correct": 2}, {"client": "Клиентка: «Я, наверное, не буду мерить — у меня руки не накрашены». Что говорите?", "choices": ["«Конечно, как вам удобно — можно просто приложить кольцо к пальцу и посмотреть, как оно смотрится»", "«Давайте примерим — кольцо само украсит руку, и вы сразу увидите, как оно сидит»", "«Ничего страшного! Можете зайти в другой раз, когда будет удобнее, — я отложу»", "«Можно примерить на мою руку — посмотрите, как оно выглядит со стороны»"], "correct": 1}, {"client": "Клиент: «У меня, кажется, 17-й размер». Кольцо 17-го размера есть. Что делаете?", "choices": ["«Отлично, 17-й как раз есть — оформляем?»", "«Хотите примерить, чтобы убедиться? Или берём сразу?»", "«Тогда это кольцо вам точно подойдёт — 17-й самый ходовой размер, и модель стандартной полноты, оформляем?»", "«Давайте примерим 17-й и 17,5 — размер пальца меняется в течение дня, так точно не ошибёмся»"], "correct": 3}], "alternative": [{"client": "Клиентке понравилось кольцо, но её размера 16,5 нет в наличии. Что делаете?", "choices": ["«Как жаль! Давайте тогда посмотрим, что ещё есть в этой витрине, — может быть, что-то понравится вам даже больше»", "«Давайте покажу похожие кольца в вашем размере, а это — закажем по каталогу точно под вас»", "«Можем заказать с доставкой через 2–3 недели. Внесёте предоплату?»", "«Давайте примерим 17-й — вдруг подойдёт, иногда разница почти не ощущается»"], "correct": 1}, {"client": "Клиентка хочет серьги «как у подруги». Такой модели в магазине нет. Что говорите?", "choices": ["«Такой модели у нас, к сожалению, сейчас нет — но коллекция часто обновляется, загляните к нам через неделю-другую»", "«Отличный вкус у подруги! Покажу похожие по стилю, а если хотите именно эти — поищем в каталоге»", "«Оставьте номер телефона — позвоню, как только похожие поступят»", "«Уточните у подруги, где она покупала, — возможно, это другая сеть»"], "correct": 1}, {"client": "Кольцо понравилось, но оно последнее и клиентке велико. Что делаете?", "choices": ["«Жаль, это был последний экземпляр — заходите на следующей неделе»", "«Его можно уменьшить в ювелирной мастерской — это недолго и недорого, а модель останется именно та, что понравилась»", "«Давайте подберём похожее в вашем размере, а это кольцо закажем под вас по каталогу»", "«Возьмите его — велико на этот палец, зато идеально сядет на средний»"], "correct": 2}], "warmClosing": [{"client": "Клиент выбрал похожую модель, оформил заказ и прощается. Что говорите?", "choices": ["«Спасибо за покупку! Чек и гарантийный талон в пакете, хорошего дня»", "«Будем рады видеть вас снова — у нас обновления коллекции каждую неделю, так что всегда есть что посмотреть»", "«Спасибо, что зашли! Будете выбирать подарки — заходите, вместе найдём что-то особенное»", "«Спасибо! Заказ придёт через несколько дней — до встречи»"], "correct": 2}, {"client": "Клиент ничего не купил: «Спасибо, я ещё похожу по другим магазинам». Что говорите?", "choices": ["«Подождите! Давайте я сделаю вам скидку, чтобы вы не уходили»", "«Спасибо, что зашли! Будем рады видеть вас снова — покажу новинки и помогу с выбором»", "«Конечно! Но если ничего не найдёте — обязательно возвращайтесь, у нас цены всё равно ниже, чем у соседей»", "«Хорошо. Только учтите: эта модель может уйти, её часто берут»"], "correct": 1}, {"client": "Постоянная клиентка Мария купила кольцо. Как прощаетесь?", "choices": ["«Спасибо, что снова выбрали именно нас! Мы всегда очень рады постоянным клиентам — хорошего вам дня»", "«Спасибо за покупку! Чек в пакете, до свидания»", "«Мария, носите с удовольствием! Будут новинки в вашем стиле — заходите, покажу первой»", "«До свидания, приходите ещё — мы всегда вам рады»"], "correct": 2}]};
-    const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-    const QUESTIONS = ALL_RULES.map(r => { const pool = POOL[r.id], vi = Math.floor(Math.random() * pool.length), q = pool[vi], order = shuffle(q.choices.map((_, i) => i));
-        return { ruleId: r.id, variant: vi, client: q.client, choices: order.map(i => q.choices[i]), correct: order.indexOf(q.correct) }; });
+    const STORIES = [{"id": "couple", "title": "Годовщина", "who": "Пара, около 40 лет", "avatar": "👫", "sale": "Кольцо с бриллиантом из винтажной коллекции", "steps": [{"rule": "initiative", "ev": [["n", "Пара лет сорока зашла в магазин. Мужчина уже полминуты молча рассматривает витрину с кольцами, жена стоит рядом."]], "opts": [["«Добрый день! Сегодня скидка 30% на бриллианты. Какое изделие выбираете — для себя или в подарок?»", 1, 15, "Добрый день! В подарок — у нас годовщина. Скидка очень кстати."], ["«Добрый день! Подсказать вам что-нибудь по кольцам? Здесь вся наша новая коллекция»", 0, -10, "Нет, спасибо, мы пока сами посмотрим… Хотя ладно — у нас годовщина, ищем подарок."], ["«Добрый день! Сегодня скидка 30% на бриллианты. Смотрите спокойно, я рядом — если что, сразу зовите»", 0, -10, "Угу, спасибо. …Девушка! Подойдите всё-таки, у нас годовщина, нужен подарок."], ["«Добрый день! Вам кольцо для себя? У нас как раз сейчас хорошие скидки на очень многое»", 0, -10, "Для себя? Нет, у нас годовщина. А на что именно скидки?"]]}, {"rule": "askBeforeShow", "ev": [["c", "Хочу подарить жене кольцо. Бюджет — до 40 000."]], "opts": [["«Отлично! Вот эта коллекция как раз в вашем бюджете — давайте покажу самые красивые»", 0, -15, "(жена) Хм… они все какие-то одинаковые. Я вообще-то люблю винтаж."], ["«Для какого случая выбираете? И что вам ближе — классика или что-то необычное?»", 1, 15, "(жена) Годовщина, 10 лет! Я люблю винтаж — такие, со старинным узором."], ["«Хороший бюджет! Покажу три самых популярных кольца — на них точно не ошибётесь, их все берут»", 0, -10, "(жена) Популярные — это как у всех? Я люблю винтаж, если что."], ["«А какой размер у вашей супруги? Тогда я сразу подберу из того, что есть в наличии»", 0, -10, "(жена) Семнадцатый… Только мне не любое нужно — я люблю винтаж."]]}, {"rule": "emotionalHPW", "ev": [["n", "Вы показываете кольцо из винтажной коллекции с ажурным узором."], ["c", "(муж) Ну… красивое. А чем оно лучше других?"]], "opts": [["«Огранка ручной работы, золото 585 пробы, вес 3,2 грамма — очень качественное изделие, таких в сети всего несколько»", 0, -10, "Ну, качественное — это хорошо… Я в этом не разбираюсь, если честно."], ["«Это хит сезона — винтажные модели сейчас покупают чаще всего, супруге точно понравится»", 0, -10, "(жена) Хит сезона? Я как раз не люблю то, что у всех."], ["«Посмотрите, какая огранка! И цена очень хорошая за такое качество, поверьте»", 0, -15, "Цена — да… Я пока не очень понимаю, за что именно платим."], ["«Это кольцо будет напоминать вам о десяти годах вместе каждый раз, когда вы на него посмотрите»", 1, 15, "(жена улыбается) Да… Это прямо про нас."]]}, {"rule": "fittingOffer", "ev": [["c", "(жена) Красивое… А можно посмотреть поближе?"]], "opts": [["«Конечно! Хотите его примерить? Зеркало у нас вон там, у окна — там самый лучший дневной свет для украшений»", 0, -10, "Да нет, наверное, я и так вижу…"], ["«Давайте примерим — и сразу в зеркало, так увидите, как оно смотрится именно на вас»", 1, 15, "(примеряет) Ой… Саша, смотри!"], ["«Конечно, вот, возьмите в руки — посмотрите поближе, оно лёгкое и очень удобное»", 0, -10, "(вертит в руках) Ну да, лёгкое…"], ["«Можно и примерить, если хотите, — я помогу подобрать размер»", 0, -10, "Можно… если только быстро."]]}, {"rule": "alternative", "ev": [["n", "Кольцо оказалось велико, а 17-го размера этой модели в наличии нет."], ["c", "(жена) Ну вот… Велико. А меньше нет?"]], "opts": [["«Как жаль! Это был последний размер — но заходите, вдруг ещё привезут»", 0, -20, "Жаль… Ну что ж."], ["«Его можно уменьшить в ювелирной мастерской — это недолго и недорого, а модель останется именно та, что понравилась»", 0, -10, "В мастерской? Не знаю… Не хочется возиться."], ["«Давайте покажу похожие кольца в вашем размере, а это — закажем по каталогу точно под вас»", 1, 15, "О, вот это тоже очень красивое! Саша, давай его?"], ["«Давайте примерим на средний палец — велико на этот, зато там будет как раз»", 0, -15, "На средний? Нет, я хочу носить его как обручальное…"]]}, {"rule": "warmClosing", "ev": [["n", "Пара оформила покупку и собирается уходить."]], "opts": [["«Спасибо за покупку! Чек и гарантийный талон в пакете, хорошего дня»", 0, -5, "Спасибо, до свидания."], ["«Спасибо вам за покупку! Кстати, к этому кольцу есть серьги из той же коллекции со скидкой 50% — посмотрите, пока не ушли? Это займёт пару минут»", 0, -10, "Нет-нет, мы уже всё. Спасибо."], ["«Спасибо, что выбрали нас для такого дня! Носите с радостью — и заходите, вместе найдём что-то особенное к следующему празднику»", 1, 10, "Обязательно зайдём! Спасибо вам огромное!"], ["«Будем рады видеть вас снова — у нас обновления коллекции каждую неделю»", 0, -5, "Ага, спасибо."]]}]}, {"id": "girl", "title": "Просто посмотреть", "who": "Девушка, около 25 лет", "avatar": "👩", "sale": "Пусеты с бриллиантами", "steps": [{"rule": "initiative", "ev": [["n", "Девушка лет 25 зашла. Вы поздоровались и назвали акцию."], ["c", "Спасибо, я просто посмотреть."], ["n", "Прошло 2–3 минуты. Она задержалась у витрины с серьгами."]], "opts": [["Жду дальше — она сама сказала, что смотрит; второй подход будет навязчивым", 0, -15, "(уже у двери оборачивается) А… вон те серьги сколько стоят?"], ["«Можно показать вам эти серьги поближе? Если хотите, конечно»", 0, -10, "Можно… наверное."], ["«Вы уже определились с выбором? Могу подсказать цену на любую пару и рассказать про все наши акции»", 0, -10, "Нет, ещё не определилась. Ну… вон те сколько?"], ["«Вижу, вам приглянулись серьги — давайте покажу их ближе, на свету они играют иначе»", 1, 15, "Ой, давайте! Вот эти, с камушками."]]}, {"rule": "askBeforeShow", "ev": [["c", "А какие у вас ещё есть серьги? Покажите что-нибудь."]], "opts": [["«На какую сумму рассчитываете? Подберу лучшее в этих пределах»", 0, -15, "Ну… не знаю. Я же просто посмотреть пришла."], ["«Для какого случая выбираете — на каждый день или к празднику? Какой стиль вам ближе?»", 1, 15, "На каждый день, на работу. Что-то аккуратное, но чтобы блестело."], ["«Давайте покажу вам всё, что есть: пусеты, конго, длинные — а вы выберете сами, что нравится»", 0, -10, "Ой, сколько всего… Я теряюсь."], ["«Сейчас хит — пусеты с фианитами, их все берут; покажу самые популярные»", 0, -10, "Как у всех? Ну… не знаю."]]}, {"rule": "emotionalHPW", "ev": [["n", "Вы показываете аккуратные пусеты с бриллиантами."], ["c", "Миленькие. А они не слишком простые?"]], "opts": [["«Бриллиант 0,1 карата, золото 585 пробы, надёжный английский замок»", 0, -10, "Ну… это всё хорошо, но всё-таки простые."], ["«Нет, что вы, это классика — такие сейчас все носят, вы не ошибётесь»", 0, -10, "Все носят — это как раз то, чего я не хочу."], ["«Каждый раз, когда повернёте голову, они будут вспыхивать — аккуратно, но заметно. То, что вы хотели»", 1, 15, "(подходит к зеркалу) Ой… и правда вспыхивают!"], ["«Если кажутся простыми — давайте посмотрим что-то подороже: там камни крупнее, огранка сложнее, и смотрятся они намного богаче»", 0, -15, "Подороже? Я не настолько готова…"]]}, {"rule": "fittingOffer", "ev": [["c", "А кольцо к ним есть? Вот это, с похожим камнем… Но я, наверное, не буду мерить — маникюра нет."]], "opts": [["«Давайте примерим — кольцо само украсит руку, и вы сразу увидите, как оно сидит»", 1, 15, "(примеряет) Ого. Правда красиво."], ["«Конечно, как вам удобно — можно просто приложить кольцо к пальцу и посмотреть»", 0, -10, "Ну да… приложила. Вроде ничего."], ["«Ничего страшного! Можете зайти в другой раз, когда будет удобнее, — я его отложу»", 0, -15, "Ладно, может быть, в другой раз…"], ["«Можно примерить на мою руку — посмотрите, как оно выглядит со стороны»", 0, -10, "Хм… на вас красиво, а на мне — не знаю."]]}, {"rule": "alternative", "ev": [["c", "А такое же, только в белом золоте есть? Я белое больше ношу."]], "opts": [["«В белом золоте именно этой модели, к сожалению, нет — и в ближайших поставках я её тоже не видела, увы»", 0, -20, "Жаль. Тогда, наверное, не надо…"], ["«Оставьте номер телефона — позвоню, как только в белом поступит»", 0, -10, "Номер? Нет, не надо, спасибо."], ["«Поверьте, в жёлтом оно смотрится даже лучше — белое сейчас уже не так модно»", 0, -10, "Мне всё-таки белое нравится…"], ["«Покажу похожую модель в белом золоте, а эту можем заказать в белом по каталогу»", 1, 15, "О, эта похожая — даже интереснее!"]]}, {"rule": "warmClosing", "ev": [["c", "Беру серьги! А кольцо… в другой раз, наверное."]], "opts": [["«Подождите! Давайте я сделаю на кольцо скидку, чтобы вы взяли сразу»", 0, -10, "Ой, нет, я правда в другой раз."], ["«Носите с удовольствием! А кольцо будет ждать вас — заходите, примерим ещё раз, когда захотите»", 1, 10, "Спасибо! Обязательно зайду."], ["«Только учтите: это кольцо у нас очень часто берут, оно может уйти уже на этой неделе — потом будет жалко, правда»", 0, -10, "Ну… значит, не судьба."], ["«Спасибо за покупку! Чек в пакете, хорошего дня»", 0, -5, "Спасибо, до свидания."]]}]}, {"id": "mom", "title": "Подарок дочке", "who": "Женщина, около 45 лет", "avatar": "👩‍🦱", "sale": "Цепочка с кулоном", "steps": [{"rule": "initiative", "ev": [["n", "Женщина лет 45 быстро оглядела зал и остановилась у витрины с цепочками."]], "opts": [["«Добрый день! Подсказать вам что-нибудь? Здесь у нас цепочки и кулоны, а вон там, у окна, — новая коллекция колец»", 0, -10, "Да я пока сама… Хотя вот — нужен подарок дочке."], ["«Добрый день! Смотрите спокойно, не буду вам мешать — если что, я у кассы»", 0, -15, "(через пару минут) Девушка! Можно вас? Нужен подарок дочке."], ["«Добрый день! Сегодня скидка 30% на бриллианты. Какое изделие выбираете — для себя или в подарок?»", 1, 15, "Добрый! В подарок. Дочке 18 лет исполняется."], ["«Добрый день! У нас сейчас много акций — спросите, если что-то заинтересует»", 0, -10, "Акции? Ну… Мне вообще подарок нужен, дочке."]]}, {"rule": "askBeforeShow", "ev": [["c", "Сейчас же модно что-то… пусеты эти. Покажите недорогие, до 15 тысяч."]], "opts": [["«Пусеты — абсолютный хит у молодёжи! Сейчас покажу лучшие до 15 000»", 0, -10, "Хит… А вдруг ей не понравится? Она у меня своеобразная."], ["«Покажу три пары до 15 000 — все очень удачные, выберете по душе»", 0, -10, "Ну… вроде все одинаковые. Не знаю, что ей подойдёт."], ["«Какой у дочки стиль? Что она носит каждый день — что-то яркое или минимализм?»", 1, 15, "Минимализм. Всё время в чёрном, украшений почти не носит — только тоненькую цепочку."], ["«За 18 000 есть пары заметно интереснее и с камнями покрупнее — может быть, посмотрим чуть-чуть выше бюджета?»", 0, -15, "Я же сказала — до 15."]]}, {"rule": "emotionalHPW", "ev": [["n", "Вы показываете тонкую цепочку с минималистичным кулоном."], ["c", "А она не порвётся? Дочка у меня всё теряет и ломает."]], "opts": [["«Плетение прочное — можно носить каждый день не снимая. А подарок на совершеннолетие останется с ней на годы»", 1, 15, "Ой… на годы — это хорошо. Это важно."], ["«Это плетение бисмарк: звенья двойные и очень плотные, порвать такую цепочку практически невозможно, даже если зацепится за одежду»", 0, -10, "Бисмарк… Ну, вам виднее."], ["«Если что-то случится — отремонтируем по гарантии, это бесплатно»", 0, -10, "Значит, всё-таки может порваться?"], ["«Не порвётся: золото 585 пробы и гарантия 2 года, можете не переживать»", 0, -10, "Ну, гарантия — это хорошо…"]]}, {"rule": "fittingOffer", "ev": [["c", "Ну не на себе же мне её мерить…"]], "opts": [["«Да, конечно, просто посмотрите её в руке — так тоже всё видно»", 0, -10, "В руке… Как она на шее ляжет — непонятно."], ["«Давайте примерим на вас — сразу увидите, где ляжет кулон и как он играет на свету»", 1, 15, "(у зеркала) Ой, а ведь хорошо лежит!"], ["«Можно примерить, если хотите, — зеркало вон там»", 0, -10, "Да ладно, не буду."], ["«Длина 45 см — это стандарт для девушек, кулон ляжет чуть ниже ключиц, так что мерить совсем не обязательно»", 0, -10, "Стандарт… Ну ладно."]]}, {"rule": "alternative", "ev": [["c", "А кулон-сердечко такой есть? Она сердечки любит."]], "opts": [["«Сердечек сейчас, к сожалению, нет»", 0, -20, "Жаль… Тогда я ещё похожу."], ["«Сердечки — это уже немного немодно, поверьте; возьмите лучше этот кулон, он универсальный и подойдёт к любой одежде»", 0, -15, "Ей нравятся сердечки, вообще-то."], ["«Покажу два похожих — тоже минималистичных, а сердечко можем заказать по каталогу»", 1, 15, "О, вот этот — прямо её стиль! Берём."], ["«Оставьте телефон — позвоню, как только сердечки привезут»", 0, -10, "Телефон оставлять не буду, спасибо."]]}, {"rule": "warmClosing", "ev": [["n", "Мама оформила покупку и благодарит вас."]], "opts": [["«Спасибо за покупку! Хорошего вам дня»", 0, -5, "И вам. До свидания."], ["«Будем рады видеть вас снова — у нас обновления каждую неделю»", 0, -5, "Хорошо, спасибо."], ["«Пусть дочке понравится! Будете выбирать подарки — заходите, вместе найдём что-то особенное»", 1, 10, "Спасибо вам большое! Обязательно зайду."], ["«Спасибо вам за покупку! Кстати, к цепочке у нас есть специальное средство для ухода — возьмёте? Оно недорогое и очень полезное»", 0, -10, "Нет-нет, уже всё оплачено."]]}]}];
 
     async function saveToFirebase(resultData) {
         // Сохраняем локально как резервную копию
@@ -308,157 +324,109 @@
         }
     }
 
-    let currentIndex = 0, currentAnswers = [], appliedRules = [], questionResults = [];
-    let currentUser = { name: '', city: '' };
-    let selectedChoice = null;
-
     const regScreen = document.getElementById('regScreen');
     const quizScreen = document.getElementById('quizScreen');
     const resultScreen = document.getElementById('resultScreen');
-    const nextBtn = document.getElementById('nextBtn');
-
     function getRule(id) { return ALL_RULES.find(r => r.id === id); }
-
-    function updateProgress() {
-        const progress = (currentIndex / QUESTIONS.length) * 100;
-        document.getElementById('progressFill').style.width = progress + '%';
-        document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
+    // ===================== ЖИВОЙ ДИАЛОГ =====================
+    const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    let story = null, stepIdx = 0, mood = 50, currentAnswers = [], appliedRules = [], left = false, busy = false;
+    let currentUser = { name: '', city: '' };
+    const chat = () => document.getElementById('chat');
+    const moodEmoji = m => m >= 80 ? '😍' : m >= 60 ? '😊' : m >= 40 ? '🙂' : m >= 25 ? '😐' : '😒';
+    function setMood(d) {
+        mood = Math.max(0, Math.min(100, mood + d));
+        document.getElementById('moodFill').style.width = mood + '%';
+        document.getElementById('moodFill').className = mood >= 60 ? 'good' : mood >= 35 ? 'mid' : 'bad';
+        document.getElementById('moodEmo').textContent = moodEmoji(mood);
+        if (d) { const t = document.createElement('span'); t.className = 'mood-pop ' + (d > 0 ? 'up' : 'down'); t.textContent = (d > 0 ? '+' : '') + d; document.querySelector('.mood').appendChild(t); setTimeout(() => t.remove(), 1200); }
     }
-
-    function renderApplied() {
-        const list = document.getElementById('appliedRulesList');
-        if (appliedRules.length) {
-            list.innerHTML = appliedRules.map(n => {
-                const r = ALL_RULES.find(x => x.name === n);
-                return `<span class="applied-rule">${r ? r.icon : '✅'} ${n}</span>`;
-            }).join('');
-        } else {
-            list.innerHTML = '<span class="applied-empty">(пока ни одного)</span>';
-        }
+    function bubble(kind, text) {
+        const el = document.createElement('div');
+        el.className = 'msg ' + kind;
+        el.innerHTML = kind === 'n' ? `<span>${esc(text)}</span>` : esc(text);
+        chat().appendChild(el); el.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
-
-    function renderQuestion() {
-        const q = QUESTIONS[currentIndex];
-        const rule = getRule(q.ruleId);
-        
-        document.getElementById('questionContainer').innerHTML = `
-            <div class="question-wrapper">
-                <div class="question-icon">${rule.icon}</div>
-                <div class="question-content">
-                    <div class="question-label">${rule.label}</div>
-                    <div class="question-text">${q.client}</div>
-                </div>
-            </div>
-        `;
-        
-        document.getElementById('qNum').innerText = currentIndex + 1;
-        document.getElementById('qTotal').innerText = QUESTIONS.length;
-        updateProgress();
-        renderApplied();
-
-        const optionsContainer = document.getElementById('optionsContainer');
-        optionsContainer.innerHTML = '';
-        selectedChoice = null;
-        nextBtn.disabled = true;
-
-        q.choices.forEach((opt, idx) => {
-            const optionDiv = document.createElement('div');
-            optionDiv.className = 'option';
-            const letter = String.fromCharCode(65 + idx);
-            optionDiv.innerHTML = `<span class="option-letter">${letter}</span><span class="option-text">${opt}</span>`;
-            optionDiv.addEventListener('click', () => {
-                document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
-                optionDiv.classList.add('selected');
-                selectedChoice = idx;
-                nextBtn.disabled = false;
-            });
-            optionsContainer.appendChild(optionDiv);
-        });
+    async function typing(ms) {
+        const el = document.createElement('div'); el.className = 'msg c typing'; el.innerHTML = '<i></i><i></i><i></i>';
+        chat().appendChild(el); el.scrollIntoView({ behavior: 'smooth', block: 'end' }); await sleep(ms); el.remove();
     }
-
-    function nextStep() {
-        if (selectedChoice === null) return;
-        const q = QUESTIONS[currentIndex];
-        const isCorrect = selectedChoice === q.correct;
-        const rule = getRule(q.ruleId);
-
-        currentAnswers.push({ question: currentIndex, variant: q.variant, selected: selectedChoice, correct: isCorrect, ruleId: q.ruleId, client: q.client, choices: q.choices, correctIdx: q.correct });
-        questionResults[currentIndex] = isCorrect;
-
-        if (isCorrect && !appliedRules.includes(rule.name)) appliedRules.push(rule.name);
-
-        currentIndex++;
-        if (currentIndex >= QUESTIONS.length) {
-            finishGame();
-        } else {
-            renderQuestion();
-        }
+    async function playEvents(evs) {
+        for (const [k, t] of evs) { if (k === 'c') await typing(700 + Math.min(900, t.length * 12)); else await sleep(350); bubble(k, t); }
+    }
+    function startChat() {
+        story = STORIES[Math.floor(Math.random() * STORIES.length)];
+        stepIdx = 0; mood = 50; currentAnswers = []; appliedRules = []; left = false;
+        document.getElementById('clAv').textContent = story.avatar;
+        document.getElementById('clWho').textContent = story.who;
+        chat().innerHTML = ''; setMood(0); nextTurn();
+    }
+    async function nextTurn() {
+        const st = story.steps[stepIdx];
+        document.getElementById('clStage').textContent = `Шаг ${stepIdx + 1} из ${story.steps.length} · ${getRule(st.rule).label}`;
+        document.getElementById('replies').innerHTML = '';
+        await playEvents(st.ev);
+        const order = shuffle(st.opts.map((_, i) => i));
+        const box = document.getElementById('replies');
+        box.innerHTML = '<div class="replies-h">💬 Ваш ответ:</div>' + order.map((oi, k) => `<button class="reply" data-k="${k}">${esc(st.opts[oi][0])}</button>`).join('');
+        box.querySelectorAll('.reply').forEach(b => b.onclick = () => choose(order, +b.dataset.k));
+        box.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+    async function choose(order, k) {
+        if (busy) return; busy = true;
+        const st = story.steps[stepIdx], o = st.opts[order[k]], rule = getRule(st.rule);
+        document.getElementById('replies').innerHTML = '';
+        bubble('s', o[0]);
+        currentAnswers.push({ question: stepIdx, story: story.id, ruleId: st.rule, client: st.ev.filter(e => e[0] === 'c').map(e => e[1]).join(' ') || st.ev.map(e => e[1]).join(' '),
+            choices: order.map(i => st.opts[i][0]), selected: k, correctIdx: order.findIndex(i => st.opts[i][1]), correct: !!o[1] });
+        if (o[1] && !appliedRules.includes(rule.name)) appliedRules.push(rule.name);
+        await typing(800 + Math.min(900, o[3].length * 12));
+        bubble('c', o[3]); setMood(o[2]);
+        await sleep(700);
+        busy = false;
+        if (mood <= 10) { left = true; await sleep(300); bubble('n', 'Клиент вежливо попрощался и ушёл. Диалог окончен.'); await sleep(1200); return finishGame(); }
+        stepIdx++;
+        if (stepIdx >= story.steps.length) { await sleep(400); return finishGame(); }
+        nextTurn();
     }
 
     async function finishGame() {
         quizScreen.classList.add('hidden');
         resultScreen.classList.remove('hidden');
-
-        const success = appliedRules.length === ALL_RULES.length;
-        const percent = Math.round((appliedRules.length / ALL_RULES.length) * 100);
-
-        let html = `
-            <div class="result-card ${success ? 'success' : 'fail'}">
-                <div class="result-icon">${success ? '🏆' : '📚'}</div>
-                <h2>${success ? 'ПОБЕДА!' : 'Диалог не пройден'}</h2>
-                <p>${success ? 'Вы применили все 6 правил — клиент в восторге!' : 'Применено правил: ' + appliedRules.length + ' из 6. Разберём ошибки?'}</p>
-                <div class="result-stats">
-                    <div class="stat-box"><div class="stat-value">${percent}%</div><div class="stat-label">Результат</div></div>
-                    <div class="stat-box"><div class="stat-value">${appliedRules.length}/6</div><div class="stat-label">Правил применено</div></div>
-                </div>
-        `;
-
-        if (success) {
-            html += `<div class="rec-perfect">🎉 ИДЕАЛЬНО! Все 6 правил в диалоге!</div>`;
-        } else {
-            const missing = ALL_RULES.filter(r => !appliedRules.includes(r.name));
-            html += `<div class="rec-section"><h3>📚 Какие правила не применены</h3>`;
-            missing.forEach(rule => {
-                html += `
-                    <div class="rec-item">
-                        <div class="rec-item-header">
-                            <div class="rec-item-icon">${rule.icon}</div>
-                            <div class="rec-q">❌ ${rule.name}</div>
-                        </div>
-                        <div class="rec-tip"><strong>💡 Как надо:</strong> ${rule.rec}</div>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-        }
-
-        html += `
-                <div class="save-status" id="saveStatus"><span class="spinner"></span>Сохраняю результат...</div>
-                <button class="restart-btn" onclick="location.reload()">🔄 Пройти заново</button>
-            </div>
-        `;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const n = appliedRules.length, percent = Math.round(n / ALL_RULES.length * 100);
+        const outcome = left ? ['🚪', 'Клиент ушёл', 'Настроение клиента упало, и он ушёл без покупки.', 'fail']
+            : mood >= 80 ? ['🛍️', 'Покупка и восторг!', `Клиент купил: ${story.sale} — и обещал вернуться.`, 'success']
+            : mood >= 50 ? ['🛍️', 'Покупка состоялась', `Клиент купил: ${story.sale}. Но мог уйти ещё довольнее.`, 'success']
+            : ['😐', 'Без покупки', 'Клиент поблагодарил и сказал, что подумает.', 'fail'];
+        let html = `<div class="result-card ${outcome[3]}"><div class="result-icon">${outcome[0]}</div><h2>${outcome[1]}</h2><p>${outcome[2]}</p>
+            <div class="result-stats"><div class="stat-box"><div class="stat-value">${moodEmoji(mood)} ${mood}</div><div class="stat-label">Настроение клиента</div></div>
+            <div class="stat-box"><div class="stat-value">${n}/6</div><div class="stat-label">Правил применено</div></div></div>`;
+        html += `<div class="rec-section"><h3>🔍 Разбор диалога</h3>`;
+        story.steps.forEach((st, i) => {
+            const a = currentAnswers.find(x => x.question === i), rule = getRule(st.rule), best = st.opts.find(x => x[1])[0];
+            html += `<div class="rec-item ${a ? (a.correct ? 'ok' : 'no') : 'skip'}"><div class="rec-item-header"><div class="rec-item-icon">${rule.icon}</div><div class="rec-q">${a ? (a.correct ? '✅' : '❌') : '⏹️'} ${rule.name}</div></div>`
+                + (a ? `<div class="rec-you">Вы: ${esc(a.choices[a.selected])}</div>` : `<div class="rec-you">До этого шага диалог не дошёл</div>`)
+                + (a && a.correct ? '' : `<div class="rec-tip"><strong>💡 Лучше так:</strong> ${esc(best)}<br><span>${esc(rule.rec)}</span></div>`) + `</div>`;
+        });
+        html += `</div><div class="save-status" id="saveStatus"><span class="spinner"></span>Сохраняю результат...</div>
+            <button class="restart-btn" onclick="location.reload()">🔄 Другой клиент</button></div>`;
         resultScreen.innerHTML = html;
 
         const resultData = {
-            id: Date.now(), type: 'trainer', user_name: currentUser.name, city: currentUser.city,
-            score: appliedRules.length, total: ALL_RULES.length, percent: percent, passed: success,
-            rules_applied: appliedRules, rules_count: appliedRules.length,
-            answers: currentAnswers, date: new Date().toISOString(),
-            timestamp: new Date().toLocaleString('ru-RU')
+            id: Date.now(), type: 'trainer', format: 'chat', story: story.id, mood, left,
+            user_name: currentUser.name, city: currentUser.city,
+            score: n, total: ALL_RULES.length, percent, passed: n === ALL_RULES.length,
+            rules_applied: appliedRules, rules_count: n,
+            answers: currentAnswers, date: new Date().toISOString(), timestamp: new Date().toLocaleString('ru-RU')
         };
-
         const saved = await saveToFirebase(resultData);
         const statusDiv = document.getElementById('saveStatus');
         if (statusDiv) {
-            if (saved) {
-                statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
-                statusDiv.style.color = '#10b981';
-                statusDiv.style.background = 'rgba(16,185,129,0.1)';
-            } else {
-                statusDiv.innerHTML = '⚠️ Сохранено локально, отправится при следующем запуске.';
-                statusDiv.style.color = '#d97706';
-                statusDiv.style.background = 'rgba(217,119,6,0.1)';
-            }
+            if (saved) { statusDiv.innerHTML = '✅ Результат сохранён в облаке!'; statusDiv.style.color = '#10b981'; statusDiv.style.background = 'rgba(16,185,129,0.1)'; }
+            else { statusDiv.innerHTML = '⚠️ Сохранено локально, отправится при следующем запуске.'; statusDiv.style.color = '#d97706'; statusDiv.style.background = 'rgba(217,119,6,0.1)'; }
         }
     }
 
@@ -469,17 +437,10 @@
         if (!city) { alert('Выберите город'); return; }
 
         currentUser = { name, city };
-        currentIndex = 0;
-        currentAnswers = [];
-        appliedRules = [];
-        questionResults = [];
-        selectedChoice = null;
-
         regScreen.classList.add('hidden');
         quizScreen.classList.remove('hidden');
-        renderQuestion();
+        startChat();
     };
-    nextBtn.onclick = nextStep;
     document.getElementById('userName').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') document.getElementById('startGameBtn').click();
     });
