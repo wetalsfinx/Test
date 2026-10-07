@@ -182,6 +182,8 @@
   .dl-item .c { text-align: right; font-variant-numeric: tabular-nums; } .dl-item .c b { font-size: 24px; font-weight: 900; } .dl-item .c small { display: block; font-size: 12px; color: var(--ink-4); }
   .dl-more { font-size: 13px; color: var(--ink-3); margin-top: 10px; line-height: 1.6; }
   @media (max-width: 700px) { .dl-item { grid-template-columns: 1fr; gap: 6px; } .dl-item .c { text-align: left; } }
+  .cell.go, .dl-item.go { cursor: pointer; } .cell.go:hover { outline: 2px solid var(--red); outline-offset: -2px; } .dl-item.go:hover .nm { color: var(--red); }
+  table.hm tr.click .storename { cursor: pointer; }
   .cell.off { background: var(--soft); color: var(--ink-4); font-weight: 600; font-size: 12px; }
   table.hm tr.click:hover .storename { color: var(--red); }
   .day.today span { color: var(--red); font-weight: 800; }
@@ -203,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 7.10-3</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 7.10-4</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -225,8 +227,8 @@
   <!-- ============ ОБЗОР ============ -->
   <section class="tab on" id="t-over">
     <div class="kpis" id="ovKpis"></div>
-    <div class="card"><h2>⏰ Тренажёры по срокам</h2><p class="hint">Что открыто сейчас, сколько сотрудников уже прошли и сколько дней осталось. Считаются сотрудники, которые уже начали обучение (штатной численности в базе нет).</p><div id="ovDead"></div></div>
-    <div class="card"><h2>🗺️ Магазины по этапам</h2><p class="hint">В клетке — какая доля сотрудников магазина прошла этап, ниже — средний результат первой попытки. Серые клетки — этап ещё не открыт. Нажмите на магазин, чтобы отфильтровать весь дашборд.</p><div class="tw" id="ovHeat"></div><div class="legend"><span><i style="background:rgba(22,163,74,.3)"></i>прошли 80% и больше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>меньше 60%</span><span><i style="background:#e8e2de"></i>ещё не открыт</span></div></div>
+    <div class="card"><h2>⏰ Тренажёры по срокам</h2><p class="hint">Что открыто сейчас, сколько сотрудников уже прошли и сколько дней осталось. Нажмите на строку — увидите, кто прошёл и кто нет. Считаются сотрудники, которые уже начали обучение (штатной численности в базе нет).</p><div id="ovDead"></div></div>
+    <div class="card"><h2>🗺️ Магазины по этапам</h2><p class="hint">В клетке — какая доля сотрудников магазина прошла этап, ниже — средний результат первой попытки. <b>Нажмите на клетку</b> — откроется, кто прошёл и с каким результатом, кто ещё нет, их ответы и трудные шаги. Нажмите на название магазина — весь дашборд покажет только его.</p><div class="tw" id="ovHeat"></div><div class="legend"><span><i style="background:rgba(22,163,74,.3)"></i>прошли 80% и больше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>меньше 60%</span><span><i style="background:#e8e2de"></i>ещё не открыт</span></div></div>
     <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождения по дням. Значок под датой — в этот день открылся тренажёр: видно, как продавцы реагируют на рассылку.</p><div id="ovDays"></div></div>
     <div class="card"><h2>🕒 Последние прохождения</h2><p class="hint">Кто, из какого магазина, что и с каким результатом прошёл — самые свежие сверху. Нажмите на имя — откроется карточка сотрудника, «📄» — его ответы. Все записи с фильтрами — во вкладке «⚙️ Данные».</p><div class="tw" id="ovFeed"></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="ovFeedMore"></div></div>
   </section>
@@ -575,11 +577,32 @@ function renderDeadlines(P) {
     const k = P.filter(p => schedRec(p, s.t)).length, pc = n ? Math.round(k / n * 100) : 0;
     const zero = cities.filter(c => !AP.some(p => p.city === c && schedRec(p, s.t)));
     const lag = !STORE && zero.length && zero.length < cities.length ? `<div class="lag">Ещё никто не прошёл: <b>${zero.map(esc).join(', ')}</b></div>` : '';
-    return `<div class="dl-item"><div class="nm">${schedLabel(s.t)}<small class="${left <= 2 ? 'hot' : ''}">${due}</small></div><div><div class="dl-bar"><i class="${cls(pc)}" style="width:${Math.max(pc, 1)}%"></i></div>${lag}</div><div class="c"><b>${k}</b> из ${n}<small>${pc}% прошли</small></div></div>`;
+    return `<div class="dl-item go" data-t="${s.t}" title="Нажмите — кто прошёл, кто нет, ответы"><div class="nm">${schedLabel(s.t)}<small class="${left <= 2 ? 'hot' : ''}">${due}</small></div><div><div class="dl-bar"><i class="${cls(pc)}" style="width:${Math.max(pc, 1)}%"></i></div>${lag}</div><div class="c"><b>${k}</b> из ${n}<small>${pc}% прошли · подробнее ›</small></div></div>`;
   };
   const doneTxt = done.filter(s => !s.nodata).map(s => { const k = P.filter(p => schedRec(p, s.t)).length; return `${schedLabel(s.t)} — ${k} из ${n}`; });
   $('ovDead').innerHTML = (open.length ? open.map(item).join('') : '<div class="empty">Сейчас открытых тренажёров нет</div>')
     + `<div class="dl-more">${soon.length ? `<b>Дальше:</b> ${soon.slice(0, 2).map(s => `${schedLabel(s.t)} с ${dm(s.from)}`).join(' · ')}` : ''}${doneTxt.length ? `${soon.length ? '<br>' : ''}<b>Срок прошёл:</b> ${doneTxt.join(' · ')}` : ''}</div>`;
+  $('ovDead').querySelectorAll('.dl-item.go').forEach(el => el.onclick = () => openStage(STORE, el.dataset.t));
+}
+// окно «магазин × этап»: кто прошёл, кто нет, трудные шаги, ответы
+function openStage(c, t) {
+  const AP = Object.values(PEOPLE), ps = AP.filter(p => !c || p.city === c), nm = schedLabel(t);
+  const recsOf = p => t === 'test' ? p.recs.filter(r => r.type === 'test') : t === 'final_exam_1' ? p.recs.filter(r => r.type === 'final_exam_1') : p.recs.filter(r => r.type === t);
+  const done = ps.filter(p => schedRec(p, t)).map(p => { const rs = recsOf(p), main = schedRec(p, t); return { p, main, n: rs.length, best: Math.max(...rs.map(r => r.percent)) }; }).sort((a, b) => b.main.percent - a.main.percent);
+  const not = ps.filter(p => !schedRec(p, t)).sort((a, b) => a.city.localeCompare(b.city, 'ru') || a.name.localeCompare(b.name, 'ru'));
+  const qm = {}, order = []; done.forEach(d => itemsOf(d.main).forEach(([n, , v]) => { if (!qm[n]) { qm[n] = []; order.push(n); } qm[n].push(v); }));
+  const qs = order.map(n => ({ n, v: avg(qm[n]) })).sort((a, b) => a.v - b.v);
+  const sc = avg(done.map(d => d.main.percent)), what = t === 'final_exam_1' ? 'последняя попытка' : 'первая попытка';
+  const draw = () => {
+    $('modalBody').innerHTML = `<h2 style="margin:0 40px 4px 0">${nm} · ${c ? esc(c) : 'все магазины'}</h2>
+      <div class="muted" style="margin-bottom:14px">Прошли <b>${done.length} из ${ps.length}</b>${sc != null ? ` · средний результат ${pill(sc)} (${what})` : ''}</div>
+      ${done.length ? `<div class="tw"><table><thead><tr><th>Сотрудник</th>${c ? '' : '<th>Магазин</th>'}<th class="num">Результат</th><th class="num">Попыток</th><th>Когда</th><th></th></tr></thead><tbody>${done.map((d, i) => `<tr><td><b>${esc(d.p.name)}</b></td>${c ? '' : `<td class="muted">${esc(d.p.city)}</td>`}<td class="num">${pill(d.main.percent)}</td><td class="num">${d.n}${d.n > 1 ? `<div class="muted">лучш. ${d.best}%</div>` : ''}</td><td class="muted">${fmtD(d.main.date)}</td><td><button class="btn sm" data-i="${i}">📄 Ответы</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Пока никто не прошёл</div>'}
+      <h2 style="margin:20px 0 6px;font-size:15px">⏳ Ещё не прошли${not.length ? ` — ${not.length}` : ''}</h2>
+      ${not.length ? `<div class="chips">${not.map(p => `<span class="chip">${esc(p.name)}${c ? '' : ` <span class="muted">· ${esc(p.city)}</span>`}</span>`).join('')}</div><p class="hint" style="margin-top:8px">Только те, кто уже что-то проходил в обучении: новых сотрудников, которые ни разу не заходили, база не знает.</p>` : '<div class="muted">Все, кто в обучении, прошли 🎉</div>'}
+      ${qs.length ? `<h2 style="margin:20px 0 6px;font-size:15px">📊 ${t === 'test' ? 'Вопросы' : t === 'final_exam_1' ? 'Клиенты' : 'Шаги и ситуации'}: от трудных к лёгким</h2><div class="ts-qs">${qs.map(q => `<div class="ts-q"><span class="nm" title="${esc(q.n)}">${esc(q.n)}</span><div class="ts-bar"><i class="${cls(q.v)}" style="width:${Math.max(q.v, 2)}%"></i></div><b>${q.v}%</b></div>`).join('')}</div>` : ''}`;
+    $('modalBody').querySelectorAll('button[data-i]').forEach(b => b.onclick = () => { const d = done[+b.dataset.i]; openRecs(d.p.key, d.p.recs.indexOf(d.main), draw); });
+  };
+  draw(); $('modalBg').classList.add('on'); $('modalBg').scrollTop = 0; document.body.style.overflow = 'hidden';
 }
 function renderHeat() {
   const AP = Object.values(PEOPLE), cities = STORE ? [STORE] : STORES.concat([...new Set(AP.map(p => p.city))].filter(c => !STORES.includes(c)));
@@ -588,12 +611,14 @@ function renderHeat() {
     if (schedState(s) === 'soon' && !ps.some(p => schedRec(p, s.t))) return `<td><div class="cell off" title="Откроется ${dm(s.from)}">с ${dm(s.from)}</div></td>`;
     if (!ps.length) return `<td><div class="cell none">—</div></td>`;
     const rs = ps.map(p => schedRec(p, s.t)).filter(Boolean), pc = Math.round(rs.length / ps.length * 100), sc = avg(rs.map(r => r.percent));
-    return `<td><div class="cell ${cls(pc)}" title="${schedLabel(s.t).replace(/^\S+ /, '')}: прошли ${rs.length} из ${ps.length}${sc != null ? ', средний результат ' + sc + '%' : ''}">${pc}%<small>${sc != null ? 'ср. ' + sc + '%' : 'никто'}</small></div></td>`;
+    return `<td><div class="cell ${cls(pc)} go" data-t="${s.t}" title="Нажмите — кто прошёл, кто нет, ответы. ${schedLabel(s.t).replace(/^\S+ /, '')}: прошли ${rs.length} из ${ps.length}${sc != null ? ', средний результат ' + sc + '%' : ''}">${pc}%<small>${sc != null ? 'ср. ' + sc + '%' : 'никто'}</small></div></td>`;
   };
   const rows = cities.map(c => ({ c, ps: AP.filter(p => p.city === c) }));
   if (!STORE && rows.length > 1) rows.push({ c: 'Все магазины', ps: AP, all: true });
-  $('ovHeat').innerHTML = `<table class="hm"><thead><tr><th class="st">Магазин</th>${cols.map(s => `<th title="${schedLabel(s.t).replace(/^\S+ /, '')}: ${dm(s.from)}–${dm(s.to)}">${schedLabel(s.t)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr class="${r.all ? '' : 'click'}" data-c="${esc(r.c)}"><td><div class="storename" style="${r.all ? 'font-style:italic;color:var(--ink-2)' : ''}">${esc(r.c)}<small>${r.ps.length} чел.</small></div></td>${cols.map(s => cell(r.ps, s)).join('')}</tr>`).join('')}</tbody></table>`;
-  $('ovHeat').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => setStore(tr.dataset.c === STORE ? '' : tr.dataset.c));
+  $('ovHeat').innerHTML = `<table class="hm"><thead><tr><th class="st">Магазин</th>${cols.map(s => `<th title="${schedLabel(s.t).replace(/^\S+ /, '')}: ${dm(s.from)}–${dm(s.to)}">${schedLabel(s.t)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr class="${r.all ? '' : 'click'} hrow" data-c="${esc(r.c)}"><td><div class="storename" style="${r.all ? 'font-style:italic;color:var(--ink-2)' : ''}">${esc(r.c)}<small>${r.ps.length} чел.</small></div></td>${cols.map(s => cell(r.ps, s)).join('')}</tr>`).join('')}</tbody></table>`;
+  $('ovHeat').querySelectorAll('tr').forEach(tr => { const c = tr.dataset.c, all = !tr.classList.contains('click');
+    const nm = tr.querySelector('.storename'); if (nm && !all) nm.onclick = () => setStore(c === STORE ? '' : c);
+    tr.querySelectorAll('.cell.go').forEach(el => el.onclick = () => openStage(all ? '' : c, el.dataset.t)); });
 }
 
 // ===================== РЕЙТИНГ =====================
@@ -764,18 +789,19 @@ function recAnswersHtml(r) {
     default: return '';
   }
 }
-function openRecs(key, recIdx) {
+function openRecs(key, recIdx, back) {
   const p = PEOPLE[key]; if (!p) return;
   const list = p.recs.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
   let cur = recIdx != null ? p.recs[recIdx] : (list.find(r => r.type === 'final_exam_1') || list[0]);
   const draw = () => {
     const nOf = r => { const same = p.recs.filter(x => x.type === r.type); return same.length > 1 ? ` · попытка ${same.indexOf(r) + 1} из ${same.length}` : ''; };
     const body = recAnswersHtml(cur);
-    $('modalBody').innerHTML = `<h2 style="margin:0 40px 6px 0">📄 ${esc(p.name)} — ответы</h2><div class="muted" style="margin-bottom:10px">${esc(p.city)} · ${p.recs.length} прохождений</div>
+    $('modalBody').innerHTML = `${back ? '<button class="btn sm" id="ansBack" style="margin-bottom:10px">← Назад к списку</button>' : ''}<h2 style="margin:0 40px 6px 0">📄 ${esc(p.name)} — ответы</h2><div class="muted" style="margin-bottom:10px">${esc(p.city)} · ${p.recs.length} прохождений</div>
       <select class="ans-pick" id="ansPick">${['test', ...TRAINERS, 'final_exam_1', 'final_exam_old'].filter(t => list.some(r => r.type === t)).map(t => `<optgroup label="${TOOLS[t]}">${list.filter(r => r.type === t).map(r => `<option value="${p.recs.indexOf(r)}" ${r === cur ? 'selected' : ''}>${TOOLS[t]} — ${r.percent}% · ${fmtD(r.date)}${nOf(r)}</option>`).join('')}</optgroup>`).join('')}</select>
       <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="font-size:17px">${TOOLS[cur.type] || cur.type}</b>${pill(cur.percent)}<span class="muted">${fmtD(cur.date)}${nOf(cur)}${cur.type === 'final_exam_1' ? ' · выручка смены ' + rub(cur.raw.revenue) : ''}</span></div>
       ${body || '<div class="empty">В этой записи нет подробных ответов — сохранён только итоговый процент</div>'}`;
     $('ansPick').onchange = e => { cur = p.recs[+e.target.value]; draw(); $('modalBg').scrollTop = 0; };
+    if (back) $('ansBack').onclick = () => { back(); $('modalBg').scrollTop = 0; };
   };
   draw(); $('modalBg').classList.add('on'); document.body.style.overflow = 'hidden';
 }
