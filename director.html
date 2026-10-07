@@ -47,6 +47,7 @@ td:first-child small{display:block;font-weight:500;color:var(--ink-3);font-size:
 .fc h3{font-size:16px;color:var(--red);margin-bottom:4px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
 .fc h3 .pc{font-size:13px;color:var(--ink-3);font-weight:700}
 .fc p{font-size:14px;color:var(--ink-2);margin-top:4px}
+.ww{margin-top:8px;font-size:13.5px;color:var(--ink-2)}.ww ul{margin:4px 0 0 18px;display:grid;gap:3px}details.rw{border-top:1px solid var(--line);padding:8px 0}details.rw:first-of-type{margin-top:6px}details.rw summary{cursor:pointer;display:flex;justify-content:space-between;gap:10px;font-weight:700;font-size:14px}details.rw .pc{color:var(--bad);white-space:nowrap}details.rw p{font-size:13.5px;color:var(--ink-2);margin-top:6px}.ok-card{border-color:var(--ok)}.ok-card>b{color:var(--ok)}
 .fc .ex{margin-top:8px;background:var(--gold-lt);border-radius:12px;padding:10px 12px;font-size:13.5px;color:#5c4500}
 .fc .ex b{color:#7a5b00}
 .mats{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin-top:10px;font-size:12.5px;color:var(--ink-3)}
@@ -83,7 +84,7 @@ const SK = [
   { k: 'K2', n: 'Инициатива и контакт', short: 'Контакт', tr: { name: 'Типы клиентов', url: 'client_type_trainer.html' } },
   { k: 'K3', n: 'Выявление потребностей', short: 'Потребности', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
   { k: 'K4', n: 'Презентация: ХПВ и примерка', short: 'Презентация', tr: { name: 'Типы клиентов', url: 'client_type_trainer.html' } },
-  { k: 'K5', n: 'Повышение ценности и золото', short: 'Ценность', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
+  { k: 'K5', n: 'Предложить вариант дороже', short: 'Ценность', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
   { k: 'K6', n: 'Допродажа: комплект и уход', short: 'Допродажа', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
   { k: 'K7', n: 'Финансовые инструменты', short: 'Финансы', tr: { name: 'Лайфхаки', url: 'lifehacks.html' } },
   { k: 'K8', n: 'Работа с возражениями', short: 'Возражения', tr: { name: 'сценка «Дорого»', url: 'dorogo_trainer.html' } },
@@ -168,6 +169,20 @@ const FOCUS = {
   K11: ['Сервис и постоянный клиент', 'Обращение по имени, маленькие жесты и тёплое прощание — даже без покупки.', 'За смену каждый узнаёт имя хотя бы у 3 клиентов и прощается с ними по имени.'],
 };
 const KEYP = {"K1": ["Приветствие + конкретная акция — сразу при встрече, каждому клиенту", "Через 20–30 секунд — первый вопрос: «Для себя выбираете или в подарок?»", "Акцию называем конкретно: не «у нас есть скидки», а «сегодня −30% на бриллианты»"], "K2": ["Продавец подходит первым — не ждёт, пока клиент позовёт", "Неконтактному клиенту даём 2–3 минуты и заходим с «крючком»: акция, новинка", "Говорим утверждениями: «Давайте покажу», а не «Вам что-нибудь подсказать?»"], "K3": ["2–3 открытых вопроса до показа товара", "Спрашиваем повод, стиль, предпочтения — о бюджете не спрашиваем", "Слушаем ответ и показываем то, что подходит, а не всё подряд"], "K4": ["Говорим выгодами: характеристика → что даёт → что получает клиент", "Каждая презентация заканчивается примеркой: «Давайте примерим»", "Зеркало — обязательно: на себе украшение продаёт лучше"], "K5": ["Вариант «чуть лучше» — только после вопросов, не с порога", "Два варианта рядом: в стиле клиента и примерно на 20% дороже", "Разницу объясняем одной фразой: «бриллиант в нём чище — заметите при свете»"], "K6": ["Второе украшение предлагаем сразу после выбора первого, в зале", "Предлагаем образ, а не товар: «Давайте подберём серьги в комплект»", "Футляр и средство для ухода — как заботу, а не как «допродажу»"], "K7": ["Сплит и рассрочку называем в речевой пластинке, после акции", "В презентации — до цены: «4 платежа без переплат, оформим за 2 минуты»", "На «дорого» — спокойно и уверенно, без оправданий"], "K8": ["4 шага: выслушать → понять → согласиться → аргументировать. Не спорим и не оправдываемся", "Аргумент — под причину сомнения; Сплит и рассрочка — тоже аргумент", "На «Я подумаю» — уточняем причину: «Над чем хотите подумать — над моделью или ценой?»"], "K9": ["Не говорим «нет» — предлагаем решение", "Похожая модель, вариант лучше или заказ из каталога", "Сохраняем эмоцию клиента: «Вы выбрали хит сезона — давайте найдём похожий»"], "K10": ["Ловим сигналы покупки: улыбается, переспрашивает цену, любуется в зеркале", "Не ждём «беру»: комплимент выбору и «Давайте оформим!»", "Назвали цену — выдерживаем паузу 3–5 секунд и не оправдываемся"], "K11": ["Узнаём имя клиента и обращаемся по имени", "Маленькие жесты: поправить застёжку, принести зеркало, показать при другом свете", "Тёплое прощание и приглашение вернуться — даже если покупки нет"]};
+const MEAN = {
+  K1: 'Продавец первым здоровается и сразу называет конкретную акцию.',
+  K2: 'Продавец сам подходит и начинает разговор, даже если клиент молчит или «просто смотрит».',
+  K3: 'Прежде чем показывать товар, продавец задаёт 2–3 вопроса: для кого, какой повод, что нравится. Про бюджет не спрашивает.',
+  K4: 'Продавец рассказывает об изделии через выгоду для клиента и обязательно предлагает примерить.',
+  K5: 'Кроме того, что клиент попросил, продавец показывает вариант чуть дороже (примерно на 20%) — например, золото вместо серебра или камень чище — и одной фразой объясняет, чем он лучше. Так растёт средний чек.',
+  K6: 'После выбора продавец предлагает парное украшение (серьги к кольцу), футляр и средства ухода.',
+  K7: 'Продавец сам рассказывает про Сплит и рассрочку — до того, как клиент услышит цену и засомневается.',
+  K8: 'На «дорого» и «я подумаю» продавец не спорит и не отпускает: выслушал, уточнил, согласился, привёл аргумент.',
+  K9: 'Если нужного нет (размер, модель), продавец предлагает похожий вариант или заказ из электронного каталога.',
+  K10: 'Продавец замечает, что изделие клиенту нравится, и сам предлагает оформить покупку, не дожидаясь слова «беру».',
+  K11: 'Продавец обращается к клиенту по имени, прощается тепло и приглашает вернуться — даже если покупки не было.'
+};
+const TEST_PLAIN = ['девушка смотрит на витрину — что сказать первым', 'клиент назвал бюджет 25 000 ₽ — что делать дальше', 'клиентка выбрала кольцо — как предложить серьги из той же коллекции', 'клиентка смотрит серебряные серьги за 12 000 ₽ — как мягко предложить золото', 'клиентка оформляет покупку кольца — что предложить вместе с ним', '«Дороговато… думала, будет дешевле» — что ответить', 'нужного размера нет — что сказать', 'подарок маме на юбилей — как презентовать изделие', '«Можно посмотреть другие модели?» — как ответить', 'кольцо за 55 000 ₽, клиентка колеблется — когда и как сказать про Сплит', 'клиентка молча идёт вдоль витрины — что делать', 'клиентка второй раз примеряет кольцо, «да, красиво», но не говорит «беру»', '«Спасибо, я подумаю» — что ответить'];
 const STG = [['skTest', '📝 Входной тест'], ['skTrain', '🎯 Тренажёры'], ['skExam', '🏆 Аттестация']];
 let db = null;
 try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); } catch (e) { console.error(e); }
@@ -216,15 +231,25 @@ async function loadPeople() {
   const acc = rs => { const m = {}; rs.forEach(r => itemsOf(r).forEach(([, k, v]) => [].concat(k).forEach(kk => (m[kk] = m[kk] || []).push(v)))); return Object.fromEntries(Object.entries(m).map(([k, v]) => [k, avg(v)])); };
   Object.values(P).forEach(p => {
     const by = t => p.recs.filter(r => r.type === t);
-    const t0 = by('test')[0]; p.test = !!t0; p.skTest = t0 ? acc([t0]) : {};
-    const firsts = TRAINERS.map(t => by(t)[0]).filter(Boolean); p.train = firsts.length > 0; p.skTrain = acc(firsts);
-    const ex = by('final_exam_1'); p.exam = ex.length > 0; p.skExam = ex.length ? acc([ex[ex.length - 1]]) : {};
+    const t0 = by('test')[0]; p.test = !!t0; p.skTest = t0 ? acc([t0]) : {}; p.rsTest = t0 ? [t0] : [];
+    const firsts = TRAINERS.map(t => by(t)[0]).filter(Boolean); p.train = firsts.length > 0; p.skTrain = acc(firsts); p.rsTrain = firsts;
+    const ex = by('final_exam_1'); p.exam = ex.length > 0; p.skExam = ex.length ? acc([ex[ex.length - 1]]) : {}; p.rsExam = ex.length ? [ex[ex.length - 1]] : [];
   });
   return Object.values(P);
 }
 const skAvg = (ps, stage) => Object.fromEntries(SK.map(s => [s.k, avg(ps.map(p => p[stage][s.k]).filter(v => v != null))]));
 const cell = v => `<div class="cell ${cls(v)}">${v == null ? '—' : v + '%'}</div>`;
 
+const RS = ['rsTest', 'rsTrain', 'rsExam'];
+const toolName = t => t === 'test' ? '📝 Входной тест' : t === 'final_exam_1' ? '🏆 Аттестация' : SICON[t] + ' ' + SNAME[t];
+function whereWrong(ps, stage, k) {
+  const m = {};
+  ps.forEach(p => (p[RS[stage]] || []).forEach(r => itemsOf(r).forEach(([topic, kk, v]) => { if (![].concat(kk).includes(k)) return;
+    const i = r.type === 'test' ? TEST_TOPICS.indexOf(topic) : -1, lbl = toolName(r.type) + (r.type === 'test' ? ' · вопрос: ' + (TEST_PLAIN[i] || topic) : r.type === 'trainer' ? ' · шаг «' + topic + '»' : ' · «' + topic + '»');
+    const b = (m[lbl] = m[lbl] || { v: [], bin: true }); b.v.push(v); if (v !== 0 && v !== 100) b.bin = false; })));
+  return Object.entries(m).map(([l, b]) => ({ l, a: avg(b.v), t: b.bin ? `верно ${b.v.filter(x => x === 100).length} из ${b.v.length}` : `в среднем ${avg(b.v)}%` })).filter(x => x.a < 80).sort((a, b) => a.a - b.a);
+}
+const wwHtml = w => w.length ? `<div class="ww"><b>Где ошиблись:</b><ul>${w.map(x => `<li>${esc(x.l)} — <b>${x.t}</b></li>`).join('')}</ul></div>` : '';
 function progressBlock(ps) {
   const today = new Date().toISOString().slice(0, 10), open = SCHED.filter(([, o]) => o <= today), team = ps.length;
   if (!open.length) return '';
@@ -267,8 +292,14 @@ function render(all) {
       return `<tr><td>${esc(s.n)}${net && net[s.k] != null ? `<small>по сети: ${net[s.k]}%</small>` : ''}</td>${v.map((x, i) => `<td>${cell(x)}${VAR === '3' && i === 1 && src[s.k] ? `<small class="src">${[...src[s.k]].map(t => TICON[t]).join(' ')} ${src[s.k].size} из ${TRAINERS.filter(t => TR_SK[t].includes(s.k)).length}</small>` : ''}</td>`).join('')}<td>${d == null ? '<span class="dl zero">—</span>' : `<span class="dl ${d > 2 ? 'up' : d < -2 ? 'down' : 'zero'}">${d > 2 ? '▲ +' + d : d < -2 ? '▼ ' + d : '≈ ' + (d > 0 ? '+' : '') + d}</span>`}</td></tr>`; }).join('')}</tbody></table></div>
     <div class="legend"><span><i style="background:var(--ok-bg)"></i>80% и выше</span><span><i style="background:var(--mid-bg)"></i>60–79%</span><span><i style="background:var(--bad-bg)"></i>ниже 60% — зона роста</span></div></section>`;
     const latest = k => { for (const i of [2, 1, 0]) if (st[i] && st[i][k] != null) return st[i][k]; return null; };
-    const weak = SK.map(s => ({ s, v: latest(s.k) })).filter(x => x.v != null && x.v < 80).sort((a, b) => a.v - b.v).slice(0, 3);
-    html += `<section><h2>🎯 На что сделать упор</h2><p class="hint">Самые слабые навыки команды сейчас. Разберите их на утреннем собрании: три ключевых момента и короткое упражнение в паре.</p>${weak.length ? `<div class="focus">${weak.map(({ s, v }) => { const f = FOCUS[s.k]; return `<div class="fc"><h3>${esc(s.n)} <span class="pc">${v}%</span></h3><p>${esc(f[1])}</p><div class="kp"><b>На собрании обратите внимание:</b><ol>${KEYP[s.k].map(x => `<li>${esc(x)}</li>`).join('')}</ol></div><div class="ex"><b>Упражнение на 3–5 минут:</b> ${esc(f[2])}</div></div>`; }).join('')}</div>` : '<div class="card empty">🎉 Все навыки на уровне 80% и выше. Так держать!</div>'}</section>`;
+    const latestI = k => { for (const i of [2, 1, 0]) if (st[i] && st[i][k] != null) return i; return null; };
+    const STN = ['тест', 'тренажёры', 'аттестация'];
+    const weakAll = SK.map(s => ({ s, v: latest(s.k), i: latestI(s.k) })).filter(x => x.v != null && x.v < 80).sort((a, b) => a.v - b.v);
+    const weak = weakAll.slice(0, 3), rest = weakAll.slice(3);
+    const better = SK.map(s => { const i = latestI(s.k), t = st[0] && st[0][s.k]; return i > 0 && t != null && t < 80 && st[i][s.k] >= 80 ? { s, t, i, v: st[i][s.k] } : null; }).filter(Boolean);
+    html += `<section><h2>🎯 На что сделать упор</h2><p class="hint">Все навыки команды ниже 80% — по последнему этапу, где навык проверялся (тест → тренажёры → аттестация). Три самых слабых разберите на утреннем собрании.</p>${weak.length ? `<div class="focus">${weak.map(({ s, v, i }) => { const f = FOCUS[s.k]; return `<div class="fc"><h3>${esc(s.n)} <span class="pc">${v}% · ${STN[i]}</span></h3><p><b>Что это значит:</b> ${esc(MEAN[s.k])}</p>${wwHtml(whereWrong(ps, i, s.k))}<div class="kp"><b>На собрании обратите внимание:</b><ol>${KEYP[s.k].map(x => `<li>${esc(x)}</li>`).join('')}</ol></div><div class="ex"><b>Упражнение на 3–5 минут:</b> ${esc(f[2])}</div></div>`; }).join('')}</div>` : '<div class="card empty">🎉 Все навыки на уровне 80% и выше. Так держать!</div>'}
+    ${rest.length ? `<div class="card" style="margin-top:12px"><b>Ещё ниже 80%</b>${rest.map(({ s, v, i }) => `<details class="rw"><summary><span>${esc(s.n)}</span><span class="pc">${v}% · ${STN[i]}</span></summary><p><b>Что это значит:</b> ${esc(MEAN[s.k])}</p>${wwHtml(whereWrong(ps, i, s.k))}<p><b>Упражнение:</b> ${esc(FOCUS[s.k][2])}</p></details>`).join('')}</div>` : ''}
+    ${better.length ? `<div class="card ok-card" style="margin-top:12px"><b>▲ Уже лучше</b><p class="muted" style="font-size:13px">Во входном тесте было ниже 80%, в тренажёрах — уже 80% и выше (по тем, кто их прошёл).</p>${better.map(({ s, t, i, v }) => `<div class="fq"><span>${esc(s.n)}</span><b>тест ${t}% → ${STN[i]} ${v}%</b></div>`).join('')}</div>` : ''}</section>`;
   }
   if (VAR === '1') html = html.replace('<!--V1-->', progressBlock(ps));
   if (VAR === '2') html += mistakesBlock(ps);
