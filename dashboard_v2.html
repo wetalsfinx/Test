@@ -172,6 +172,20 @@
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   .dz-bar { height: 10px; background: var(--line); border-radius: 6px; overflow: hidden; margin-top: 12px; } .dz-bar i { display: block; height: 100%; background: var(--red); transition: width .2s; }
   @media (max-width: 640px) { .rs-bar > * { flex: 1 1 100%; min-width: 0; max-width: 100%; } .rs-bar input { min-width: 0 !important; } }
+  /* сроки и тепловая карта */
+  .dl-item { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr) 150px; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--soft); } .dl-item:first-child { border-top: none; }
+  .dl-item .nm { font-weight: 800; font-size: 15px; } .dl-item .nm small { display: block; font-weight: 600; font-size: 12.5px; color: var(--ink-3); }
+  .dl-item .nm small.hot { color: var(--bad); }
+  .dl-bar { height: 14px; background: var(--soft); border-radius: 8px; overflow: hidden; } .dl-bar i { display: block; height: 100%; border-radius: 8px; }
+  .dl-bar i.good { background: #22c55e; } .dl-bar i.mid { background: #f59e0b; } .dl-bar i.bad { background: #ef4444; }
+  .dl-item .lag { font-size: 12.5px; color: var(--ink-3); margin-top: 5px; } .dl-item .lag b { color: var(--bad); }
+  .dl-item .c { text-align: right; font-variant-numeric: tabular-nums; } .dl-item .c b { font-size: 24px; font-weight: 900; } .dl-item .c small { display: block; font-size: 12px; color: var(--ink-4); }
+  .dl-more { font-size: 13px; color: var(--ink-3); margin-top: 10px; line-height: 1.6; }
+  @media (max-width: 700px) { .dl-item { grid-template-columns: 1fr; gap: 6px; } .dl-item .c { text-align: left; } }
+  .cell.off { background: var(--soft); color: var(--ink-4); font-weight: 600; font-size: 12px; }
+  table.hm tr.click:hover .storename { color: var(--red); }
+  .day.today span { color: var(--red); font-weight: 800; }
+  .day em { font-style: normal; font-size: 13px; height: 16px; line-height: 16px; margin-top: 2px; }
   .ts-kpis .kpi .v { font-size: 26px; } .ts-kpis { margin: 12px 0 14px; }
   .ts-seg { flex-wrap: wrap; margin-top: 4px; }
   .ts-cov { display: flex; align-items: center; gap: 8px; min-width: 130px; } .ts-cov b { font-size: 13px; min-width: 38px; }
@@ -189,7 +203,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 7.10-2</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 7.10-3</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -199,33 +213,42 @@
 
   <nav class="tabs" id="tabs">
     <button data-t="over" class="on">🏠 Обзор</button>
+    <button data-t="res">📊 Результаты</button>
     <button data-t="rank">🏆 Рейтинг</button>
     <button data-t="skills">🎯 Навыки</button>
     <button data-t="emp">👤 Сотрудник</button>
     <button data-t="lh">💎 Лайфхаки</button>
+    <button data-t="dir">🔗 Директора</button>
     <button data-t="data">⚙️ Данные</button>
   </nav>
 
   <!-- ============ ОБЗОР ============ -->
   <section class="tab on" id="t-over">
     <div class="kpis" id="ovKpis"></div>
+    <div class="card"><h2>⏰ Тренажёры по срокам</h2><p class="hint">Что открыто сейчас, сколько сотрудников уже прошли и сколько дней осталось. Считаются сотрудники, которые уже начали обучение (штатной численности в базе нет).</p><div id="ovDead"></div></div>
+    <div class="card"><h2>🗺️ Магазины по этапам</h2><p class="hint">В клетке — какая доля сотрудников магазина прошла этап, ниже — средний результат первой попытки. Серые клетки — этап ещё не открыт. Нажмите на магазин, чтобы отфильтровать весь дашборд.</p><div class="tw" id="ovHeat"></div><div class="legend"><span><i style="background:rgba(22,163,74,.3)"></i>прошли 80% и больше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>меньше 60%</span><span><i style="background:#e8e2de"></i>ещё не открыт</span></div></div>
+    <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождения по дням. Значок под датой — в этот день открылся тренажёр: видно, как продавцы реагируют на рассылку.</p><div id="ovDays"></div></div>
     <div class="card"><h2>🕒 Последние прохождения</h2><p class="hint">Кто, из какого магазина, что и с каким результатом прошёл — самые свежие сверху. Нажмите на имя — откроется карточка сотрудника, «📄» — его ответы. Все записи с фильтрами — во вкладке «⚙️ Данные».</p><div class="tw" id="ovFeed"></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="ovFeedMore"></div></div>
+  </section>
+
+  <!-- ============ РЕЗУЛЬТАТЫ ============ -->
+  <section class="tab" id="t-res">
     <div class="card"><h2>📊 Сводка по тесту, тренажёрам и аттестации</h2><p class="hint" id="tsHint"></p>
       <div class="seg ts-seg" id="tsSeg"></div>
       <div class="kpis ts-kpis" id="tsKpis"></div>
       <div class="tw" id="tsTable"></div>
       <h2 style="margin-top:18px;font-size:15px" id="tsQh"></h2><div id="tsQs"></div>
     </div>
-    <div class="grid2">
-      <div class="card"><h2>🪜 Путь обучения</h2><p class="hint">Сколько сотрудников дошли до каждого этапа.</p><div class="funnel" id="ovFunnel"></div></div>
-      <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождений тестов, тренажёров и аттестации по дням.</p><div id="ovDays"></div></div>
-    </div>
     <div class="card"><h2>🎯 Тренажёры — каждый отдельно</h2><p class="hint">Первая попытка — реальный уровень, лучшая — после пересдач. Нажмите на тренажёр, чтобы открыть разбор по ситуациям.</p><div class="tw" id="ovTrainers"></div></div>
     <div class="card"><h2>🏙️ Рейтинг магазинов</h2><p class="hint">По среднему результату аттестации. Нажмите на магазин, чтобы отфильтровать весь дашборд.</p><div class="tw" id="ovStores"></div></div>
-    <div class="grid2">
+    <div class="grid2" id="ovExamBlock">
       <div class="card"><h2>⚠️ Нужна поддержка</h2><p class="hint">Попадают сюда, если аттестация ниже 50% <b>или</b> аттестация хуже входного теста. «Изменение» = аттестация минус входной тест.</p><div class="tw" id="ovRisk"></div></div>
       <div class="card"><h2>⏳ Ещё не аттестованы</h2><p class="hint">Проходили тест или тренажёры, но аттестацию «Одна смена» пока нет.</p><div class="tw" id="ovTodo"></div></div>
     </div>
+  </section>
+
+  <!-- ============ ДИРЕКТОРА ============ -->
+  <section class="tab" id="t-dir">
     <div class="card"><h2>🔗 Страницы для директоров</h2><p class="hint">Прогресс по тренажёрам (кто ещё не прошёл), 11 навыков команды и на что сделать упор. Данные обновляются сами — ссылку достаточно отправить один раз. «✉️ Письмо» копирует готовое письмо с ссылкой этого магазина. «Открыл» — сколько раз открывали страницу (ваши открытия с этого компьютера не считаются).</p><div id="ovDir"></div></div>
   </section>
 
@@ -340,6 +363,24 @@ const TRAINERS = ['trainer', 'crosssell', 'errorfinder', 'clienttype', 'algorith
 const TSHORT = { trainer: 'Диалог', crosssell: 'Допродажи', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов', algorithm: 'Алгоритм', service: 'Сервис' };
 const TICON = { trainer: '💬', crosssell: '🛍️', errorfinder: '🔍', clienttype: '🧑‍🤝‍🧑', algorithm: '🧭', service: '🤝' };
 const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт и сервис' };
+// расписание октябрьской программы: открытие → срок (включительно)
+const SCHED = [
+  { t: 'test', from: '2026-10-01', to: '2026-10-05' },
+  { t: 'trainer', from: '2026-10-07', to: '2026-10-14' },
+  { t: 'service', from: '2026-10-09', to: '2026-10-16' },
+  { t: 'clienttype', from: '2026-10-14', to: '2026-10-21' },
+  { t: 'crosssell', from: '2026-10-16', to: '2026-10-23' },
+  { t: 'dorogo', from: '2026-10-20', to: '2026-10-27', nodata: true },
+  { t: 'errorfinder', from: '2026-10-22', to: '2026-10-29' },
+  { t: 'algorithm', from: '2026-10-26', to: '2026-11-02' },
+  { t: 'final_exam_1', from: '2026-10-28', to: '2026-11-02' }
+];
+const dayOf = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const schedState = s => { const now = new Date(), a = dayOf(s.from), b = new Date(+dayOf(s.to) + 864e5); return now < a ? 'soon' : now < b ? 'open' : 'done'; };
+const schedLabel = t => t === 'test' ? '📝 Входной тест' : t === 'final_exam_1' ? '🏆 Аттестация' : t === 'dorogo' ? '🎭 Сценка «Дорого»' : TICON[t] + ' ' + TSHORT[t];
+const schedRec = (p, t) => t === 'test' ? p.test : t === 'final_exam_1' ? p.exam : (p.tools[t] ? p.tools[t].firstRec : null);
+const dm = s => dayOf(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'numeric' });
+const plDay = n => n % 10 === 1 && n % 100 !== 11 ? 'день' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'дня' : 'дней';
 const activeTr = () => TRAINERS.filter(t => RECS.some(r => r.type === t));
 const COLS = [['test', 'test'], ['dialog', 'trainer'], ['crosssell', 'crosssell'], ['errorfinder', 'errorfinder'], ['clienttype', 'clienttype'], ['service', 'service'], ['algorithm', 'algorithm'], ['final_exam', 'final_exam'], ['final_exam_1', 'final_exam_1']];
 const TEST_TOPICS = ['Приветствие и контакт', 'Выявление бюджета', 'Дополнительные товары', 'Выбор материала', 'Сопутствующие товары', 'Возражение «дорого»', 'Альтернатива, нет размера', 'Эмоциональная презентация', 'Дополнительные модели', 'Рассрочка (Сплит)', 'Инициатива, молчаливый клиент', 'Завершение сделки', '«Я подумаю»'];
@@ -479,23 +520,24 @@ function renderFeed() {
 function renderOverview() {
   renderTestSum(); renderDirLinks(); renderFeed();
   const P = people(), withExam = P.filter(p => p.exam), withBoth = P.filter(p => p.growth != null);
-  const g = avg(withBoth.map(p => p.growth));
+  const withTr = P.filter(p => p.test && p.trainN), gEx = avg(withBoth.map(p => p.growth)), gTr = avg(withTr.map(p => p.train - p.test.percent));
+  const g = withBoth.length ? gEx : gTr;
   $('ovKpis').innerHTML = [
     ['👥 В обучении', P.length, 'сотрудников проходили хоть что-то'],
-    ['🏆 Аттестованы', `${withExam.length}`, P.length ? `${Math.round(withExam.length / P.length * 100)}% сотрудников · средний балл ${avg(withExam.map(p => p.exam.percent)) ?? '—'}%` : '—'],
-    ['📈 Рост после обучения', g == null ? '—' : (g >= 0 ? '+' : '') + g + ' п.п.', withBoth.length ? `входной тест → аттестация, ${withBoth.length} чел.` : 'нужны и тест, и аттестация', g == null ? '' : g >= 0 ? 'up' : 'down'],
-    ['🎯 Тренажёры', `${avg(P.map(p => p.trainN)) != null ? (P.reduce((a, p) => a + p.trainN, 0) / Math.max(1, P.length)).toFixed(1).replace('.', ',') : '—'} <small style="font-size:16px;color:var(--ink-3)">из ${activeTr().length}</small>`, 'в среднем тренажёров на сотрудника · подробно ниже']
+    !RECS.some(r => r.type === 'final_exam_1') ? ['🏆 Аттестованы', '—', 'аттестация откроется 28.10'] : ['🏆 Аттестованы', `${withExam.length}`, P.length ? `${Math.round(withExam.length / P.length * 100)}% сотрудников · средний балл ${avg(withExam.map(p => p.exam.percent)) ?? '—'}%` : '—'],
+    ['📈 Рост после обучения', g == null ? '—' : (g >= 0 ? '+' : '') + g + ' п.п.', withBoth.length ? `входной тест → аттестация, ${withBoth.length} чел.` : withTr.length ? `входной тест → тренажёры, ${withTr.length} чел.` : 'нужны тест и тренажёры', g == null ? '' : g >= 0 ? 'up' : 'down'],
+    ['🎯 Тренажёры', `${avg(P.map(p => p.trainN)) != null ? (P.reduce((a, p) => a + p.trainN, 0) / Math.max(1, P.length)).toFixed(1).replace('.', ',') : '—'} <small style="font-size:16px;color:var(--ink-3)">из ${activeTr().length}</small>`, 'в среднем тренажёров на сотрудника · подробно во вкладке «Результаты»']
   ].map(k => `<div class="kpi"><div class="l">${k[0]}</div><div class="v ${k[3] || ''}">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
 
-  const st = [['📝 Входной тест', P.filter(p => p.test).length, 'знание стандартов']].concat(activeTr().map(t => [TICON[t] + ' ' + TSHORT[t], P.filter(p => p.tools[t]).length, 'тренажёр'])).concat([['🏆 Аттестация', withExam.length, '«Одна смена в 585GOLD»']]);
-  const mx = Math.max(1, P.length);
-  $('ovFunnel').innerHTML = st.map(s => `<div class="fstep"><div class="n">${s[0]}<small>${s[2]}</small></div><div class="fbar"><i style="width:${s[1] / mx * 100}%"></i></div><div class="c">${s[1]}<small>${P.length ? Math.round(s[1] / P.length * 100) : 0}%</small></div></div>`).join('');
+  renderDeadlines(P); renderHeat();
 
   // активность
   const R = RECS.filter(r => !STORE || r.city === STORE), days = [];
   for (let i = 13; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); days.push(d); }
   const cnt = days.map(d => R.filter(r => { const x = new Date(r.date); return x >= d && x < new Date(+d + 864e5); }).length), m2 = Math.max(1, ...cnt);
-  $('ovDays').innerHTML = `<div class="days">${days.map((d, i) => `<div class="day" title="${d.toLocaleDateString('ru-RU')}: ${cnt[i]}"><b>${cnt[i] || ''}</b><i style="height:${cnt[i] / m2 * 100}%"></i><span>${d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span></div>`).join('')}</div>`;
+  const opens = d => SCHED.filter(s => +dayOf(s.from) === +d);
+  $('ovDays').innerHTML = `<div class="days" style="height:150px">${days.map((d, i) => { const o = opens(d), ic = o.map(s => schedLabel(s.t).split(' ')[0]).join('');
+    return `<div class="day ${i === 13 ? 'today' : ''}" title="${d.toLocaleDateString('ru-RU')}: ${cnt[i]} прохожд.${o.length ? ' · открылся: ' + o.map(s => schedLabel(s.t).replace(/^\S+ /, '')).join(', ') : ''}"><b>${cnt[i] || ''}</b><i style="height:${cnt[i] / m2 * 100}%"></i><span>${i === 13 ? 'сегодня' : d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span><em>${ic}</em></div>`; }).join('')}</div>`;
 
   // тренажёры по отдельности
   const AT = activeTr();
@@ -514,12 +556,44 @@ function renderOverview() {
   $('ovStores').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => setStore(tr.dataset.c === STORE ? '' : tr.dataset.c));
 
   // риск и незавершённые
+  $('ovExamBlock').style.display = RECS.some(r => r.type === 'final_exam_1') ? '' : 'none';
   const risk = P.filter(p => (p.exam && p.exam.percent < 50) || (p.growth != null && p.growth < 0)).sort((a, b) => (a.exam?.percent ?? 0) - (b.exam?.percent ?? 0));
   $('ovRisk').innerHTML = risk.length ? `<table><thead><tr><th>Сотрудник</th><th class="num">Входной тест</th><th class="num">Аттестация</th><th class="num">Изменение</th></tr></thead><tbody>${risk.slice(0, 12).map(p => { const why = p.exam && p.exam.percent < 50 ? 'аттестация ниже 50%' : 'аттестация хуже входного теста';
     return `<tr class="click" data-k="${esc(p.key)}"><td><b>${esc(p.name)}</b><div class="muted">${esc(p.city)} · ${why}</div></td><td class="num">${pill(p.test ? p.test.percent : null)}</td><td class="num">${pill(p.exam ? p.exam.percent : null)}</td><td class="num">${p.growth != null ? delta(p.growth) + '<div class="muted">п.п.</div>' : delta(null)}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">🎉 Таких сотрудников нет</div>';
   const todo = P.filter(p => !p.exam).sort((a, b) => new Date(b.last) - new Date(a.last));
   $('ovTodo').innerHTML = todo.length ? `<table><tbody>${todo.slice(0, 12).map(p => `<tr class="click" data-k="${esc(p.key)}"><td><b>${esc(p.name)}</b><div class="muted">${esc(p.city)}</div></td><td class="muted">${p.test ? 'тест ✓' : ''} ${Object.keys(p.tools).map(t => TICON[t]).join(' ')}</td><td class="muted num">${fmtD(p.last)}</td></tr>`).join('')}</tbody></table>${todo.length > 12 ? `<div class="muted" style="margin-top:8px">…и ещё ${todo.length - 12}</div>` : ''}` : '<div class="empty">🎉 Все аттестованы</div>';
   document.querySelectorAll('#ovRisk tr.click, #ovTodo tr.click').forEach(tr => tr.onclick = () => openEmp(tr.dataset.k));
+}
+
+function renderDeadlines(P) {
+  const n = P.length, AP = Object.values(PEOPLE), cities = STORE ? [STORE] : STORES;
+  const open = SCHED.filter(s => schedState(s) === 'open'), soon = SCHED.filter(s => schedState(s) === 'soon'), done = SCHED.filter(s => schedState(s) === 'done');
+  const item = s => {
+    const left = Math.ceil((+dayOf(s.to) + 864e5 - Date.now()) / 864e5);
+    const due = `до ${dm(s.to)} · ${left <= 1 ? 'последний день' : 'осталось ' + left + ' ' + plDay(left)}`;
+    if (s.nodata) return `<div class="dl-item"><div class="nm">${schedLabel(s.t)}<small class="${left <= 2 ? 'hot' : ''}">${due}</small></div><div class="muted">Сценка результаты не сохраняет — прохождение здесь не видно.</div><div class="c"></div></div>`;
+    const k = P.filter(p => schedRec(p, s.t)).length, pc = n ? Math.round(k / n * 100) : 0;
+    const zero = cities.filter(c => !AP.some(p => p.city === c && schedRec(p, s.t)));
+    const lag = !STORE && zero.length && zero.length < cities.length ? `<div class="lag">Ещё никто не прошёл: <b>${zero.map(esc).join(', ')}</b></div>` : '';
+    return `<div class="dl-item"><div class="nm">${schedLabel(s.t)}<small class="${left <= 2 ? 'hot' : ''}">${due}</small></div><div><div class="dl-bar"><i class="${cls(pc)}" style="width:${Math.max(pc, 1)}%"></i></div>${lag}</div><div class="c"><b>${k}</b> из ${n}<small>${pc}% прошли</small></div></div>`;
+  };
+  const doneTxt = done.filter(s => !s.nodata).map(s => { const k = P.filter(p => schedRec(p, s.t)).length; return `${schedLabel(s.t)} — ${k} из ${n}`; });
+  $('ovDead').innerHTML = (open.length ? open.map(item).join('') : '<div class="empty">Сейчас открытых тренажёров нет</div>')
+    + `<div class="dl-more">${soon.length ? `<b>Дальше:</b> ${soon.slice(0, 2).map(s => `${schedLabel(s.t)} с ${dm(s.from)}`).join(' · ')}` : ''}${doneTxt.length ? `${soon.length ? '<br>' : ''}<b>Срок прошёл:</b> ${doneTxt.join(' · ')}` : ''}</div>`;
+}
+function renderHeat() {
+  const AP = Object.values(PEOPLE), cities = STORE ? [STORE] : STORES.concat([...new Set(AP.map(p => p.city))].filter(c => !STORES.includes(c)));
+  const cols = SCHED.filter(s => !s.nodata);
+  const cell = (ps, s) => {
+    if (schedState(s) === 'soon' && !ps.some(p => schedRec(p, s.t))) return `<td><div class="cell off" title="Откроется ${dm(s.from)}">с ${dm(s.from)}</div></td>`;
+    if (!ps.length) return `<td><div class="cell none">—</div></td>`;
+    const rs = ps.map(p => schedRec(p, s.t)).filter(Boolean), pc = Math.round(rs.length / ps.length * 100), sc = avg(rs.map(r => r.percent));
+    return `<td><div class="cell ${cls(pc)}" title="${schedLabel(s.t).replace(/^\S+ /, '')}: прошли ${rs.length} из ${ps.length}${sc != null ? ', средний результат ' + sc + '%' : ''}">${pc}%<small>${sc != null ? 'ср. ' + sc + '%' : 'никто'}</small></div></td>`;
+  };
+  const rows = cities.map(c => ({ c, ps: AP.filter(p => p.city === c) }));
+  if (!STORE && rows.length > 1) rows.push({ c: 'Все магазины', ps: AP, all: true });
+  $('ovHeat').innerHTML = `<table class="hm"><thead><tr><th class="st">Магазин</th>${cols.map(s => `<th title="${schedLabel(s.t).replace(/^\S+ /, '')}: ${dm(s.from)}–${dm(s.to)}">${schedLabel(s.t)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr class="${r.all ? '' : 'click'}" data-c="${esc(r.c)}"><td><div class="storename" style="${r.all ? 'font-style:italic;color:var(--ink-2)' : ''}">${esc(r.c)}<small>${r.ps.length} чел.</small></div></td>${cols.map(s => cell(r.ps, s)).join('')}</tr>`).join('')}</tbody></table>`;
+  $('ovHeat').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => setStore(tr.dataset.c === STORE ? '' : tr.dataset.c));
 }
 
 // ===================== РЕЙТИНГ =====================
@@ -549,7 +623,8 @@ function csv(rows, name) {
 }
 
 // ===================== НАВЫКИ =====================
-let skMode = 'growth';
+let skMode = 'growth', skCmp = '';
+const cmpStage = () => skCmp || (Object.values(PEOPLE).some(p => p.test && p.exam) ? 'exam' : 'train');
 function storeSkill(ps, stage) { const m = {}; ps.forEach(p => { const s = typeof stage === 'function' ? stage(p) : p[stage]; if (!s) return; Object.entries(s).forEach(([k, v]) => { if (v != null) (m[k] = m[k] || []).push(v); }); }); return Object.fromEntries(SK.map(s => [s.k, { v: avg(m[s.k] || []), n: (m[s.k] || []).length }])); }
 function renderSkills() {
   const AP = Object.values(PEOPLE);
@@ -561,28 +636,31 @@ function renderSkills() {
   $('skTr').style.display = skMode === 'train' ? '' : 'none';
   $('skTr').innerHTML = '<option value="">Все тренажёры вместе</option>' + AT.map(t => `<option value="${t}" ${t === tcur ? 'selected' : ''}>${TICON[t]} ${TOOLS[t]}</option>`).join('');
   const EXK = new Set(Object.values(EX_SK).flat()), SKG = SK.filter(s => EXK.has(s.k));
-  const COLSK = skMode === 'growth' ? SKG : SK;
+  const C = cmpStage(), BST = C === 'exam' ? 'skExam' : 'skTrain', okP = p => p.test && (C === 'exam' ? p.exam : p.trainN), BN = C === 'exam' ? 'аттестация' : 'тренажёры', SKC = C === 'exam' ? SKG : SK;
+  const COLSK = skMode === 'growth' ? SKC : SK;
   const cellFor = (ps) => {
     if (skMode === 'growth') {
-      const both = ps.filter(p => p.test && p.exam);
-      const t = storeSkill(both, 'skTest'), e = storeSkill(both, 'skExam');
-      return SKG.map(s => { const a = t[s.k].v, b = e[s.k].v; if (a == null || b == null) return `<td><div class="gcell none" title="Нет сотрудников, прошедших и тест, и аттестацию">нет данных</div></td>`; const d = b - a;
-        return `<td><div class="gcell ${d > 2 ? 'gup' : d < -2 ? 'gdown' : 'gzero'}" title="${s.n}: входной тест ${a}% → аттестация ${b}% (${both.length} чел.)"><div class="ft">${a}% → <b>${b}%</b></div><div class="dl">${d > 2 ? '▲ вырос на ' + d : d < -2 ? '▼ упал на ' + (-d) : '≈ без изменений'}</div></div></td>`; }).join('');
+      const both = ps.filter(okP);
+      const t = storeSkill(both, 'skTest'), e = storeSkill(both, BST);
+      return SKC.map(s => { const a = t[s.k].v, b = e[s.k].v; if (a == null || b == null) return `<td><div class="gcell none" title="Нет сотрудников, прошедших и тест, и ${C === 'exam' ? 'аттестацию' : 'тренажёры по этому навыку'}">нет данных</div></td>`; const d = b - a;
+        return `<td><div class="gcell ${d > 2 ? 'gup' : d < -2 ? 'gdown' : 'gzero'}" title="${s.n}: входной тест ${a}% → ${BN} ${b}% (${both.length} чел.)"><div class="ft">${a}% → <b>${b}%</b></div><div class="dl">${d > 2 ? '▲ вырос на ' + d : d < -2 ? '▼ упал на ' + (-d) : '≈ без изменений'}</div></div></td>`; }).join('');
     }
     const tsel = $('skTr').value, stage = skMode === 'test' ? 'skTest' : skMode === 'train' ? (tsel ? (p => p.skTool[tsel]) : 'skTrain') : 'skExam', r = storeSkill(ps, stage);
     return SK.map(s => `<td><div class="cell ${cls(r[s.k].v)}" title="${s.n}: ${r[s.k].v == null ? 'нет данных' : r[s.k].v + '%'} (${r[s.k].n} чел.)">${r[s.k].v == null ? '—' : r[s.k].v + '%'}</div></td>`).join('');
   };
   // наглядный блок «было → стало»
   if (skMode === 'growth') {
-    const P = people(), both = P.filter(p => p.test && p.exam), t = storeSkill(both, 'skTest'), e = storeSkill(both, 'skExam');
-    const rows = SKG.map(s => { const a = t[s.k].v, b = e[s.k].v; if (a == null || b == null) return `<div class="db-row"><div class="nm">${s.n}</div><div class="muted">нет данных</div><div></div></div>`; const d = b - a, lo = Math.min(a, b), hi = Math.max(a, b), col = d > 2 ? '#16a34a' : d < -2 ? '#dc2626' : '#94a3b8';
-      return `<div class="db-row"><div class="nm">${s.n}<small>${both.length} чел.</small></div><div class="db-track"><div class="ln" style="left:${lo}%;width:${hi - lo}%;background:${col}"></div><div class="dot a" style="left:${a}%" title="Входной тест ${a}%"></div><div class="dot b" style="left:${b}%" title="Аттестация ${b}%"></div>${[0, 50, 100].map(x => `<span class="tick" style="left:${x}%">${x}%</span>`).join('')}</div><div class="db-val">${a}% → <b>${b}%</b> ${delta(d)}</div></div>`; }).join('');
-    const miss = SK.filter(s => !EXK.has(s.k)).map(s => '«' + s.n + '»').join(', ');
-    $('skGrowth').innerHTML = `<div class="how">📌 <b>Как читать.</b> Берём одних и тех же людей — тех, кто прошёл <b>и входной тест, и аттестацию «Одна смена»</b> (сейчас: ${both.length} чел.${STORE ? ', ' + esc(STORE) : ''}). По каждому навыку смотрим, сколько процентов они набрали <b>в начале</b> (входной тест) и <b>в конце</b> (аттестация). Точка правее — навык лучше.</div>
-      <div class="db-legend"><span><i style="background:#94a3b8"></i>Входной тест — было</span><span><i style="background:var(--red)"></i>Аттестация — стало</span><span style="color:var(--ok);font-weight:700">зелёная линия — навык вырос</span><span style="color:var(--bad);font-weight:700">красная — упал</span></div>
-      ${both.length ? rows : '<div class="empty">Пока нет сотрудников, прошедших и входной тест, и аттестацию</div>'}
+    const P = people(), both = P.filter(okP), t = storeSkill(both, 'skTest'), e = storeSkill(both, BST);
+    const rows = SKC.map(s => { const a = t[s.k].v, b = e[s.k].v; if (a == null || b == null) return `<div class="db-row"><div class="nm">${s.n}</div><div class="muted">нет данных</div><div></div></div>`; const d = b - a, lo = Math.min(a, b), hi = Math.max(a, b), col = d > 2 ? '#16a34a' : d < -2 ? '#dc2626' : '#94a3b8';
+      return `<div class="db-row"><div class="nm">${s.n}<small>${both.length} чел.</small></div><div class="db-track"><div class="ln" style="left:${lo}%;width:${hi - lo}%;background:${col}"></div><div class="dot a" style="left:${a}%" title="Входной тест ${a}%"></div><div class="dot b" style="left:${b}%" title="${C === 'exam' ? 'Аттестация' : 'Тренажёры'} ${b}%"></div>${[0, 50, 100].map(x => `<span class="tick" style="left:${x}%">${x}%</span>`).join('')}</div><div class="db-val">${a}% → <b>${b}%</b> ${delta(d)}</div></div>`; }).join('');
+    const miss = C === 'exam' ? SK.filter(s => !EXK.has(s.k)).map(s => '«' + s.n + '»').join(', ') : '';
+    $('skGrowth').innerHTML = `<div class="toolbar"><span class="muted">Сравнить входной тест с:</span><div class="seg" id="skCmp"><button data-v="train" class="${C === 'train' ? 'on' : ''}">🎯 Тренажёрами</button><button data-v="exam" class="${C === 'exam' ? 'on' : ''}">🏆 Аттестацией</button></div></div>
+      <div class="how">📌 <b>Как читать.</b> Берём одних и тех же людей — тех, кто прошёл <b>и входной тест, и ${C === 'exam' ? 'аттестацию «Одна смена»' : 'хотя бы один тренажёр'}</b> (сейчас: ${both.length} чел.${STORE ? ', ' + esc(STORE) : ''}). По каждому навыку смотрим, сколько процентов они набрали <b>в начале</b> (входной тест) и <b>${C === 'exam' ? 'в конце (аттестация)' : 'в тренажёрах (первая попытка)'}</b>. Точка правее — навык лучше.${C === 'train' ? ' Навык без данных — его ещё не проверял ни один пройденный тренажёр.' : ''}</div>
+      <div class="db-legend"><span><i style="background:#94a3b8"></i>Входной тест — было</span><span><i style="background:var(--red)"></i>${C === 'exam' ? 'Аттестация' : 'Тренажёры'} — стало</span><span style="color:var(--ok);font-weight:700">зелёная линия — навык вырос</span><span style="color:var(--bad);font-weight:700">красная — упал</span></div>
+      ${both.length ? rows : `<div class="empty">Пока нет сотрудников, прошедших и входной тест, и ${C === 'exam' ? 'аттестацию' : 'тренажёры'}</div>`}
       ${miss ? `<p class="hint" style="margin-top:22px">ℹ️ ${miss} в аттестации не проверяются — их уровень смотрите в режиме «🎯 Тренажёры».</p>` : ''}
-      <h2 style="margin:22px 0 4px">🏙️ По магазинам</h2><p class="hint">В каждой ячейке: входной тест → аттестация и на сколько изменилось.</p>`;
+      <h2 style="margin:22px 0 4px">🏙️ По магазинам</h2><p class="hint">В каждой ячейке: входной тест → ${BN} и на сколько изменилось.</p>`;
+    $('skCmp').querySelectorAll('button').forEach(b => b.onclick = () => { skCmp = b.dataset.v; renderSkills(); });
   } else $('skGrowth').innerHTML = '';
   $('skMatrix').innerHTML = groups.length ? `<table class="hm"><thead><tr><th class="st">Магазин</th>${COLSK.map(s => `<th title="${s.n}">${s.short}</th>`).join('')}</tr></thead><tbody>${groups.map(g => `<tr><td><div class="storename" style="${g.all ? 'font-style:italic;color:var(--ink-2)' : ''}">${esc(g.c)}<small>${g.ps.length} чел.</small></div></td>${cellFor(g.ps)}</tr>`).join('')}</tbody></table>` : '<div class="empty">Нет данных</div>';
   $('skLegend').innerHTML = skMode === 'growth'
