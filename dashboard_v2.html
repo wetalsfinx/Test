@@ -209,6 +209,7 @@
   <!-- ============ ОБЗОР ============ -->
   <section class="tab on" id="t-over">
     <div class="kpis" id="ovKpis"></div>
+    <div class="card"><h2>🕒 Последние прохождения</h2><p class="hint">Кто, из какого магазина, что и с каким результатом прошёл — самые свежие сверху. Нажмите на имя — откроется карточка сотрудника, «📄» — его ответы. Все записи с фильтрами — во вкладке «⚙️ Данные».</p><div class="tw" id="ovFeed"></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="ovFeedMore"></div></div>
     <div class="card"><h2>📊 Сводка по тесту, тренажёрам и аттестации</h2><p class="hint" id="tsHint"></p>
       <div class="seg ts-seg" id="tsSeg"></div>
       <div class="kpis ts-kpis" id="tsKpis"></div>
@@ -399,7 +400,7 @@ try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc"
 async function load() {
   $('status').textContent = 'Загрузка…';
   if (!db) { $('status').textContent = '⚠️ База не загрузилась — откройте по ссылке github.io'; return; }
-  const recs = [];
+  const recs = [], SEEN = new Set();
   for (const [col, type] of COLS) {
     try {
       const snap = await db.collection('results').doc(col).collection('items').get();
@@ -408,6 +409,8 @@ async function load() {
         let t = type;
         if (col === 'final_exam') t = x.exam_version === 'shift_v1' ? 'final_exam_1' : 'final_exam_old';
         if (!x.user_name || x.percent == null) return;
+        const dk = col + '|' + String(x.user_name).trim().toLowerCase() + '|' + (x.city || '') + '|' + x.date + '|' + x.percent; // повторная отправка из резервной копии — не считаем дважды
+        if (x.date && SEEN.has(dk)) return; SEEN.add(dk);
         recs.push({ col, docId: d.id, type: t, name: String(x.user_name).trim().replace(/\s+/g, ' '), city: x.city || 'Не указан', percent: Math.max(0, Math.min(100, Math.round(+x.percent || 0))), date: x.date || new Date(0).toISOString(), raw: x });
       });
     } catch (e) { console.warn(col, e.message); }
@@ -459,8 +462,19 @@ const people = () => Object.values(PEOPLE).filter(p => !STORE || p.city === STOR
 function renderAll() { renderOverview(); renderRank(); renderSkills(); renderEmpList(); renderLH(); renderData(); }
 
 // ===================== ОБЗОР =====================
+let feedN = 10;
+function renderFeed() {
+  const R = RECS.filter(r => !STORE || r.city === STORE).slice().sort((a, b) => new Date(b.date) - new Date(a.date)), view = R.slice(0, feedN);
+  const nOf = r => { const same = PEOPLE[r.key] ? PEOPLE[r.key].recs.filter(x => x.type === r.type) : []; return same.length > 1 ? `<small class="muted"> · попытка ${same.indexOf(r) + 1}</small>` : ''; };
+  $('ovFeed').innerHTML = view.length ? `<table><thead><tr><th>Когда</th><th>Сотрудник</th><th>Магазин</th><th>Что прошёл</th><th class="num">Результат</th><th></th></tr></thead><tbody>${view.map((r, i) => `<tr><td class="muted" style="white-space:nowrap">${fmtD(r.date)}</td><td><a href="#" style="color:inherit;text-decoration:none;border-bottom:1px dashed var(--ink-4)" data-emp="${esc(r.key)}"><b>${esc(PEOPLE[r.key]?.name || r.name)}</b></a></td><td class="muted">${esc(r.city)}</td><td>${typeLabel(r.type)}${nOf(r)}</td><td class="num">${pill(r.percent)}</td><td><button class="btn sm" data-fv="${i}">📄 Ответы</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">Пока никто ничего не прошёл</div>';
+  $('ovFeedMore').innerHTML = (R.length > feedN ? `<button class="btn" id="feedMore">Показать ещё (${Math.min(20, R.length - feedN)} из ${R.length - feedN})</button>` : '') + `<button class="btn" id="feedAll">⚙️ Все записи с фильтрами</button>`;
+  $('ovFeed').querySelectorAll('a[data-emp]').forEach(a => a.onclick = e => { e.preventDefault(); openEmp(a.dataset.emp); });
+  $('ovFeed').querySelectorAll('button[data-fv]').forEach(b => b.onclick = () => { const r = view[+b.dataset.fv]; if (PEOPLE[r.key]) openRecs(r.key, PEOPLE[r.key].recs.indexOf(r)); });
+  if ($('feedMore')) $('feedMore').onclick = () => { feedN += 20; renderFeed(); };
+  $('feedAll').onclick = () => showTab('data');
+}
 function renderOverview() {
-  renderTestSum(); renderDirLinks();
+  renderTestSum(); renderDirLinks(); renderFeed();
   const P = people(), withExam = P.filter(p => p.exam), withBoth = P.filter(p => p.growth != null);
   const g = avg(withBoth.map(p => p.growth));
   $('ovKpis').innerHTML = [
@@ -877,7 +891,7 @@ function renderTestSum() {
 function renderDirLinks() {
   const base = location.href.split('?')[0].replace(/[^/]*$/, '') + 'director.html?m=';
   const ver = '&v=' + new Date().toISOString().slice(2, 10).replace(/-/g, ''); // чтобы браузер не показывал старую копию страницы
-  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><b>🏬 ${esc(c)}</b><span><a class="btn" href="${base + encodeURIComponent(c) + ver}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Копировать ссылку</button></span></div>`).join('');
+  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><b>🏬 ${esc(c)}</b><span><a class="btn" href="${base + encodeURIComponent(c) + ver}" target="_blank">👁 Открыть</a> <span class="muted" style="font-size:12px">🧪 ${['1', '2', '3'].map(v => `<a href="${base + encodeURIComponent(c)}&var=${v}" target="_blank">вар. ${v}</a>`).join(' · ')}</span> <button class="btn" data-dl="${i}">📋 Копировать ссылку</button></span></div>`).join('');
   $('ovDir').querySelectorAll('button[data-dl]').forEach(b => b.onclick = async () => {
     const url = base + encodeURIComponent(STORES[+b.dataset.dl]) + ver;
     try { await navigator.clipboard.writeText(url); } catch (e) { const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e2) {} t.remove(); }
