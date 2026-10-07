@@ -205,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 7.10-4</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 7.10-5</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -241,7 +241,7 @@
       <div class="tw" id="tsTable"></div>
       <h2 style="margin-top:18px;font-size:15px" id="tsQh"></h2><div id="tsQs"></div>
     </div>
-    <div class="card"><h2>🎯 Тренажёры — каждый отдельно</h2><p class="hint">Первая попытка — реальный уровень, лучшая — после пересдач. Нажмите на тренажёр, чтобы открыть разбор по ситуациям.</p><div class="tw" id="ovTrainers"></div></div>
+    <div class="card"><h2>🎯 Тренажёры — каждый отдельно</h2><p class="hint">Первая попытка — реальный уровень, лучшая — после пересдач. Нажмите на тренажёр — кто прошёл, их ответы, кто ещё нет, трудные ситуации.</p><div class="tw" id="ovTrainers"></div></div>
     <div class="card"><h2>🏙️ Рейтинг магазинов</h2><p class="hint">По среднему результату аттестации. Нажмите на магазин, чтобы отфильтровать весь дашборд.</p><div class="tw" id="ovStores"></div></div>
     <div class="grid2" id="ovExamBlock">
       <div class="card"><h2>⚠️ Нужна поддержка</h2><p class="hint">Попадают сюда, если аттестация ниже 50% <b>или</b> аттестация хуже входного теста. «Изменение» = аттестация минус входной тест.</p><div class="tw" id="ovRisk"></div></div>
@@ -545,7 +545,7 @@ function renderOverview() {
   const AT = activeTr();
   $('ovTrainers').innerHTML = AT.length ? `<table><thead><tr><th>Тренажёр</th><th>Что тренирует</th><th class="num">Прошли</th><th class="num">1-я попытка</th><th class="num">Лучшая</th><th class="num">Попыток на чел.</th><th>Охват сотрудников</th></tr></thead><tbody>${AT.map(t => { const ps = P.filter(p => p.tools[t]), n = ps.length, tries = ps.reduce((a, p) => a + p.tools[t].n, 0), cov = P.length ? Math.round(n / P.length * 100) : 0;
     return `<tr class="click" data-t="${t}"><td><b>${TICON[t]} ${TOOLS[t]}</b></td><td class="muted">${TSKILL[t]}</td><td class="num">${n}</td><td class="num">${pill(avg(ps.map(p => p.tools[t].first)))}</td><td class="num">${pill(avg(ps.map(p => p.tools[t].best)))}</td><td class="num">${n ? (tries / n).toFixed(1).replace('.', ',') : '—'}</td><td><div class="bar-in"><div class="b"><i style="width:${cov}%"></i></div><span class="muted">${n} из ${P.length}</span></div></td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">Тренажёры ещё никто не проходил</div>';
-  $('ovTrainers').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => { showTab('skills'); $('dtTool').value = tr.dataset.t; renderDetail(); setTimeout(() => $('dtTool').scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); });
+  $('ovTrainers').querySelectorAll('tr.click').forEach(tr => tr.onclick = () => openStage(STORE, tr.dataset.t));
 
   // магазины
   const AP = Object.values(PEOPLE);
@@ -968,7 +968,7 @@ function renderTestSum() {
   const types = tsTypes(); if (!types.includes(tsType)) tsType = 'test';
   $('tsSeg').innerHTML = types.map(t => `<button data-v="${t}" class="${t === tsType ? 'on' : ''}">${tsLabel(t)}</button>`).join('');
   $('tsSeg').querySelectorAll('button').forEach(b => b.onclick = () => { tsType = b.dataset.v; store.set('dash2_ts', tsType); renderTestSum(); });
-  $('tsHint').textContent = tsType === 'test' ? 'Первая попытка каждого сотрудника.' : tsType === 'final_exam_1' ? 'Последняя попытка аттестации «Одна смена».' : `${TOOLS[tsType]}: первая попытка каждого сотрудника — реальный уровень до пересдач.`;
+  $('tsHint').textContent = (tsType === 'test' ? 'Первая попытка каждого сотрудника.' : tsType === 'final_exam_1' ? 'Последняя попытка аттестации «Одна смена».' : `${TOOLS[tsType]}: первая попытка каждого сотрудника — реальный уровень до пересдач.`) + ' Нажмите на магазин — увидите фамилии, ответы каждого и кто ещё не прошёл.';
   const AP = Object.values(PEOPLE).filter(p => !STORE || p.city === STORE);
   const cities = STORE ? [STORE] : STORES.concat([...new Set(AP.filter(p => tsRec(p, tsType)).map(p => p.city))].filter(c => !STORES.includes(c)));
   const row = (c, ps, isAll) => {
@@ -983,8 +983,9 @@ function renderTestSum() {
     ['🟢 80% и выше', all.g, pc(all.g)], ['🟡 60–79%', all.m, pc(all.m)], ['🔴 ниже 60%', all.b, pc(all.b)],
   ].map(k => `<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
   const dist = r => r.n ? `<div class="ts-dist" title="80%+: ${r.g} · 60–79%: ${r.m} · ниже 60%: ${r.b}">${r.g ? `<i class="good" style="flex:${r.g}">${r.g}</i>` : ''}${r.m ? `<i class="mid" style="flex:${r.m}">${r.m}</i>` : ''}${r.b ? `<i class="bad" style="flex:${r.b}">${r.b}</i>` : ''}</div>` : '<span class="muted">—</span>';
-  const tr = r => `<tr class="${r.isAll ? 'ts-all' : ''}"><td><b>${esc(r.c)}</b></td><td class="num"><b>${r.n || '<span class="muted">0</span>'}</b></td><td class="num">${pill(r.avg)}</td><td class="num muted">${r.n ? r.min + '–' + r.max + '%' : '—'}</td><td>${dist(r)}</td></tr>`;
+  const tr = r => `<tr class="click ${r.isAll ? 'ts-all' : ''}" data-c="${r.isAll ? '' : esc(r.c)}" title="Нажмите — кто прошёл, их ответы, кто ещё нет"><td><b>${esc(r.c)}</b> <span class="muted">· кто прошёл и ответы ›</span></td><td class="num"><b>${r.n || '<span class="muted">0</span>'}</b></td><td class="num">${pill(r.avg)}</td><td class="num muted">${r.n ? r.min + '–' + r.max + '%' : '—'}</td><td>${dist(r)}</td></tr>`;
   $('tsTable').innerHTML = `<table><thead><tr><th>Магазин</th><th class="num">Прошли, чел.</th><th class="num">Средний</th><th class="num">Мин–макс</th><th>🟢 / 🟡 / 🔴</th></tr></thead><tbody>${rows.map(tr).join('')}${cities.length > 1 ? tr(all) : ''}</tbody></table>`;
+  $('tsTable').querySelectorAll('tr.click').forEach(x => x.onclick = () => openStage(x.dataset.c || STORE, tsType));
   // вопросы / ситуации
   const qm = {}, order = [];
   AP.map(p => tsRec(p, tsType)).filter(Boolean).forEach(r => itemsOf(r).forEach(([n, , v]) => { if (!qm[n]) { qm[n] = []; order.push(n); } qm[n].push(v); }));
