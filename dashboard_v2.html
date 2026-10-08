@@ -70,7 +70,7 @@
   a.btn { display: inline-block; text-decoration: none; }
   .att { font-size: 11px; color: var(--ink-4); margin-top: 3px; white-space: nowrap; font-weight: 600; } .att.many { color: #9a5b00; background: rgba(245,158,11,.16); border-radius: 8px; padding: 1px 6px; display: inline-block; }
   .emp-bar { flex-wrap: nowrap; } .emp-sel { flex: 1; min-width: 0; max-width: 420px; padding: 10px 12px; border: 2px solid var(--line); border-radius: 12px; font: inherit; font-weight: 700; font-size: 14.5px; background: #fff; cursor: pointer; } .emp-sel:focus { outline: none; border-color: var(--red); } .emp-bar .btn { padding: 9px 13px; } #empPos { white-space: nowrap; font-size: 13px; }
-  .dl-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); } .dl-row:first-child { border-top: none; } .dm-reset { padding: 2px 8px; font-size: 11.5px; margin-left: 6px; } .dm-seen { font-size: 12px; color: var(--ink-3); } .dm-seen.ok { color: #1f7a3d; font-weight: 600; } .dm-lab { margin-top: 12px; } .dm-lab summary { cursor: pointer; font-weight: 700; font-size: 13.5px; color: var(--ink-3); } .dl-row span { white-space: nowrap; }
+  .dl-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); } .dl-row:first-child { border-top: none; } .dm-seen { font-size: 12px; color: var(--ink-3); } .dm-seen.ok { color: #1f7a3d; font-weight: 600; } .dm-lab { margin-top: 12px; } .dm-lab summary { cursor: pointer; font-weight: 700; font-size: 13.5px; color: var(--ink-3); } .dl-row span { white-space: nowrap; }
   .btn { border: 1px solid var(--line); background: #fff; color: var(--ink-2); padding: 9px 14px; border-radius: 12px; font-family: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; }
   .btn:hover { border-color: var(--red); color: var(--red); } .btn.red { background: var(--red); color: #fff; border-color: var(--red); }
   .seg { display: inline-flex; background: var(--soft); border-radius: 30px; padding: 4px; flex-wrap: wrap; }
@@ -205,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 8.10-2</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 8.10-1</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -460,8 +460,8 @@ async function load() {
     } catch (e) { console.warn(col, e.message); }
   }
   try { const s = await db.collection('results').doc('lifehacks').collection('items').get(); LH = []; s.forEach(d => LH.push(Object.assign({}, d.data(), { _id: d.id }))); } catch (e) { LH = []; }
-  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date, col: 'lifehacks', id: e._id })); LH = LH.filter(e => e.event !== 'dm_open'); // запасной путь записи открытий
-  try { const s = await db.collection('results').doc('dm_visits').collection('items').get(); s.forEach(d => { const x = d.data(); if (x.store) VISITS.push({ store: x.store, date: x.date, col: 'dm_visits', id: d.id }); }); } catch (e) { }
+  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date })); LH = LH.filter(e => e.event !== 'dm_open'); // запасной путь записи открытий
+  try { const s = await db.collection('results').doc('dm_visits').collection('items').get(); s.forEach(d => { const x = d.data(); if (x.store) VISITS.push({ store: x.store, date: x.date }); }); } catch (e) { }
   RECS = recs.sort((a, b) => new Date(a.date) - new Date(b.date));
   lastLoad = new Date();
   build();
@@ -590,17 +590,25 @@ function openStage(c, t) {
   const recsOf = p => t === 'test' ? p.recs.filter(r => r.type === 'test') : t === 'final_exam_1' ? p.recs.filter(r => r.type === 'final_exam_1') : p.recs.filter(r => r.type === t);
   const done = ps.filter(p => schedRec(p, t)).map(p => { const rs = recsOf(p), main = schedRec(p, t); return { p, main, n: rs.length, best: Math.max(...rs.map(r => r.percent)) }; }).sort((a, b) => b.main.percent - a.main.percent);
   const not = ps.filter(p => !schedRec(p, t)).sort((a, b) => a.city.localeCompare(b.city, 'ru') || a.name.localeCompare(b.name, 'ru'));
-  const qm = {}, order = []; done.forEach(d => itemsOf(d.main).forEach(([n, , v]) => { if (!qm[n]) { qm[n] = []; order.push(n); } qm[n].push(v); }));
-  const qs = order.map(n => ({ n, v: avg(qm[n]) })).sort((a, b) => a.v - b.v);
-  const sc = avg(done.map(d => d.main.percent)), what = t === 'final_exam_1' ? 'последняя попытка' : 'первая попытка';
+  const what = t === 'final_exam_1' ? 'последняя попытка' : 'первая попытка';
+  const ALLDONE = done, ALLNOT = not, shops = [...new Set(ps.map(p => p.city))].sort((a, b) => (STORES.indexOf(a) + 1 || 99) - (STORES.indexOf(b) + 1 || 99));
+  let fShop = '', fSort = 'new';
+  const SORTS = [['new', 'Сначала новые'], ['old', 'Сначала старые'], ['hi', 'Результат: выше'], ['lo', 'Результат: ниже']];
   const draw = () => {
-    $('modalBody').innerHTML = `<h2 style="margin:0 40px 4px 0">${nm} · ${c ? esc(c) : 'все магазины'}</h2>
-      <div class="muted" style="margin-bottom:14px">Прошли <b>${done.length} из ${ps.length}</b>${sc != null ? ` · средний результат ${pill(sc)} (${what})` : ''}</div>
-      ${done.length ? `<div class="tw"><table><thead><tr><th>Сотрудник</th>${c ? '' : '<th>Магазин</th>'}<th class="num">Результат</th><th class="num">Попыток</th><th>Когда</th><th></th></tr></thead><tbody>${done.map((d, i) => `<tr><td><b>${esc(d.p.name)}</b></td>${c ? '' : `<td class="muted">${esc(d.p.city)}</td>`}<td class="num">${pill(d.main.percent)}</td><td class="num">${d.n}${d.n > 1 ? `<div class="muted">лучш. ${d.best}%</div>` : ''}</td><td class="muted">${fmtD(d.main.date)}</td><td><button class="btn sm" data-i="${i}">📄 Ответы</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Пока никто не прошёл</div>'}
+    const done = ALLDONE.filter(d => !fShop || d.p.city === fShop).slice().sort((a, b) => fSort === 'new' ? new Date(b.main.date) - new Date(a.main.date) : fSort === 'old' ? new Date(a.main.date) - new Date(b.main.date) : fSort === 'hi' ? b.main.percent - a.main.percent : a.main.percent - b.main.percent);
+    const qm = {}, order = []; done.forEach(d => itemsOf(d.main).forEach(([n, , v]) => { if (!qm[n]) { qm[n] = []; order.push(n); } qm[n].push(v); }));
+    const qs = order.map(n => ({ n, v: avg(qm[n]) })).sort((a, b) => a.v - b.v);
+    const not = ALLNOT.filter(p => !fShop || p.city === fShop), tot = done.length + not.length, sc = avg(done.map(d => d.main.percent)), oneShop = c || fShop;
+    $('modalBody').innerHTML = `<h2 style="margin:0 40px 4px 0">${nm} · ${oneShop ? esc(oneShop) : 'все магазины'}</h2>
+      <div class="muted" style="margin-bottom:12px">Прошли <b>${done.length} из ${tot}</b>${sc != null ? ` · средний результат ${pill(sc)} (${what})` : ''}</div>
+      <div class="toolbar">${c ? '' : `<select id="stShop"><option value="">🏙️ Все магазины</option>${shops.map(s => `<option ${s === fShop ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select>`}<div class="seg" id="stSort">${SORTS.map(([v, n]) => `<button data-v="${v}" class="${v === fSort ? 'on' : ''}">${n}</button>`).join('')}</div></div>
+      ${done.length ? `<div class="tw"><table><thead><tr><th>Сотрудник</th>${oneShop ? '' : '<th>Магазин</th>'}<th class="num">Результат</th><th class="num">Попыток</th><th>Когда</th><th></th></tr></thead><tbody>${done.map((d, i) => `<tr><td><b>${esc(d.p.name)}</b></td>${oneShop ? '' : `<td class="muted">${esc(d.p.city)}</td>`}<td class="num">${pill(d.main.percent)}</td><td class="num">${d.n}${d.n > 1 ? `<div class="muted">лучш. ${d.best}%</div>` : ''}</td><td class="muted">${fmtD(d.main.date)}</td><td><button class="btn sm" data-i="${i}">📄 Ответы</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Пока никто не прошёл</div>'}
       <h2 style="margin:20px 0 6px;font-size:15px">⏳ Ещё не прошли${not.length ? ` — ${not.length}` : ''}</h2>
-      ${not.length ? `<div class="chips">${not.map(p => `<span class="chip">${esc(p.name)}${c ? '' : ` <span class="muted">· ${esc(p.city)}</span>`}</span>`).join('')}</div><p class="hint" style="margin-top:8px">Только те, кто уже что-то проходил в обучении: новых сотрудников, которые ни разу не заходили, база не знает.</p>` : '<div class="muted">Все, кто в обучении, прошли 🎉</div>'}
+      ${not.length ? `<div class="chips">${not.map(p => `<span class="chip">${esc(p.name)}${oneShop ? '' : ` <span class="muted">· ${esc(p.city)}</span>`}</span>`).join('')}</div><p class="hint" style="margin-top:8px">Только те, кто уже что-то проходил в обучении: новых сотрудников, которые ни разу не заходили, база не знает.</p>` : '<div class="muted">Все, кто в обучении, прошли 🎉</div>'}
       ${qs.length ? `<h2 style="margin:20px 0 6px;font-size:15px">📊 ${t === 'test' ? 'Вопросы' : t === 'final_exam_1' ? 'Клиенты' : 'Шаги и ситуации'}: от трудных к лёгким</h2><div class="ts-qs">${qs.map(q => `<div class="ts-q"><span class="nm" title="${esc(q.n)}">${esc(q.n)}</span><div class="ts-bar"><i class="${cls(q.v)}" style="width:${Math.max(q.v, 2)}%"></i></div><b>${q.v}%</b></div>`).join('')}</div>` : ''}`;
     $('modalBody').querySelectorAll('button[data-i]').forEach(b => b.onclick = () => { const d = done[+b.dataset.i]; openRecs(d.p.key, d.p.recs.indexOf(d.main), draw); });
+    if ($('stShop')) $('stShop').onchange = e => { fShop = e.target.value; draw(); };
+    $('stSort').querySelectorAll('button').forEach(b => b.onclick = () => { fSort = b.dataset.v; draw(); });
   };
   draw(); $('modalBg').classList.add('on'); $('modalBg').scrollTop = 0; document.body.style.overflow = 'hidden';
 }
@@ -996,51 +1004,27 @@ function renderTestSum() {
 }
 
 // ===================== ССЫЛКИ ДЛЯ ДИРЕКТОРОВ =====================
-const DM_MAIL = url => `Тема: 📊 Новый инструмент для директора: зоны развития вашей команды — на одной странице
+const DM_MAIL = url => `Тема: 📊 Новое для директоров: навыки вашей команды на одной странице
 
 Добрый день!
 
-Вы каждый день в зале и видите, как работает каждый продавец.
-Теперь к вашим наблюдениям добавились результаты обучения: страница показывает, как команда проходит входной тест, тренажёры и аттестацию, и какие навыки продаж стоит подтянуть.
+Для вас появилась отдельная страница: на ней видно, как ваша команда проходит обучение и какие навыки продаж стоит подтянуть.
 
-👉 Страница вашего магазина: ${url}
+👉 Ваша ссылка: ${url}
 
-💡 Зачем она вам:
-🔹 видно, кто из сотрудников уже прошёл тренажёры, а кто ещё нет
-🔹 видны зоны развития команды по 11 навыкам продажи
-🔹 видно, в каких ситуациях продавцы ошибаются чаще всего — во входном тесте, тренажёрах и аттестации
-🔹 готовое упражнение на 3–5 минут для утреннего собрания
+Что на странице:
+🔹 Тренажёры — какие открыты, до какого числа пройти и кто из сотрудников ещё не прошёл
+🔹 11 навыков продавца — результат команды на входном тесте, в тренажёрах и на аттестации, рядом — средний по сети
+🔹 На что сделать упор — самые слабые навыки: что это значит, где команда ошиблась, и упражнение на 3–5 минут для утреннего собрания
+🔹 Уже лучше — навыки, которые команда подтянула
 
-📝 Как устроена страница:
-🔹 Тренажёры — какие открыты, срок прохождения и кто ещё не прошёл.
-🔹 11 навыков — результат команды на трёх этапах: входной тест → тренажёры → аттестация.
-     Зелёный — 80% и выше,
-     Жёлтый — 60–79%,
-     Красный — зона развития.
-     Рядом — средний результат по сети.
-🔹 На что сделать упор — навыки ниже 80%: что это значит в работе с покупателем и где команда ошиблась.
-     Посмотрите, как продавцы применяют эти навыки в зале, и при необходимости дайте обратную связь.
-🔹 Уже лучше — навыки, которые команда подтянула (выделены зелёным цветом)
+🔄 Данные обновляются сами. Сохраните ссылку в закладки и открывайте перед утренним собранием.
 
-🔄 Страница обновляется сама. Цифры меняются, когда сотрудники проходят новые тренажёры — по два в неделю — и аттестацию в конце месяца.
+🔒 Страница только для вас: на ней есть фамилии сотрудников, которые ещё не прошли тренажёры. Пожалуйста, не пересылайте её дальше.
 
-🎯 Как использовать:
-🔹 Откройте страницу, когда удобно: перед собранием или в течение дня — это 1 минута.
-🔹 Выберите одну зону развития команды и проведите упражнение, которое там предложено.
-🔹 В течение дня обращайте внимание, как продавцы работают с покупателями именно в этом месте продажи, и давайте обратную связь сразу после диалога с клиентом.
-🔹 В конце месяца, после аттестации, посмотрите столбец «Изменение»: в нём видно, насколько выросла команда по каждому навыку.
+🎯 Задание: откройте страницу сегодня и выберите один навык для разбора на завтрашнем собрании.
 
-🔒 Страница только для вас: на ней фамилии сотрудников, которые ещё не прошли тренажёры. Пожалуйста, не пересылайте ссылку.
-
-🎯 Задание: сохраните ссылку в закладки и на завтрашнем собрании разберите с командой одну зону развития.
-
-Хорошей смены и сильной команды! 💪
-
-P.S. Важно помнить: цифры на странице — это ориентир, а не оценка сотрудника.
-Отвечая на тест или проходя тренажёр, продавец мог поторопиться, разволноваться или просто нажать не ту кнопку.
-Настоящая картина — в зале, у вас перед глазами. Страница подсказывает, куда посмотреть, а выводы делаете вы.
-
-Будут вопросы — обращайтесь.`;
+Хорошей смены и ярких продаж!`;
 async function copyText(txt, b) {
   try { await navigator.clipboard.writeText(txt); } catch (e) { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e2) { } t.remove(); }
   const o = b.textContent; b.textContent = '✅ Скопировано'; setTimeout(() => b.textContent = o, 1500);
@@ -1050,17 +1034,9 @@ function renderDirLinks() {
   const url = c => base + encodeURIComponent(c);
   const fmt = d => new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   const seen = c => { const v = VISITS.filter(x => x.store === c && x.date).sort((a, b) => new Date(a.date) - new Date(b.date)); return v.length ? `<span class="dm-seen ok">✅ открыл ${v.length} ${v.length % 10 === 1 && v.length % 100 !== 11 ? 'раз' : v.length % 10 >= 2 && v.length % 10 <= 4 && (v.length % 100 < 10 || v.length % 100 >= 20) ? 'раза' : 'раз'} · первый ${fmt(v[0].date)} · последний ${fmt(v[v.length - 1].date)}</span>` : '<span class="dm-seen">⏳ ещё не открывал</span>'; };
-  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><div><b>🏬 ${esc(c)}</b><br>${seen(c)}${VISITS.some(x => x.store === c && x.id) ? ` <button class="btn dm-reset" data-dr="${i}" title="Удалить открытия этого магазина (например, ваши тестовые)">🗑 Сбросить</button>` : ''}</div><span><a class="btn" href="${url(c)}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Ссылка</button> <button class="btn" data-dm="${i}">✉️ Письмо</button></span></div>`).join('')
+  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><div><b>🏬 ${esc(c)}</b><br>${seen(c)}</div><span><a class="btn" href="${url(c)}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Ссылка</button> <button class="btn" data-dm="${i}">✉️ Письмо</button></span></div>`).join('')
     + `<details class="dm-lab"><summary>🧪 Архив вариантов страницы (эксперимент 7.10)</summary><p class="hint">Директорам уходит вариант 1. Остальные сохранены — откроются с панелью переключения.</p>${STORES.map(c => `<div class="dl-row"><b>${esc(c)}</b><span class="muted" style="font-size:12.5px">${[['0', 'только навыки'], ['2', 'ошибки сотрудников'], ['3', 'навыки по тренажёрам']].map(([v, n]) => `<a href="${url(c)}&var=${v}&lab=1" target="_blank">${v} · ${n}</a>`).join(' · ')}</span></div>`).join('')}</details>`;
   $('ovDir').querySelectorAll('button[data-dl]').forEach(b => b.onclick = () => copyText(url(STORES[+b.dataset.dl]), b));
-  $('ovDir').querySelectorAll('button[data-dr]').forEach(b => b.onclick = async () => {
-    const c = STORES[+b.dataset.dr], v = VISITS.filter(x => x.store === c && x.id);
-    if (!confirm(`Удалить открытия страницы директора «${c}» (${v.length})? Счётчик начнётся заново.`)) return;
-    b.disabled = true; b.textContent = '…'; let fail = 0;
-    await Promise.all(v.map(x => db.collection('results').doc(x.col).collection('items').doc(x.id).delete().catch(() => fail++)));
-    if (fail) alert(`Не удалось удалить ${fail} из ${v.length} — проверьте правила Firestore.`);
-    load();
-  });
   $('ovDir').querySelectorAll('button[data-dm]').forEach(b => b.onclick = () => copyText(DM_MAIL(url(STORES[+b.dataset.dm])), b));
 }
 
