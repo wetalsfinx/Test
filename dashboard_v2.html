@@ -70,7 +70,7 @@
   a.btn { display: inline-block; text-decoration: none; }
   .att { font-size: 11px; color: var(--ink-4); margin-top: 3px; white-space: nowrap; font-weight: 600; } .att.many { color: #9a5b00; background: rgba(245,158,11,.16); border-radius: 8px; padding: 1px 6px; display: inline-block; }
   .emp-bar { flex-wrap: nowrap; } .emp-sel { flex: 1; min-width: 0; max-width: 420px; padding: 10px 12px; border: 2px solid var(--line); border-radius: 12px; font: inherit; font-weight: 700; font-size: 14.5px; background: #fff; cursor: pointer; } .emp-sel:focus { outline: none; border-color: var(--red); } .emp-bar .btn { padding: 9px 13px; } #empPos { white-space: nowrap; font-size: 13px; }
-  .dl-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); } .dl-row:first-child { border-top: none; } .dm-seen { font-size: 12px; color: var(--ink-3); } .dm-seen.ok { color: #1f7a3d; font-weight: 600; } .dm-lab { margin-top: 12px; } .dm-lab summary { cursor: pointer; font-weight: 700; font-size: 13.5px; color: var(--ink-3); } .dl-row span { white-space: nowrap; }
+  .dl-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); } .dl-row:first-child { border-top: none; } .dm-reset { padding: 2px 8px; font-size: 11.5px; margin-left: 6px; } .dm-seen { font-size: 12px; color: var(--ink-3); } .dm-seen.ok { color: #1f7a3d; font-weight: 600; } .dm-lab { margin-top: 12px; } .dm-lab summary { cursor: pointer; font-weight: 700; font-size: 13.5px; color: var(--ink-3); } .dl-row span { white-space: nowrap; }
   .btn { border: 1px solid var(--line); background: #fff; color: var(--ink-2); padding: 9px 14px; border-radius: 12px; font-family: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; }
   .btn:hover { border-color: var(--red); color: var(--red); } .btn.red { background: var(--red); color: #fff; border-color: var(--red); }
   .seg { display: inline-flex; background: var(--soft); border-radius: 30px; padding: 4px; flex-wrap: wrap; }
@@ -205,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 8.10-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 8.10-2</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -460,8 +460,8 @@ async function load() {
     } catch (e) { console.warn(col, e.message); }
   }
   try { const s = await db.collection('results').doc('lifehacks').collection('items').get(); LH = []; s.forEach(d => LH.push(Object.assign({}, d.data(), { _id: d.id }))); } catch (e) { LH = []; }
-  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date })); LH = LH.filter(e => e.event !== 'dm_open'); // запасной путь записи открытий
-  try { const s = await db.collection('results').doc('dm_visits').collection('items').get(); s.forEach(d => { const x = d.data(); if (x.store) VISITS.push({ store: x.store, date: x.date }); }); } catch (e) { }
+  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date, col: 'lifehacks', id: e._id })); LH = LH.filter(e => e.event !== 'dm_open'); // запасной путь записи открытий
+  try { const s = await db.collection('results').doc('dm_visits').collection('items').get(); s.forEach(d => { const x = d.data(); if (x.store) VISITS.push({ store: x.store, date: x.date, col: 'dm_visits', id: d.id }); }); } catch (e) { }
   RECS = recs.sort((a, b) => new Date(a.date) - new Date(b.date));
   lastLoad = new Date();
   build();
@@ -1050,9 +1050,17 @@ function renderDirLinks() {
   const url = c => base + encodeURIComponent(c);
   const fmt = d => new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   const seen = c => { const v = VISITS.filter(x => x.store === c && x.date).sort((a, b) => new Date(a.date) - new Date(b.date)); return v.length ? `<span class="dm-seen ok">✅ открыл ${v.length} ${v.length % 10 === 1 && v.length % 100 !== 11 ? 'раз' : v.length % 10 >= 2 && v.length % 10 <= 4 && (v.length % 100 < 10 || v.length % 100 >= 20) ? 'раза' : 'раз'} · первый ${fmt(v[0].date)} · последний ${fmt(v[v.length - 1].date)}</span>` : '<span class="dm-seen">⏳ ещё не открывал</span>'; };
-  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><div><b>🏬 ${esc(c)}</b><br>${seen(c)}</div><span><a class="btn" href="${url(c)}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Ссылка</button> <button class="btn" data-dm="${i}">✉️ Письмо</button></span></div>`).join('')
+  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><div><b>🏬 ${esc(c)}</b><br>${seen(c)}${VISITS.some(x => x.store === c && x.id) ? ` <button class="btn dm-reset" data-dr="${i}" title="Удалить открытия этого магазина (например, ваши тестовые)">🗑 Сбросить</button>` : ''}</div><span><a class="btn" href="${url(c)}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Ссылка</button> <button class="btn" data-dm="${i}">✉️ Письмо</button></span></div>`).join('')
     + `<details class="dm-lab"><summary>🧪 Архив вариантов страницы (эксперимент 7.10)</summary><p class="hint">Директорам уходит вариант 1. Остальные сохранены — откроются с панелью переключения.</p>${STORES.map(c => `<div class="dl-row"><b>${esc(c)}</b><span class="muted" style="font-size:12.5px">${[['0', 'только навыки'], ['2', 'ошибки сотрудников'], ['3', 'навыки по тренажёрам']].map(([v, n]) => `<a href="${url(c)}&var=${v}&lab=1" target="_blank">${v} · ${n}</a>`).join(' · ')}</span></div>`).join('')}</details>`;
   $('ovDir').querySelectorAll('button[data-dl]').forEach(b => b.onclick = () => copyText(url(STORES[+b.dataset.dl]), b));
+  $('ovDir').querySelectorAll('button[data-dr]').forEach(b => b.onclick = async () => {
+    const c = STORES[+b.dataset.dr], v = VISITS.filter(x => x.store === c && x.id);
+    if (!confirm(`Удалить открытия страницы директора «${c}» (${v.length})? Счётчик начнётся заново.`)) return;
+    b.disabled = true; b.textContent = '…'; let fail = 0;
+    await Promise.all(v.map(x => db.collection('results').doc(x.col).collection('items').doc(x.id).delete().catch(() => fail++)));
+    if (fail) alert(`Не удалось удалить ${fail} из ${v.length} — проверьте правила Firestore.`);
+    load();
+  });
   $('ovDir').querySelectorAll('button[data-dm]').forEach(b => b.onclick = () => copyText(DM_MAIL(url(STORES[+b.dataset.dm])), b));
 }
 
