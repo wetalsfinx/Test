@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Без вопроса о бюджете | 585GOLD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--red:#E30613;--red-dk:#a8101c;--gold:#c9a227;--gold-lt:#f6ecc9;--ink:#1f2430;--ink-2:#4b5260;--ink-3:#8a909c;--bg:#faf7f5;--card:#fff;--line:#eee6e2;--ok:#0f8a5f;--ok-bg:#e8f6ef;--bad:#c41c2a;--bad-bg:#fdecee}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 56px}
+.hero{background:linear-gradient(135deg,var(--red) 0%,var(--red-dk) 100%);color:#fff;border-radius:28px;padding:30px 28px;position:relative;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hero::after{content:'';position:absolute;right:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,39,.45),transparent 70%)}
+.brand{font-size:12px;font-weight:800;letter-spacing:2px;color:#ffd98a;position:relative;z-index:1}
+.hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(28px,5vw,42px);line-height:1.1;margin:10px 0 8px;position:relative;z-index:1}
+.hero p{opacity:.93;font-size:15.5px;max-width:640px;position:relative;z-index:1}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;position:relative;z-index:1}
+.tools span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:6px 12px;border-radius:30px;font-size:13px;font-weight:600}
+.tools b{color:#ffd98a}
+section{margin-top:28px}
+.sec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.sec-head h2{font-size:21px;font-weight:800}
+.sec-head .hint{color:var(--ink-3);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px 22px;box-shadow:0 6px 24px rgba(80,20,20,.05)}
+.lead{font-size:15.5px;color:var(--ink-2)}
+.lead b{color:var(--ink)}
+/* формула */
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+.flow .st{flex:1 1 150px;background:#fff;border:1px solid var(--line);border-top:4px solid var(--red);border-radius:16px;padding:12px 14px;min-width:0}
+.flow .st .n{font-size:11px;font-weight:800;color:var(--gold);letter-spacing:1px}
+.flow .st b{display:block;font-size:15px;margin:2px 0 4px}
+.flow .st p{font-size:13.5px;color:var(--ink-2)}
+.flow .st q{display:block;font-size:13.5px;color:var(--ok);font-weight:600;margin-top:6px;quotes:none}
+/* пары неправильно / правильно */
+.pairs{display:grid;gap:12px}
+.pair{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:#fffdfb}
+.pair h3{font-size:15px;font-weight:800;margin-bottom:8px}
+.say{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.say div{border-radius:12px;padding:10px 12px;font-size:14px}
+.say .no{background:var(--bad-bg);color:var(--bad)}
+.say .yes{background:var(--ok-bg);color:var(--ok);font-weight:600}
+.say small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.8;margin-bottom:2px}
+.pair .why{font-size:13px;color:var(--ink-2);margin-top:8px}
+.effect{display:inline-block;margin-top:8px;background:var(--gold-lt);color:#7a5b00;font-size:12px;font-weight:800;padding:4px 10px;border-radius:20px}
+/* переворачивающиеся карточки */
+.flips{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));grid-auto-rows:1fr;gap:12px}
+.flip{perspective:900px;cursor:pointer;height:100%}
+.flip:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:18px}
+.flip-in{display:grid;height:100%;min-height:180px;transition:transform .5s;transform-style:preserve-3d}
+.flip.turned .flip-in{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column}
+.face.front{background:var(--bad-bg);border:1px solid #f6c8cd}
+.face.back{background:var(--ok-bg);border:1px solid #bfe6d2;transform:rotateY(180deg)}
+.face .sit{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--ink-3)}
+.face .ph{font-size:16.5px;font-weight:700;margin:8px 0 auto;line-height:1.35}
+.face.front .ph{color:var(--bad)}
+.face.back .ph{color:var(--ok)}
+.face .why{font-size:12.5px;color:var(--ink-2);margin-top:10px}
+.face .tap{font-size:11px;color:var(--ink-3);margin-top:8px;font-weight:600}
+/* таблица */
+.tw{overflow-x:auto;border-radius:16px;border:1px solid var(--line);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:var(--red);color:#fff;text-align:left;padding:10px 12px;font-size:12.5px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
+tr:nth-child(even) td{background:#fffaf8}
+td.k{font-weight:700;white-space:nowrap}
+td .g{color:var(--ok);font-weight:600}
+td .r{color:var(--bad)}
+/* карточки-советы */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.tile .ic{font-size:24px}
+.tile b{display:block;font-size:15px;margin:4px 0}
+.tile p{font-size:13.5px;color:var(--ink-2)}
+.tile q{display:block;quotes:none;font-size:13.5px;color:var(--ok);font-weight:600;margin-top:6px}
+/* важно */
+.note{background:var(--gold-lt);border-radius:16px;padding:12px 16px;font-size:14px;color:#5c4500}
+.note b{color:#7a5b00}
+/* задание */
+.task{border:2px solid var(--red);border-radius:20px;padding:16px 20px;background:#fff}
+.task h3{color:var(--red);font-size:17px;margin-bottom:8px}
+.task ol{padding-left:20px;display:grid;gap:4px;font-size:14.5px}
+.task .line{margin-top:10px;font-size:14px;color:var(--ink-2)}
+.check{border:2px solid var(--gold);background:#fffbef;border-radius:20px;padding:16px 20px}
+.check h3{color:#8a6a00;font-size:17px;margin-bottom:6px}
+.check a{color:var(--red);font-weight:700;word-break:break-all}
+.quote{margin-top:28px;text-align:center;padding:28px 22px;border-radius:22px;background:linear-gradient(135deg,var(--red) 0%,var(--red-dk) 100%);color:#fff;position:relative;overflow:hidden;border-bottom:4px solid var(--gold);box-shadow:0 10px 30px rgba(227,6,19,.25);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.quote::before{content:'💎';display:block;font-size:26px;margin-bottom:8px}
+.quote p{font-family:'Playfair Display',Georgia,serif;font-size:clamp(19px,3vw,25px);line-height:1.35;max-width:720px;margin:0 auto;position:relative;z-index:1}
+.next{text-align:center;color:var(--ink-2);font-size:14px;margin-top:18px}
+.next b{color:var(--red)}
+.foot{text-align:center;color:var(--ink-3);font-size:12px;margin-top:10px}
+.print-btn{position:fixed;right:16px;bottom:16px;z-index:10;border:none;cursor:pointer;font-family:inherit;font-weight:800;font-size:14px;padding:12px 18px;border-radius:14px;background:var(--red);color:#fff;box-shadow:0 8px 22px rgba(227,6,19,.35)}
+@media (max-width:720px){.say{grid-template-columns:1fr}.hero{padding:24px 20px;border-radius:22px}.card{padding:16px}.print-btn{display:none}td.k{white-space:normal}}
+@media (prefers-reduced-motion:reduce){.flip-in{transition:none}}
+@media print{
+ @page{size:A4 portrait;margin:9mm}
+ body{background:#fff;font-size:12px}
+ .wrap{padding:0;max-width:none}
+ .print-btn,.face .tap,.sec-head .hint.scr{display:none!important}
+ .hero{padding:14px 18px;border-radius:12px}.hero::after{display:none}.hero h1{font-size:24px;margin:4px 0}.hero p{font-size:12px}.tools{margin-top:8px}.tools span{font-size:10.5px;padding:3px 8px}
+ section{margin-top:12px}.sec-head h2{font-size:15px}.sec-head{margin-bottom:6px}
+ .card,.pair,.tile,.task,.check,.flow .st{box-shadow:none;break-inside:avoid}
+ .card{padding:10px 12px;border-radius:12px}
+ .flips{grid-auto-rows:auto;grid-template-columns:1fr;gap:5px}
+ .flip{break-inside:avoid;cursor:default}
+ .flip-in{display:grid;grid-template-columns:1fr 1fr;min-height:0;transform:none!important}
+ .face{grid-area:auto;backface-visibility:visible;-webkit-backface-visibility:visible;transform:none!important;padding:7px 9px;border-radius:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .face.front{border-radius:10px 0 0 10px}.face.back{border-radius:0 10px 10px 0}
+ .face .ph{font-size:11.5px;margin:4px 0 0}.face .why{font-size:10px;margin-top:4px}
+ .say div,.pair,.tile,.flow .st,.note,.effect{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .say div{padding:6px 8px;font-size:11.5px}.pair{padding:8px 10px}.pair h3{font-size:12.5px;margin-bottom:4px}
+ table{font-size:11px}th,td{padding:5px 7px}tr:nth-child(even) td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .quote{padding:10px 14px;margin-top:12px}.quote::before{display:none}.quote p{font-size:14px}
+ .tile{padding:8px 10px}.tile p,.tile q,.flow .st p,.flow .st q{font-size:11px}
+ .task,.check{padding:10px 14px}.task ol{font-size:12px}
+ .next{font-size:11px;margin-top:8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero"><div class="brand">585GOLD · ОБУЧЕНИЕ ПРОДАЖАМ</div><h1>Выявление потребностей без вопроса о бюджете</h1><p>Работаем через повод, стиль и предпочтения — не через деньги. Клиент, которого спросили о бюджете, может почувствовать, что его оценивают. Клиент, которого спросили о поводе, чувствует заботу.</p><div class=tools><span>Повод</span><span>Стиль</span><span>Предпочтения</span><span>Показ в диапазоне</span></div></header><section><div class="sec-head"><h2>6 вопросов, которые работают</h2></div><div class="tw"><table><thead><tr><th>Вопрос</th><th>Зачем</th><th>Как продолжить</th></tr></thead><tbody><tr><td class="k">«Для какого случая выбираете украшение?»</td><td>Понимаем контекст: подарок, праздник, каждый день</td><td>«Юбилей — особый повод. Подберём украшение, которое запомнится. Кого поздравляете?»</td></tr><tr><td class="k">«Это подарок или для себя?»</td><td>Кто получатель — меняем акцент презентации</td><td>«Если для себя — давайте примерим, чтобы вы почувствовали, как оно сидит»</td></tr><tr><td class="k">«Какой стиль вам ближе — классика или современное?»</td><td>Сужаем выбор</td><td>«Тогда обратите внимание на эту коллекцию — она в вашем стиле»</td></tr><tr><td class="k">«Какие металлы и камни вы предпочитаете?»</td><td>Узнаём вкусы</td><td>«Отлично! Тогда вот эти серьги — как раз в вашем вкусе»</td></tr><tr><td class="k">«Что для вас важно: дизайн, качество камня, универсальность?»</td><td>Выявляем приоритеты, строим аргументы</td><td>«Тогда это кольцо — идеальный вариант: и дизайн изящный, и камень высокого качества»</td></tr><tr><td class="k">«Вы уже присматривали что-то или хотите посмотреть новинки?»</td><td>Понимаем, с чего начать показ</td><td>«Тогда начнём с новинок — как раз на этой неделе привезли интересную коллекцию»</td></tr></tbody></table></div></section><section><div class="sec-head"><h2>Чем заменить вопрос о деньгах</h2><span class="hint scr">нажмите на карточку</span></div><div class="flips"><div class="flip" tabindex="0" role="button" aria-label="Перевернуть карточку"><div class="flip-in"><div class="face front"><span class="sit">Вместо суммы</span><span class="ph">❌ «На какую сумму рассчитываете?»</span><span class="tap">Нажмите, чтобы увидеть, как лучше →</span></div><div class="face back"><span class="sit">Вместо суммы · как лучше</span><span class="ph">✅ «Для какого случая выбираете?»</span><span class="why">Повод говорит о клиенте больше, чем сумма.</span></div></div></div><div class="flip" tabindex="0" role="button" aria-label="Перевернуть карточку"><div class="flip-in"><div class="face front"><span class="sit">Вместо лимита</span><span class="ph">❌ «Сколько вы готовы потратить?»</span><span class="tap">Нажмите, чтобы увидеть, как лучше →</span></div><div class="face back"><span class="sit">Вместо лимита · как лучше</span><span class="ph">✅ «Какой стиль вам ближе — классика или современное?»</span><span class="why">Стиль сразу сужает выбор.</span></div></div></div><div class="flip" tabindex="0" role="button" aria-label="Перевернуть карточку"><div class="flip-in"><div class="face front"><span class="sit">Вместо сомнения</span><span class="ph">❌ «Это дорого для вас?»</span><span class="tap">Нажмите, чтобы увидеть, как лучше →</span></div><div class="face back"><span class="sit">Вместо сомнения · как лучше</span><span class="ph">✅ «Что для вас важно в украшении: дизайн, качество или универсальность?»</span><span class="why">Приоритеты — основа аргументов.</span></div></div></div><div class="flip" tabindex="0" role="button" aria-label="Перевернуть карточку"><div class="flip-in"><div class="face front"><span class="sit">Вместо «подешевле»</span><span class="ph">❌ «У нас есть подешевле»</span><span class="tap">Нажмите, чтобы увидеть, как лучше →</span></div><div class="face back"><span class="sit">Вместо «подешевле» · как лучше</span><span class="ph">✅ «Давайте покажу варианты в разных стилях — вы выберете, что ближе»</span><span class="why">Не обесцениваем выбор клиента.</span></div></div></div></div></section><section><div class="sec-head"><h2>Как показывать варианты без вопроса о бюджете</h2></div><div class="flow"><div class="st"><span class="n">ШАГ 1</span><b>2–3 варианта</b><p>После вопросов показать модели в разных ценовых категориях</p><q>«Вот три модели в вашем стиле: изящная, с акцентным камнем и классическая. Какая ближе?»</q></div><div class="st"><span class="n">ШАГ 2</span><b>Спросили цену — честно</b><p>Отвечать без смущения, сразу с ценностью</p><q>«Это кольцо — 28 000 ₽: золото 585 пробы с бриллиантом высокой чистоты. Давайте примерим»</q></div><div class="st"><span class="n">ШАГ 3</span><b>Назвал бюджет сам</b><p>Принять сумму и уточнить повод</p><q>«Поняла, до 30 000 ₽. А для какого случая выбираете?»</q></div><div class="st"><span class="n">ШАГ 4</span><b>Молчит о деньгах</b><p>Продолжать показ, делая акцент на ценности</p><q>«Давайте примерим. Цена — 35 000 ₽: золото 585 пробы и бриллиант высокой чистоты — это на годы»</q></div></div></section><section><div class="task"><h3>🎯 Задание на смену</h3><ol><li>За смену ни разу не спросить о бюджете.</li><li>Если клиент сам назвал сумму — принять её и уточнить повод.</li><li>Запишите 2 вопроса, которые сработали вместо вопроса о деньгах.</li></ol></div></section>
+<div class="quote"><p>Клиент покупает не по бюджету. Он покупает по эмоции. Ваша задача — помочь ему эту эмоцию почувствовать.</p></div>
+
+<p class="foot">💎 585GOLD | Команда обучения | С верой в ваш успех!</p>
+</div>
+<button class="print-btn" onclick="window.print()">🖨️ Печать</button>
+<script>
+document.querySelectorAll('.flip').forEach(function(f){
+  function turn(){ f.classList.toggle('turned'); }
+  f.addEventListener('click', turn);
+  f.addEventListener('keydown', function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); turn(); } });
+});
+</script>
+</body>
+</html>
