@@ -295,7 +295,7 @@ function render(all) {
     <div class="tw"><table><thead><tr><th>Навык</th>${STG.map(([, l]) => `<th>${l}</th>`).join('')}<th>Изменение</th></tr></thead><tbody>${SK.map(s => {
       const v = st.map(x => x ? x[s.k] : null), a = v[0], li = [2, 1].find(i => v[i] != null), b = li != null ? v[li] : null, d = a != null && b != null ? b - a : null;
       return `<tr><td>${esc(s.n)}${net && net[s.k] != null ? `<small>по сети: ${net[s.k]}%</small>` : ''}</td>${v.map((x, i) => `<td>${cell(x)}${VAR === '3' && i === 1 && src[s.k] ? `<small class="src">${[...src[s.k]].map(t => TICON[t]).join(' ')} ${src[s.k].size} из ${TRAINERS.filter(t => TR_SK[t].includes(s.k)).length}</small>` : ''}</td>`).join('')}<td>${d == null ? '<span class="dl zero">—</span>' : `<span class="dl ${d > 2 ? 'up' : d < -2 ? 'down' : 'zero'}">${d > 2 ? '▲ +' + d : d < -2 ? '▼ ' + d : '≈ ' + (d > 0 ? '+' : '') + d}</span>`}</td></tr>`; }).join('')}</tbody></table></div>
-    <div class="legend"><span><i style="background:var(--ok-bg)"></i>80% и выше</span><span><i style="background:var(--mid-bg)"></i>60–79%</span><span><i style="background:var(--bad-bg)"></i>ниже 60% — зона роста</span></div></section>`;
+    <div class="legend"><span><i style="background:var(--ok-bg)"></i>80% и выше</span><span><i style="background:var(--mid-bg)"></i>60–79%</span><span><i style="background:var(--bad-bg)"></i>ниже 60% — зона развития</span></div></section>`;
     const latest = k => { for (const i of [2, 1, 0]) if (st[i] && st[i][k] != null) return st[i][k]; return null; };
     const latestI = k => { for (const i of [2, 1, 0]) if (st[i] && st[i][k] != null) return i; return null; };
     const STN = ['тест', 'тренажёры', 'аттестация'];
