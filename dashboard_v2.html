@@ -205,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 9.10-2</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 13.10-1</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -353,7 +353,7 @@ const SK = [
   { k: 'K7', n: 'Финансовые инструменты', short: 'Финансы', tr: { name: 'Лайфхаки', url: 'lifehacks.html' } },
   { k: 'K8', n: 'Работа с возражениями', short: 'Возражения', tr: { name: 'сценка «Дорого»', url: 'dorogo_trainer.html' } },
   { k: 'K9', n: 'Альтернатива и каталог', short: 'Альтернатива', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
-  { k: 'K10', n: 'Завершение сделки', short: 'Закрытие', tr: { name: 'Алгоритм продаж', url: 'algorithm_trainer.html' } },
+  { k: 'K10', n: 'Завершение сделки', short: 'Закрытие', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
   { k: 'K11', n: 'Прощание и сервис', short: 'Сервис', tr: { name: 'Сервис с человеческим лицом', url: 'service_trainer.html' } }
 ];
 const SKN = Object.fromEntries(SK.map(s => [s.k, s]));
@@ -374,7 +374,6 @@ const SCHED = [
   { t: 'crosssell', from: '2026-10-16', to: '2026-10-23' },
   { t: 'dorogo', from: '2026-10-20', to: '2026-10-27', nodata: true },
   { t: 'errorfinder', from: '2026-10-22', to: '2026-10-29' },
-  { t: 'algorithm', from: '2026-10-26', to: '2026-11-02' },
   { t: 'final_exam_1', from: '2026-10-28', to: '2026-11-02' }
 ];
 const dayOf = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
