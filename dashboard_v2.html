@@ -205,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 14.10-2</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 14.10-3</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -347,9 +347,9 @@ const SVC_SK = { 'Помощь без запроса': 'K2', 'Проактивн
 const STORES = (window.STORES_585 || ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик']);
 const SK = [
   { k: 'K1', n: 'Приветствие и речевая пластинка', short: 'Приветствие', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
-  { k: 'K2', n: 'Инициатива и контакт', short: 'Контакт', tr: { name: 'Типы клиентов', url: 'client_type_trainer.html' } },
+  { k: 'K2', n: 'Инициатива и контакт', short: 'Контакт', tr: { name: 'Сервис с человеческим лицом', url: 'service_trainer.html' } },
   { k: 'K3', n: 'Выявление потребностей', short: 'Потребности', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
-  { k: 'K4', n: 'Презентация: ХПВ и примерка', short: 'Презентация', tr: { name: 'Типы клиентов', url: 'client_type_trainer.html' } },
+  { k: 'K4', n: 'Презентация: ХПВ и примерка', short: 'Презентация', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
   { k: 'K5', n: 'Повышение ценности и золото', short: 'Ценность', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
   { k: 'K6', n: 'Допродажа: комплект и уход', short: 'Допродажа', tr: { name: 'Тренажёр допродаж', url: 'crosssell_trainer.html' } },
   { k: 'K7', n: 'Финансовые инструменты', short: 'Финансы', tr: { name: 'Лайфхаки', url: 'lifehacks.html' } },
@@ -372,7 +372,6 @@ const SCHED = [
   { t: 'test', from: '2026-10-01', to: '2026-10-05' },
   { t: 'trainer', from: '2026-10-07', to: '2026-10-14' },
   { t: 'service', from: '2026-10-12', to: '2026-10-19' },
-  { t: 'clienttype', from: '2026-10-14', to: '2026-10-21' },
   { t: 'crosssell', from: '2026-10-16', to: '2026-10-23' },
   { t: 'dorogo', from: '2026-10-20', to: '2026-10-27', nodata: true },
   { t: 'errorfinder', from: '2026-10-22', to: '2026-10-29' },
