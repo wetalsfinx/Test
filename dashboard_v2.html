@@ -205,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 13.10-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 14.10-2</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -342,6 +342,8 @@
 <div class="modal-bg" id="modalBg"><div class="modal"><button class="x" id="modalX">✕</button><div id="modalBody"></div></div></div>
 <script>
 // ===================== НАСТРОЙКИ =====================
+// «Сервис»: принцип карточки → навык (14.10; старые названия принципов — для прохождений до 12.10)
+const SVC_SK = { 'Помощь без запроса': 'K2', 'Проактивность': 'K2', 'Эмпатия': 'K2', 'Искренний интерес': 'K3', 'Гибкость': 'K3', 'Честность': 'K4', 'Маленькие жесты': 'K4', 'Личное завершение': 'K11', 'Завершение контакта': 'K11', 'Вы — не просто покупатель': 'K11', 'Не просто покупатель': 'K11' };
 const STORES = (window.STORES_585 || ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик']);
 const SK = [
   { k: 'K1', n: 'Приветствие и речевая пластинка', short: 'Приветствие', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
@@ -364,7 +366,7 @@ const TOOLS = {
 const TRAINERS = ['trainer', 'crosssell', 'errorfinder', 'clienttype', 'algorithm', 'service'];
 const TSHORT = { trainer: 'Диалог', crosssell: 'Допродажи', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов', algorithm: 'Алгоритм', service: 'Сервис' };
 const TICON = { trainer: '💬', crosssell: '🛍️', errorfinder: '🔍', clienttype: '🧑‍🤝‍🧑', algorithm: '🧭', service: '🤝' };
-const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт и сервис' };
+const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт, потребности, презентация, сервис' };
 // расписание октябрьской программы: открытие → срок (включительно)
 const SCHED = [
   { t: 'test', from: '2026-10-01', to: '2026-10-05' },
@@ -403,7 +405,7 @@ function itemsOf(r) {
     case 'errorfinder': return (x.scenarios || []).map(s => [s.scenario, EF_SK[s.scenario] || 'K4', s.percent != null ? s.percent : Math.round((s.score || 0) / (s.maxScore || 1) * 100)]);
     case 'clienttype': return (x.scenarios || []).map(s => [s.scenario || s.clientType, CT_SK[s.scenario] || 'K4', s.isCorrect ? 100 : 0]);
     case 'algorithm': return (x.scenarios || []).map(s => [s.scenario, ALG_SK[s.scenario] || 'K10', s.percent || 0]);
-    case 'service': return (x.answers || []).filter(a => a.principle).map(a => [a.principle, 'K11', a.isCorrect ? 100 : 0]);
+    case 'service': return (x.answers || []).filter(a => a.principle).map(a => [a.principle, SVC_SK[a.principle] || 'K11', a.isCorrect ? 100 : 0]);
     case 'final_exam_1': return (x.answers || []).filter(a => a.skill).flatMap(a => [].concat(EX_SK[a.skill] || 'K10').map(k => [a.skill, k, a.percentTask || 0]));
     default: return [];
   }
@@ -669,7 +671,11 @@ function renderSkills() {
   $('skTr').innerHTML = '<option value="">Все тренажёры вместе</option>' + AT.map(t => `<option value="${t}" ${t === tcur ? 'selected' : ''}>${TICON[t]} ${TOOLS[t]}</option>`).join('');
   const EXK = new Set(Object.values(EX_SK).flat()), SKG = SK.filter(s => EXK.has(s.k));
   const C = cmpStage(), BST = C === 'exam' ? 'skExam' : 'skTrain', okP = p => p.test && (C === 'exam' ? p.exam : p.trainN), BN = C === 'exam' ? 'аттестация' : 'тренажёры', SKC = C === 'exam' ? SKG : SK;
-  const COLSK = skMode === 'growth' ? SKC : SK;
+  // в режимах «тест / тренажёры / аттестация» показываем только навыки, которые выбранный этап реально проверяет
+  const tsel0 = $('skTr').value, stageOf = skMode === 'test' ? 'skTest' : skMode === 'train' ? (tsel0 ? (p => p.skTool[tsel0]) : 'skTrain') : 'skExam';
+  const hasAll = skMode === 'growth' ? null : storeSkill(AP, stageOf);
+  const SKD = hasAll ? SK.filter(s => hasAll[s.k].n > 0) : SK;
+  const COLSK = skMode === 'growth' ? SKC : (SKD.length ? SKD : SK);
   const cellFor = (ps) => {
     if (skMode === 'growth') {
       const both = ps.filter(okP);
@@ -678,7 +684,7 @@ function renderSkills() {
         return `<td><div class="gcell ${d > 2 ? 'gup' : d < -2 ? 'gdown' : 'gzero'}" title="${s.n}: входной тест ${a}% → ${BN} ${b}% (${both.length} чел.)"><div class="ft">${a}% → <b>${b}%</b></div><div class="dl">${d > 2 ? '▲ вырос на ' + d : d < -2 ? '▼ упал на ' + (-d) : '≈ без изменений'}</div></div></td>`; }).join('');
     }
     const tsel = $('skTr').value, stage = skMode === 'test' ? 'skTest' : skMode === 'train' ? (tsel ? (p => p.skTool[tsel]) : 'skTrain') : 'skExam', r = storeSkill(ps, stage);
-    return SK.map(s => `<td><div class="cell ${cls(r[s.k].v)}" title="${s.n}: ${r[s.k].v == null ? 'нет данных' : r[s.k].v + '%'} (${r[s.k].n} чел.)">${r[s.k].v == null ? '—' : r[s.k].v + '%'}</div></td>`).join('');
+    return COLSK.map(s => `<td><div class="cell ${cls(r[s.k].v)}" title="${s.n}: ${r[s.k].v == null ? 'нет данных' : r[s.k].v + '%'} (${r[s.k].n} чел.)">${r[s.k].v == null ? '—' : r[s.k].v + '%'}</div></td>`).join('');
   };
   // наглядный блок «было → стало»
   if (skMode === 'growth') {
@@ -693,7 +699,12 @@ function renderSkills() {
       ${miss ? `<p class="hint" style="margin-top:22px">ℹ️ ${miss} в аттестации не проверяются — их уровень смотрите в режиме «🎯 Тренажёры».</p>` : ''}
       <h2 style="margin:22px 0 4px">🏙️ По магазинам</h2><p class="hint">В каждой ячейке: входной тест → ${BN} и на сколько изменилось.</p>`;
     $('skCmp').querySelectorAll('button').forEach(b => b.onclick = () => { skCmp = b.dataset.v; renderSkills(); });
-  } else $('skGrowth').innerHTML = '';
+  } else {
+    const hid = SKD.length ? SK.filter(s => !SKD.includes(s)) : [];
+    const what = skMode === 'test' ? 'входной тест' : skMode === 'exam' ? 'аттестация' : tsel0 ? 'тренажёр «' + TOOLS[tsel0] + '»' : 'пройденные тренажёры';
+    $('skGrowth').innerHTML = !SKD.length ? `<p class="hint">Пока никто не прошёл — данных нет.</p>`
+      : hid.length ? `<p class="hint">ℹ️ Показаны только навыки, которые проверяет ${what}: ${SKD.map(s => '«' + s.n + '»').join(', ')}. Остальные он не проверяет${skMode === 'train' && !tsel0 ? ' (или их ещё не проверял ни один пройденный тренажёр)' : ''}.</p>` : '';
+  }
   $('skMatrix').innerHTML = groups.length ? `<table class="hm"><thead><tr><th class="st">Магазин</th>${COLSK.map(s => `<th title="${s.n}">${s.short}</th>`).join('')}</tr></thead><tbody>${groups.map(g => `<tr><td><div class="storename" style="${g.all ? 'font-style:italic;color:var(--ink-2)' : ''}">${esc(g.c)}<small>${g.ps.length} чел.</small></div></td>${cellFor(g.ps)}</tr>`).join('')}</tbody></table>` : '<div class="empty">Нет данных</div>';
   $('skLegend').innerHTML = skMode === 'growth'
     ? '<span><i style="background:rgba(22,163,74,.3)"></i>вырос</span><span><i style="background:#e8e2de"></i>без изменений (±2)</span><span><i style="background:rgba(220,38,38,.3)"></i>упал</span>'
