@@ -226,6 +226,7 @@ async function loadPeople() {
     try {
       const snap = await db.collection('results').doc(col).collection('items').get();
       snap.forEach(d => { const x = d.data(); let t = type; if (col === 'final_exam') t = x.exam_version === 'shift_v1' ? 'final_exam_1' : 'final_exam_old'; if (!x.user_name || x.percent == null) return;
+        if (String(x.user_name).trim().replace(/\s+/g, ' ').toLowerCase() === 'тренер тест') return; // проверки тренера (test585.html) — не показываем
         const dk = col + '|' + String(x.user_name).trim().toLowerCase() + '|' + (x.city || '') + '|' + x.date + '|' + x.percent; if (x.date && SEEN.has(dk)) return; SEEN.add(dk);
         recs.push({ type: t, name: String(x.user_name).trim(), city: x.city || '', percent: +x.percent || 0, date: x.date || new Date(0).toISOString(), raw: x }); });
     } catch (e) { }
