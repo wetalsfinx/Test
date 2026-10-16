@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>585GOLD | Тренажёры сейчас</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+* { box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: #f5f5f5; margin: 0; padding: 16px; color: #1f2937; }
+.wrap { max-width: 500px; margin: 0 auto; }
+.head { text-align: center; padding: 8px 0 18px; }
+.brand { font-size: 12px; letter-spacing: .12em; font-weight: 700; color: #9ca3af; }
+h1 { color: #c41e3a; margin: 6px 0 4px; font-size: 24px; font-weight: 800; }
+.today { color: #6b7280; font-size: 14px; }
+.sec { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; margin: 22px 4px 10px; }
+a.card { display: block; text-decoration: none; color: inherit; background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,.08); border: 2px solid transparent; transition: transform .15s; }
+a.card:active { transform: scale(.98); }
+a.card.first { border-color: #c41e3a; }
+.top { display: flex; gap: 14px; align-items: flex-start; }
+.ic { font-size: 34px; line-height: 1; }
+.nm { font-size: 19px; font-weight: 800; margin: 0 0 4px; }
+.ds { font-size: 14px; color: #4b5563; line-height: 1.45; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.pill { font-size: 12.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #f3f4f6; color: #374151; }
+.pill.hot { background: #c41e3a; color: #fff; }
+.pill.warn { background: #fef3c7; color: #92400e; }
+.pill.top1 { background: #fde8ec; color: #c41e3a; }
+.go { display: block; margin-top: 14px; background: #c41e3a; color: #fff; text-align: center; font-weight: 700; font-size: 16px; padding: 14px; border-radius: 12px; }
+.soon { background: #fff; border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; display: flex; gap: 12px; align-items: center; opacity: .65; }
+.soon .ic { font-size: 24px; }
+.soon b { display: block; font-size: 15px; }
+.soon span { font-size: 13px; color: #6b7280; }
+.empty { background: #fff; border-radius: 20px; padding: 24px; text-align: center; color: #4b5563; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+.note { text-align: center; font-size: 12.5px; color: #9ca3af; margin: 22px 0 8px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="brand">585GOLD · ОБУЧЕНИЕ</div>
+    <h1>Тренажёры сейчас</h1>
+    <div class="today" id="today"></div>
+  </div>
+  <div id="open"></div>
+  <div id="soon"></div>
+  <p class="note">Сохраните эту страницу — здесь всегда открытые тренажёры.<br>Один QR-код на всё обучение.</p>
+</div>
+<script>
+// Расписание. Даты включительно (ГГГГ-ММ-ДД). Меняется только здесь.
+const T = [
+  { n: 'Входной тест', u: 'test_new.html', i: '📝', d: '13 ситуаций из зала. Не экзамен — диагностика.', m: 10, from: '2026-10-01', to: '2026-10-05' },
+  { n: 'Тренировка диалога', u: 'dialog_trainer.html', i: '💬', d: 'Живой разговор с клиентом: доведите до покупки.', m: 6, from: '2026-10-07', to: '2026-10-14' },
+  { n: 'Сервис с человеческим лицом', u: 'service_trainer.html', i: '🤝', d: '16 ситуаций: хорошо или плохо поступил продавец?', m: 5, from: '2026-10-12', to: '2026-10-19' },
+  { n: 'Тренажёр допродаж', u: 'crosssell_trainer.html', i: '🛍️', d: 'Клиент выбрал украшение. Что предложить к нему?', m: 5, from: '2026-10-16', to: '2026-10-23' },
+  { n: 'Сценка «Дорого»', u: 'dorogo_trainer.html', i: '🎬', d: 'Выберите ответ продавца — у сценки 5 концовок.', m: 5, from: '2026-10-20', to: '2026-10-27' },
+  { n: 'Найди ошибку в диалоге', u: 'error_finder.html', i: '🔍', d: 'Нажмите на фразу, где продавец ошибся.', m: 7, from: '2026-10-22', to: '2026-10-29' },
+  { n: 'Аттестация «Одна смена»', u: 'attestation.html', i: '🏆', d: '9 клиентов, ответы своими словами, именной сертификат.', m: 25, from: '2026-10-28', to: '2026-11-02' },
+  { n: 'Лайфхаки', u: 'lifehacks.html', i: '💡', d: 'Повторение приёмов перед аттестацией.', m: 5, from: '2026-10-28', to: '2026-11-02', extra: 1 }
+];
+const MON = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const WD = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+const day = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+const fmt = d => d.getDate() + ' ' + MON[d.getMonth()];
+const left = t => Math.round((day(t.to) - today) / 864e5);
+const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return n + ' ' + (m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 10 || h >= 20) ? b : c); };
+document.getElementById('today').textContent = 'Сегодня ' + WD[now.getDay()] + ', ' + fmt(now);
+
+const open = T.filter(t => day(t.from) <= today && today <= day(t.to))
+  .sort((a, b) => (a.extra || 0) - (b.extra || 0) || day(a.to) - day(b.to));
+const soon = T.filter(t => day(t.from) > today).sort((a, b) => day(a.from) - day(b.from)).slice(0, 3);
+
+document.getElementById('open').innerHTML = open.length
+  ? `<div class="sec">Открыто сейчас · ${open.length}</div>` + open.map((t, k) => {
+      const l = left(t), last = l === 0;
+      const pills = [
+        k === 0 && open.length > 1 && !t.extra ? '<span class="pill top1">Сначала этот</span>' : '',
+        last ? '<span class="pill hot">Сегодня последний день</span>' : `<span class="pill ${l <= 2 ? 'warn' : ''}">до ${fmt(day(t.to))} · ${l === 1 ? 'остался 1 день' : 'осталось ' + plural(l, 'день', 'дня', 'дней')}</span>`,
+        `<span class="pill">~${t.m} мин</span>`
+      ].join('');
+      return `<a class="card ${k === 0 && !t.extra ? 'first' : ''}" href="${t.u}"><div class="top"><div class="ic">${t.i}</div><div><div class="nm">${t.n}</div><div class="ds">${t.d}</div></div></div><div class="meta">${pills}</div><span class="go">Начать →</span></a>`;
+    }).join('')
+  : `<div class="empty">${today > day(T[T.length - 1].to) ? '🎉 Обучение этого месяца завершено. Спасибо!' : 'Сейчас открытых тренажёров нет. Новый скоро появится здесь.'}</div>`;
+
+document.getElementById('soon').innerHTML = soon.length
+  ? '<div class="sec">Скоро</div>' + soon.map(t => `<div class="soon"><div class="ic">${t.i}</div><div><b>${t.n}</b><span>откроется ${fmt(day(t.from))}</span></div></div>`).join('')
+  : '';
+</script>
+</body>
+</html>
