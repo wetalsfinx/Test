@@ -205,9 +205,10 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 16.10-4</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 16.10-6</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
+      <a class="hbtn" href="test585.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block" title="Все тренажёры без регистрации — ваши прохождения не считаются">🧪 Все тренажёры</a>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
       <span class="status" id="status">Загрузка…</span>
     </div>
@@ -443,10 +444,12 @@ let db = null, RECS = [], LH = [], VISITS = [], PEOPLE = {}, STORE = '', lastLoa
 try { localStorage.setItem('dm_trainer', '1'); } catch (e) { } // на этом браузере открытия страниц директоров не считаются
 try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); } catch (e) { console.error(e); }
 
+let TEST_SKIPPED = 0;
 async function load() {
   $('status').textContent = 'Загрузка…';
   if (!db) { $('status').textContent = '⚠️ База не загрузилась — откройте по ссылке github.io'; return; }
   const recs = [], SEEN = new Set();
+  TEST_SKIPPED = 0;
   for (const [col, type] of COLS) {
     try {
       const snap = await db.collection('results').doc(col).collection('items').get();
@@ -455,6 +458,7 @@ async function load() {
         let t = type;
         if (col === 'final_exam') t = x.exam_version === 'shift_v1' ? 'final_exam_1' : 'final_exam_old';
         if (!x.user_name || x.percent == null) return;
+        if (String(x.user_name).trim().replace(/\s+/g, ' ').toLowerCase() === 'тренер тест') { TEST_SKIPPED++; return; } // проверки тренера со страницы test585.html — не считаем
         const dk = col + '|' + String(x.user_name).trim().toLowerCase() + '|' + (x.city || '') + '|' + x.date + '|' + x.percent; // повторная отправка из резервной копии — не считаем дважды
         if (x.date && SEEN.has(dk)) return; SEEN.add(dk);
         recs.push({ col, docId: d.id, type: t, name: String(x.user_name).trim().replace(/\s+/g, ' '), city: x.city || 'Не указан', percent: Math.max(0, Math.min(100, Math.round(+x.percent || 0))), date: x.date || new Date(0).toISOString(), raw: x });
@@ -503,7 +507,7 @@ function build() {
   const cities = [...new Set(Object.values(PEOPLE).map(p => p.city))];
   const all = STORES.concat(cities.filter(c => !STORES.includes(c)));
   $('storeSel').innerHTML = '<option value="">🏙️ Все магазины</option>' + all.map(c => `<option ${c === STORE ? 'selected' : ''}>${esc(c)}</option>`).join('');
-  $('status').textContent = `✅ ${RECS.length} прохождений · ${Object.keys(PEOPLE).length} сотрудников · ${lastLoad.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+  $('status').textContent = `✅ ${RECS.length} прохождений · ${Object.keys(PEOPLE).length} сотрудников · ${TEST_SKIPPED ? `🧪 тестовых скрыто: ${TEST_SKIPPED} · ` : ''}${lastLoad.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
   renderAll();
 }
 const people = () => Object.values(PEOPLE).filter(p => !STORE || p.city === STORE);
