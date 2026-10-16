@@ -80,12 +80,12 @@ input:focus, select:focus { outline: none; border-color: #c41e3a; }
   <input id="userName" placeholder="Имя и фамилия" autocomplete="name">
   <select id="userCity"><option value="">Выберите магазин</option></select>
   <div class="err" id="regErr"></div>
-  <button class="btn" id="startBtn">Начать смену →</button>
+  <button class="btn" id="startBtn">Начать →</button>
 </div>
 
 <div id="game" class="hidden">
   <div class="bar">
-    <div class="barrow"><span class="step" id="stepLbl"></span><span class="check" id="check">🧾 0 ₽</span></div>
+    <div class="barrow"><span class="step" id="stepLbl"></span><span class="check" id="check">🧾 Чек: 0 ₽</span></div>
     <div class="prog"><i id="prog"></i></div>
   </div>
   <div class="card" id="area"></div>
@@ -238,7 +238,7 @@ let cur = 0, check = 0, results = [], userName = '', userCity = '', st = null;
 
 const $ = id => document.getElementById(id);
 function setCheck(v, bump) {
-  check = v; const el = $('check'); el.textContent = '🧾 ' + money(v);
+  check = v; const el = $('check'); el.textContent = '🧾 Чек: ' + money(v);
   if (bump) { el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 450); }
 }
 function head(s) {
@@ -250,7 +250,7 @@ function render() {
   st = { pickSel: null, sayOrder: shuffle(s.say.o) };
   $('stepLbl').textContent = `Покупатель ${cur + 1} из ${S.length}`;
   $('prog').style.width = (cur / S.length * 100) + '%';
-  if (s.base) setCheck(check + s.base, false);
+  setCheck(s.base, false);
   const tiles = shuffle(s.pick.o).map(([[e, n], i]) => `<button class="tile" data-i="${i}"><span class="e">${e}</span>${n}</button>`).join('');
   $('area').innerHTML = head(s) + `<p class="q"><span>1/2</span> Что предложить?</p><div class="tiles">${tiles}</div><div id="fb1"></div>`;
   $('area').querySelectorAll('.tile').forEach(b => b.onclick = () => pick(+b.dataset.i));
@@ -275,36 +275,36 @@ function say(i) {
   if (both) setCheck(check + s.add, true);
   const gain = both ? `<br><b style="margin-top:8px">🧾 +${money(s.add)} к чеку</b>` : (ok ? '<br>К чеку не добавилось — в первом шаге было другое предложение.' : '');
   $('fb2').innerHTML = `<div class="fb ${ok ? 'ok' : 'no'}"><b>${ok ? '✅ Так и скажем!' : '❌ Клиент, скорее всего, откажется'}</b>${ok ? s.say.ok : s.say.no}${gain}</div>
-    <button class="btn next" id="nx">${cur < S.length - 1 ? 'Следующий покупатель →' : 'Закрыть смену 🏁'}</button>`;
+    <button class="btn next" id="nx">${cur < S.length - 1 ? 'Следующий покупатель →' : 'Готово 🏁'}</button>`;
   results.push({
     scenario: s.t, icon: s.i, situation: s.d + ' Клиент: ' + s.c,
     pickCorrect: pickOk, phraseCorrect: ok, isCorrect: both, percent: (pickOk ? 50 : 0) + (ok ? 50 : 0),
     selectedPick: s.pick.o[st.pickSel][1], correctPick: s.pick.o[s.pick.k][1],
-    selectedText: s.say.o[i], correctText: s.say.o[s.say.k], added: both ? s.add : 0
+    selectedText: s.say.o[i], correctText: s.say.o[s.say.k], base: s.base, added: both ? s.add : 0
   });
   $('nx').onclick = () => { if (cur < S.length - 1) { cur++; render(); } else finish(); };
 }
 async function finish() {
   $('prog').style.width = '100%';
-  const maxCheck = S.reduce((a, s) => a + s.base + s.add, 0);
+  const maxAdd = S.reduce((a, s) => a + s.add, 0), added = results.reduce((x, r) => x + r.added, 0);
   const pct = Math.round(results.reduce((a, r) => a + r.percent, 0) / S.length);
   const full = results.filter(r => r.isCorrect).length;
   const passed = pct >= 70;
   const weak = results.filter(r => !r.isCorrect);
   $('game').classList.add('hidden'); $('fin').classList.remove('hidden');
   $('fin').innerHTML = `<div style="font-size:44px">${passed ? '🏆' : '💪'}</div>
-    <h1>${passed ? 'Сильная смена!' : 'Хорошее начало!'}</h1>
-    <div class="of">Ваш чек за смену</div>
-    <div class="big">${money(check)}</div>
-    <div class="of">из возможных ${money(maxCheck)}</div>
-    <div class="stats"><div><b>${full}/${S.length}</b><span>покупок собрано полностью</span></div><div><b>+${money(results.reduce((x, r) => x + r.added, 0))}</b><span>допродано</span></div><div><b>${pct}%</b><span>результат</span></div></div>
-    <div class="rev">${results.map(r => `<div><span>${r.icon}</span><span>${r.scenario}</span><span>${r.isCorrect ? '✅' : r.percent ? '½' : '❌'}</span></div>`).join('')}</div>
+    <h1>${passed ? 'Мастер допродаж!' : 'Хорошее начало!'}</h1>
+    <div class="of">Вы допродали</div>
+    <div class="big">+${money(added)}</div>
+    <div class="of">из возможных +${money(maxAdd)}</div>
+    <div class="stats"><div><b>${full}/${S.length}</b><span>покупок собрано полностью</span></div><div><b>${pct}%</b><span>результат</span></div></div>
+    <div class="rev">${results.map(r => `<div><span>${r.icon}</span><span>${r.scenario}<br><small style="color:#6b7280">чек ${r.base ? money(r.base) + ' → ' : ''}${money(r.base + r.added)}</small></span><span>${r.isCorrect ? '✅' : r.percent ? '½' : '❌'}</span></div>`).join('')}</div>
     ${weak.length ? `<div class="tip"><b>💡 Запомните:</b> ${weak.slice(0, 2).map(r => r.correctText).join('<br>')}</div>` : `<div class="tip"><b>💡</b> Все покупки собраны. Попробуйте завтра так же в зале!</div>`}
     <div class="save" id="save">⏳ Сохраняю результат…</div>
     <button class="btn restart" onclick="location.reload()">🔄 Пройти ещё раз</button>`;
   const data = {
     id: Date.now(), type: 'crosssell', format: 'basket', user_name: userName, city: userCity,
-    score: full, total: S.length, percent: pct, passed, check, max_check: maxCheck,
+    score: full, total: S.length, percent: pct, passed, added, max_added: maxAdd,
     scenarios: results, rules_applied: [...new Set(results.filter(r => r.isCorrect).map(r => r.correctPick))],
     date: new Date().toISOString(), timestamp: new Date().toLocaleString('ru-RU')
   };
@@ -321,7 +321,7 @@ $('startBtn').onclick = () => {
   const n = $('userName').value.trim(), c = $('userCity').value;
   if (!n) { $('regErr').textContent = 'Введите имя и фамилию'; return; }
   if (!c) { $('regErr').textContent = 'Выберите магазин'; return; }
-  userName = n; userCity = c; cur = 0; check = 0; results = [];
+  userName = n; userCity = c; cur = 0; results = [];
   $('reg').classList.add('hidden'); $('game').classList.remove('hidden');
   setCheck(0, false); render();
 };
