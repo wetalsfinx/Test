@@ -205,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 16.10-2</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 16.10-3</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -363,7 +363,8 @@ const TOOLS = {
   test: 'Входной тест', trainer: 'Тренировка диалога', crosssell: 'Тренажёр допродаж', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов',
   algorithm: 'Алгоритм продаж', service: 'Сервис', final_exam_1: 'Аттестация «Одна смена»', final_exam_old: 'Аттестация (старая)'
 };
-const TRAINERS = ['trainer', 'crosssell', 'errorfinder', 'clienttype', 'algorithm', 'service'];
+// порядок = хронология октября (как в SCHED); резерв (Типы клиентов, Алгоритм) — в конце
+const TRAINERS = ['trainer', 'service', 'crosssell', 'errorfinder', 'clienttype', 'algorithm'];
 const TSHORT = { trainer: 'Диалог', crosssell: 'Допродажи', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов', algorithm: 'Алгоритм', service: 'Сервис' };
 const TICON = { trainer: '💬', crosssell: '🛍️', errorfinder: '🔍', clienttype: '🧑‍🤝‍🧑', algorithm: '🧭', service: '🤝' };
 const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт, потребности, презентация, сервис' };
