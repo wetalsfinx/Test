@@ -46,6 +46,7 @@ a.card.small .nm { font-size: 16px; }
 .all h2 { margin: 8px 0 6px; font-size: 20px; }
 .all p { margin: 0; color: #4b5563; font-size: 15px; line-height: 1.45; }
 .load { text-align: center; color: #6b7280; padding: 30px 0; }
+.selfbtn { background: none; border: none; color: #6b7280; font: inherit; text-decoration: underline; cursor: pointer; padding: 2px 4px; }
 .note { text-align: center; font-size: 12.5px; color: #9ca3af; margin: 22px 0 8px; line-height: 1.5; }
 </style>
 </head>
@@ -123,7 +124,9 @@ async function myResults(col, me) {
     const j = await r.json(); if (j.error) throw new Error(j.error.message);
     (j.documents || []).forEach(d => {
       const f = d.fields || {}, v = k => f[k] ? (f[k].stringValue ?? f[k].integerValue ?? f[k].doubleValue) : null;
-      if (v('city') === me.city && sameName(v('user_name'), me.name)) out.push(+v('percent') || 0);
+      const nm = v('user_name'), c = v('city');
+      if (c === me.city && sameName(nm, me.name)) out.push({ p: +v('percent') || 0 });
+      else if (toks(nm).length >= 2 && toks(me.name).length >= 2 && sameName(nm, me.name)) out.push({ p: +v('percent') || 0, city: c });
     });
     tok = j.nextPageToken;
   } while (tok);
@@ -144,14 +147,15 @@ async function draw() {
   $('reg').classList.add('hidden');
   $('who').classList.remove('hidden');
   $('who').innerHTML = `${esc(me.name)} · ${esc(me.city)} <button id="chg">не вы?</button>`;
-  $('chg').onclick = () => { ls.set('go585_me', null); try { localStorage.removeItem('go585_me'); } catch (e) {} draw(); };
+  $('chg').onclick = () => { try { localStorage.removeItem('go585_me'); localStorage.removeItem('go585_self'); localStorage.removeItem('go585_opened'); } catch (e) {} draw(); };
   if (!open.length) { $('list').innerHTML = `<div class="all"><div class="e">🎉</div><h2>${today > day(T[T.length - 1].to) ? 'Обучение этого месяца завершено' : 'Сейчас открытых тренажёров нет'}</h2><p>Спасибо!</p></div>`; return; }
   $('list').innerHTML = '<div class="load">⏳ Проверяю, что вы уже прошли…</div>';
   const opened = ls.get('go585_opened') || {};
   const status = await Promise.all(open.map(async t => {
-    if (!t.col) return { t, done: !!opened[t.u], pct: null, local: true };
-    try { const r = await myResults(t.col, me); return { t, done: r.length > 0, pct: r.length ? Math.max(...r) : null }; }
-    catch (e) { return { t, done: false, pct: null, err: true }; }
+    if (!t.col) return { t, done: !!opened[t.u] || !!(ls.get('go585_self') || {})[t.u], pct: null, local: true };
+    const mine = (ls.get('go585_self') || {})[t.u];
+    try { const r = await myResults(t.col, me); if (!r.length && mine) return { t, done: true, pct: null, self: true }; const here = r.filter(x => !x.city), use = here.length ? here : r; return { t, done: r.length > 0, pct: r.length ? Math.max(...use.map(x => x.p)) : null, other: here.length ? null : (r[0] && r[0].city) }; }
+    catch (e) { return { t, done: !!mine, pct: null, self: !!mine, err: true }; }
   }));
   const todo = status.filter(s => !s.done), done = status.filter(s => s.done);
   let html = '';
@@ -159,16 +163,18 @@ async function draw() {
     html += `<div class="sec">${todo.length === 1 ? 'Вам осталось пройти' : 'Вам осталось · ' + todo.length}</div>`;
     html += card(todo[0].t, 0, true);
     if (todo.length > 1) html += '<div class="sec">Потом</div>' + todo.slice(1).map(s => card(s.t, 1, false)).join('');
+    html += `<p class="note" style="margin-top:4px">Уже проходили, а здесь не отмечено? ${todo.map(s => `<button class="selfbtn" data-u="${s.t.u}">${s.t.n} — я прошёл(а)</button>`).join(' ')}</p>`;
   } else {
     html += `<div class="all"><div class="e">🎉</div><h2>Всё открытое пройдено!</h2><p>Отличная работа. Новое задание придёт в письме.</p></div>`;
   }
-  if (done.length) html += '<div class="sec">Уже пройдено</div>' + done.map(s => `<div class="done">${s.local ? '👀' : '✅'} <b>${s.t.n}${s.pct != null ? ' · ' + s.pct + '%' : ''}${s.local ? ' · открывали' : ''}</b><a href="${s.t.u}">ещё раз</a></div>`).join('');
+  if (done.length) html += '<div class="sec">Уже пройдено</div>' + done.map(s => `<div class="done">${s.local ? '👀' : s.self ? '👌' : '✅'} <b>${s.t.n}${s.pct != null ? ' · ' + s.pct + '%' : ''}${s.local ? ' · открывали' : ''}${s.self ? ' · отмечено вами' : ''}${s.other ? ' · в магазине ' + esc(s.other) : ''}</b><a href="${s.t.u}">ещё раз</a></div>`).join('');
   $('list').innerHTML = html;
+  $('list').querySelectorAll('.selfbtn').forEach(b => b.onclick = () => { const o = ls.get('go585_self') || {}; o[b.dataset.u] = 1; ls.set('go585_self', o); draw(); });
   $('list').querySelectorAll('a.card').forEach(a => a.addEventListener('click', () => { const o = ls.get('go585_opened') || {}; o[a.dataset.u] = 1; ls.set('go585_opened', o); }));
 }
 $('saveBtn').onclick = () => {
   const n = $('userName').value.trim(), c = $('userCity').value;
-  if (toks(n).length < 2) { $('regErr').textContent = 'Введите имя и фамилию — так же, как в тренажёрах'; return; }
+  if (toks(n).length < 2) { $('regErr').textContent = 'Нужно имя и фамилия — два слова, как в тренажёрах'; return; }
   if (!c) { $('regErr').textContent = 'Выберите магазин'; return; }
   ls.set('go585_me', { name: n, city: c }); draw();
 };
