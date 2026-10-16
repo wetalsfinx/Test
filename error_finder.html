@@ -1,562 +1,388 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>585GOLD | Найди ошибку в диалоге</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>585GOLD | Найди ошибку</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Inter', sans-serif; background: #f5f5f5; margin: 0; padding: 16px; color: #1f2937; }
+.wrap { max-width: 500px; margin: 0 auto; }
+.hidden { display: none !important; }
+.card { background: #fff; border-radius: 20px; padding: 22px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+h1 { color: #c41e3a; margin: 0 0 6px; font-size: 24px; font-weight: 800; text-align: center; }
+.sub { color: #6b7280; font-size: 14px; text-align: center; line-height: 1.45; margin: 0 0 18px; }
+.how { background: #fdf2f4; border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
+.how b { color: #c41e3a; }
+.note { font-size: 12px; color: #9ca3af; text-align: center; margin-top: 10px; }
+input, select { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; margin-bottom: 12px; font-family: inherit; background: #fff; }
+input:focus, select:focus { outline: none; border-color: #c41e3a; }
+.btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; background: #c41e3a; color: #fff; font-family: inherit; }
+.btn.calm { background: #1f2937; }
+.err { color: #c41e3a; font-size: 13px; min-height: 18px; margin: -4px 0 8px; }
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #fef5f5 0%, #fff5f5 50%, #fef9f0 100%);
-            min-height: 100vh; padding: 20px; position: relative; overflow-x: hidden;
-        }
-        body::before { content: ''; position: fixed; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(196,30,58,0.08) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: float 20s ease-in-out infinite; }
-        body::after { content: ''; position: fixed; bottom: -30%; left: -10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: float 25s ease-in-out infinite reverse; }
-        @keyframes float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px,-30px); } }
-        
-        .container { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
-        
-        .header {
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-            border-radius: 32px; padding: 40px 32px; margin-bottom: 24px;
-            box-shadow: 0 20px 60px rgba(196,30,58,0.3);
-            position: relative; overflow: hidden; animation: slideDown 0.6s ease;
-        }
-        .header::before { content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%); border-radius: 50%; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes questionAppear { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .logo-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
-            padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700;
-            color: white; margin-bottom: 16px; position: relative; z-index: 1;
-        }
-        h1 { color: white; text-align: center; font-size: 36px; font-weight: 900; margin-bottom: 12px; position: relative; z-index: 1; }
-        .subtitle { text-align: center; color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 500; position: relative; z-index: 1; }
-        
-        .card {
-            background: white; border-radius: 28px; padding: 40px; margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08); animation: slideUp 0.6s ease;
-            border: 1px solid rgba(229,231,235,0.5);
-        }
-        
-        .form-group { margin-bottom: 24px; }
-        .form-group label { font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #1f2937; font-size: 15px; }
-        .form-group label::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #c41e3a 0%, #d4af37 100%); border-radius: 2px; }
-        .form-group input, .form-group select {
-            width: 100%; padding: 18px 24px; border-radius: 16px; border: 2px solid #e5e7eb;
-            font-size: 16px; background: #f9fafb; transition: all 0.3s; font-family: 'Inter', sans-serif; font-weight: 500;
-        }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: #c41e3a; background: white; box-shadow: 0 0 0 4px rgba(196,30,58,0.1); transform: translateY(-2px); }
-        
-        .btn-primary {
-            width: 100%; padding: 20px 32px; border: none; border-radius: 20px; font-size: 17px; font-weight: 700;
-            cursor: pointer; transition: all 0.3s; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-            color: white; font-family: 'Inter', sans-serif; margin-top: 12px; position: relative; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(196,30,58,0.3);
-        }
-        .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.5s; }
-        .btn-primary:hover::before { left: 100%; }
-        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(196,30,58,0.4); }
-        .btn-primary:disabled { background: #d1d5db; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn-next { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 10px 30px rgba(245,158,11,0.3); }
-        .btn-finish { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 10px 30px rgba(16,185,129,0.3); }
-        
-        .progress-container { margin-bottom: 28px; }
-        .progress-text { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #6b7280; }
-        .progress-text .current { color: #c41e3a; font-size: 16px; }
-        .progress-bar { width: 100%; height: 8px; background: #f3f4f6; border-radius: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #c41e3a 0%, #d4af37 100%); border-radius: 10px; transition: width 0.5s ease; position: relative; overflow: hidden; }
-        .progress-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 2s infinite; }
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        
-        .question-wrapper {
-            display: flex; align-items: flex-start; gap: 20px; padding: 28px;
-            background: linear-gradient(135deg, #fef5f5 0%, #fff 100%);
-            border-radius: 24px; border-left: 6px solid #c41e3a;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 24px; animation: questionAppear 0.5s ease;
-        }
-        .question-icon {
-            flex-shrink: 0; width: 72px; height: 72px; border-radius: 50%;
-            background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%);
-            display: flex; align-items: center; justify-content: center; font-size: 36px;
-            box-shadow: 0 8px 24px rgba(196,30,58,0.3), inset 0 2px 8px rgba(255,255,255,0.2);
-            position: relative; animation: iconPulse 2s ease-in-out infinite;
-        }
-        .question-icon::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
-        @keyframes iconPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05) rotate(2deg); } }
-        .question-content { flex: 1; padding-top: 8px; }
-        .question-label { font-size: 12px; font-weight: 700; color: #c41e3a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .question-label::before { content: ''; width: 20px; height: 2px; background: linear-gradient(90deg, #c41e3a 0%, #d4af37 100%); }
-        .question-text { font-weight: 700; font-size: 19px; line-height: 1.6; color: #1f2937; }
-        
-        .hint-box {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-left: 4px solid #d97706; border-radius: 12px;
-            padding: 12px 16px; margin-bottom: 20px;
-            font-size: 14px; color: #92400e; font-weight: 600;
-        }
-        
-        .dialogue-area { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
-        .message { padding: 16px 20px; border-radius: 20px; font-size: 15px; line-height: 1.6; color: #374151; animation: questionAppear 0.4s ease; position: relative; }
-        .message .speaker { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-        .message.client { background: white; border-left: 5px solid #c41e3a; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-right: 24px; }
-        .message.client .speaker { color: #c41e3a; }
-        .message.seller { background: #fffbeb; border-left: 5px solid #f59e0b; margin-left: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .message.seller .speaker { color: #b45309; }
-        .message.seller.clickable { cursor: pointer; transition: all 0.25s; }
-        .message.seller.clickable::after { content: '✏️'; position: absolute; top: 12px; right: 14px; font-size: 14px; opacity: 0.5; }
-        .message.seller.clickable:hover { transform: translateX(6px); box-shadow: 0 6px 16px rgba(245,158,11,0.25); }
-        .message.seller.selected { background: #fee2e2; border-left-color: #c41e3a; box-shadow: 0 0 0 3px rgba(196,30,58,0.15); transform: scale(1.02); }
-        .message.seller.selected::after { content: '🚩'; opacity: 1; }
-        .message.seller.correct { background: #d1fae5; border-left-color: #10b981; box-shadow: 0 4px 16px rgba(16,185,129,0.2); }
-        .message.seller.correct::after { content: '🎯'; opacity: 1; }
-        .message.seller.wrong { background: #fee2e2; border-left-color: #ef4444; opacity: 0.75; }
-        .message.seller.wrong::after { content: '❌'; opacity: 1; }
-        
-        .hidden { display: none; }
-        
-        .result-card { border-radius: 24px; padding: 32px; margin-top: 24px; border: 3px solid #e5e7eb; background: white; animation: scaleIn 0.5s ease; text-align: center; }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .result-card.success { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: #10b981; }
-        .result-card.fail { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-color: #ef4444; }
-        .result-card h2 { font-size: 28px; font-weight: 900; margin-bottom: 12px; }
-        .result-card.success h2 { color: #065f46; }
-        .result-card.fail h2 { color: #991b1b; }
-        .result-card > p { font-size: 16px; color: #4b5563; font-weight: 500; }
-        
-        .rec-section { margin-top: 24px; text-align: left; }
-        .rec-section h3 { color: #1f2937; font-size: 18px; font-weight: 800; margin-bottom: 16px; text-align: center; }
-        .rec-item { background: white; border-radius: 16px; padding: 20px; margin-bottom: 14px; border-left: 6px solid #ef4444; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-        .rec-item .rec-q { font-weight: 700; font-size: 14px; color: #991b1b; margin-bottom: 8px; line-height: 1.5; }
-        .rec-item .rec-expl { font-size: 14px; color: #6b7280; line-height: 1.6; margin-bottom: 10px; }
-        .rec-item .rec-tip { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 12px 16px; border-radius: 12px; font-size: 14px; color: #92400e; border-left: 4px solid #d97706; line-height: 1.6; font-weight: 500; }
-        
-        .final-card { border-radius: 32px; padding: 48px 40px; text-align: center; animation: scaleIn 0.6s ease; border: 3px solid #e5e7eb; background: white; }
-        .final-card.success { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: #10b981; }
-        .final-card.fail { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-color: #ef4444; }
-        .final-icon { font-size: 80px; margin-bottom: 24px; display: block; animation: bounce 0.6s ease; }
-        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-        .final-card h2 { font-size: 36px; font-weight: 900; margin-bottom: 20px; }
-        .final-card.success h2 { color: #065f46; }
-        .final-card.fail h2 { color: #991b1b; }
-        .result-stats { display: flex; justify-content: center; gap: 24px; margin: 32px 0; flex-wrap: wrap; }
-        .stat-box { background: white; padding: 24px 32px; border-radius: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); min-width: 140px; }
-        .stat-value { font-size: 36px; font-weight: 900; margin-bottom: 4px; }
-        .stat-label { font-size: 13px; color: #6b7280; font-weight: 600; }
-        .final-card.success .stat-value { color: #10b981; }
-        .final-card.fail .stat-value { color: #ef4444; }
-        .final-card p { font-size: 17px; color: #4b5563; margin-bottom: 12px; font-weight: 500; }
-        
-        .save-status { font-size: 15px; font-weight: 700; margin-top: 24px; text-align: center; padding: 16px; border-radius: 12px; }
-        .restart-btn {
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; border: none; border-radius: 20px;
-            padding: 20px 32px; font-size: 17px; margin-top: 32px; width: 100%; cursor: pointer; font-weight: 800;
-            font-family: 'Inter', sans-serif; transition: all 0.3s; box-shadow: 0 10px 30px rgba(196,30,58,0.3);
-        }
-        .restart-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(196,30,58,0.4); }
-        
-        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        @media (max-width: 600px) {
-            body { padding: 12px; }
-            .header { padding: 32px 24px; }
-            h1 { font-size: 28px; }
-            .card { padding: 28px 20px; }
-            .question-wrapper { flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 24px 20px; }
-            .question-icon { width: 64px; height: 64px; font-size: 32px; }
-            .question-label { justify-content: center; }
-            .question-text { font-size: 17px; }
-            .message.client, .message.seller { margin: 0; }
-            .result-stats { flex-direction: column; gap: 16px; }
-            .stat-box { width: 100%; }
-            .final-card { padding: 32px 24px; }
-        }
-    </style>
+.bar { position: sticky; top: 0; z-index: 5; background: #f5f5f5; padding: 4px 0 12px; }
+.barrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.step { font-size: 13px; font-weight: 700; color: #6b7280; }
+.chip { background: #1f2937; color: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; transition: transform .25s; }
+.chip.bump { transform: scale(1.12); background: #10b981; }
+.prog { height: 6px; background: #e5e7eb; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: #c41e3a; transition: width .3s; }
+
+.sit { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.sit .ic { font-size: 34px; line-height: 1; }
+.sit .t { font-size: 18px; font-weight: 800; margin-bottom: 2px; }
+.sit .d { font-size: 13px; color: #6b7280; }
+.hint { font-size: 13px; color: #6b7280; background: #f9fafb; border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; }
+
+.chat { display: flex; flex-direction: column; gap: 10px; }
+.m { border-radius: 16px; padding: 11px 14px; font-size: 15px; line-height: 1.45; max-width: 88%; }
+.m small { display: block; font-size: 11px; color: #6b7280; font-weight: 700; margin-bottom: 2px; text-transform: uppercase; letter-spacing: .03em; }
+.m.c { background: #f3f4f6; border-radius: 16px 16px 16px 4px; align-self: flex-start; }
+.m.n { align-self: center; max-width: 100%; background: none; color: #6b7280; font-size: 13px; font-style: italic; text-align: center; padding: 2px 8px; }
+.m.s { background: #fff; border: 2px solid #e5e7eb; border-radius: 16px 16px 4px 16px; align-self: flex-end; cursor: pointer; position: relative; transition: border-color .15s, background .15s; }
+.m.s .mark { display: none; font-size: 12px; font-weight: 800; color: #c41e3a; margin-top: 6px; }
+.m.s.on { border-color: #c41e3a; background: #fef2f2; }
+.m.s.on .mark { display: block; }
+.m.s.done { cursor: default; }
+.m.s.hit { border-color: #10b981; background: #ecfdf5; }
+.m.s.miss { border-color: #f59e0b; background: #fffbeb; }
+.m.s.fp { border-color: #c41e3a; background: #fef2f2; }
+.m.s.okd { opacity: .6; }
+.v { margin-top: 8px; font-size: 13px; line-height: 1.5; border-top: 1px dashed rgba(0,0,0,.12); padding-top: 8px; }
+.v b { display: block; font-size: 13px; margin-bottom: 2px; }
+.v .h { margin-top: 4px; color: #065f46; }
+.fb { border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.5; margin: 16px 0 0; }
+.fb.ok { background: #ecfdf5; color: #065f46; }
+.fb.no { background: #fef2f2; color: #7f1d1d; }
+.fb b { display: block; margin-bottom: 2px; font-size: 15px; }
+.next { margin-top: 16px; }
+
+.final { text-align: center; }
+.big { font-size: 44px; font-weight: 800; color: #1f2937; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.of { color: #6b7280; font-size: 14px; margin-bottom: 8px; }
+.stats { display: flex; gap: 8px; margin: 16px 0; }
+.stats div { flex: 1; background: #f9fafb; border-radius: 14px; padding: 12px 6px; }
+.stats b { display: block; font-size: 20px; }
+.stats span { font-size: 11px; color: #6b7280; }
+.rev { text-align: left; margin-top: 10px; }
+.rev div { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+.rev div span:nth-child(2) { flex: 1; }
+.save { font-size: 13px; padding: 10px; border-radius: 10px; margin: 14px 0; background: #f3f4f6; color: #6b7280; }
+.tip { background: #fdf2f4; border-radius: 14px; padding: 14px; font-size: 14px; line-height: 1.5; text-align: left; margin-top: 14px; }
+.tip p { margin: 6px 0 0; }
+.restart { background: #fff; color: #c41e3a; border: 2px solid #c41e3a; margin-top: 10px; }
+</style>
 </head>
 <body>
-<div class="container" id="app">
-    <div class="header">
-        <div class="logo-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7.5 3h9L21 9l-9 12L3 9l4.5-6z" fill="#ffffff"/><path d="M3 9H21M12 21L8 9M12 21L16 9M7.5 3L8 9M16.5 3L16 9" stroke="rgba(196,30,58,0.35)" stroke-width="1"/></svg> 585GOLD | Найди ошибку</div>
-        <h1>Найди ошибку в диалоге</h1>
-        <p class="subtitle">Кликайте на фразы продавца, где нарушен алгоритм продаж</p>
-    </div>
+<div class="wrap">
 
-    <div id="regScreen" class="card">
-        <div class="form-group">
-            <label>Имя и фамилия</label>
-            <input type="text" id="userName" placeholder="Например: Иванова Анна" autocomplete="off">
-        </div>
-        <div class="form-group">
-            <label>Город</label>
-            <select id="userCity">
-    <option value="">Выберите город</option>
-    <option value="СПб, Новочеркасский, 28/19">СПб, Новочеркасский, 28/19</option>
-    <option value="СПб, Дыбенко, 27">СПб, Дыбенко, 27</option>
-    <option value="Самара">Самара</option>
-    <option value="Казань">Казань</option>
-    <option value="Тюмень">Тюмень</option>
-    <option value="Черкесск">Черкесск</option>
-    <option value="Ульяновск">Ульяновск</option>
-    <option value="Нальчик">Нальчик</option>
-</select>
-<script src="stores.js"></script>
-<script src="me.js"></script>
-        </div>
-        <button class="btn-primary" id="startBtn">🚀 Начать игру</button>
-    </div>
-
-    <div id="quizScreen" class="hidden">
-        <div class="card">
-            <div class="progress-container">
-                <div class="progress-text">
-                    <span>Сценарий <span class="current" id="scenarioNum">1</span> из <span id="totalScenarios">7</span></span>
-                    <span id="progressPercent">0%</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
-            </div>
-            <div id="scenarioHeader"></div>
-            <div class="hint-box">💡 Кликайте на фразы продавца, где нарушен алгоритм. Отметили — жмите «Проверить».</div>
-            <div class="dialogue-area" id="dialogueArea"></div>
-            <button class="btn-primary" id="checkBtn" disabled>✅ Проверить</button>
-            <div id="resultCard" class="result-card" style="display: none;"></div>
-        </div>
-    </div>
-
-    <div id="finalScreen" class="hidden"></div>
+<div id="reg" class="card">
+  <h1>🔍 Найди ошибку</h1>
+  <p class="sub">Продажа от первого «Добрый день» до прощания — глазами наставника. Где продавец теряет клиента?</p>
+  <div class="how">
+    👆 Нажмите на фразу продавца, где он ошибся. Нажмёте ещё раз — отметка снимется.<br>
+    🔎 В одном диалоге ошибок несколько, в другом — ни одной. <b>Угадать не выйдет.</b><br>
+    👍 Если всё сделано по стандарту — жмите «Здесь ошибок нет».<br>
+    💡 После проверки — почему это ошибка и как сказать правильно.<br>
+    ⏱️ Около 7 минут.
+  </div>
+  <input id="userName" placeholder="Имя и фамилия" autocomplete="name">
+  <select id="userCity"><option value="">Выберите магазин</option></select>
+  <div class="err" id="regErr"></div>
+  <button class="btn" id="startBtn">Начать →</button>
+  <div class="note">Акции и цены в диалогах условные</div>
 </div>
 
+<div id="game" class="hidden">
+  <div class="bar">
+    <div class="barrow"><span class="step" id="stepLbl"></span><span class="chip" id="chip">🔍 Найдено: 0</span></div>
+    <div class="prog"><i id="prog"></i></div>
+  </div>
+  <div class="card" id="area"></div>
+</div>
+
+<div id="fin" class="card final hidden"></div>
+
+</div>
+<script src="stores.js"></script>
+<script src="me.js"></script>
 <script>
-    // 🔥 Firestore (новый канал, без блокировок)
-    const firebaseConfig = {
-        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
-        authDomain: "gold-8105a.firebaseapp.com",
-        projectId: "gold-8105a",
-        storageBucket: "gold-8105a.firebasestorage.app",
-        messagingSenderId: "195469188947",
-        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+const firebaseConfig = {
+  apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+  authDomain: "gold-8105a.firebaseapp.com",
+  projectId: "gold-8105a",
+  storageBucket: "gold-8105a.firebasestorage.app",
+  messagingSenderId: "195469188947",
+  appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COL = () => db.collection('results').doc('errorfinder').collection('items');
+const withTimeout = p => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 6000))]);
 
-    // 🔥 АВТОДОЗАГРУЗКА ИЗ ЛОКАЛЬНОГО ХРАНИЛИЩА (в Firestore)
-    window.addEventListener('load', async () => {
-        const backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
-        if (backup.length > 0) {
-            console.log(`🔄 Найдено ${backup.length} несохранённых результатов. Отправляем в Firestore...`);
-            for (let result of backup) {
-                try {
-                    await Promise.race([
-                        db.collection('results').doc('errorfinder').collection('items').add(result),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
-                    ]);
-                    console.log('✅ Отправлено:', result.user_name);
-                } catch(e) {
-                    console.error('❌ Ошибка дозагрузки:', e.message);
-                }
-            }
-            localStorage.removeItem('errorfinder_backup');
-        }
-    });
+// Дозагрузка результатов, которые не ушли из-за интернета
+window.addEventListener('load', async () => {
+  let backup = []; try { backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]'); } catch (e) {}
+  if (!backup.length) return;
+  const left = [];
+  for (const r of backup) { try { await withTimeout(COL().add(r)); } catch (e) { left.push(r); } }
+  try { localStorage.setItem('errorfinder_backup', JSON.stringify(left)); } catch (e) {}
+});
 
-    const SCENARIOS = [
-        {
-            icon: "🧊", label: "Первый контакт", title: "Холодный клиент",
-            dialogue: [
-                { speaker: "client", text: "Клиент заходит в магазин, молча проходит к витрине с кольцами и начинает рассматривать." },
-                { speaker: "seller", text: "Добрый день! У нас в магазине акция...", error: false },
-                { speaker: "seller", text: "Вот у нас как раз новая коллекция колец с бриллиантами, посмотрите эту модель — она сейчас по акции.", error: true, explanation: "Продавец сразу показывает товар без установления зрительного контакта и выявления потребностей.", rec: "Сначала задайте вопрос: «Какое изделие выбираете? Для себя или в подарок?»" },
-                { speaker: "client", text: "Клиент кивает, но продолжает молча смотреть на витрину." },
-                { speaker: "seller", text: "Какие украшения интересуют? Для себя выбираете или в подарок?", error: false }
-            ],
-            correctErrors: [2]
-        },
-        {
-            icon: "🎁", label: "Подбор подарка", title: "Подарок жене",
-            dialogue: [
-                { speaker: "client", text: "Мужчина: «Мне нужно кольцо в подарок жене, бюджет до 50 тысяч»." },
-                { speaker: "seller", text: "Отлично! А какой стиль она предпочитает: классику или что-то более современное?", error: false },
-                { speaker: "client", text: "Мужчина: «Ну, она любит простое, без лишних камней»." },
-                { speaker: "seller", text: "Поняла. Вот эта модель как раз 48 тысяч, золото 585 пробы, вес 3 грамма, фианиты.", error: true, explanation: "Продавец проигнорировал пожелание клиента («без лишних камней») и просто перечислил сухие характеристики.", rec: "Предложите вариант, соответствующий запросу: «Тогда обратите внимание на эти гладкие модели или кольца с минималистичным дизайном»." },
-                { speaker: "client", text: "Мужчина: «Хм, а что-нибудь попроще есть?»" },
-                { speaker: "seller", text: "Конечно, давайте посмотрим на кольца без камней или модели с одним камнем.", error: false }
-            ],
-            correctErrors: [3]
-        },
-        {
-            icon: "💸", label: "Работа с возражением", title: "Дорого!",
-            dialogue: [
-                { speaker: "client", text: "Клиентка: «Красивое кольцо, но дороговато... Я думала, дешевле будет»." },
-                { speaker: "seller", text: "Так это же золото с бриллиантом, а не бижутерия! Цена полностью оправдана качеством.", error: true, explanation: "Продавец спорит с клиентом и обесценивает её сомнения, вызывая защитную реакцию.", rec: "Присоединитесь к чувству: «Понимаю, цена важна. А с чем вы сравниваете? Может быть, посмотрим альтернативные варианты?»" },
-                { speaker: "client", text: "Клиентка: «Ну не знаю, мне нужно подумать»." },
-                { speaker: "seller", text: "Я вас понимаю, покупка должна радовать. А с чем вы сравниваете? Вы уже присматривали что-нибудь?", error: false }
-            ],
-            correctErrors: [1]
-        },
-        {
-            icon: "👀", label: "Скрытые потребности", title: "Просто смотрю",
-            dialogue: [
-                { speaker: "client", text: "Клиентка: «Я просто смотрю, мне пока ничего не нужно»." },
-                { speaker: "seller", text: "Конечно, смотрите с удовольствием! Кстати, у нас как раз новое поступление. Вы для себя присматриваете или в подарок?", error: false },
-                { speaker: "client", text: "Клиентка: «Для себя»." },
-                { speaker: "seller", text: "Хорошо, смотрите. Если что — я рядом у кассы.", error: true, explanation: "Продавец полностью отступает и упускает возможность мягко направить диалог, оставляя клиента одного.", rec: "Мягко направьте: «Понимаю. Могу рассказать о наших хитах продаж, которые отлично смотрятся на каждый день»." }
-            ],
-            correctErrors: [3]
-        },
-        {
-            icon: "🛍️", label: "Допродажа", title: "Допродажа на кассе",
-            dialogue: [
-                { speaker: "client", text: "Клиентка выбрала золотые серьги-пусеты. «Всё, давайте оформлять, мне очень понравилось.»" },
-                { speaker: "seller", text: "Прекрасный выбор! Они будут вас радовать каждый день.", error: false },
-                { speaker: "client", text: "Спасибо." },
-                { speaker: "seller", text: "Пробивать чек?", error: true, explanation: "Продавец упустил возможность увеличить чек и проявить заботу о продукте, перейдя сразу к упаковке.", rec: "Скажите: «Чтобы серьги всегда сияли как новые, позвольте добавить к покупке нашу профессиональную салфетку для чистки золота. Она стоит всего 300 рублей, но продлевает жизнь украшению на годы. Добавим в чек?»" },
-                { speaker: "client", text: "Клиентка: «Да, оплата картой»." },
-                { speaker: "seller", text: "Чтобы серьги всегда сияли как новые, позвольте добавить к покупке нашу профессиональную салфетку для чистки золота. Она стоит всего 300 рублей, но продлевает жизнь украшению на годы. Добавим в чек?", error: false }
-            ],
-            correctErrors: [3]
-        },
-        {
-            icon: "🔍", label: "Сужение выбора", title: "А что есть ещё?",
-            dialogue: [
-                { speaker: "client", text: "Клиентка: «Мне нравится это кольцо, но посмотрю я ещё что-нибудь»." },
-                { speaker: "seller", text: "Конечно! А что именно вам понравилось в этой модели: камень, форма шинки?", error: false },
-                { speaker: "client", text: "Клиентка: «Ну, мне нравится, что оно не слишком широкое и легкое»." },
-                { speaker: "seller", text: "Поняла! Вот ещё 10 колец из этой витрины, посмотрите все, вдруг что-то приглянется.", error: true, explanation: "Продавец полностью проигнорировал критерий клиента («не слишком широкое») и показывает всё подряд.", rec: "Сузьте выбор на основе критериев: «Тогда давайте посмотрим эти 2-3 изящные модели, они как раз легкие и аккуратные»." }
-            ],
-            correctErrors: [3]
-        },
-        {
-            icon: "💍", label: "Завершение сделки", title: "Беру",
-            dialogue: [
-                { speaker: "client", text: "Клиентка: «Всё, беру это кольцо!»" },
-                { speaker: "seller", text: "Отлично! Что-то еще может?", error: true, explanation: "Продавец упустил золотую возможность для допродажи (футляр, средство для ухода, серьги из той же коллекции).", rec: "Скажите: «Отличный выбор! Давайте подберём к кольцу футляр и средство для ухода, чтобы оно всегда сияло. Или, может быть, серьги из этой же коллекции?»" },
-                { speaker: "client", text: "Клиентка: «Нет, спасибо, только кольцо»." },
-                { speaker: "seller", text: "Хорошо, тогда пройдем к кассе. Давайте выберем футляр для вашего нового украшения!", error: false }
-            ],
-            correctErrors: [1]
-        }
-    ];
+// Диалоги по материалам дня (1.10–27.10). Строки: c — клиент, n — ремарка, s — продавец.
+// У каждой фразы продавца: k — навык (K1–K11), e — ошибка или нет;
+// для ошибки: why — почему ошибка, how — как сказать правильно; для верной фразы: ok — почему так правильно.
+const D = [
+  { t: 'Первые секунды', i: '👋', d: 'Приветствие и контакт', L: [
+    { n: 'Покупательница заходит и неспешно идёт к витрине с серьгами.' },
+    { s: '«Здравствуйте! Рады вас видеть. Подсказать вам что-нибудь или пока сами посмотрите?»', k: 'K1', e: true,
+      why: 'Нет акции — клиенту незачем оставаться. А на вопрос «да/нет» почти всегда отвечают «нет, спасибо».',
+      how: '«Добрый день! У нас сегодня скидка 30% на бриллианты, а любое украшение оформим в Сплит. Изучайте спокойно — я рядом».' },
+    { c: '«Нет, спасибо, я посмотрю».' },
+    { s: '«Конечно, изучайте спокойно. Я рядом — захотите примерить, скажите».', k: 'K2', e: false,
+      ok: 'Продавец дала клиенту контроль и осталась на виду — так и нужно с «закрытым» клиентом.' },
+    { n: 'Через пару минут покупательница второй раз возвращается к одним и тем же серьгам.' },
+    { s: '«Я вижу, вы уже второй раз сюда подходите. Ну что, выбрали что-нибудь?»', k: 'K2', e: true,
+      why: 'Клиентка подала сигнал — вернулась к изделию. Но «Выбрали?» звучит как давление и не помогает выбрать.',
+      how: '«Вижу, вам приглянулись эти серьги. Давайте я достану — на свету они смотрятся совсем иначе».' }
+  ]},
+  { t: 'Подарок маме', i: '🎁', d: 'Выявление потребностей', L: [
+    { c: 'Мужчина: «Ищу подарок маме на юбилей».' },
+    { s: '«Юбилей — прекрасный повод! Подскажите, на какую сумму вы рассчитываете?»', k: 'K3', e: true,
+      why: 'О бюджете не спрашиваем: клиент чувствует, что его оценивают. Работаем через повод, стиль и предпочтения.',
+      how: '«Юбилей — особый повод. Что мама любит носить — серьги, кольца, цепочки?»' },
+    { c: '«Она в основном серьги носит, золотые».' },
+    { s: '«Поняла. А какой стиль ей ближе — классика или современное?»', k: 'K3', e: false,
+      ok: 'Вопрос про стиль сужает выбор — и это не вопрос о деньгах.' },
+    { c: '«Классика. Ничего яркого она не любит».' },
+    { s: '«Тогда вот эти — с крупными цветными камнями, сейчас их все берут».', k: 'K3', e: true,
+      why: 'Клиент сказал «ничего яркого», а продавец показывает яркое. «Все берут» — не аргумент для мамы клиента.',
+      how: '«Тогда посмотрите эти классические серьги с небольшим бриллиантом — их удобно носить каждый день».' }
+  ]},
+  { t: 'Кольцо на каждый день', i: '💍', d: 'Презентация и вариант лучше', L: [
+    { c: 'Покупательница: «Хочу тонкое кольцо на каждый день, из белого золота».' },
+    { s: '«Вот в вашем стиле. Белое золото не темнеет — давайте примерим, увидите, как сидит».', k: 'K4', e: false,
+      ok: 'Факт переведён в выгоду, и презентация сразу ведёт к примерке.' },
+    { n: 'Примеряет и смотрит в зеркало.' },
+    { c: '«Мне нравится».' },
+    { s: '«А это на 20% дороже — бриллиант чище, видно на свету. Давайте примерим оба».', k: 'K5', e: false,
+      ok: 'Вариант дороже показан после вопросов, разница названа одной фразой, выбор за клиентом.' },
+    { c: '«Пожалуй, первое».' },
+    { s: '«Хороший выбор: тонкое, удобное и в вашем стиле. Давайте оформим».', k: 'K10', e: false,
+      ok: 'Резюме выгоды и уверенное «Давайте оформим» — мягкое закрытие без давления.' }
+  ]},
+  { t: 'Серьги с бриллиантами', i: '✨', d: 'Презентация и Сплит', L: [
+    { c: 'Девушка: «Покажите, пожалуйста, вот эти серьги».' },
+    { s: '«Золото 585 пробы, бриллианты 57 граней, вес 2,1 грамма. Вот, подержите в руке».', k: 'K4', e: true,
+      why: 'Одни характеристики без выгоды, и украшение в руке, а не на клиенте. На себе серьги продают себя сами.',
+      how: '«57 граней — это идеальная игра света. Давайте примерим — посмотрите в зеркало, как они сверкают».' },
+    { n: 'Примеряет у зеркала.' },
+    { c: '«Красиво… А сколько стоят?»' },
+    { s: '«Для них есть Сплит — 4 платежа по 10 500 ₽ без переплат. Итого 42 000 ₽».', k: 'K7', e: false,
+      ok: 'Сплит назван до итоговой цены — сумма воспринимается легче.' },
+    { c: '«А есть что-то ещё в таком духе?»' },
+    { s: '«Конечно, у нас есть модели и подороже, они ещё лучше. Хотите, я их покажу?»', k: 'K5', e: true,
+      why: '«Ещё лучше» — без понятной разницы это звучит как «впаривание». А на «Хотите?» легко ответить «нет».',
+      how: '«Вот эти на 20% дороже — бриллианты крупнее, блеск заметнее. Давайте примерим обе пары — выберете, что ближе».' }
+  ]},
+  { t: '«Дороговато…»', i: '💸', d: 'Возражение «дорого»', L: [
+    { c: 'Клиентка держит кольцо за 36 000 ₽: «Красивое, но дороговато…»' },
+    { s: '«Что вы, это же золото с бриллиантом, а не бижутерия! Цена полностью оправдана».', k: 'K8', e: true,
+      why: 'Продавец спорит. Спор только усиливает возражение — клиентка начнёт защищаться.',
+      how: 'Выслушать до конца и уточнить: «Понимаю, цена важна. А с чем вы сравниваете?»' },
+    { c: '«Ну, в интернете видела похожее за 28».' },
+    { s: '«Понимаю, всем хочется качество по доступной цене. А там камень такой же?»', k: 'K8', e: false,
+      ok: 'Продавец согласилась с чувством клиентки и уточнила, с чем она сравнивает.' },
+    { c: '«Не знаю, не смотрела».' },
+    { s: '«Понимаю. Давайте тогда я покажу вам что-нибудь подешевле, похожее по форме».', k: 'K8', e: true,
+      why: 'Уступка: продавец сама обесценивает выбор клиентки, хотя ещё не объяснила, за что цена.',
+      how: '«Давайте разберём, из чего складывается цена: здесь бриллиант чище — посмотрите, как он играет на свету».' },
+    { c: '«Всё равно сумма большая».' },
+    { s: '«Ну… если что, можно ведь и в рассрочку оформить, это тоже вариант».', k: 'K7', e: true,
+      why: 'Сплит прозвучал неуверенно, как оправдание, и через «можно». Клиентка так и не услышала, сколько платить.',
+      how: '«Понимаю, сумма серьёзная. Для такого выбора есть Сплит — 4 платежа по 9 000 ₽ без переплат».' }
+  ]},
+  { t: 'Нет размера', i: '📏', d: 'Альтернатива и каталог', L: [
+    { c: 'Покупательница: «Мне вот это кольцо, только 16-го размера».' },
+    { s: '«Вы выбрали хит сезона! Что вас в нём покорило — камень или форма?»', k: 'K9', e: false,
+      ok: 'Сначала подтвердить ценность выбора и уточнить, что понравилось, — так проще найти замену.' },
+    { c: '«Форма — такая тонкая волна».' },
+    { s: '«К сожалению, 16-го размера нет, есть только 17-й. Будете смотреть его?»', k: 'K9', e: true,
+      why: 'Это тупик: «нет» без решения. После этих слов клиент разворачивается и уходит.',
+      how: '«Понимаю, нужен 16-й. Давайте посмотрим похожие модели в вашем размере, а эту закажем с доставкой».' },
+    { c: '«Давайте посмотрим».' },
+    { s: '«Вот две модели с той же волной в 16-м. А в каталоге покажу ещё — там выбор больше».', k: 'K9', e: false,
+      ok: '1–2 похожих варианта в зале и каталог, когда нужного нет на витрине.' }
+  ]},
+  { t: 'Кольцо с топазом', i: '🛍️', d: 'Второе украшение', L: [
+    { c: 'Клиентка примерила кольцо с топазом: «Всё, это беру!»' },
+    { s: '«Отличный выбор, оно вам очень идёт! Тогда проходите на кассу, я всё оформлю».', k: 'K6', e: true,
+      why: 'Упущен момент: парное украшение предлагаем в зале, пока клиентка ещё выбирает, а не на кассе.',
+      how: '«Отличный выбор! Давайте подберём серьги из той же коллекции — вместе получится законченный образ».' },
+    { c: '«Ой, а серьги к нему у вас есть?»' },
+    { s: '«Есть, из той же коллекции. Давайте примерим вместе — увидите комплект».', k: 'K6', e: false,
+      ok: 'Предложение через «Давайте» и примерку вместе — клиентка сама видит образ.' },
+    { c: '«Красиво, но серьги в следующий раз. Сегодня только кольцо».' },
+    { s: '«Жаль, вместе ведь гораздо выгоднее. Может, всё-таки возьмёте сразу и серьги?»', k: 'K6', e: true,
+      why: 'Клиентка ясно отказалась — дожимать нельзя. Давление портит впечатление от всей покупки. Принять отказ и оформить кольцо.',
+      how: '«Конечно! Кольцо — прекрасный выбор. Давайте оформим».' }
+  ]},
+  { t: 'Кулон', i: '💛', d: 'Закрытие и прощание', L: [
+    { n: 'Покупательница второй раз примеряет кулон.' },
+    { c: '«Сколько, говорите, он стоит?»' },
+    { s: '«24 000 ₽ — и он вам действительно очень идёт. Ну что, берёте?»', k: 'K10', e: true,
+      why: 'Клиентка переспрашивает цену — это сигнал покупки. «Берёте?» давит и толкает к ответу «подумаю».',
+      how: '«24 000 ₽ — и он вам очень идёт. Давайте оформим».' },
+    { c: '«На этой. Оформляйте».' },
+    { n: 'Покупка оплачена, продавец передаёт пакет.' },
+    { s: '«Спасибо за покупку! Чек в пакете. Всего доброго, приходите к нам ещё».', k: 'K11', e: true,
+      why: 'Шаблон, который слышат в каждом магазине, — клиентка его не запомнит. Запоминается личное пожелание.',
+      how: '«Носите с радостью — он вам очень идёт! Захотите подобрать к нему серьги — заходите, я покажу».' }
+  ]},
+  { t: '«Я подумаю»', i: '🤔', d: 'Клиент без покупки', L: [
+    { c: 'Клиентка примерила браслет: «Красивый, но я подумаю».' },
+    { s: '«Конечно, решение важное. Над чем хотите подумать — над моделью или ценой?»', k: 'K8', e: false,
+      ok: 'Продавец приняла решение клиентки без обиды и мягко уточнила причину.' },
+    { c: '«Хочу мужу показать».' },
+    { s: '«Давайте сфотографируем браслет на вас — мужу будет проще оценить».', k: 'K8', e: false,
+      ok: 'Помощь с причиной: клиентка унесёт с собой не «подумаю», а фото на руке.' },
+    { c: '«Спасибо, так и сделаю».' },
+    { s: '«Будем рады вас видеть — приходите вместе, покажу, как он сидит».', k: 'K11', e: false,
+      ok: 'Тёплое прощание без давления — клиентке хочется вернуться.' }
+  ]}
+];
 
-    let currentScenario = 0;
-    let selectedErrors = [];
-    let gameResults = [];
-    let currentUser = { name: '', city: '' };
+// Подсказки «Запомните» по навыкам — из материалов дня
+const TIPS = {
+  K1: '<b>Приветствие:</b> сразу конкретная акция — «Добрый день! У нас сегодня скидка 30% на бриллианты». Без выгоды клиенту незачем оставаться.',
+  K2: '<b>Контакт:</b> не «Вам помочь?» и не «Выбрали?», а предложение по тому, на что клиент смотрит: «Давайте я достану — на свету смотрится иначе».',
+  K3: '<b>Потребности:</b> бюджет не спрашиваем — повод, стиль, предпочтения. И слышим ответ: показываем то, что клиент описал.',
+  K4: '<b>Презентация:</b> ХПВ — переводим факт в выгоду — и сразу примерка у зеркала.',
+  K5: '<b>Вариант лучше:</b> после вопросов, с понятной разницей одной фразой: «на 20% дороже — бриллиант чище». Примерить оба.',
+  K6: '<b>Второе украшение:</b> предлагаем в зале, до кассы. Отказ принимаем — не дожимаем.',
+  K7: '<b>Сплит:</b> уверенно, до цены и с суммой платежа: «4 платежа по … ₽ без переплат». Не «можно в рассрочку».',
+  K8: '<b>Возражения:</b> выслушать → понять → согласиться → аргументировать. Не спорить и не бежать к «подешевле».',
+  K9: '<b>Альтернатива:</b> не «нет», а решение — похожая модель, заказ с доставкой, электронный каталог.',
+  K10: '<b>Закрытие:</b> на сигнал покупки — не «Берёте?», а выбор без выбора или «Давайте оформим».',
+  K11: '<b>Прощание:</b> личное пожелание вместо шаблона — так клиент возвращается.'
+};
 
-    const regScreen = document.getElementById('regScreen');
-    const quizScreen = document.getElementById('quizScreen');
-    const finalScreen = document.getElementById('finalScreen');
-    const checkBtn = document.getElementById('checkBtn');
+let me = { name: '', city: '' }, cur = 0, marks = [], results = [], found = 0;
+const $ = id => document.getElementById(id);
+const sellers = d => d.L.map((l, i) => l.s ? i : -1).filter(i => i >= 0);
+const errorsOf = d => d.L.map((l, i) => l.s && l.e ? i : -1).filter(i => i >= 0);
 
-    function updateProgress() {
-        const progress = (currentScenario / SCENARIOS.length) * 100;
-        document.getElementById('progressFill').style.width = progress + '%';
-        document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
-    }
+$('startBtn').onclick = () => {
+  const name = $('userName').value.trim().replace(/\s+/g, ' '), city = $('userCity').value;
+  if (name.split(' ').filter(w => w.length > 1).length < 2) { $('regErr').textContent = 'Введите имя и фамилию'; return; }
+  if (!city) { $('regErr').textContent = 'Выберите магазин'; return; }
+  me = { name, city }; $('reg').classList.add('hidden'); $('game').classList.remove('hidden'); show();
+};
 
-    function renderScenario() {
-        const scenario = SCENARIOS[currentScenario];
-        document.getElementById('scenarioNum').textContent = currentScenario + 1;
-        document.getElementById('totalScenarios').textContent = SCENARIOS.length;
-        updateProgress();
+function show() {
+  const d = D[cur]; marks = [];
+  $('stepLbl').textContent = `Диалог ${cur + 1} из ${D.length}`;
+  $('prog').style.width = (cur / D.length * 100) + '%';
+  $('area').innerHTML = `
+    <div class="sit"><div class="ic">${d.i}</div><div><div class="t">${d.t}</div><div class="d">${d.d}</div></div></div>
+    <div class="hint">👆 Нажмите на фразу продавца, где он ошибся</div>
+    <div class="chat">${d.L.map((l, i) => l.n ? `<div class="m n">${l.n}</div>`
+      : l.c ? `<div class="m c"><small>Клиент</small>${l.c}</div>`
+      : `<div class="m s" data-i="${i}"><small>Продавец</small>${l.s}<div class="mark">❌ Здесь ошибка</div></div>`).join('')}</div>
+    <button class="btn calm next" id="go">👍 Здесь ошибок нет</button>`;
+  document.querySelectorAll('.m.s').forEach(el => el.onclick = () => {
+    const i = +el.dataset.i; if (el.classList.contains('done')) return;
+    marks = marks.includes(i) ? marks.filter(x => x !== i) : marks.concat(i);
+    el.classList.toggle('on', marks.includes(i)); btnLabel();
+  });
+  $('go').onclick = check;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function btnLabel() {
+  const b = $('go'); if (!b || b.dataset.done) return;
+  if (marks.length) { b.textContent = `✅ Проверить (отмечено: ${marks.length})`; b.classList.remove('calm'); }
+  else { b.textContent = '👍 Здесь ошибок нет'; b.classList.add('calm'); }
+}
 
-        document.getElementById('scenarioHeader').innerHTML = `
-            <div class="question-wrapper">
-                <div class="question-icon">${scenario.icon}</div>
-                <div class="question-content">
-                    <div class="question-label">${scenario.label}</div>
-                    <div class="question-text">${scenario.title}</div>
-                </div>
-            </div>
-        `;
+function check() {
+  const d = D[cur], errs = errorsOf(d);
+  const hit = marks.filter(i => errs.includes(i)), fp = marks.filter(i => !errs.includes(i)), miss = errs.filter(i => !marks.includes(i));
+  const max = errs.length || 1, score = errs.length ? Math.max(0, hit.length - fp.length) : (marks.length ? 0 : 1);
+  const pct = Math.round(score / max * 100);
+  document.querySelectorAll('.m.s').forEach(el => {
+    const i = +el.dataset.i, l = d.L[i]; el.classList.add('done'); el.classList.remove('on');
+    let v = '';
+    if (l.e && marks.includes(i)) { el.classList.add('hit'); v = `<b>✅ Нашли!</b>${l.why}<div class="h">📌 Как надо: ${l.how}</div>`; }
+    else if (l.e) { el.classList.add('miss'); v = `<b>⚠️ Пропустили ошибку</b>${l.why}<div class="h">📌 Как надо: ${l.how}</div>`; }
+    else if (marks.includes(i)) { el.classList.add('fp'); v = `<b>✋ Здесь всё верно</b>${l.ok}`; }
+    else el.classList.add('okd');
+    if (v) el.insertAdjacentHTML('beforeend', `<div class="v">${v}</div>`);
+  });
+  found += hit.length;
+  if (hit.length) { const c = $('chip'); c.textContent = `🔍 Найдено: ${found}`; c.classList.add('bump'); setTimeout(() => c.classList.remove('bump'), 400); }
+  let fb;
+  if (!errs.length) fb = marks.length ? ['no', '✋ Здесь ошибок не было', 'Продавец всё сделала по стандарту. Не каждая фраза — ошибка: важно узнавать и правильные ходы.']
+    : ['ok', '👍 Верно — ошибок нет', 'Этот диалог — образец. Запомните фразы: их можно брать в зал.'];
+  else if (pct === 100) fb = ['ok', '🎯 Все ошибки найдены', fp.length ? '' : 'Ни одной лишней отметки.'];
+  else fb = ['no', `Найдено ${hit.length} из ${errs.length}`, (miss.length ? 'Пропущенные — с жёлтой рамкой. ' : '') + (fp.length ? 'Лишние отметки снимают баллы.' : '')];
+  const b = $('go'); b.dataset.done = '1';
+  b.insertAdjacentHTML('beforebegin', `<div class="fb ${fb[0]}"><b>${fb[1]}</b>${fb[2]}</div>`);
+  b.classList.remove('calm');
+  b.textContent = cur < D.length - 1 ? 'Следующий диалог →' : 'Готово 🏁';
+  b.onclick = () => { cur++; cur < D.length ? show() : finish(); };
+  results.push({
+    scenario: d.t, score, maxScore: max, percent: pct, found: hit.length, errors: errs.length, falseMarks: fp.length,
+    selectedErrors: marks.slice(), correctErrors: errs,
+    lines: d.L.filter(l => l.s || l.c || l.n).map((l, i) => l.s ? { s: 'seller', t: l.s, err: !!l.e, skill: l.k, marked: marks.includes(i), how: l.e ? l.how : '' } : { s: l.c ? 'client' : 'note', t: l.c || l.n })
+  });
+}
 
-        selectedErrors = [];
-        const dialogueArea = document.getElementById('dialogueArea');
-        dialogueArea.innerHTML = '';
-
-        scenario.dialogue.forEach((msg, idx) => {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${msg.speaker}`;
-            msgDiv.dataset.idx = idx;
-
-            if (msg.speaker === 'seller' && msg.error !== undefined) {
-                msgDiv.classList.add('clickable');
-                msgDiv.onclick = () => toggleError(idx, msgDiv);
-            }
-
-            msgDiv.innerHTML = `
-                <div class="speaker">${msg.speaker === 'client' ? '👤 Клиент' : '💼 Продавец'}</div>
-                <div>${msg.text}</div>
-            `;
-            dialogueArea.appendChild(msgDiv);
-        });
-
-        checkBtn.textContent = '✅ Проверить';
-        checkBtn.className = 'btn-primary';
-        checkBtn.disabled = true;
-        checkBtn.onclick = checkScenario;
-
-        document.getElementById('resultCard').style.display = 'none';
-    }
-
-    function toggleError(idx, element) {
-        if (selectedErrors.includes(idx)) {
-            selectedErrors = selectedErrors.filter(i => i !== idx);
-            element.classList.remove('selected');
-        } else {
-            selectedErrors.push(idx);
-            element.classList.add('selected');
-        }
-        checkBtn.disabled = selectedErrors.length === 0;
-    }
-
-    function checkScenario() {
-        const scenario = SCENARIOS[currentScenario];
-        const correctErrors = scenario.correctErrors;
-
-        document.querySelectorAll('.message.seller').forEach((msg) => {
-            const globalIdx = parseInt(msg.dataset.idx);
-            if (correctErrors.includes(globalIdx)) msg.classList.add('correct');
-            if (selectedErrors.includes(globalIdx) && !correctErrors.includes(globalIdx)) msg.classList.add('wrong');
-            msg.classList.remove('clickable');
-            msg.onclick = null;
-        });
-
-        const correctFound = selectedErrors.filter(e => correctErrors.includes(e)).length;
-        const wrongFound = selectedErrors.filter(e => !correctErrors.includes(e)).length;
-        const score = Math.max(0, correctFound - wrongFound);
-        const maxScore = correctErrors.length;
-        const percent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 100;
-
-        const resultCard = document.getElementById('resultCard');
-        resultCard.style.display = 'block';
-        resultCard.className = `result-card ${percent >= 70 ? 'success' : 'fail'}`;
-
-        let html = `<h2>${percent >= 70 ? '🎉 Отлично!' : '⚠️ Есть над чем поработать'}</h2>`;
-        html += `<p>Найдено ошибок: <strong>${correctFound} из ${maxScore}</strong> (Результат: ${percent}%)</p>`;
-
-        html += '<div class="rec-section"><h3>📚 Разбор ошибок сценария</h3>';
-        correctErrors.forEach(idx => {
-            const msg = scenario.dialogue[idx];
-            html += `
-                <div class="rec-item">
-                    <div class="rec-q">❌ Ошибка: «${msg.text}»</div>
-                    <div class="rec-expl">${msg.explanation}</div>
-                    <div class="rec-tip">📌 <strong>Как надо:</strong> ${msg.rec}</div>
-                </div>
-            `;
-        });
-        html += '</div>';
-        resultCard.innerHTML = html;
-
-        gameResults.push({
-            scenario: scenario.title,
-            score: score,
-            maxScore: maxScore,
-            percent: percent,
-            selectedErrors: selectedErrors,
-            correctErrors: correctErrors
-        });
-
-        if (currentScenario < SCENARIOS.length - 1) {
-            checkBtn.textContent = '➡️ Следующий сценарий';
-            checkBtn.className = 'btn-primary btn-next';
-            checkBtn.disabled = false;
-            checkBtn.onclick = () => {
-                currentScenario++;
-                renderScenario();
-            };
-        } else {
-            checkBtn.textContent = '🏁 Завершить игру';
-            checkBtn.className = 'btn-primary btn-finish';
-            checkBtn.disabled = false;
-            checkBtn.onclick = finishGame;
-        }
-    }
-
-    async function finishGame() {
-        const totalScore = gameResults.reduce((sum, r) => sum + r.score, 0);
-        const maxTotal = gameResults.reduce((sum, r) => sum + r.maxScore, 0);
-        const avgPercent = maxTotal > 0 ? Math.round((totalScore / maxTotal) * 100) : 0;
-        const passed = avgPercent >= 70;
-
-        quizScreen.classList.add('hidden');
-        finalScreen.classList.remove('hidden');
-
-        finalScreen.innerHTML = `
-            <div class="final-card ${passed ? 'success' : 'fail'}">
-                <div class="final-icon">${passed ? '🏆' : '📚'}</div>
-                <h2>${passed ? 'Отличный результат!' : 'Есть над чем поработать'}</h2>
-                <p>${passed ? 'Вы хорошо видите нарушения алгоритма продаж!' : 'Рекомендуем повторить алгоритм продаж и сыграть ещё раз.'}</p>
-                <div class="result-stats">
-                    <div class="stat-box"><div class="stat-value">${avgPercent}%</div><div class="stat-label">Результат</div></div>
-                    <div class="stat-box"><div class="stat-value">${totalScore}/${maxTotal}</div><div class="stat-label">Ошибок найдено</div></div>
-                </div>
-                <div class="save-status" id="saveStatus"><span class="spinner"></span>Сохраняю результат...</div>
-                <button class="restart-btn" onclick="location.reload()">🔄 Пройти ещё раз</button>
-            </div>
-        `;
-
-        const resultData = {
-            id: Date.now(), type: 'errorfinder', user_name: currentUser.name, city: currentUser.city,
-            score: totalScore, total: maxTotal, percent: avgPercent, passed: passed,
-            scenarios: gameResults, date: new Date().toISOString(),
-            timestamp: new Date().toLocaleString('ru-RU')
-        };
-
-        const statusDiv = document.getElementById('saveStatus');
-        try {
-            const localBackup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
-            localBackup.push(resultData);
-            localStorage.setItem('errorfinder_backup', JSON.stringify(localBackup));
-
-            await Promise.race([
-                db.collection('results').doc('errorfinder').collection('items').add(resultData),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
-            ]);
-
-            const backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]');
-            localStorage.setItem('errorfinder_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
-
-            statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
-            statusDiv.style.color = '#10b981';
-            statusDiv.style.background = 'rgba(16,185,129,0.1)';
-        } catch(e) {
-            statusDiv.innerHTML = '⚠️ Сохранено локально, отправится при следующем запуске.';
-            statusDiv.style.color = '#d97706';
-            statusDiv.style.background = 'rgba(217,119,6,0.1)';
-        }
-    }
-
-    document.getElementById('startBtn').onclick = () => {
-        const name = document.getElementById('userName').value.trim();
-        const city = document.getElementById('userCity').value;
-        if (!name) { alert('Введите имя и фамилию'); return; }
-        if (!city) { alert('Выберите город'); return; }
-
-        currentUser = { name, city };
-        currentScenario = 0;
-        selectedErrors = [];
-        gameResults = [];
-
-        regScreen.classList.add('hidden');
-        quizScreen.classList.remove('hidden');
-        renderScenario();
-    };
-
-    document.getElementById('userName').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') document.getElementById('startBtn').click();
-    });
+async function finish() {
+  $('game').classList.add('hidden'); const f = $('fin'); f.classList.remove('hidden');
+  const score = results.reduce((a, r) => a + r.score, 0), total = results.reduce((a, r) => a + r.maxScore, 0);
+  const errTotal = results.reduce((a, r) => a + r.errors, 0), fpTotal = results.reduce((a, r) => a + r.falseMarks, 0);
+  const clean = results.filter(r => !r.errors), cleanOk = clean.filter(r => r.score).length;
+  const pct = Math.round(score / total * 100), passed = pct >= 70;
+  // какие навыки чаще всего пропущены
+  const missK = {};
+  results.forEach(r => r.lines.forEach(l => { if (l.s === 'seller' && l.err && !l.marked) missK[l.skill] = (missK[l.skill] || 0) + 1; }));
+  const tips = Object.entries(missK).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k]) => TIPS[k]);
+  if (!tips.length && fpTotal) tips.push('<b>Не каждая фраза — ошибка.</b> Узнавать правильные ходы так же важно, как замечать ошибки: их и берём в зал.');
+  if (!tips.length) tips.push('<b>Вы видите продажу глазами наставника.</b> Попробуйте сегодня в зале поймать у себя хотя бы одну такую ошибку — и сказать по-другому.');
+  f.innerHTML = `
+    <div style="font-size:52px">${pct >= 90 ? '🏆' : passed ? '🎯' : '📚'}</div>
+    <h1>${pct >= 90 ? 'Глаз наставника!' : passed ? 'Хороший результат!' : 'Есть над чем поработать'}</h1>
+    <div class="big">${pct}%</div>
+    <div class="of">Найдено ошибок: <b>${found} из ${errTotal}</b></div>
+    <div class="stats">
+      <div><b>${found}/${errTotal}</b><span>ошибок найдено</span></div>
+      <div><b>${fpTotal}</b><span>лишних отметок</span></div>
+      <div><b>${cleanOk}/${clean.length}</b><span>«ошибок нет» — верно</span></div>
+    </div>
+    <div class="rev">${results.map(r => `<div><span>${r.percent === 100 ? '✅' : r.percent ? '🟡' : '❌'}</span><span>${r.scenario}</span><b>${r.percent}%</b></div>`).join('')}</div>
+    <div class="tip">💡 <b>Запомните</b>${tips.map(t => `<p>${t}</p>`).join('')}</div>
+    <div class="save" id="save">⏳ Сохраняю результат…</div>
+    <button class="btn restart" onclick="location.reload()">🔄 Пройти ещё раз</button>`;
+  window.scrollTo({ top: 0 });
+  const data = {
+    id: Date.now(), type: 'errorfinder', format: 'v2', user_name: me.name, city: me.city,
+    score, total, percent: pct, passed, found, errors: errTotal, false_marks: fpTotal,
+    scenarios: results, date: new Date().toISOString(), timestamp: new Date().toLocaleString('ru-RU')
+  };
+  let backup = []; try { backup = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]'); } catch (e) {}
+  try { localStorage.setItem('errorfinder_backup', JSON.stringify(backup.concat(data))); } catch (e) {}
+  try {
+    await withTimeout(COL().add(data));
+    try { const b = JSON.parse(localStorage.getItem('errorfinder_backup') || '[]'); localStorage.setItem('errorfinder_backup', JSON.stringify(b.filter(r => r.id !== data.id))); } catch (e) {}
+    $('save').textContent = '✅ Результат сохранён'; $('save').style.background = '#ecfdf5'; $('save').style.color = '#065f46';
+  } catch (e) {
+    $('save').textContent = '⚠️ Сохранено на телефоне — отправится при следующем открытии';
+  }
+}
 </script>
 </body>
 </html>
