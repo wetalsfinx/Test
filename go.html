@@ -14,8 +14,24 @@ body { font-family: 'Inter', sans-serif; background: #f5f5f5; margin: 0; padding
 .brand { font-size: 12px; letter-spacing: .12em; font-weight: 700; color: #9ca3af; }
 h1 { color: #c41e3a; margin: 6px 0 4px; font-size: 24px; font-weight: 800; }
 .today { color: #6b7280; font-size: 14px; }
-.who { text-align: center; font-size: 14px; color: #4b5563; margin: -6px 0 14px; }
-.who button { background: none; border: none; color: #c41e3a; font: inherit; font-weight: 600; cursor: pointer; padding: 0 4px; text-decoration: underline; }
+.who { background: #fff; border-radius: 16px; padding: 14px 16px; margin: 0 0 6px; box-shadow: 0 2px 10px rgba(0,0,0,.06); display: flex; gap: 12px; align-items: center; }
+.who .av { font-size: 30px; line-height: 1; }
+.who .wn { flex: 1; min-width: 0; }
+.who .wn b { display: block; font-size: 18px; font-weight: 800; color: #1f2937; overflow-wrap: anywhere; }
+.who .wn span { display: block; font-size: 16px; font-weight: 700; color: #c41e3a; margin-top: 2px; }
+.who .wb { display: flex; flex-direction: column; gap: 6px; }
+.who .wb button, .cbtn2 { background: #fff; border: 1.5px solid #e5e7eb; color: #374151; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 10px; border-radius: 10px; white-space: nowrap; }
+.chg { background: #fff; border-radius: 16px; padding: 14px 16px; margin: 0 0 6px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+.chg select { margin-bottom: 8px; }
+.confirm { text-align: center; }
+.confirm .cn { font-size: 22px; font-weight: 800; margin: 4px 0 2px; overflow-wrap: anywhere; }
+.confirm .cc { font-size: 20px; font-weight: 800; color: #c41e3a; margin-bottom: 16px; }
+.btn.ghost { background: #fff; color: #374151; border: 2px solid #e5e7eb; margin-top: 10px; }
+.warnbox { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 16px; padding: 14px 16px; margin: 10px 0 6px; font-size: 15px; line-height: 1.45; color: #78350f; }
+.warnbox b { color: #78350f; }
+.warnbox .wbtns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.warnbox .wbtns button { flex: 1 1 140px; padding: 11px 10px; border-radius: 10px; border: 2px solid #f59e0b; background: #fff; color: #78350f; font: inherit; font-weight: 700; cursor: pointer; }
+.warnbox .wbtns button.main { background: #f59e0b; color: #fff; }
 .box { background: #fff; border-radius: 20px; padding: 22px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
 .box p { margin: 0 0 14px; font-size: 15px; line-height: 1.45; color: #4b5563; text-align: center; }
 input, select { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; margin-bottom: 12px; font-family: inherit; background: #fff; }
@@ -67,7 +83,21 @@ a.card.small .nm { font-size: 16px; }
     <button class="btn" id="saveBtn">Показать мои тренажёры →</button>
   </div>
 
+  <div id="conf" class="box confirm hidden">
+    <p style="margin-bottom:6px">Проверьте, всё ли верно:</p>
+    <div class="cn" id="confName"></div>
+    <div class="cc" id="confCity"></div>
+    <button class="btn" id="confYes">Да, всё верно →</button>
+    <button class="btn ghost" id="confNo">Исправить</button>
+  </div>
+
   <div id="who" class="who hidden"></div>
+  <div id="chgBox" class="chg hidden">
+    <p style="margin:0 0 8px;font-size:14px;color:#4b5563">Выберите свой магазин:</p>
+    <select id="chgCity"><option value="">Выберите магазин</option></select>
+    <button class="btn" id="chgSave">Сохранить</button>
+  </div>
+  <div id="warn"></div>
   <div id="list"></div>
   <p class="note">Сохраните эту страницу — здесь всегда ваши открытые тренажёры.</p>
 </div>
@@ -143,11 +173,13 @@ function card(t, k, big) {
 }
 async function draw() {
   const me = ls.get('go585_me');
-  if (!me) { $('reg').classList.remove('hidden'); $('who').classList.add('hidden'); $('list').innerHTML = ''; return; }
+  if (!me) { $('conf').classList.add('hidden'); $('chgBox').classList.add('hidden'); $('warn').innerHTML = ''; $('reg').classList.remove('hidden'); $('who').classList.add('hidden'); $('list').innerHTML = ''; return; }
   $('reg').classList.add('hidden');
   $('who').classList.remove('hidden');
-  $('who').innerHTML = `${esc(me.name)} · ${esc(me.city)} <button id="chg">не вы?</button>`;
+  $('conf').classList.add('hidden'); $('chgBox').classList.add('hidden'); $('warn').innerHTML = '';
+  $('who').innerHTML = `<div class="av">👤</div><div class="wn"><b>${esc(me.name)}</b><span>🏬 ${esc(me.city)}</span></div><div class="wb"><button id="chgStore">Другой магазин</button><button id="chg">Это не я</button></div>`;
   $('chg').onclick = () => { try { localStorage.removeItem('go585_me'); localStorage.removeItem('go585_self'); localStorage.removeItem('go585_opened'); } catch (e) {} draw(); };
+  $('chgStore').onclick = () => { fillSel($('chgCity'), me.city); $('chgBox').classList.toggle('hidden'); };
   if (!open.length) { $('list').innerHTML = `<div class="all"><div class="e">🎉</div><h2>${today > day(T[T.length - 1].to) ? 'Обучение этого месяца завершено' : 'Сейчас открытых тренажёров нет'}</h2><p>Спасибо!</p></div>`; return; }
   $('list').innerHTML = '<div class="load">⏳ Проверяю, что вы уже прошли…</div>';
   const opened = ls.get('go585_opened') || {};
@@ -157,6 +189,15 @@ async function draw() {
     try { const r = await myResults(t.col, me); if (!r.length && mine) return { t, done: true, pct: null, self: true }; const here = r.filter(x => !x.city), use = here.length ? here : r; return { t, done: r.length > 0, pct: r.length ? Math.max(...use.map(x => x.p)) : null, other: here.length ? null : (r[0] && r[0].city) }; }
     catch (e) { return { t, done: !!mine, pct: null, self: !!mine, err: true }; }
   }));
+  // Все найденные прохождения — в другом магазине? Возможно, магазин выбран неверно
+  const others = [...new Set(status.filter(s => s.other).map(s => s.other))], anyHere = status.some(s => s.done && !s.other && !s.local && !s.self);
+  if (others.length === 1 && !anyHere) {
+    const o = others[0];
+    $('warn').innerHTML = `<div class="warnbox">⚠️ <b>Проверьте магазин.</b> Здесь выбран <b>${esc(me.city)}</b>, а ваши прохождения записаны в магазине <b>${esc(o)}</b>. В каком магазине вы работаете?<div class="wbtns"><button class="main" id="wOther">${esc(o)}</button><button id="wHere">${esc(me.city)} — меня перевели</button></div></div>`;
+    $('wOther').onclick = () => { ls.set('go585_me', { name: me.name, city: o }); draw(); };
+    $('wHere').onclick = () => { ls.set('go585_ok_' + me.city, 1); $('warn').innerHTML = ''; };
+    if (ls.get('go585_ok_' + me.city)) $('warn').innerHTML = '';
+  }
   const todo = status.filter(s => !s.done), done = status.filter(s => s.done);
   let html = '';
   if (todo.length) {
@@ -176,8 +217,15 @@ $('saveBtn').onclick = () => {
   const n = $('userName').value.trim(), c = $('userCity').value;
   if (toks(n).length < 2) { $('regErr').textContent = 'Нужно имя и фамилия — два слова, как в тренажёрах'; return; }
   if (!c) { $('regErr').textContent = 'Выберите магазин'; return; }
-  ls.set('go585_me', { name: n, city: c }); draw();
+  $('regErr').textContent = '';
+  $('confName').textContent = '👤 ' + n.replace(/\s+/g, ' ');
+  $('confCity').textContent = '🏬 Магазин: ' + c;
+  $('reg').classList.add('hidden'); $('conf').classList.remove('hidden');
 };
+$('confYes').onclick = () => { ls.set('go585_me', { name: $('userName').value.trim().replace(/\s+/g, ' '), city: $('userCity').value }); draw(); };
+$('confNo').onclick = () => { $('conf').classList.add('hidden'); $('reg').classList.remove('hidden'); $('userCity').focus(); };
+function fillSel(sel, cur) { if (sel.options.length < 2) (window.STORES_585 || []).forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; sel.appendChild(o); }); sel.value = cur || ''; }
+$('chgSave').onclick = () => { const me = ls.get('go585_me'), c = $('chgCity').value; if (!me || !c) return; ls.set('go585_me', { name: me.name, city: c }); draw(); };
 $('userName').addEventListener('keydown', e => { if (e.key === 'Enter') $('saveBtn').click(); });
 // Подсказка имён: кто из этого магазина уже есть в базе (по входному тесту и тренажёрам)
 $('userCity').addEventListener('change', async () => {
