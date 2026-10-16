@@ -1,658 +1,331 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>585GOLD | Тренажёр допродаж</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>585GOLD | Собери покупку</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Inter', sans-serif; background: #f5f5f5; margin: 0; padding: 16px; color: #1f2937; }
+.wrap { max-width: 500px; margin: 0 auto; }
+.hidden { display: none !important; }
+.card { background: #fff; border-radius: 20px; padding: 22px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+h1 { color: #c41e3a; margin: 0 0 6px; font-size: 24px; font-weight: 800; text-align: center; }
+.sub { color: #6b7280; font-size: 14px; text-align: center; line-height: 1.45; margin: 0 0 18px; }
+.how { background: #fdf2f4; border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.5; margin-bottom: 18px; }
+.how b { color: #c41e3a; }
+input, select { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; margin-bottom: 12px; font-family: inherit; background: #fff; }
+input:focus, select:focus { outline: none; border-color: #c41e3a; }
+.btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; background: #c41e3a; color: #fff; font-family: inherit; }
+.btn:disabled { background: #e5e7eb; color: #9ca3af; }
+.err { color: #c41e3a; font-size: 13px; min-height: 18px; margin: -4px 0 8px; }
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #fef5f5 0%, #fff5f5 50%, #fef9f0 100%);
-            min-height: 100vh; padding: 20px; position: relative; overflow-x: hidden;
-        }
-        body::before { content: ''; position: fixed; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(196,30,58,0.08) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: float 20s ease-in-out infinite; }
-        body::after { content: ''; position: fixed; bottom: -30%; left: -10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%); border-radius: 50%; z-index: 0; animation: float 25s ease-in-out infinite reverse; }
-        @keyframes float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px,-30px); } }
-        
-        .container { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
-        
-        .header {
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-            border-radius: 32px; padding: 40px 32px; margin-bottom: 24px;
-            box-shadow: 0 20px 60px rgba(196,30,58,0.3);
-            position: relative; overflow: hidden; animation: slideDown 0.6s ease;
-        }
-        .header::before { content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%); border-radius: 50%; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes scenarioAppear { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        
-        .logo-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
-            padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700;
-            color: white; margin-bottom: 16px; position: relative; z-index: 1;
-        }
-        h1 { color: white; text-align: center; font-size: 32px; font-weight: 900; margin-bottom: 12px; position: relative; z-index: 1; }
-        .subtitle { text-align: center; color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 500; position: relative; z-index: 1; }
-        
-        .card {
-            background: white; border-radius: 28px; padding: 40px; margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08); animation: slideUp 0.6s ease;
-            border: 1px solid rgba(229,231,235,0.5);
-        }
-        
-        .form-group { margin-bottom: 24px; }
-        .form-group label { font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #1f2937; font-size: 15px; }
-        .form-group label::before { content: ''; width: 4px; height: 20px; background: linear-gradient(180deg, #c41e3a 0%, #d4af37 100%); border-radius: 2px; }
-        .form-group input, .form-group select {
-            width: 100%; padding: 18px 24px; border-radius: 16px; border: 2px solid #e5e7eb;
-            font-size: 16px; background: #f9fafb; transition: all 0.3s; font-family: 'Inter', sans-serif; font-weight: 500;
-        }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: #c41e3a; background: white; box-shadow: 0 0 0 4px rgba(196,30,58,0.1); transform: translateY(-2px); }
-        
-        .btn-primary {
-            width: 100%; padding: 20px 32px; border: none; border-radius: 20px; font-size: 17px; font-weight: 700;
-            cursor: pointer; transition: all 0.3s; background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-            color: white; font-family: 'Inter', sans-serif; margin-top: 12px; position: relative; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(196,30,58,0.3);
-        }
-        .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.5s; }
-        .btn-primary:hover::before { left: 100%; }
-        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(196,30,58,0.4); }
-        .btn-primary:disabled { background: #d1d5db; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn-next { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 10px 30px rgba(245,158,11,0.3); }
-        .btn-finish { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 10px 30px rgba(16,185,129,0.3); }
-        
-        .progress-container { margin-bottom: 28px; }
-        .progress-text { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #6b7280; }
-        .progress-text .current { color: #c41e3a; font-size: 16px; }
-        .progress-bar { width: 100%; height: 8px; background: #f3f4f6; border-radius: 10px; overflow: hidden; position: relative; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #c41e3a 0%, #d4af37 100%); border-radius: 10px; transition: width 0.5s ease; position: relative; overflow: hidden; }
-        .progress-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 2s infinite; }
-        
-        .scenario-header {
-            display: flex; align-items: center; gap: 20px; padding: 28px;
-            background: linear-gradient(135deg, #fef5f5 0%, #fff 100%);
-            border-radius: 24px; border-left: 6px solid #c41e3a;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 20px; animation: scenarioAppear 0.5s ease;
-        }
-        .scenario-icon {
-            flex-shrink: 0; width: 80px; height: 80px; border-radius: 50%;
-            background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%);
-            display: flex; align-items: center; justify-content: center; font-size: 40px;
-            box-shadow: 0 8px 24px rgba(196,30,58,0.3), inset 0 2px 8px rgba(255,255,255,0.2);
-            position: relative;
-        }
-        .scenario-icon::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
-        .scenario-content { flex: 1; }
-        .scenario-label { font-size: 12px; font-weight: 700; color: #c41e3a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-        .scenario-label::before { content: ''; width: 20px; height: 2px; background: linear-gradient(90deg, #c41e3a 0%, #d4af37 100%); }
-        .scenario-title { font-weight: 800; font-size: 22px; line-height: 1.3; color: #1f2937; }
-        
-        .situation-card {
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-            border-left: 5px solid #d97706; border-radius: 16px;
-            padding: 18px 20px; margin-bottom: 16px; font-size: 14px; color: #92400e; line-height: 1.6;
-        }
-        .situation-card strong { color: #78350f; font-weight: 800; display: block; margin-bottom: 6px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-        
-        .message { padding: 18px 22px; border-radius: 20px; font-size: 15px; line-height: 1.6; color: #374151; margin-bottom: 20px; animation: scenarioAppear 0.4s ease; }
-        .message.client { background: white; border-left: 5px solid #c41e3a; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .message .speaker { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; color: #c41e3a; }
-        
-        .options-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-        .options-title::before { content: ''; flex: 0 0 30px; height: 2px; background: linear-gradient(90deg, #c41e3a 0%, transparent 100%); }
-        
-        .options-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
-        .option {
-            background: white; border: 2px solid #e5e7eb; border-radius: 18px; padding: 18px 20px;
-            cursor: pointer; transition: all 0.3s; font-size: 15px; line-height: 1.5;
-            display: flex; gap: 14px; align-items: flex-start; position: relative;
-            animation: scenarioAppear 0.4s ease;
-        }
-        .option:hover:not(.disabled) { border-color: #c41e3a; transform: translateX(6px); box-shadow: 0 6px 20px rgba(196,30,58,0.15); }
-        .option.selected { border-color: #c41e3a; background: #fff1f2; box-shadow: 0 4px 16px rgba(196,30,58,0.2); }
-        .option.correct { border-color: #10b981; background: #d1fae5; box-shadow: 0 4px 16px rgba(16,185,129,0.2); cursor: default; }
-        .option.wrong { border-color: #ef4444; background: #fee2e2; opacity: 0.8; cursor: default; }
-        .option.disabled { cursor: default; opacity: 0.7; }
-        .option-label {
-            flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px;
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%);
-            color: white; font-weight: 800; font-size: 15px;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .option.selected .option-label { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); }
-        .option.correct .option-label { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-        .option.correct .option-label::after { content: '✓'; }
-        .option.wrong .option-label { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-        .option.wrong .option-label::after { content: '✕'; }
-        .option.correct .option-label span, .option.wrong .option-label span { display: none; }
-        .option-text { flex: 1; padding-top: 6px; }
-        
-        .result-card { border-radius: 24px; padding: 28px; margin-top: 20px; border: 3px solid #e5e7eb; background: white; animation: scaleIn 0.5s ease; }
-        .result-card.success { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: #10b981; }
-        .result-card.fail { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-color: #ef4444; }
-        .result-card h2 { font-size: 26px; font-weight: 900; margin-bottom: 12px; text-align: center; }
-        .result-card.success h2 { color: #065f46; }
-        .result-card.fail h2 { color: #991b1b; }
-        .result-card > p { font-size: 15px; color: #4b5563; font-weight: 500; text-align: center; margin-bottom: 16px; }
-        
-        .explanation {
-            background: white; border-radius: 14px; padding: 18px 20px;
-            margin-top: 16px; border-left: 5px solid #d97706; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        .explanation.correct { border-left-color: #10b981; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
-        .explanation.wrong { border-left-color: #ef4444; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); }
-        .explanation strong { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 800; color: #1f2937; }
-        .explanation p { font-size: 14px; line-height: 1.6; color: #4b5563; }
-        .explanation .correct-answer {
-            margin-top: 12px; padding: 12px 16px; border-radius: 10px;
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-left: 4px solid #d97706; color: #92400e; font-size: 13px; line-height: 1.5;
-        }
-        .explanation .correct-answer strong { color: #78350f; }
-        
-        .final-card { border-radius: 32px; padding: 48px 40px; text-align: center; animation: scaleIn 0.6s ease; border: 3px solid #e5e7eb; background: white; }
-        .final-card.success { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: #10b981; }
-        .final-card.fail { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-color: #ef4444; }
-        .final-icon { font-size: 80px; margin-bottom: 24px; display: block; animation: bounce 0.6s ease; }
-        .final-card h2 { font-size: 34px; font-weight: 900; margin-bottom: 20px; }
-        .final-card.success h2 { color: #065f46; }
-        .final-card.fail h2 { color: #991b1b; }
-        .final-card > p { font-size: 17px; color: #4b5563; margin-bottom: 16px; font-weight: 500; }
-        
-        .result-stats { display: flex; justify-content: center; gap: 20px; margin: 32px 0; flex-wrap: wrap; }
-        .stat-box { background: white; padding: 22px 28px; border-radius: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); min-width: 130px; }
-        .stat-value { font-size: 34px; font-weight: 900; margin-bottom: 4px; }
-        .stat-label { font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .final-card.success .stat-value { color: #10b981; }
-        .final-card.fail .stat-value { color: #ef4444; }
-        
-        .scenarios-review { margin-top: 32px; text-align: left; }
-        .scenarios-review h3 { text-align: center; color: #1f2937; font-size: 18px; font-weight: 800; margin-bottom: 16px; }
-        .scenario-review-item {
-            background: white; border-radius: 14px; padding: 16px 18px; margin-bottom: 10px;
-            display: flex; align-items: center; gap: 14px; border-left: 5px solid #10b981;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        .scenario-review-item.wrong { border-left-color: #ef4444; }
-        .scenario-review-icon {
-            flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
-            background: linear-gradient(135deg, #c41e3a 0%, #d4af37 100%);
-            display: flex; align-items: center; justify-content: center; font-size: 22px;
-        }
-        .scenario-review-info { flex: 1; }
-        .scenario-review-title { font-weight: 700; font-size: 14px; color: #1f2937; }
-        .scenario-review-type { font-size: 12px; color: #6b7280; margin-top: 2px; }
-        .scenario-review-status { font-size: 22px; }
-        
-        .save-status { font-size: 15px; font-weight: 700; margin-top: 24px; text-align: center; padding: 16px; border-radius: 12px; }
-        .restart-btn {
-            background: linear-gradient(135deg, #c41e3a 0%, #8b1a2c 100%); color: white; border: none; border-radius: 20px;
-            padding: 20px 32px; font-size: 17px; margin-top: 32px; width: 100%; cursor: pointer; font-weight: 800;
-            font-family: 'Inter', sans-serif; transition: all 0.3s; box-shadow: 0 10px 30px rgba(196,30,58,0.3);
-        }
-        .restart-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(196,30,58,0.4); }
-        
-        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
-        
-        .hidden { display: none; }
-        
-        @media (max-width: 600px) {
-            body { padding: 12px; }
-            .header { padding: 32px 24px; }
-            h1 { font-size: 24px; }
-            .card { padding: 24px 18px; }
-            .scenario-header { flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 24px 20px; }
-            .scenario-icon { width: 70px; height: 70px; font-size: 34px; }
-            .scenario-title { font-size: 19px; }
-            .scenario-label { justify-content: center; }
-            .result-stats { flex-direction: column; gap: 12px; }
-            .stat-box { width: 100%; }
-            .final-card { padding: 32px 20px; }
-            .final-card h2 { font-size: 26px; }
-            .final-icon { font-size: 64px; }
-        }
-    </style>
+.bar { position: sticky; top: 0; z-index: 5; background: #f5f5f5; padding: 4px 0 12px; }
+.barrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.step { font-size: 13px; font-weight: 700; color: #6b7280; }
+.check { background: #1f2937; color: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; transition: transform .25s; }
+.check.bump { transform: scale(1.12); background: #10b981; }
+.prog { height: 6px; background: #e5e7eb; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: #c41e3a; transition: width .3s; }
+
+.sit { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.sit .ic { font-size: 34px; line-height: 1; }
+.sit .t { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.sit .d { font-size: 14px; color: #4b5563; line-height: 1.45; }
+.client { background: #f3f4f6; border-radius: 16px 16px 16px 4px; padding: 12px 14px; font-size: 15px; margin-bottom: 18px; }
+.client small { display: block; font-size: 12px; color: #6b7280; font-weight: 600; margin-bottom: 2px; }
+.q { font-size: 15px; font-weight: 800; margin: 0 0 10px; }
+.q span { color: #c41e3a; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { border: 2px solid #e5e7eb; background: #fff; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; color: #1f2937; line-height: 1.3; min-height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.tile .e { font-size: 28px; }
+.opts { display: grid; gap: 10px; }
+.opt { border: 2px solid #e5e7eb; background: #fff; border-radius: 14px; padding: 14px; text-align: left; cursor: pointer; font-family: inherit; font-size: 15px; line-height: 1.45; color: #1f2937; }
+.tile.ok, .opt.ok { border-color: #10b981; background: #ecfdf5; }
+.tile.no, .opt.no { border-color: #c41e3a; background: #fef2f2; }
+.tile.dim, .opt.dim { opacity: .45; }
+.tile:disabled, .opt:disabled { cursor: default; }
+.fb { border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.5; margin: 14px 0 0; }
+.fb.ok { background: #ecfdf5; color: #065f46; }
+.fb.no { background: #fef2f2; color: #7f1d1d; }
+.fb b { display: block; margin-bottom: 2px; font-size: 15px; }
+.chosen { background: #ecfdf5; border-radius: 12px; padding: 10px 12px; font-size: 14px; margin-bottom: 14px; color: #065f46; font-weight: 600; }
+.next { margin-top: 16px; }
+
+.final { text-align: center; }
+.big { font-size: 40px; font-weight: 800; color: #1f2937; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.of { color: #6b7280; font-size: 14px; margin-bottom: 16px; }
+.stats { display: flex; gap: 10px; margin: 16px 0; }
+.stats div { flex: 1; background: #f9fafb; border-radius: 14px; padding: 12px; }
+.stats b { display: block; font-size: 22px; }
+.stats span { font-size: 12px; color: #6b7280; }
+.rev { text-align: left; margin-top: 10px; }
+.rev div { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+.rev div span:nth-child(2) { flex: 1; }
+.save { font-size: 13px; padding: 10px; border-radius: 10px; margin: 14px 0; background: #f3f4f6; color: #6b7280; }
+.tip { background: #fdf2f4; border-radius: 14px; padding: 14px; font-size: 14px; line-height: 1.5; text-align: left; margin-top: 14px; }
+.restart { background: #fff; color: #c41e3a; border: 2px solid #c41e3a; margin-top: 10px; }
+</style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <div class="logo-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7.5 3h9L21 9l-9 12L3 9l4.5-6z" fill="#ffffff"/><path d="M3 9H21M12 21L8 9M12 21L16 9M7.5 3L8 9M16.5 3L16 9" stroke="rgba(196,30,58,0.35)" stroke-width="1"/></svg> 585GOLD | Допродажи</div>
-        <h1>💰 Тренажёр допродаж</h1>
-        <p class="subtitle">10 ситуаций — выберите фразу, которая увеличит средний чек</p>
-    </div>
+<div class="wrap">
 
-    <div id="regScreen" class="card">
-        <div class="form-group">
-            <label>Имя и фамилия</label>
-            <input type="text" id="userName" placeholder="Например: Иванова Анна" autocomplete="off">
-        </div>
-        <div class="form-group">
-            <label>Магазин</label>
-            <select id="userCity">
-                <option value="">Выберите магазин</option>
-                <option value="СПб, Новочеркасский, 28/19">СПб, Новочеркасский, 28/19</option>
-                <option value="СПб, Дыбенко, 27">СПб, Дыбенко, 27</option>
-                <option value="Самара">Самара</option>
-                <option value="Казань">Казань</option>
-                <option value="Тюмень">Тюмень</option>
-                <option value="Черкесск">Черкесск</option>
-                <option value="Ульяновск">Ульяновск</option>
-                <option value="Нальчик">Нальчик</option>
-            </select>
-<script src="stores.js"></script>
-        </div>
-        <button class="btn-primary" id="startBtn">🚀 Начать игру</button>
-    </div>
-
-    <div id="gameScreen" class="hidden">
-        <div class="card">
-            <div class="progress-container">
-                <div class="progress-text">
-                    <span>Сценарий <span class="current" id="scenarioNum">1</span> из <span id="totalScenarios">10</span></span>
-                    <span id="progressPercent">0%</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
-            </div>
-            <div id="scenarioArea"></div>
-            <button class="btn-primary" id="checkBtn" disabled>✅ Проверить</button>
-            <div id="resultCard" class="result-card" style="display: none;"></div>
-        </div>
-    </div>
-
-    <div id="finalScreen" class="hidden"></div>
+<div id="reg" class="card">
+  <h1>🛍️ Собери покупку</h1>
+  <p class="sub">10 покупателей. Помогите каждому собрать законченную покупку — и посмотрите, каким получится ваш чек.</p>
+  <div class="how">1️⃣ Клиент выбрал украшение — <b>что предложить к нему?</b><br>2️⃣ <b>Как сказать</b>, чтобы клиенту захотелось?<br>⏱️ Около 5 минут, можно с телефона.</div>
+  <input id="userName" placeholder="Имя и фамилия" autocomplete="name">
+  <select id="userCity"><option value="">Выберите магазин</option></select>
+  <div class="err" id="regErr"></div>
+  <button class="btn" id="startBtn">Начать смену →</button>
 </div>
 
+<div id="game" class="hidden">
+  <div class="bar">
+    <div class="barrow"><span class="step" id="stepLbl"></span><span class="check" id="check">🧾 0 ₽</span></div>
+    <div class="prog"><i id="prog"></i></div>
+  </div>
+  <div class="card" id="area"></div>
+</div>
+
+<div id="fin" class="card final hidden"></div>
+
+</div>
+<script src="stores.js"></script>
 <script>
-    // 🔥 Firestore (новый канал, без блокировок)
-    const firebaseConfig = {
-        apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
-        authDomain: "gold-8105a.firebaseapp.com",
-        projectId: "gold-8105a",
-        storageBucket: "gold-8105a.firebasestorage.app",
-        messagingSenderId: "195469188947",
-        appId: "1:195469188947:web:af9671f88b0e70eceecba6"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+const firebaseConfig = {
+  apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+  authDomain: "gold-8105a.firebaseapp.com",
+  projectId: "gold-8105a",
+  storageBucket: "gold-8105a.firebasestorage.app",
+  messagingSenderId: "195469188947",
+  appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COL = () => db.collection('results').doc('crosssell').collection('items');
+const withTimeout = p => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 6000))]);
 
-    // 🔥 АВТОДОЗАГРУЗКА ИЗ ЛОКАЛЬНОГО ХРАНИЛИЩА (в Firestore)
-    window.addEventListener('load', async () => {
-        const backup = JSON.parse(localStorage.getItem('crosssell_backup') || '[]');
-        if (backup.length > 0) {
-            console.log(`🔄 Найдено ${backup.length} несохранённых результатов. Отправляем в Firestore...`);
-            for (let result of backup) {
-                try {
-                    await Promise.race([
-                        db.collection('results').doc('crosssell').collection('items').add(result),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
-                    ]);
-                    console.log('✅ Отправлено:', result.user_name);
-                } catch(e) {
-                    console.error('❌ Ошибка:', e.message);
-                }
-            }
-            localStorage.removeItem('crosssell_backup');
-        }
-    });
+// Дозагрузка результатов, которые не ушли из-за интернета
+window.addEventListener('load', async () => {
+  let backup = []; try { backup = JSON.parse(localStorage.getItem('crosssell_backup') || '[]'); } catch (e) {}
+  if (!backup.length) return;
+  const left = [];
+  for (const r of backup) { try { await withTimeout(COL().add(r)); } catch (e) { left.push(r); } }
+  try { localStorage.setItem('crosssell_backup', JSON.stringify(left)); } catch (e) {}
+});
 
-    const SCENARIOS = [
-        {
-            title: "Кольцо с бриллиантом",
-            icon: "💍",
-            situation: "Клиентка выбрала и примерила золотое кольцо с бриллиантом, оно ей очень понравилось.",
-            clientPhrase: "«Да, беру его, оно прекрасное!»",
-            options: [
-                { text: "«Отлично, сейчас пробью чек. С вас 45 тысяч».", correct: false, explanation: "Продавец упустил возможность увеличить чек, перейдя сразу к оплате." },
-                { text: "«Отличный выбор! К этому кольцу идеально подойдут серьги из той же коллекции. Давайте я их принесу, чтобы вы оценили комплект?»", correct: true, explanation: "Предложение комплекта (cross-sell) через создание законченного образа. Это увеличивает чек на 40-60%." },
-                { text: "«Хорошо, а ещё у нас есть акция на браслеты, хотите посмотреть?»", correct: false, explanation: "Слишком резкий переход к другому товару без логической связи с выбранным кольцом." }
-            ]
-        },
-        {
-            title: "Золотая цепочка",
-            icon: "🔗",
-            situation: "Мужчина выбирает золотую цепочку себе в подарок.",
-            clientPhrase: "«Вот эта цепочка мне нравится, её и возьму».",
-            options: [
-                { text: "«Хорошо, оформляю. Вам нужен футляр?»", correct: false, explanation: "Минимальное обслуживание, упущена выгода." },
-                { text: "«Отличная цепочка! К ней часто берут вот этот стильный кулон или подвеску. Они продаются вместе в 70% случаев, так образ выглядит законченным. Примерим?»", correct: true, explanation: "Аргументированное предложение кулона к цепочке через заботу о законченности образа." },
-                { text: "«А вы уверены, что не хотите взять цепочку подороже? Эта слишком простая».", correct: false, explanation: "Обесценивание выбора клиента, вызывает защитную реакцию." }
-            ]
-        },
-        {
-            title: "Подарок маме",
-            icon: "🎁",
-            situation: "Клиент выбрал серьги в подарок маме на юбилей.",
-            clientPhrase: "«Да, маме точно понравится. Беру».",
-            options: [
-                { text: "«Конечно! Давайте я упакую их в наш фирменный подарочный футляр. Это сделает подарок по-настоящему праздничным и покажет вашу заботу».", correct: true, explanation: "Продажа подарочной упаковки через эмоциональную выгоду (забота, праздник), а не просто как доп. услугу." },
-                { text: "«У нас есть платный футляр, стоит ... рублей. Будете брать?»", correct: false, explanation: "Слишком сухо и транзакционно. Клиент с большой вероятностью откажется." },
-                { text: "«Хорошо, упакую в бесплатный картонный футляр. Тоже неплохо смотрится».", correct: false, explanation: "Игнорирование того, что это подарок, где упаковка критически важна." }
-            ]
-        },
-        {
-            title: "Дорогие серьги",
-            icon: "✨",
-            situation: "Клиентка приобретает дорогие золотые серьги с фианитами.",
-            clientPhrase: "«Они красивые, но я боюсь, что быстро потемнеют».",
-            options: [
-                { text: "«Не бойтесь, это же золото, оно не темнеет».", correct: false, explanation: "Продавец спорит с опасением клиента и не предлагает решения." },
-                { text: "«Понимаю вашу заботу. Чтобы серьги всегда сияли как новые, рекомендую взять наше профессиональное чистящее средство и мягкую салфетку. Это продлит жизнь украшению на годы».", correct: true, explanation: "Продажа средств ухода через заботу о долговечности дорогой покупки, а не через навязывание." },
-                { text: "«Ну, если будете аккуратно носить, всё будет хорошо».", correct: false, explanation: "Перекладывание ответственности на клиента, отсутствие экспертной заботы." }
-            ]
-        },
-        {
-            title: "Растерянный клиент",
-            icon: "🤔",
-            situation: "Клиент ходит по магазину уже 15 минут, но не может ничего выбрать.",
-            clientPhrase: "«Я не знаю, что выбрать, тут всё какое-то не то...»",
-            options: [
-                { text: "«Может быть, вам подарочный сертификат? Так вы точно не ошибётесь, а именинник выберет сам».", correct: true, explanation: "Сертификат — идеальное решение для растерянного клиента, снимающее стресс от выбора." },
-                { text: "«Давайте я покажу вам вообще всё, что у нас есть в этом бюджете».", correct: false, explanation: "Ещё больше запутает и перегрузит растерянного клиента." },
-                { text: "«Просто выберите то, что первым приглянулось».", correct: false, explanation: "Обесценивание процесса выбора, звучит непрофессионально." }
-            ]
-        },
-        {
-            title: "Молчаливый клиент",
-            icon: "👀",
-            situation: "Клиент рассматривает витрину, но на вопросы отвечает односложно.",
-            clientPhrase: "«Да просто смотрю...»",
-            options: [
-                { text: "«Хорошо, смотрите. Я тут рядом».", correct: false, explanation: "Пассивная позиция, разговор завершён." },
-                { text: "«Понимаю. Кстати, у многих наших покупателей сейчас популярны минималистичные кольца. Вы ищете что-то для повседневной носки или для особого случая?»", correct: true, explanation: "Мягкий активный вопрос, который переводит монолог в диалог и помогает выявить потребность." },
-                { text: "«А почему вы ничего не выбираете? У нас большой ассортимент».", correct: false, explanation: "Давление на клиента, вызовет желание немедленно уйти." }
-            ]
-        },
-        {
-            title: "Серьги-пусеты",
-            icon: "💎",
-            situation: "Девушка выбрала классические серьги-пусеты с камнем.",
-            clientPhrase: "«Возьму вот эти пусеты».",
-            options: [
-                { text: "«Хорошо, один товар, пробиваю».", correct: false, explanation: "Упущенная возможность допродажи." },
-                { text: "«Отличный базовый выбор! А к ним у нас есть очень нежные тонкие цепочки, которые идеально дополнят такой образ. Посмотрите пару вариантов?»", correct: true, explanation: "Логичное предложение дополнения (цепочки) к базовому товару (пусетам)." },
-                { text: "«А может, возьмёте сразу две пары, пока акция?»", correct: false, explanation: "Слишком агрессивная попытка увеличить чек без аргументации." }
-            ]
-        },
-        {
-            title: "Серебряная цепь",
-            icon: "⚪",
-            situation: "Покупатель берёт недорогую серебряную цепь.",
-            clientPhrase: "«Мне только эту цепь, пожалуйста».",
-            options: [
-                { text: "«Серебро требует особого ухода. Давайте я добавлю к покупке специальное средство для чистки, она стоит совсем недорого, но цепь будет как новая».", correct: true, explanation: "Продажа средства ухода через экспертную заботу о конкретном материале (серебре)." },
-                { text: "«Серебро сейчас не очень модно, может, посмотрите золото?»", correct: false, explanation: "Критика выбора клиента, вызывает негатив." },
-                { text: "«Хорошо, с вас 1500 рублей».", correct: false, explanation: "Отсутствие инициативы в предложении сопутствующих товаров." }
-            ]
-        },
-        {
-            title: "Пара просто смотрит",
-            icon: "👫",
-            situation: "Пара зашла в магазин, держатся за руки, улыбаются, но пока ничего не примеряют.",
-            clientPhrase: "«Мы пока просто гуляем, смотрим».",
-            options: [
-                { text: "«Понимаю, прогуливайтесь. А вы не подбираете что-то к предстоящему празднику или дате? У нас как раз новое поступление».", correct: true, explanation: "Мягкий, ненавязчивый вопрос о подарке или событии, который может запустить процесс продажи." },
-                { text: "«Ну ладно, заглядывайте, когда решите купить».", correct: false, explanation: "Преждевременное завершение контакта." },
-                { text: "«Смотрите, но ничего не трогайте, пожалуйста».", correct: false, explanation: "Грубость и недоверие, мгновенно отпугивающее клиентов." }
-            ]
-        },
-        {
-            title: "Постоянный клиент",
-            icon: "🏆",
-            situation: "Знакомая клиентка, которая покупала кольцо месяц назад, зашла в магазин.",
-            clientPhrase: "«Здравствуйте! Решила заглянуть, посмотреть, что у вас новенького».",
-            options: [
-                { text: "«Здравствуйте! Да, вот новые коллекции, смотрите».", correct: false, explanation: "Формальный ответ без использования истории покупок." },
-                { text: "«Здравствуйте, Мария! Рада вас видеть. Как вам кольцо, которое вы брали в прошлом месяце, носите с удовольствием? Кстати, к нему отлично подойдут новые браслеты из той же коллекции, давайте покажу?»", correct: true, explanation: "Персонализация, забота о предыдущей покупке и логичное предложение дополнения к уже купленному." },
-                { text: "«Здравствуйте. У нас сегодня скидки 10%».", correct: false, explanation: "Слишком рекламный подход, игнорирующий личные отношения." }
-            ]
-        }
-    ];
+// Ситуации. Фразы — из материала «Второе украшение и уход» (16.10).
+// pick: что предложить (k — верная плитка), say: как сказать (k — верная фраза). add — сколько добавит к чеку.
+const S = [
+  { t: 'Кольцо с бриллиантом', i: '💍', base: 45000, add: 32000,
+    d: 'Клиентка примерила золотое кольцо с бриллиантом — оно ей очень идёт.', c: '«Да, беру его, оно прекрасное!»',
+    pick: { o: [['💎', 'Серьги из той же коллекции'], ['📦', 'Футляр'], ['✨', 'Средство для блеска'], ['✋', 'Пока ничего']], k: 0,
+      ok: 'Кольцо выбрано — самое время для парного украшения. Футляр и средство предложите следом.',
+      no: 'Сначала — парное украшение: серьги из той же коллекции создадут законченный образ. Футляр и средство — следом.' },
+    say: { o: ['«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»',
+      '«Можно ещё и серьги из этой коллекции посмотреть, если вдруг захотите собрать комплект?»',
+      '«Отличный выбор! Кольцо пробиваю, а серьги из коллекции покажу вам уже у кассы»'], k: 0,
+      ok: '«Давайте» — уверенное приглашение, и сразу понятна выгода: законченный образ.',
+      no: '«Можно…, если захотите» — просьба, на неё легко сказать «нет». А на кассе клиент уже платит и к новому украшению не готов — предлагаем в зале.' } },
 
-    // 🔗 Какой тип допродажи тренирует каждый сценарий
-    const SCENARIO_RULE = {
-        "Кольцо с бриллиантом": "Предлагай комплекты",
-        "Золотая цепочка": "Цепочка + кулон",
-        "Подарок маме": "Подарочная упаковка",
-        "Дорогие серьги": "Средства ухода",
-        "Растерянный клиент": "Подарочный сертификат",
-        "Молчаливый клиент": "Активный вопрос",
-        "Серьги-пусеты": "Предлагай комплекты",
-        "Серебряная цепь": "Средства ухода",
-        "Пара просто смотрит": "Активный вопрос",
-        "Постоянный клиент": "Предлагай комплекты"
-    };
+  { t: 'Кулон в подарок', i: '❤️', base: 14000, add: 9000,
+    d: 'Мама выбрала золотой кулон-сердце в подарок дочери.', c: '«Вот этот кулон, пожалуйста».',
+    pick: { o: [['🎀', 'Подарочная упаковка'], ['🔗', 'Цепочка нужной длины'], ['💎', 'Серьги в том же стиле'], ['✋', 'Пока ничего']], k: 1,
+      ok: 'Без цепочки кулон не наденешь — подберите её сразу. Упаковку предложите следом.',
+      no: 'Сначала — цепочка: без неё кулон не наденешь. Упаковку предложите следом.' },
+    say: { o: ['«Цепочка у дочки дома, наверное, есть? Если нет — можем и цепочку посмотреть»',
+      '«Давайте подберём цепочку подлиннее и потолще — так кулон будет смотреться дороже»',
+      '«Чтобы кулон сидел безупречно, давайте подберём цепочку — 45 см ляжет на ключицы»'], k: 2,
+      ok: 'Забота о том, как кулон будет сидеть, и конкретика: длина и как ляжет.',
+      no: 'Не надеемся, что «дома есть» — предлагаем решение. И не «потолще, чтобы дороже»: подбираем длину и плетение под кулон.' } },
 
-    let currentScenario = 0;
-    let selectedOption = null;
-    let gameResults = [];
-    let currentUserName = '';
-    let currentUserCity = '';
+  { t: 'Цепочка для жены', i: '🔗', base: 22000, add: 12000,
+    d: 'Мужчина выбрал золотую цепочку жене на годовщину.', c: '«Вот эту цепочку возьму».',
+    pick: { o: [['✨', 'Средство для блеска'], ['🔗', 'Вторая цепочка'], ['✋', 'Пока ничего'], ['💛', 'Кулон или подвеска']], k: 3,
+      ok: 'Цепочка + кулон — классическая связка. Подарок станет особенным.',
+      no: 'К цепочке — кулон или подвеска: так цепочка смотрится завершённой, а подарок — особенным.' },
+    say: { o: ['«К цепочке почти всегда берут кулон — восемь из десяти наших покупателей, это правда»',
+      '«Давайте подберём к ней кулон — цепочка будет завершённой, а подарок особенным»',
+      '«Кулоны хотите посмотреть? Их у нас много, вон там справа, выбирайте любой»'], k: 1,
+      ok: 'Предложение с выгодой для клиента: завершённый образ и особенный подарок.',
+      no: 'Цифры, которых мы не знаем, клиенту не говорим. А «выбирайте сами» — продавец не помогает.' } },
 
-    function updateProgress() {
-        const progress = (currentScenario / SCENARIOS.length) * 100;
-        document.getElementById('progressFill').style.width = progress + '%';
-        document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
-    }
+  { t: 'Подарок маме', i: '🎁', base: 18000, add: 500,
+    d: 'Сын выбрал серьги маме на юбилей.', c: '«Маме точно понравится. Беру».',
+    pick: { o: [['💍', 'Кольцо в пару'], ['🎀', 'Фирменная упаковка'], ['✨', 'Средство для блеска'], ['✋', 'Пока ничего']], k: 1,
+      ok: 'Это подарок — пусть он будет сразу готов к вручению.',
+      no: 'Для подарка главное — чтобы он был сразу готов к вручению: фирменная упаковка.' },
+    say: { o: ['«Упаковка вам нужна? Она платная, но для подарка, наверное, лучше всё-таки взять»',
+      '«Положу в пакет, а дома переложите во что-нибудь, если захочется покрасивее»',
+      '«Давайте оформим в фирменную упаковку — и подарок сразу готов к вручению»'], k: 2,
+      ok: 'Не «нужна ли?», а забота: подарок сразу готов.',
+      no: '«Нужна?» и «наверное» — приглашение отказаться. Предлагаем уверенно и говорим, что получит клиент.' } },
 
-    function renderScenario() {
-        const scenario = SCENARIOS[currentScenario];
-        document.getElementById('scenarioNum').textContent = currentScenario + 1;
-        document.getElementById('totalScenarios').textContent = SCENARIOS.length;
-        updateProgress();
-        selectedOption = null;
+  { t: 'Серебряная цепь', i: '⚪', base: 3000, add: 600,
+    d: 'Покупатель берёт недорогую серебряную цепь себе.', c: '«Мне только эту цепь, пожалуйста».',
+    pick: { o: [['✨', 'Средство для серебра'], ['🟡', 'Золотая цепь вместо этой'], ['🎀', 'Подарочная упаковка'], ['✋', 'Пока ничего']], k: 0,
+      ok: 'Клиент сказал «только эту» — не спорим с выбором, а заботимся о нём.',
+      no: 'Клиент выбрал серебро — не переубеждаем. Лучшая забота о покупке — средство для ухода.' },
+    say: { o: ['«Серебро быстро темнеет — без средства через месяц цепь будет выглядеть старой»',
+      '«Давайте добавим средство для серебра — цепь всегда будет блестеть как новая»',
+      '«Средство для чистки нужно будет? Оно недорогое, на кассе у нас лежит»'], k: 1,
+      ok: 'Выгода, а не страх: «блестит как новая».',
+      no: 'Не пугаем клиента и не спрашиваем «нужно?» — уверенно предлагаем и говорим, что он получит.' } },
 
-        const scenarioArea = document.getElementById('scenarioArea');
-        let optionsHtml = '';
-        scenario.options.forEach((option, idx) => {
-            const letter = String.fromCharCode(65 + idx);
-            optionsHtml += `
-                <div class="option" data-idx="${idx}" onclick="selectOption(${idx}, this)">
-                    <div class="option-label"><span>${letter}</span></div>
-                    <div class="option-text">${option.text}</div>
-                </div>
-            `;
-        });
+  { t: 'Скромный бюджет', i: '💛', base: 18000, add: 7500,
+    d: 'Клиентка выбрала кольцо за 18 000 ₽ и сама говорит про деньги.', c: '«На серьги к нему я уже не рассчитывала…»',
+    pick: { o: [['✋', 'Ничего не предлагать'], ['💎', 'Серьги из той же коллекции'], ['🌿', 'Серьги в том же стиле, но доступнее'], ['🏷️', 'Скидка на кольцо']], k: 2,
+      ok: 'Клиентка сама назвала границу — принимаем её и показываем доступную пару.',
+      no: 'Клиентка сама сказала про деньги — принимаем это. Но и не молчим: есть серьги в том же стиле, но доступнее.' },
+    say: { o: ['«Есть изящные серьги в том же стиле, но доступнее — давайте покажу, просто оцените»',
+      '«Понимаю. Тогда ничего больше не предлагаю — оформляем кольцо, и всё на сегодня»',
+      '«Серьги из этой же коллекции стоят всего 25 000 — это же почти как кольцо, берите сразу»'], k: 0,
+      ok: 'Уважаем бюджет и мягко показываем вариант: «просто оцените».',
+      no: 'Не сдаёмся сразу и не давим ценой выше названной. Показываем доступный вариант в том же стиле.' } },
 
-        scenarioArea.innerHTML = `
-            <div class="scenario-header">
-                <div class="scenario-icon">${scenario.icon}</div>
-                <div class="scenario-content">
-                    <div class="scenario-label">Сценарий ${currentScenario + 1} из ${SCENARIOS.length}</div>
-                    <div class="scenario-title">${scenario.title}</div>
-                </div>
-            </div>
-            <div class="situation-card">
-                <strong>💡 Ситуация</strong>
-                ${scenario.situation}
-            </div>
-            <div class="message client">
-                <div class="speaker">👤 Клиент говорит:</div>
-                <div>${scenario.clientPhrase}</div>
-            </div>
-            <div class="options-title">Выберите лучшую фразу для допродажи:</div>
-            <div class="options-container">${optionsHtml}</div>
-        `;
+  { t: 'Торопится', i: '⏱️', base: 27000, add: 15000,
+    d: 'Мужчина забежал в обеденный перерыв и быстро выбрал кольцо жене.', c: '«Беру кольцо, у меня пять минут».',
+    pick: { o: [['📚', 'Рассказать про всю коллекцию'], ['💎', 'Серьги в пару — быстро'], ['✋', 'Ничего, раз торопится'], ['✨', 'Средство для блеска']], k: 1,
+      ok: 'Торопливому — скорость и конкретика: одна готовая пара, за минуту.',
+      no: 'Торопится — не значит «ничего». Быстро покажите одну пару к выбору — это займёт минуту.' },
+    say: { o: ['«Раз вы торопитесь, ничего показывать не буду — давайте быстро оформим кольцо»',
+      '«Давайте я сначала расскажу про коллекцию — там много интересного к этому кольцу»',
+      '«Быстро покажу пару к вашему выбору — это займёт минуту, и сразу решите»'], k: 2,
+      ok: 'Уважаете его время и всё равно предлагаете — коротко и конкретно.',
+      no: 'Длинный рассказ торопливый не дослушает, а промолчать — упустить комплект. Одна пара, одна минута.' } },
 
-        const checkBtn = document.getElementById('checkBtn');
-        checkBtn.textContent = '✅ Проверить';
-        checkBtn.className = 'btn-primary';
-        checkBtn.disabled = true;
-        checkBtn.onclick = checkScenario;
-        document.getElementById('resultCard').style.display = 'none';
-    }
+  { t: 'Уже на кассе', i: '🧾', base: 16000, add: 900,
+    d: 'Клиентка выбрала браслет и уже стоит у кассы с картой. Пару в зале вы предложить не успели.', c: '«Оплачу картой».',
+    pick: { o: [['💎', 'Вернуться за серьгами'], ['✋', 'Ничего, она уже платит'], ['🛍️', '«Посмотрите ещё что-нибудь»'], ['📦', 'Футляр для браслета']], k: 3,
+      ok: 'На кассе — только короткая забота о покупке. Второе украшение — в зале, до кассы.',
+      no: 'Возвращать к витрине, когда клиентка уже платит, — поздно. На кассе — короткая забота: футляр.' },
+    say: { o: ['«Давайте выберем футляр — браслет не поцарапается, и хранить удобно»',
+      '«Подождите оплачивать! Давайте вернёмся к витрине и подберём к нему серьги»',
+      '«Может, ещё что-нибудь посмотрите, пока я пробиваю? У нас много всего»'], k: 0,
+      ok: 'Коротко и с пользой для клиента. А в следующий раз — пару в зале, сразу после выбора.',
+      no: 'На кассе не останавливаем покупку и не говорим «что-нибудь». Одна короткая забота — футляр.' } },
 
-    function selectOption(idx, element) {
-        const options = document.querySelectorAll('.option');
-        options.forEach(opt => opt.classList.remove('selected'));
-        element.classList.add('selected');
-        selectedOption = idx;
-        document.getElementById('checkBtn').disabled = false;
-    }
+  { t: 'Отказалась от пары', i: '🙅‍♀️', base: 30000, add: 900,
+    d: 'Вы предложили серьги к кольцу. Клиентка вежливо отказалась.', c: '«Нет, спасибо, только кольцо».',
+    pick: { o: [['💎', 'Ещё раз предложить серьги'], ['📦', 'Футляр для кольца'], ['🏷️', 'Серьги подешевле'], ['⏳', '«Подумайте ещё»']], k: 1,
+      ok: 'Отказ принимаем. Одна мягкая забота о покупке — уместна.',
+      no: 'После «нет» не дожимаем. Принимаем решение и предлагаем заботу о покупке — футляр.' },
+    say: { o: ['«Точно? Посмотрите ещё раз, как они вместе смотрятся — жалко упускать»',
+      '«Конечно! Тогда давайте выберем футляр — кольцу так удобнее храниться»',
+      '«Зря вы так, это последний такой комплект — потом его не будет, подумайте ещё»'], k: 1,
+      ok: 'Клиентка чувствует, что её услышали. И покупка под защитой.',
+      no: 'Давление и «последний комплект» (если это неправда) отпугивают. Принимаем отказ и заботимся о покупке.' } },
 
-    function checkScenario() {
-        const scenario = SCENARIOS[currentScenario];
-        const correctOption = scenario.options.findIndex(opt => opt.correct);
-        const options = document.querySelectorAll('.option');
-        
-        options.forEach((opt, idx) => {
-            opt.onclick = null;
-            opt.classList.add('disabled');
-            if (idx === correctOption) opt.classList.add('correct');
-            else if (idx === selectedOption) opt.classList.add('wrong');
-        });
-        
-        const isCorrect = selectedOption === correctOption;
-        const percent = isCorrect ? 100 : 0;
-        
-        const resultCard = document.getElementById('resultCard');
-        resultCard.style.display = 'block';
-        resultCard.className = `result-card ${isCorrect ? 'success' : 'fail'}`;
-        
-        let html = `<h2>${isCorrect ? '🎉 Отлично!' : '⚠️ Есть над чем поработать'}</h2>`;
-        html += `<p>${isCorrect ? 'Вы выбрали лучшую фразу для увеличения чека!' : 'Этот вариант не сработал бы для допродажи'}</p>`;
-        
-        html += `<div class="explanation ${isCorrect ? 'correct' : 'wrong'}">`;
-        if (isCorrect) {
-            html += `<strong>✅ Правильно!</strong><p>${scenario.options[selectedOption].explanation}</p>`;
-        } else {
-            html += `<strong>❌ Почему это не сработает:</strong><p>${scenario.options[selectedOption].explanation}</p>`;
-            html += `<div class="correct-answer"><strong>✅ Лучший вариант:</strong><p style="margin-top:6px;">${scenario.options[correctOption].text}</p><p style="margin-top:8px;"><em>${scenario.options[correctOption].explanation}</em></p></div>`;
-        }
-        html += `</div>`;
-        resultCard.innerHTML = html;
-        
-        gameResults.push({
-            scenario: scenario.title,
-            icon: scenario.icon,
-            selectedOption: selectedOption,
-            correctOption: correctOption,
-            selectedText: scenario.options[selectedOption].text,
-            correctText: scenario.options[correctOption].text,
-            isCorrect: isCorrect,
-            percent: percent
-        });
-        
-        const checkBtn = document.getElementById('checkBtn');
-        if (currentScenario < SCENARIOS.length - 1) {
-            checkBtn.textContent = '➡️ Следующий сценарий';
-            checkBtn.className = 'btn-primary btn-next';
-            checkBtn.disabled = false;
-            checkBtn.onclick = () => { currentScenario++; renderScenario(); };
-        } else {
-            checkBtn.textContent = '🏁 Завершить игру';
-            checkBtn.className = 'btn-primary btn-finish';
-            checkBtn.disabled = false;
-            checkBtn.onclick = finishGame;
-        }
-    }
+  { t: 'Постоянная клиентка', i: '🌟', base: 0, add: 21000,
+    d: 'Мария месяц назад купила у вас кольцо. Сегодня зашла «посмотреть новинки».', c: '«Здравствуйте! Решила заглянуть».',
+    pick: { o: [['🏷️', 'Рассказать про все скидки'], ['✨', 'Средство для блеска'], ['💎', 'Серьги к её кольцу'], ['👀', 'Пусть смотрит сама']], k: 2,
+      ok: 'Вспомнить прошлую покупку и предложить то, что её дополнит.',
+      no: 'Постоянному клиенту важно, что его помнят. Вспомните её кольцо и предложите то, что его дополнит.' },
+    say: { o: ['«Здравствуйте! Новинки вон там, на правой витрине, смотрите спокойно — я буду рядом»',
+      '«Мария, рада вас видеть! У нас скидки на всё — можно сразу взять побольше»',
+      '«Мария, рада вас видеть! Как носится кольцо? Давайте покажу серьги к нему»'], k: 2,
+      ok: 'По имени, с вопросом о прошлой покупке и с конкретным предложением.',
+      no: 'Формальное «смотрите» и «скидки на всё» — не про неё. Покажите, что помните: имя, кольцо, пара к нему.' } }
+];
 
-    async function finishGame() {
-        const totalScore = gameResults.reduce((sum, r) => sum + r.percent, 0);
-        const avgPercent = Math.round(totalScore / SCENARIOS.length);
-        const correctCount = gameResults.filter(r => r.isCorrect).length;
-        const passed = avgPercent >= 70;
-        
-        document.getElementById('gameScreen').classList.add('hidden');
-        document.getElementById('finalScreen').classList.remove('hidden');
-        
-        let reviewHtml = '<div class="scenarios-review"><h3>💰 Ваши результаты по ситуациям допродаж</h3>';
-        gameResults.forEach(r => {
-            reviewHtml += `
-                <div class="scenario-review-item ${r.isCorrect ? '' : 'wrong'}">
-                    <div class="scenario-review-icon">${r.icon}</div>
-                    <div class="scenario-review-info">
-                        <div class="scenario-review-title">${r.scenario}</div>
-                        <div class="scenario-review-type">${r.isCorrect ? 'Верно увеличил чек' : 'Возможность упущена'}</div>
-                    </div>
-                    <div class="scenario-review-status">${r.isCorrect ? '✅' : '❌'}</div>
-                </div>
-            `;
-        });
-        reviewHtml += '</div>';
-        
-        document.getElementById('finalScreen').innerHTML = `
-            <div class="final-card ${passed ? 'success' : 'fail'}">
-                <div class="final-icon">${passed ? '🏆' : '📚'}</div>
-                <h2>${passed ? 'Мастер допродаж!' : 'Есть над чем поработать'}</h2>
-                <p>${passed ? 'Вы отлично находите возможности увеличить средний чек!' : 'Рекомендуем повторить тренажёр и изучить техники cross-sell.'}</p>
-                <div class="result-stats">
-                    <div class="stat-box"><div class="stat-value">${avgPercent}%</div><div class="stat-label">Результат</div></div>
-                    <div class="stat-box"><div class="stat-value">${correctCount}/${SCENARIOS.length}</div><div class="stat-label">Верно</div></div>
-                </div>
-                ${reviewHtml}
-                <div class="save-status" id="saveStatus"><span class="spinner"></span>Сохраняю результат...</div>
-                <button class="restart-btn" onclick="location.reload()">🔄 Пройти ещё раз</button>
-            </div>
-        `;
-        
-        const rulesApplied = [...new Set(gameResults.filter(r => r.isCorrect).map(r => SCENARIO_RULE[r.scenario]).filter(Boolean))];
-        const resultData = {
-            id: Date.now(), type: 'crosssell', user_name: currentUserName, city: currentUserCity,
-            score: correctCount, total: SCENARIOS.length, percent: avgPercent, passed: passed,
-            rules_applied: rulesApplied, rules_count: rulesApplied.length,
-            scenarios: gameResults, date: new Date().toISOString(),
-            timestamp: new Date().toLocaleString('ru-RU')
-        };
-        
-        const statusDiv = document.getElementById('saveStatus');
-        try {
-            const localBackup = JSON.parse(localStorage.getItem('crosssell_backup') || '[]');
-            localBackup.push(resultData);
-            localStorage.setItem('crosssell_backup', JSON.stringify(localBackup));
-            
-            await Promise.race([
-                db.collection('results').doc('crosssell').collection('items').add(resultData),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
-            ]);
-            
-            const backup = JSON.parse(localStorage.getItem('crosssell_backup') || '[]');
-            localStorage.setItem('crosssell_backup', JSON.stringify(backup.filter(r => r.id !== resultData.id)));
-            
-            statusDiv.innerHTML = '✅ Результат сохранён в облаке!';
-            statusDiv.style.color = '#10b981';
-            statusDiv.style.background = 'rgba(16,185,129,0.1)';
-        } catch(e) {
-            statusDiv.innerHTML = '⚠️ Сохранено локально, отправится при следующем запуске.';
-            statusDiv.style.color = '#d97706';
-            statusDiv.style.background = 'rgba(217,119,6,0.1)';
-        }
-    }
+const money = n => n.toLocaleString('ru-RU') + ' ₽';
+const shuffle = a => { const b = a.map((v, i) => [v, i]); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+let cur = 0, check = 0, results = [], userName = '', userCity = '', st = null;
 
-    document.getElementById('startBtn').onclick = () => {
-        const name = document.getElementById('userName').value.trim();
-        const city = document.getElementById('userCity').value;
-        if (!name) { alert('Введите имя и фамилию'); return; }
-        if (!city) { alert('Выберите магазин'); return; }
-        
-        currentUserName = name;
-        currentUserCity = city;
-        currentScenario = 0;
-        gameResults = [];
-        
-        document.getElementById('regScreen').classList.add('hidden');
-        document.getElementById('gameScreen').classList.remove('hidden');
-        renderScenario();
-    };
-
-    document.getElementById('userName').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') document.getElementById('startBtn').click();
-    });
+const $ = id => document.getElementById(id);
+function setCheck(v, bump) {
+  check = v; const el = $('check'); el.textContent = '🧾 ' + money(v);
+  if (bump) { el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 450); }
+}
+function head(s) {
+  return `<div class="sit"><div class="ic">${s.i}</div><div><div class="t">${s.t}</div><div class="d">${s.d}</div></div></div>
+    <div class="client"><small>Клиент</small>${s.c}</div>`;
+}
+function render() {
+  const s = S[cur];
+  st = { pickSel: null, sayOrder: shuffle(s.say.o) };
+  $('stepLbl').textContent = `Покупатель ${cur + 1} из ${S.length}`;
+  $('prog').style.width = (cur / S.length * 100) + '%';
+  if (s.base) setCheck(check + s.base, false);
+  const tiles = shuffle(s.pick.o).map(([[e, n], i]) => `<button class="tile" data-i="${i}"><span class="e">${e}</span>${n}</button>`).join('');
+  $('area').innerHTML = head(s) + `<p class="q"><span>1/2</span> Что предложить?</p><div class="tiles">${tiles}</div><div id="fb1"></div>`;
+  $('area').querySelectorAll('.tile').forEach(b => b.onclick = () => pick(+b.dataset.i));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function pick(i) {
+  const s = S[cur], ok = i === s.pick.k; st.pickSel = i;
+  $('area').querySelectorAll('.tile').forEach(b => { const j = +b.dataset.i; b.disabled = true; b.classList.add(j === s.pick.k ? 'ok' : j === i ? 'no' : 'dim'); });
+  $('fb1').innerHTML = `<div class="fb ${ok ? 'ok' : 'no'}"><b>${ok ? '✅ Верно!' : '❌ Не то'}</b>${ok ? s.pick.ok : s.pick.no}</div><button class="btn next" id="toSay">Как сказать? →</button>`;
+  $('toSay').onclick = sayStep;
+}
+function sayStep() {
+  const s = S[cur], item = s.pick.o[s.pick.k];
+  const opts = st.sayOrder.map(([t, i]) => `<button class="opt" data-i="${i}">${t}</button>`).join('');
+  $('area').innerHTML = head(s) + `<div class="chosen">Предлагаем: ${item[0]} ${item[1]}</div><p class="q"><span>2/2</span> Как сказать?</p><div class="opts">${opts}</div><div id="fb2"></div>`;
+  $('area').querySelectorAll('.opt').forEach(b => b.onclick = () => say(+b.dataset.i));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function say(i) {
+  const s = S[cur], ok = i === s.say.k, pickOk = st.pickSel === s.pick.k, both = ok && pickOk;
+  $('area').querySelectorAll('.opt').forEach(b => { const j = +b.dataset.i; b.disabled = true; b.classList.add(j === s.say.k ? 'ok' : j === i ? 'no' : 'dim'); });
+  if (both) setCheck(check + s.add, true);
+  const gain = both ? `<br><b style="margin-top:8px">🧾 +${money(s.add)} к чеку</b>` : (ok ? '<br>К чеку не добавилось — в первом шаге было другое предложение.' : '');
+  $('fb2').innerHTML = `<div class="fb ${ok ? 'ok' : 'no'}"><b>${ok ? '✅ Так и скажем!' : '❌ Клиент, скорее всего, откажется'}</b>${ok ? s.say.ok : s.say.no}${gain}</div>
+    <button class="btn next" id="nx">${cur < S.length - 1 ? 'Следующий покупатель →' : 'Закрыть смену 🏁'}</button>`;
+  results.push({
+    scenario: s.t, icon: s.i, situation: s.d + ' Клиент: ' + s.c,
+    pickCorrect: pickOk, phraseCorrect: ok, isCorrect: both, percent: (pickOk ? 50 : 0) + (ok ? 50 : 0),
+    selectedPick: s.pick.o[st.pickSel][1], correctPick: s.pick.o[s.pick.k][1],
+    selectedText: s.say.o[i], correctText: s.say.o[s.say.k], added: both ? s.add : 0
+  });
+  $('nx').onclick = () => { if (cur < S.length - 1) { cur++; render(); } else finish(); };
+}
+async function finish() {
+  $('prog').style.width = '100%';
+  const maxCheck = S.reduce((a, s) => a + s.base + s.add, 0);
+  const pct = Math.round(results.reduce((a, r) => a + r.percent, 0) / S.length);
+  const full = results.filter(r => r.isCorrect).length;
+  const passed = pct >= 70;
+  const weak = results.filter(r => !r.isCorrect);
+  $('game').classList.add('hidden'); $('fin').classList.remove('hidden');
+  $('fin').innerHTML = `<div style="font-size:44px">${passed ? '🏆' : '💪'}</div>
+    <h1>${passed ? 'Сильная смена!' : 'Хорошее начало!'}</h1>
+    <div class="of">Ваш чек за смену</div>
+    <div class="big">${money(check)}</div>
+    <div class="of">из возможных ${money(maxCheck)}</div>
+    <div class="stats"><div><b>${full}/${S.length}</b><span>покупок собрано полностью</span></div><div><b>+${money(results.reduce((x, r) => x + r.added, 0))}</b><span>допродано</span></div><div><b>${pct}%</b><span>результат</span></div></div>
+    <div class="rev">${results.map(r => `<div><span>${r.icon}</span><span>${r.scenario}</span><span>${r.isCorrect ? '✅' : r.percent ? '½' : '❌'}</span></div>`).join('')}</div>
+    ${weak.length ? `<div class="tip"><b>💡 Запомните:</b> ${weak.slice(0, 2).map(r => r.correctText).join('<br>')}</div>` : `<div class="tip"><b>💡</b> Все покупки собраны. Попробуйте завтра так же в зале!</div>`}
+    <div class="save" id="save">⏳ Сохраняю результат…</div>
+    <button class="btn restart" onclick="location.reload()">🔄 Пройти ещё раз</button>`;
+  const data = {
+    id: Date.now(), type: 'crosssell', format: 'basket', user_name: userName, city: userCity,
+    score: full, total: S.length, percent: pct, passed, check, max_check: maxCheck,
+    scenarios: results, rules_applied: [...new Set(results.filter(r => r.isCorrect).map(r => r.correctPick))],
+    date: new Date().toISOString(), timestamp: new Date().toLocaleString('ru-RU')
+  };
+  data.rules_count = data.rules_applied.length;
+  try {
+    await withTimeout(COL().add(data));
+    $('save').textContent = '✅ Результат сохранён'; $('save').style.background = '#ecfdf5'; $('save').style.color = '#065f46';
+  } catch (e) {
+    try { const b = JSON.parse(localStorage.getItem('crosssell_backup') || '[]'); b.push(data); localStorage.setItem('crosssell_backup', JSON.stringify(b)); } catch (er) {}
+    $('save').textContent = '⚠️ Нет связи — результат отправится при следующем открытии'; $('save').style.background = '#fef3c7'; $('save').style.color = '#92400e';
+  }
+}
+$('startBtn').onclick = () => {
+  const n = $('userName').value.trim(), c = $('userCity').value;
+  if (!n) { $('regErr').textContent = 'Введите имя и фамилию'; return; }
+  if (!c) { $('regErr').textContent = 'Выберите магазин'; return; }
+  userName = n; userCity = c; cur = 0; check = 0; results = [];
+  $('reg').classList.add('hidden'); $('game').classList.remove('hidden');
+  setCheck(0, false); render();
+};
+$('userName').addEventListener('keydown', e => { if (e.key === 'Enter') $('startBtn').click(); });
 </script>
-
 </body>
 </html>

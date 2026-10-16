@@ -205,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 14.10-3</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 16.10-1</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -390,7 +390,7 @@ const TEST_SK = ['K1', 'K3', 'K6', 'K5', 'K6', 'K8', 'K9', 'K4', 'K2', 'K7', 'K2
 const RULES = [['Проявляй инициативу', 'K1'], ['Проявляй инициативу', 'K2'], ['Задавай вопросы ДО показа', 'K3'], ['Презентуй с эмоцией', 'K4'], ['Предлагай примерку', 'K4'], ['Показывай вариант лучше', 'K5'], ['Называй Сплит до цены', 'K7'], ['Отрабатывай «дорого»', 'K8'], ['Не отпускай без альтернативы', 'K9'], ['Закрывай сделку', 'K10'], ['Предлагай второе украшение', 'K6'], ['Предлагай футляр и уход', 'K6'], ['Завершай с теплотой', 'K11']];
 const EF_SK = { 'Холодный клиент': 'K2', 'Подарок жене': 'K3', 'Дорого!': 'K8', 'Просто смотрю': 'K2', 'Допродажа на кассе': 'K6', 'А что есть ещё?': 'K4', 'Беру': 'K10' };
 const CT_SK = { 'Холодный клиент': 'K2', 'Молчаливый наблюдатель': 'K2', 'Постоянный клиент': 'K11', 'Растерянный мужчина (подарок)': 'K3' };
-const CS_SK = { 'Серебряная цепь': 'K5' };
+const CS_SK = {}; // с 16.10 «Собери покупку»: все 10 ситуаций — K6
 const ALG_SK = { 'Классический путь покупателя': 'K10', 'Растерянный мужчина с подарком': 'K3', 'Клиент говорит ДОРОГО': 'K8', 'Допродажа на кассе': 'K6', 'Молчаливый клиент': 'K2', 'Постоянный клиент': 'K11', 'Возврат после «подумаю»': 'K8' };
 const EX_SK = { 'Приветствие и контакт': ['K1', 'K2'], 'Выявление потребностей': 'K3', 'Наблюдательность': 'K3', 'Презентация и золото': ['K4', 'K5'], 'Допродажа': 'K6', 'Работа с возражениями': ['K8', 'K7'], 'Закрытие и прощание': ['K10', 'K11'], 'Удержание и допродажа': ['K6', 'K11'], 'Алгоритм продажи': 'K9' };
 
@@ -400,7 +400,7 @@ function itemsOf(r) {
   switch (r.type) {
     case 'test': return (x.answers || []).map(a => { const i = a.originalIndex ?? (a.questionNum - 1); return [TEST_TOPICS[i] || ('Вопрос ' + (i + 1)), TEST_SK[i] || 'K4', a.correct ? 100 : 0]; });
     case 'trainer': return RULES.filter(([n]) => (n !== 'Предлагай второе украшение' || (x.total || 6) >= 7) && (n !== 'Предлагай футляр и уход' || (x.total || 6) >= 8) && (!['Показывай вариант лучше', 'Называй Сплит до цены', 'Отрабатывай «дорого»', 'Закрывай сделку'].includes(n) || (x.total || 6) >= 12)).map(([n, k]) => [n, k, (x.rules_applied || []).includes(n) ? 100 : 0]); // старые прохождения — 6 правил
-    case 'crosssell': return (x.scenarios || []).map(s => [s.scenario, CS_SK[s.scenario] || 'K6', s.isCorrect ? 100 : 0]);
+    case 'crosssell': return (x.scenarios || []).map(s => [s.scenario, x.format === 'basket' ? 'K6' : (s.scenario === 'Серебряная цепь' ? 'K5' : CS_SK[s.scenario] || 'K6'), s.percent != null ? s.percent : (s.isCorrect ? 100 : 0)]);
     case 'errorfinder': return (x.scenarios || []).map(s => [s.scenario, EF_SK[s.scenario] || 'K4', s.percent != null ? s.percent : Math.round((s.score || 0) / (s.maxScore || 1) * 100)]);
     case 'clienttype': return (x.scenarios || []).map(s => [s.scenario || s.clientType, CT_SK[s.scenario] || 'K4', s.isCorrect ? 100 : 0]);
     case 'algorithm': return (x.scenarios || []).map(s => [s.scenario, ALG_SK[s.scenario] || 'K10', s.percent || 0]);
@@ -791,7 +791,8 @@ function recAnswersHtml(r) {
     case 'trainer': { const st = DSTORY[x.story], ok = A.filter(a => a.correct).length;
       const head = x.format === 'chat' ? `<div class="qa-out" style="margin:10px 0">${st ? `<b>${st[0]}</b> · ${esc(st[1])} · ` : ''}верных шагов: <b>${ok} из ${A.length}</b>${x.mood != null ? ` · настроение клиента в конце: <b>${x.mood}</b>` : ''}${x.left ? ' · <b style="color:var(--bad)">клиент ушёл, не дослушав</b>' : ''}</div>` : '';
       return A.length ? head + A.map((a, i) => { const q = a.client ? { c: a.client, o: a.choices || [], k: a.correctIdx } : REF.dq[a.question]; if (!q) return ''; return qa(`Шаг ${i + 1}${DRULE[a.ruleId] ? ' · ' + DRULE[a.ruleId] : ''}`, a.correct ? 100 : 0, `<div class="qa-lbl">Клиент</div><div class="qa-sit">${esc(q.c)}</div>${choiceLines(q.o, a.selected, q.k)}`); }).join('') : ''; }
-    case 'crosssell': return S.map(c => qa(`${c.icon || ''} ${esc(c.scenario)}`, c.isCorrect ? 100 : 0, `${REF.cs[c.scenario] ? `<div class="qa-sit">${esc(REF.cs[c.scenario])}</div>` : ''}${line(c.isCorrect ? 'ok' : 'no', c.isCorrect ? '✅' : '❌', 'Ответ: ' + esc(c.selectedText || '—'))}${c.isCorrect ? '' : line('ok', '✔️', 'Лучший вариант: ' + esc(c.correctText || '—'))}`)).join('');
+    case 'crosssell': if (x.format === 'basket') return `<div class="qa-out" style="margin:10px 0">🧾 чек за смену: <b>${(x.check || 0).toLocaleString('ru-RU')} ₽</b> из ${(x.max_check || 0).toLocaleString('ru-RU')} ₽</div>` + S.map(c => qa(`${c.icon || ''} ${esc(c.scenario)}`, c.percent != null ? c.percent : (c.isCorrect ? 100 : 0), `<div class="qa-sit">${esc(c.situation || '')}</div><div class="qa-lbl">1. Что предложить</div>${line(c.pickCorrect ? 'ok' : 'no', c.pickCorrect ? '✅' : '❌', esc(c.selectedPick || '—'))}${c.pickCorrect ? '' : line('ok', '✔️', 'Верно: ' + esc(c.correctPick || '—'))}<div class="qa-lbl">2. Как сказать</div>${line(c.phraseCorrect ? 'ok' : 'no', c.phraseCorrect ? '✅' : '❌', esc(c.selectedText || '—'))}${c.phraseCorrect ? '' : line('ok', '✔️', 'Верно: ' + esc(c.correctText || '—'))}`)).join('');
+    return S.map(c => qa(`${c.icon || ''} ${esc(c.scenario)}`, c.isCorrect ? 100 : 0, `${REF.cs[c.scenario] ? `<div class="qa-sit">${esc(REF.cs[c.scenario])}</div>` : ''}${line(c.isCorrect ? 'ok' : 'no', c.isCorrect ? '✅' : '❌', 'Ответ: ' + esc(c.selectedText || '—'))}${c.isCorrect ? '' : line('ok', '✔️', 'Лучший вариант: ' + esc(c.correctText || '—'))}`)).join('');
     case 'clienttype': return S.map(c => { const rf = REF.ct[c.scenario]; return qa(`${c.clientIcon || ''} ${esc(c.scenario)}`, c.isCorrect ? 100 : 0, `${rf ? `<div class="qa-sit">${esc(rf.sit)}</div>${choiceLines(rf.o, c.selectedOption, c.correctOption)}` : line(c.isCorrect ? 'ok' : 'no', c.isCorrect ? '✅' : '❌', c.isCorrect ? 'Выбрал верный подход' : 'Выбрал неверный подход')}`, c.clientType ? `<span class="muted">${esc(c.clientType)}</span>` : ''); }).join('');
     case 'errorfinder': return S.map(c => { const d = REF.ef[c.scenario], sel = c.selectedErrors || [], cor = c.correctErrors || [];
       const found = sel.filter(i => cor.includes(i)).length, fp = sel.filter(i => !cor.includes(i)).length;
