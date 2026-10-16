@@ -43,8 +43,7 @@ a.card.first { border-color: #c41e3a; }
     <div class="today" id="today"></div>
   </div>
   <div id="open"></div>
-  <div id="soon"></div>
-  <p class="note">Сохраните эту страницу — здесь всегда открытые тренажёры.<br>Один QR-код на всё обучение.</p>
+  <p class="note">Сохраните эту страницу — здесь всегда открытые тренажёры.</p>
 </div>
 <script>
 // Расписание. Даты включительно (ГГГГ-ММ-ДД). Меняется только здесь.
@@ -69,10 +68,9 @@ document.getElementById('today').textContent = 'Сегодня ' + WD[now.getDay
 
 const open = T.filter(t => day(t.from) <= today && today <= day(t.to))
   .sort((a, b) => (a.extra || 0) - (b.extra || 0) || day(a.to) - day(b.to));
-const soon = T.filter(t => day(t.from) > today).sort((a, b) => day(a.from) - day(b.from)).slice(0, 3);
 
 document.getElementById('open').innerHTML = open.length
-  ? `<div class="sec">Открыто сейчас · ${open.length}</div>` + open.map((t, k) => {
+  ? open.map((t, k) => {
       const l = left(t), last = l === 0;
       const pills = [
         k === 0 && open.length > 1 && !t.extra ? '<span class="pill top1">Сначала этот</span>' : '',
@@ -81,11 +79,9 @@ document.getElementById('open').innerHTML = open.length
       ].join('');
       return `<a class="card ${k === 0 && !t.extra ? 'first' : ''}" href="${t.u}"><div class="top"><div class="ic">${t.i}</div><div><div class="nm">${t.n}</div><div class="ds">${t.d}</div></div></div><div class="meta">${pills}</div><span class="go">Начать →</span></a>`;
     }).join('')
-  : `<div class="empty">${today > day(T[T.length - 1].to) ? '🎉 Обучение этого месяца завершено. Спасибо!' : 'Сейчас открытых тренажёров нет. Новый скоро появится здесь.'}</div>`;
+  : `<div class="empty">${today > day(T[T.length - 1].to) ? '🎉 Обучение этого месяца завершено. Спасибо!' : 'Сейчас открытых тренажёров нет.'}</div>`;
 
-document.getElementById('soon').innerHTML = soon.length
-  ? '<div class="sec">Скоро</div>' + soon.map(t => `<div class="soon"><div class="ic">${t.i}</div><div><b>${t.n}</b><span>откроется ${fmt(day(t.from))}</span></div></div>`).join('')
-  : '';
+
 </script>
 </body>
 </html>
