@@ -9,14 +9,25 @@
 * { box-sizing: border-box; }
 body { font-family: 'Inter', sans-serif; background: #f5f5f5; margin: 0; padding: 16px; color: #1f2937; }
 .wrap { max-width: 500px; margin: 0 auto; }
-.head { text-align: center; padding: 8px 0 18px; }
+.hidden { display: none !important; }
+.head { text-align: center; padding: 8px 0 16px; }
 .brand { font-size: 12px; letter-spacing: .12em; font-weight: 700; color: #9ca3af; }
 h1 { color: #c41e3a; margin: 6px 0 4px; font-size: 24px; font-weight: 800; }
 .today { color: #6b7280; font-size: 14px; }
-.sec { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; margin: 22px 4px 10px; }
-a.card { display: block; text-decoration: none; color: inherit; background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,.08); border: 2px solid transparent; transition: transform .15s; }
-a.card:active { transform: scale(.98); }
+.who { text-align: center; font-size: 14px; color: #4b5563; margin: -6px 0 14px; }
+.who button { background: none; border: none; color: #c41e3a; font: inherit; font-weight: 600; cursor: pointer; padding: 0 4px; text-decoration: underline; }
+.box { background: #fff; border-radius: 20px; padding: 22px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+.box p { margin: 0 0 14px; font-size: 15px; line-height: 1.45; color: #4b5563; text-align: center; }
+input, select { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; margin-bottom: 12px; font-family: inherit; background: #fff; }
+input:focus, select:focus { outline: none; border-color: #c41e3a; }
+.btn { display: block; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; background: #c41e3a; color: #fff; font-family: inherit; text-align: center; text-decoration: none; }
+.err { color: #c41e3a; font-size: 13px; min-height: 18px; margin: -4px 0 8px; }
+.sec { font-size: 13px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; margin: 20px 4px 10px; }
+a.card { display: block; text-decoration: none; color: inherit; background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,.08); border: 2px solid transparent; }
 a.card.first { border-color: #c41e3a; }
+a.card.small { padding: 14px 16px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+a.card.small .ic { font-size: 26px; }
+a.card.small .nm { font-size: 16px; }
 .top { display: flex; gap: 14px; align-items: flex-start; }
 .ic { font-size: 34px; line-height: 1; }
 .nm { font-size: 19px; font-weight: 800; margin: 0 0 4px; }
@@ -27,11 +38,14 @@ a.card.first { border-color: #c41e3a; }
 .pill.warn { background: #fef3c7; color: #92400e; }
 .pill.top1 { background: #fde8ec; color: #c41e3a; }
 .go { display: block; margin-top: 14px; background: #c41e3a; color: #fff; text-align: center; font-weight: 700; font-size: 16px; padding: 14px; border-radius: 12px; }
-.soon { background: #fff; border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; display: flex; gap: 12px; align-items: center; opacity: .65; }
-.soon .ic { font-size: 24px; }
-.soon b { display: block; font-size: 15px; }
-.soon span { font-size: 13px; color: #6b7280; }
-.empty { background: #fff; border-radius: 20px; padding: 24px; text-align: center; color: #4b5563; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+.done { background: #ecfdf5; border-radius: 14px; padding: 12px 16px; margin-bottom: 8px; display: flex; gap: 10px; align-items: center; font-size: 15px; color: #065f46; }
+.done b { flex: 1; font-weight: 600; }
+.done a { color: #065f46; font-size: 13px; }
+.all { background: #fff; border-radius: 20px; padding: 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+.all .e { font-size: 44px; }
+.all h2 { margin: 8px 0 6px; font-size: 20px; }
+.all p { margin: 0; color: #4b5563; font-size: 15px; line-height: 1.45; }
+.load { text-align: center; color: #6b7280; padding: 30px 0; }
 .note { text-align: center; font-size: 12.5px; color: #9ca3af; margin: 22px 0 8px; line-height: 1.5; }
 </style>
 </head>
@@ -42,46 +56,137 @@ a.card.first { border-color: #c41e3a; }
     <h1>Тренажёры сейчас</h1>
     <div class="today" id="today"></div>
   </div>
-  <div id="open"></div>
-  <p class="note">Сохраните эту страницу — здесь всегда открытые тренажёры.</p>
+
+  <div id="reg" class="box hidden">
+    <p>Как вас зовут? Один раз — и мы покажем, что вам осталось пройти.</p>
+    <input id="userName" placeholder="Имя и фамилия" autocomplete="name" list="names">
+    <datalist id="names"></datalist>
+    <select id="userCity"><option value="">Выберите магазин</option></select>
+    <div class="err" id="regErr"></div>
+    <button class="btn" id="saveBtn">Показать мои тренажёры →</button>
+  </div>
+
+  <div id="who" class="who hidden"></div>
+  <div id="list"></div>
+  <p class="note">Сохраните эту страницу — здесь всегда ваши открытые тренажёры.</p>
 </div>
+<script src="stores.js"></script>
 <script>
-// Расписание. Даты включительно (ГГГГ-ММ-ДД). Меняется только здесь.
+// Расписание. Даты включительно (ГГГГ-ММ-ДД). Меняется только здесь (и в SCHED дашборда).
+// col — коллекция результатов в базе (если тренажёр их сохраняет), чтобы отметить «✅ пройдено».
 const T = [
-  { n: 'Входной тест', u: 'test_new.html', i: '📝', d: '13 ситуаций из зала. Не экзамен — диагностика.', m: 10, from: '2026-10-01', to: '2026-10-05' },
-  { n: 'Тренировка диалога', u: 'dialog_trainer.html', i: '💬', d: 'Живой разговор с клиентом: доведите до покупки.', m: 6, from: '2026-10-07', to: '2026-10-14' },
-  { n: 'Сервис с человеческим лицом', u: 'service_trainer.html', i: '🤝', d: '16 ситуаций: хорошо или плохо поступил продавец?', m: 5, from: '2026-10-12', to: '2026-10-19' },
-  { n: 'Тренажёр допродаж', u: 'crosssell_trainer.html', i: '🛍️', d: 'Клиент выбрал украшение. Что предложить к нему?', m: 5, from: '2026-10-16', to: '2026-10-23' },
+  { n: 'Входной тест', u: 'test_new.html', i: '📝', d: '13 ситуаций из зала. Не экзамен — диагностика.', m: 10, from: '2026-10-01', to: '2026-10-05', col: 'test' },
+  { n: 'Тренировка диалога', u: 'dialog_trainer.html', i: '💬', d: 'Живой разговор с клиентом: доведите до покупки.', m: 6, from: '2026-10-07', to: '2026-10-14', col: 'dialog' },
+  { n: 'Сервис с человеческим лицом', u: 'service_trainer.html', i: '🤝', d: '16 ситуаций: хорошо или плохо поступил продавец?', m: 5, from: '2026-10-12', to: '2026-10-19', col: 'service' },
+  { n: 'Собери покупку', u: 'crosssell_trainer.html', i: '🛍️', d: 'Клиент выбрал украшение. Что предложить к нему и как сказать?', m: 5, from: '2026-10-16', to: '2026-10-23', col: 'crosssell' },
   { n: 'Сценка «Дорого»', u: 'dorogo_trainer.html', i: '🎬', d: 'Выберите ответ продавца — у сценки 5 концовок.', m: 5, from: '2026-10-20', to: '2026-10-27' },
-  { n: 'Найди ошибку в диалоге', u: 'error_finder.html', i: '🔍', d: 'Нажмите на фразу, где продавец ошибся.', m: 7, from: '2026-10-22', to: '2026-10-29' },
-  { n: 'Аттестация «Одна смена»', u: 'attestation.html', i: '🏆', d: '9 клиентов, ответы своими словами, именной сертификат.', m: 25, from: '2026-10-28', to: '2026-11-02' },
+  { n: 'Найди ошибку в диалоге', u: 'error_finder.html', i: '🔍', d: 'Нажмите на фразу, где продавец ошибся.', m: 7, from: '2026-10-22', to: '2026-10-29', col: 'errorfinder' },
+  { n: 'Аттестация «Одна смена»', u: 'attestation.html', i: '🏆', d: '9 клиентов, ответы своими словами, именной сертификат.', m: 25, from: '2026-10-28', to: '2026-11-02', col: 'final_exam' },
   { n: 'Лайфхаки', u: 'lifehacks.html', i: '💡', d: 'Повторение приёмов перед аттестацией.', m: 5, from: '2026-10-28', to: '2026-11-02', extra: 1 }
 ];
+const KEY = 'AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc';
+const BASE = 'https://firestore.googleapis.com/v1/projects/gold-8105a/databases/(default)/documents/results/';
 const MON = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const WD = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const day = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
 const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 const fmt = d => d.getDate() + ' ' + MON[d.getMonth()];
 const left = t => Math.round((day(t.to) - today) / 864e5);
 const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return n + ' ' + (m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 10 || h >= 20) ? b : c); };
-document.getElementById('today').textContent = 'Сегодня ' + WD[now.getDay()] + ', ' + fmt(now);
+const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+$('today').textContent = 'Сегодня ' + WD[now.getDay()] + ', ' + fmt(now);
 
 const open = T.filter(t => day(t.from) <= today && today <= day(t.to))
   .sort((a, b) => (a.extra || 0) - (b.extra || 0) || day(a.to) - day(b.to));
 
-document.getElementById('open').innerHTML = open.length
-  ? open.map((t, k) => {
-      const l = left(t), last = l === 0;
-      const pills = [
-        k === 0 && open.length > 1 && !t.extra ? '<span class="pill top1">Сначала этот</span>' : '',
-        last ? '<span class="pill hot">Сегодня последний день</span>' : `<span class="pill ${l <= 2 ? 'warn' : ''}">до ${fmt(day(t.to))} · ${l === 1 ? 'остался 1 день' : 'осталось ' + plural(l, 'день', 'дня', 'дней')}</span>`,
-        `<span class="pill">~${t.m} мин</span>`
-      ].join('');
-      return `<a class="card ${k === 0 && !t.extra ? 'first' : ''}" href="${t.u}"><div class="top"><div class="ic">${t.i}</div><div><div class="nm">${t.n}</div><div class="ds">${t.d}</div></div></div><div class="meta">${pills}</div><span class="go">Начать →</span></a>`;
-    }).join('')
-  : `<div class="empty">${today > day(T[T.length - 1].to) ? '🎉 Обучение этого месяца завершено. Спасибо!' : 'Сейчас открытых тренажёров нет.'}</div>`;
-
-
+// Имя: без отчества, без регистра; «Анна Иванова» = «Иванова Анна»
+const toks = s => String(s || '').toLowerCase().replace(/ё/g, 'е').split(/[\s.,]+/).filter(w => w.length > 1 && !/(вна|вич|ична)$/.test(w));
+// одна опечатка в длинном слове не мешает: «Шасварова» = «Шасворова»
+function lev1(a, b) {
+  if (a === b) return true; if (Math.abs(a.length - b.length) > 1 || Math.min(a.length, b.length) < 5) return false;
+  let i = 0, j = 0, d = 0;
+  while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++d > 1) return false; if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } }
+  return d + (a.length - i) + (b.length - j) <= 1;
+}
+function sameName(a, b) {
+  const x = toks(a), y = toks(b); if (!x.length || !y.length) return false;
+  const [s, l] = x.length <= y.length ? [x, y] : [y, x];
+  if (!s.every(w => l.some(v => lev1(w, v)))) return false;
+  return s.length >= 2 || x.length === y.length;
+}
+async function myResults(col, me) {
+  const out = []; let tok = '';
+  do {
+    const r = await fetch(BASE + col + '/items?pageSize=300&key=' + KEY + (tok ? '&pageToken=' + tok : ''));
+    const j = await r.json(); if (j.error) throw new Error(j.error.message);
+    (j.documents || []).forEach(d => {
+      const f = d.fields || {}, v = k => f[k] ? (f[k].stringValue ?? f[k].integerValue ?? f[k].doubleValue) : null;
+      if (v('city') === me.city && sameName(v('user_name'), me.name)) out.push(+v('percent') || 0);
+    });
+    tok = j.nextPageToken;
+  } while (tok);
+  return out;
+}
+function card(t, k, big) {
+  const l = left(t);
+  const pills = [
+    k === 0 && big ? '<span class="pill top1">Сначала этот</span>' : '',
+    l === 0 ? '<span class="pill hot">Сегодня последний день</span>' : `<span class="pill ${l <= 2 ? 'warn' : ''}">до ${fmt(day(t.to))} · ${l === 1 ? 'остался 1 день' : 'осталось ' + plural(l, 'день', 'дня', 'дней')}</span>`,
+    `<span class="pill">~${t.m} мин</span>`
+  ].join('');
+  return `<a class="card ${k === 0 && big ? 'first' : ''} ${big ? '' : 'small'}" href="${t.u}" data-u="${t.u}"><div class="top"><div class="ic">${t.i}</div><div><div class="nm">${t.n}</div>${big ? `<div class="ds">${t.d}</div>` : ''}</div></div><div class="meta">${pills}</div>${big ? '<span class="go">Начать →</span>' : ''}</a>`;
+}
+async function draw() {
+  const me = ls.get('go585_me');
+  if (!me) { $('reg').classList.remove('hidden'); $('who').classList.add('hidden'); $('list').innerHTML = ''; return; }
+  $('reg').classList.add('hidden');
+  $('who').classList.remove('hidden');
+  $('who').innerHTML = `${esc(me.name)} · ${esc(me.city)} <button id="chg">не вы?</button>`;
+  $('chg').onclick = () => { ls.set('go585_me', null); try { localStorage.removeItem('go585_me'); } catch (e) {} draw(); };
+  if (!open.length) { $('list').innerHTML = `<div class="all"><div class="e">🎉</div><h2>${today > day(T[T.length - 1].to) ? 'Обучение этого месяца завершено' : 'Сейчас открытых тренажёров нет'}</h2><p>Спасибо!</p></div>`; return; }
+  $('list').innerHTML = '<div class="load">⏳ Проверяю, что вы уже прошли…</div>';
+  const opened = ls.get('go585_opened') || {};
+  const status = await Promise.all(open.map(async t => {
+    if (!t.col) return { t, done: !!opened[t.u], pct: null, local: true };
+    try { const r = await myResults(t.col, me); return { t, done: r.length > 0, pct: r.length ? Math.max(...r) : null }; }
+    catch (e) { return { t, done: false, pct: null, err: true }; }
+  }));
+  const todo = status.filter(s => !s.done), done = status.filter(s => s.done);
+  let html = '';
+  if (todo.length) {
+    html += `<div class="sec">${todo.length === 1 ? 'Вам осталось пройти' : 'Вам осталось · ' + todo.length}</div>`;
+    html += card(todo[0].t, 0, true);
+    if (todo.length > 1) html += '<div class="sec">Потом</div>' + todo.slice(1).map(s => card(s.t, 1, false)).join('');
+  } else {
+    html += `<div class="all"><div class="e">🎉</div><h2>Всё открытое пройдено!</h2><p>Отличная работа. Новое задание придёт в письме.</p></div>`;
+  }
+  if (done.length) html += '<div class="sec">Уже пройдено</div>' + done.map(s => `<div class="done">${s.local ? '👀' : '✅'} <b>${s.t.n}${s.pct != null ? ' · ' + s.pct + '%' : ''}${s.local ? ' · открывали' : ''}</b><a href="${s.t.u}">ещё раз</a></div>`).join('');
+  $('list').innerHTML = html;
+  $('list').querySelectorAll('a.card').forEach(a => a.addEventListener('click', () => { const o = ls.get('go585_opened') || {}; o[a.dataset.u] = 1; ls.set('go585_opened', o); }));
+}
+$('saveBtn').onclick = () => {
+  const n = $('userName').value.trim(), c = $('userCity').value;
+  if (toks(n).length < 2) { $('regErr').textContent = 'Введите имя и фамилию — так же, как в тренажёрах'; return; }
+  if (!c) { $('regErr').textContent = 'Выберите магазин'; return; }
+  ls.set('go585_me', { name: n, city: c }); draw();
+};
+$('userName').addEventListener('keydown', e => { if (e.key === 'Enter') $('saveBtn').click(); });
+// Подсказка имён: кто из этого магазина уже есть в базе (по входному тесту и тренажёрам)
+$('userCity').addEventListener('change', async () => {
+  const c = $('userCity').value, seen = new Map(); $('names').innerHTML = ''; if (!c) return;
+  for (const col of ['test', 'dialog', 'service', 'crosssell']) {
+    try {
+      const r = await fetch(BASE + col + '/items?pageSize=300&key=' + KEY); const j = await r.json();
+      (j.documents || []).forEach(d => { const f = d.fields || {}; if (f.city?.stringValue !== c) return; const n = String(f.user_name?.stringValue || '').trim().replace(/\s+/g, ' '); const k = toks(n).sort().join(' '); if (toks(n).length >= 2 && !seen.has(k)) seen.set(k, n); });
+    } catch (e) {}
+  }
+  $('names').innerHTML = [...seen.values()].sort().map(n => `<option value="${esc(n)}">`).join('');
+});
+// Вернулся из тренажёра — обновить отметки
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ls.get('go585_me')) draw(); });
+draw();
 </script>
 </body>
 </html>
