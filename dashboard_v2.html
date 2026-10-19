@@ -188,6 +188,12 @@
   table.hm tr.click:hover .storename { color: var(--red); }
   .day.today span { color: var(--red); font-weight: 800; }
   .day em { font-style: normal; font-size: 13px; height: 16px; line-height: 16px; margin-top: 2px; }
+  .day { position: relative; cursor: default; }
+  .day .dtip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 20; background: #1f2937; color: #fff; border-radius: 10px; padding: 9px 12px; font-size: 12.5px; line-height: 1.55; white-space: nowrap; box-shadow: 0 6px 20px rgba(0,0,0,.18); text-align: left; pointer-events: none; }
+  .day .dtip b { color: #fff; font-size: 12.5px; }
+  .day:hover .dtip { display: block; }
+  .day:hover i { filter: brightness(1.15); }
+  .days .day:nth-child(-n+3) .dtip { left: 0; transform: none; } .days .day:nth-last-child(-n+3) .dtip { left: auto; right: 0; transform: none; }
   .ts-kpis .kpi .v { font-size: 26px; } .ts-kpis { margin: 12px 0 14px; }
   .ts-seg { flex-wrap: wrap; margin-top: 4px; }
   .ts-cov { display: flex; align-items: center; gap: 8px; min-width: 130px; } .ts-cov b { font-size: 13px; min-width: 38px; }
@@ -205,7 +211,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 19.10-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 19.10-2</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <a class="hbtn" href="test585.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block" title="Все тренажёры без регистрации — ваши прохождения не считаются">🧪 Все тренажёры</a>
@@ -230,7 +236,7 @@
     <div class="kpis" id="ovKpis"></div>
     <div class="card"><h2>⏰ Тренажёры по срокам</h2><p class="hint">Что открыто сейчас, сколько сотрудников уже прошли и сколько дней осталось. Нажмите на строку — увидите, кто прошёл и кто нет. Считаются сотрудники, которые уже начали обучение (штатной численности в базе нет).</p><div id="ovDead"></div></div>
     <div class="card"><h2>🗺️ Магазины по этапам</h2><p class="hint">В клетке — какая доля сотрудников магазина прошла этап, ниже — сколько человек из скольких и средний результат первой попытки. <b>Нажмите на клетку</b> — откроется, кто прошёл и с каким результатом, кто ещё нет, их ответы и трудные шаги. Нажмите на название магазина — весь дашборд покажет только его.</p><div class="tw" id="ovHeat"></div><div class="legend"><span><i style="background:rgba(22,163,74,.3)"></i>прошли 80% и больше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>меньше 60%</span><span><i style="background:#e8e2de"></i>ещё не открыт</span></div></div>
-    <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождения по дням. Значок под датой — в этот день открылся тренажёр: видно, как продавцы реагируют на рассылку.</p><div id="ovDays"></div></div>
+    <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождения по дням. Наведите на столбик — по тренажёрам. Значок под датой — в этот день открылся тренажёр: видно, как продавцы реагируют на рассылку.</p><div id="ovDays"></div></div>
     <div class="card"><h2>🕒 Последние прохождения</h2><p class="hint">Кто, из какого магазина, что и с каким результатом прошёл — самые свежие сверху. Нажмите на имя — откроется карточка сотрудника, «📄» — его ответы. Все записи с фильтрами — во вкладке «⚙️ Данные».</p><div class="tw" id="ovFeed"></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="ovFeedMore"></div></div>
   </section>
 
@@ -547,9 +553,14 @@ function renderOverview() {
   const R = RECS.filter(r => !STORE || r.city === STORE), days = [];
   for (let i = 13; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); days.push(d); }
   const cnt = days.map(d => R.filter(r => { const x = new Date(r.date); return x >= d && x < new Date(+d + 864e5); }).length), m2 = Math.max(1, ...cnt);
+  const DLBL = t => t === 'test' ? '📝 Входной тест' : t === 'final_exam_1' ? '🏆 Аттестация' : t === 'final_exam_old' ? '📜 Старая аттестация' : (TICON[t] || '') + ' ' + (TSHORT[t] || TOOLS[t] || t);
+  const tip = d => { const rs = R.filter(r => { const x = new Date(r.date); return x >= d && x < new Date(+d + 864e5); }); if (!rs.length) return '';
+    const by = {}; rs.forEach(r => { (by[r.type] = by[r.type] || { n: 0, p: new Set() }).n++; by[r.type].p.add(r.name + '|' + r.city); });
+    const order = ['test'].concat(TRAINERS, ['final_exam_1', 'final_exam_old']);
+    return Object.keys(by).sort((a, b) => order.indexOf(a) - order.indexOf(b)).map(t => `${DLBL(t)} — <b>${by[t].p.size} чел.</b>${by[t].n > by[t].p.size ? ` <span style="opacity:.7">(${by[t].n} попыт.)</span>` : ''}`).join('<br>'); };
   const opens = d => SCHED.filter(s => +dayOf(s.from) === +d);
   $('ovDays').innerHTML = `<div class="days" style="height:150px">${days.map((d, i) => { const o = opens(d), ic = o.map(s => schedLabel(s.t).split(' ')[0]).join('');
-    return `<div class="day ${i === 13 ? 'today' : ''}" title="${d.toLocaleDateString('ru-RU')}: ${cnt[i]} прохожд.${o.length ? ' · открылся: ' + o.map(s => schedLabel(s.t).replace(/^\S+ /, '')).join(', ') : ''}"><b>${cnt[i] || ''}</b><i style="height:${cnt[i] / m2 * 100}%"></i><span>${i === 13 ? 'сегодня' : d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span><em>${ic}</em></div>`; }).join('')}</div>`;
+    return `<div class="day ${i === 13 ? 'today' : ''}"${cnt[i] ? '' : ` title="${d.toLocaleDateString('ru-RU')}: прохождений нет${o.length ? ' · открылся: ' + o.map(s => schedLabel(s.t).replace(/^\S+ /, '')).join(', ') : ''}"`}><b>${cnt[i] || ''}</b><i style="height:${cnt[i] / m2 * 100}%"></i>${cnt[i] ? `<div class="dtip"><b>${d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</b><br>${tip(d)}${o.length ? `<br><span style="opacity:.75">открылся: ${o.map(s => schedLabel(s.t).replace(/^\S+ /, '')).join(', ')}</span>` : ''}</div>` : ''}<span>${i === 13 ? 'сегодня' : d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}</span><em>${ic}</em></div>`; }).join('')}</div>`;
 
   // тренажёры по отдельности
   const AT = activeTr();
