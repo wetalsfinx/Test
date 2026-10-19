@@ -186,7 +186,26 @@ const MEAN = {
 const TEST_PLAIN = ['девушка смотрит на витрину — что сказать первым', 'клиент назвал бюджет 25 000 ₽ — что делать дальше', 'клиентка выбрала кольцо — как предложить серьги из той же коллекции', 'клиентка смотрит серебряные серьги за 12 000 ₽ — как мягко предложить золото', 'клиентка оформляет покупку кольца — что предложить вместе с ним', '«Дороговато… думала, будет дешевле» — что ответить', 'нужного размера нет — что сказать', 'подарок маме на юбилей — как презентовать изделие', '«Можно посмотреть другие модели?» — как ответить', 'кольцо за 55 000 ₽, клиентка колеблется — когда и как сказать про Сплит', 'клиентка молча идёт вдоль витрины — что делать', 'клиентка второй раз примеряет кольцо, «да, красиво», но не говорит «беру»', '«Спасибо, я подумаю» — что ответить'];
 const STG = [['skTest', '📝 Входной тест'], ['skTrain', '🎯 Тренажёры'], ['skExam', '🏆 Аттестация']];
 let db = null;
-try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); } catch (e) { console.error(e); }
+try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (e) {} } catch (e) { console.error(e); }
+
+// Быстрое чтение и запись обычными запросами (REST) — постоянное соединение Firestore через рабочие прокси может висеть 30–60 секунд.
+const REST = 'https://firestore.googleapis.com/v1/projects/gold-8105a/databases/(default)/documents/results/', RKEY = 'AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc';
+const fsVal = v => v == null ? null : 'stringValue' in v ? v.stringValue : 'integerValue' in v ? +v.integerValue : 'doubleValue' in v ? v.doubleValue : 'booleanValue' in v ? v.booleanValue : 'nullValue' in v ? null : 'timestampValue' in v ? v.timestampValue : 'mapValue' in v ? fsObj(v.mapValue.fields) : 'arrayValue' in v ? (v.arrayValue.values || []).map(fsVal) : null;
+const fsObj = f => Object.fromEntries(Object.entries(f || {}).map(([k, v]) => [k, fsVal(v)]));
+async function getCol(col) {
+  const docs = []; let tok = '';
+  do {
+    const r = await fetch(`${REST}${encodeURIComponent(col)}/items?pageSize=300&key=${RKEY}${tok ? '&pageToken=' + encodeURIComponent(tok) : ''}`, { cache: 'no-store' });
+    if (!r.ok) throw new Error(col + ': ' + r.status);
+    const j = await r.json(); (j.documents || []).forEach(d => docs.push({ id: d.name.split('/').pop(), data: () => fsObj(d.fields) })); tok = j.nextPageToken || '';
+  } while (tok);
+  return { forEach: f => docs.forEach(f) };
+}
+async function addDoc(col, obj) {
+  const fields = Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, typeof v === 'number' ? (Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v }) : typeof v === 'boolean' ? { booleanValue: v } : { stringValue: String(v) }]));
+  const r = await fetch(`${REST}${encodeURIComponent(col)}/items?key=${RKEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }) });
+  if (!r.ok) throw new Error('add ' + r.status);
+}
 const MY = new URLSearchParams(location.search).get('m') || '';
 // Варианты страницы (архив эксперимента 7.10): 1 — основной (прогресс по тренажёрам + кто не прошёл), 0 — только навыки без имён, 2 — ошибки сотрудников, 3 — навыки по всем тренажёрам.
 // Директорам уходит ссылка без &var — открывается вариант 1. Остальные варианты: &var=0/2/3&lab=1 (с панелью переключения).
@@ -222,9 +241,10 @@ function mistakes(r) {
 
 async function loadPeople() {
   const recs = [], SEEN = new Set();
+  const SN = Object.fromEntries(await Promise.all([...new Set(COLS.map(c => c[0]))].map(c => getCol(c).then(x => [c, x], () => [c, null]))));
   for (const [col, type] of COLS) {
     try {
-      const snap = await db.collection('results').doc(col).collection('items').get();
+      const snap = SN[col] || await db.collection('results').doc(col).collection('items').get();
       snap.forEach(d => { const x = d.data(); let t = type; if (col === 'final_exam') t = x.exam_version === 'shift_v1' ? 'final_exam_1' : 'final_exam_old'; if (!x.user_name || x.percent == null) return;
         if (String(x.user_name).trim().replace(/\s+/g, ' ').toLowerCase() === 'тренер тест') return; // проверки тренера (test585.html) — не показываем
         const dk = col + '|' + String(x.user_name).trim().toLowerCase() + '|' + (x.city || '') + '|' + x.date + '|' + x.percent; if (x.date && SEEN.has(dk)) return; SEEN.add(dk);
@@ -323,8 +343,9 @@ function render(all) {
   // отметка «директор открыл страницу» (не пишется для тренера и в режиме вариантов)
   if (!IS_TRAINER && !LAB) {
     const v = { store: MY, date: new Date().toISOString(), device: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'телефон' : 'компьютер' };
-    try { await db.collection('results').doc('dm_visits').collection('items').add(v); }
-    catch (e) { try { await db.collection('results').doc('lifehacks').collection('items').add(Object.assign({ event: 'dm_open', city: MY }, v)); } catch (e2) { } }
+    try { await addDoc('dm_visits', v); }
+    catch (e0) { try { await db.collection('results').doc('dm_visits').collection('items').add(v); }
+    catch (e) { try { await db.collection('results').doc('lifehacks').collection('items').add(Object.assign({ event: 'dm_open', city: MY }, v)); } catch (e2) { } } }
   }
   // автообновление: каждые 15 минут, пока страница открыта, и сразу при возврате на вкладку, если данные старше 5 минут
   setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, 15 * 60 * 1000);
