@@ -205,7 +205,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 16.10-7</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 19.10-1</span></div></div>
     <div class="right">
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <a class="hbtn" href="test585.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block" title="Все тренажёры без регистрации — ваши прохождения не считаются">🧪 Все тренажёры</a>
@@ -229,7 +229,7 @@
   <section class="tab on" id="t-over">
     <div class="kpis" id="ovKpis"></div>
     <div class="card"><h2>⏰ Тренажёры по срокам</h2><p class="hint">Что открыто сейчас, сколько сотрудников уже прошли и сколько дней осталось. Нажмите на строку — увидите, кто прошёл и кто нет. Считаются сотрудники, которые уже начали обучение (штатной численности в базе нет).</p><div id="ovDead"></div></div>
-    <div class="card"><h2>🗺️ Магазины по этапам</h2><p class="hint">В клетке — какая доля сотрудников магазина прошла этап, ниже — средний результат первой попытки. <b>Нажмите на клетку</b> — откроется, кто прошёл и с каким результатом, кто ещё нет, их ответы и трудные шаги. Нажмите на название магазина — весь дашборд покажет только его.</p><div class="tw" id="ovHeat"></div><div class="legend"><span><i style="background:rgba(22,163,74,.3)"></i>прошли 80% и больше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>меньше 60%</span><span><i style="background:#e8e2de"></i>ещё не открыт</span></div></div>
+    <div class="card"><h2>🗺️ Магазины по этапам</h2><p class="hint">В клетке — какая доля сотрудников магазина прошла этап, ниже — сколько человек из скольких и средний результат первой попытки. <b>Нажмите на клетку</b> — откроется, кто прошёл и с каким результатом, кто ещё нет, их ответы и трудные шаги. Нажмите на название магазина — весь дашборд покажет только его.</p><div class="tw" id="ovHeat"></div><div class="legend"><span><i style="background:rgba(22,163,74,.3)"></i>прошли 80% и больше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>меньше 60%</span><span><i style="background:#e8e2de"></i>ещё не открыт</span></div></div>
     <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождения по дням. Значок под датой — в этот день открылся тренажёр: видно, как продавцы реагируют на рассылку.</p><div id="ovDays"></div></div>
     <div class="card"><h2>🕒 Последние прохождения</h2><p class="hint">Кто, из какого магазина, что и с каким результатом прошёл — самые свежие сверху. Нажмите на имя — откроется карточка сотрудника, «📄» — его ответы. Все записи с фильтрами — во вкладке «⚙️ Данные».</p><div class="tw" id="ovFeed"></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="ovFeedMore"></div></div>
   </section>
@@ -629,7 +629,7 @@ function renderHeat() {
     if (schedState(s) === 'soon' && !ps.some(p => schedRec(p, s.t))) return `<td><div class="cell off" title="Откроется ${dm(s.from)}">с ${dm(s.from)}</div></td>`;
     if (!ps.length) return `<td><div class="cell none">—</div></td>`;
     const rs = ps.map(p => schedRec(p, s.t)).filter(Boolean), pc = Math.round(rs.length / ps.length * 100), sc = avg(rs.map(r => r.percent));
-    return `<td><div class="cell ${cls(pc)} go" data-t="${s.t}" title="Нажмите — кто прошёл, кто нет, ответы. ${schedLabel(s.t).replace(/^\S+ /, '')}: прошли ${rs.length} из ${ps.length}${sc != null ? ', средний результат ' + sc + '%' : ''}">${pc}%<small>${sc != null ? 'ср. ' + sc + '%' : 'никто'}</small></div></td>`;
+    return `<td><div class="cell ${cls(pc)} go" data-t="${s.t}" title="Нажмите — кто прошёл, кто нет, ответы. ${schedLabel(s.t).replace(/^\S+ /, '')}: прошли ${rs.length} из ${ps.length}${sc != null ? ', средний результат ' + sc + '%' : ''}">${pc}%<small>${rs.length} из ${ps.length}${sc != null ? ' · ср. ' + sc + '%' : ''}</small></div></td>`;
   };
   const rows = cities.map(c => ({ c, ps: AP.filter(p => p.city === c) }));
   if (!STORE && rows.length > 1) rows.push({ c: 'Все магазины', ps: AP, all: true });
