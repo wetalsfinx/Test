@@ -238,6 +238,12 @@ $('userCity').addEventListener('change', async () => {
   }
   $('names').innerHTML = [...seen.values()].sort().map(n => `<option value="${esc(n)}">`).join('');
 });
+// Страница долго висела во вкладке (или телефон показал сохранённую копию) — перезагрузить,
+// чтобы список тренажёров был на сегодня и по свежему расписанию
+const LOADED = Date.now(), LOADED_DAY = new Date().toDateString();
+function stale() { return Date.now() - LOADED > 10 * 60 * 1000 || new Date().toDateString() !== LOADED_DAY; }
+window.addEventListener('pageshow', e => { if (e.persisted && stale()) location.reload(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && stale()) location.reload(); });
 // Вернулся из тренажёра — обновить отметки
 document.addEventListener('visibilitychange', () => { if (!document.hidden && ls.get('go585_me')) draw(); });
 draw();
