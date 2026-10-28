@@ -11,7 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&family=Cormorant+Garamond:ital,wght@0,700;1,500&display=swap');
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -207,6 +207,39 @@
         .cert-score { font-size: 48px; font-weight: 800; color: #c41e3a; margin: 16px 0; }
         .cert-date { font-size: 13px; color: #6b7280; margin-top: 20px; }
         .cert-signature { margin-top: 24px; padding-top: 16px; border-top: 1px dashed #d4a017; font-size: 12px; color: #6b7280; font-style: italic; }
+
+        /* ===== СЕРТИФИКАТ «Грамота с печатью» (выбран 28.10) ===== */
+        .certificate.ga { background: #fbf6ea; color: #2a2220; border: none; border-radius: 0; padding: 14px; max-width: 440px; margin: 20px auto; box-shadow: 0 10px 34px rgba(120, 90, 30, 0.18); text-align: center; }
+        .certificate.ga::before { display: none; }
+        .ga.gold { --m: #c99a2e; --ml: #f1d27a; --md: #8a6414; }
+        .ga.silver { --m: #9aa3ad; --ml: #e3e7ec; --md: #56606b; }
+        .ga.bronze { --m: #c07a45; --ml: #f0c19a; --md: #7c4318; }
+        .ga .ga-edge { border: 2px solid var(--m); padding: 6px; }
+        .ga .ga-in { border: 1px solid var(--m); padding: 26px 20px 20px;
+            background: radial-gradient(circle at 50% 0, rgba(255,255,255,.9), rgba(251,246,234,0) 60%),
+                        repeating-linear-gradient(45deg, rgba(160,120,40,.06) 0 2px, transparent 2px 9px),
+                        repeating-linear-gradient(-45deg, rgba(160,120,40,.06) 0 2px, transparent 2px 9px); }
+        .ga .ga-brand { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 20px; letter-spacing: .14em; color: #c41e3a; }
+        .ga .ga-kick { font-size: 10.5px; letter-spacing: .28em; text-transform: uppercase; color: #8a7a6a; margin-top: 4px; }
+        .ga .ga-title { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; font-size: 44px; line-height: 1; margin: 16px 0 6px; letter-spacing: .04em; }
+        .ga .ga-sub { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 16px; color: #6b5d50; }
+        .ga .ga-name { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; font-size: 34px; line-height: 1.1; margin: 16px 0 6px; overflow-wrap: anywhere; }
+        .ga .ga-rule { height: 1px; background: linear-gradient(90deg, rgba(0,0,0,0), var(--m), rgba(0,0,0,0)); margin: 0 30px 12px; }
+        .ga .ga-lvl { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; color: var(--md); }
+        .ga .ga-row { display: flex; justify-content: center; align-items: center; gap: 18px; margin: 18px 0 14px; }
+        .ga .ga-seal { width: 104px; height: 104px; flex: 0 0 104px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; color: #fff;
+            background: radial-gradient(circle at 35% 30%, var(--ml) 0, var(--m) 45%, var(--md) 100%); box-shadow: 0 3px 8px rgba(0,0,0,.18); }
+        .ga .ga-seal::before { content: ""; position: absolute; top: 7px; left: 7px; right: 7px; bottom: 7px; border-radius: 50%; border: 1.5px dashed rgba(255,255,255,.75); }
+        .ga .ga-seal b { font-family: 'Playfair Display', serif; font-size: 30px; line-height: 1; display: block; }
+        .ga .ga-seal span { font-size: 9px; letter-spacing: .2em; text-transform: uppercase; display: block; margin-top: 3px; }
+        .ga .ga-facts { text-align: left; font-size: 12px; color: #6b5d50; }
+        .ga .ga-facts div + div { margin-top: 6px; }
+        .ga .ga-facts b { display: block; font-size: 19px; color: #2a2220; font-weight: 800; }
+        .ga .ga-best { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 16px; line-height: 1.35; color: #4a3f36; margin: 4px 4px 0; }
+        .ga .ga-best i { font-style: italic; }
+        .ga .ga-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-top: 20px; font-size: 11px; color: #8a7a6a; text-align: left; }
+        .ga .ga-foot div:last-child { text-align: right; font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 14px; color: #4a3f36; }
+        @media (max-width: 400px) { .ga .ga-title { font-size: 36px; } .ga .ga-name { font-size: 28px; } .ga .ga-row { gap: 12px; } }
         
         .cert-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
         .cert-actions .btn-primary { flex: 1; min-width: 150px; margin-top: 0; }
@@ -487,7 +520,7 @@
             max += r.pts;
             const ok = t.length >= MIN_TEXT && (r.test ? r.test(t) : hasAny(t, r.stems));
             if (ok) pts += r.pts;
-            lines.push((ok ? '✅ ' : '❌ ') + r.label);
+            lines.push(ok ? '✅ ' + r.label + ' (+' + r.pts + ')' : '❌ ' + r.label + ' (0 из ' + r.pts + ')');
         });
         penalties.forEach(p => {
             if (hasAny(t, p.stems)) { pts -= p.pts; lines.push('⚠️ ' + p.label + ' (−' + p.pts + ')'); }
@@ -558,14 +591,14 @@
                     const roles = picked.map(id => F.find(f => f.id === id).role);
                     const traps = picked.filter(id => id.startsWith('T'));
                     const lines = []; let pts = 0;
-                    if (roles.includes('greet')) { pts++; lines.push('✅ Поздоровались (+1)'); } else lines.push('❌ Нет приветствия');
-                    if (roles.includes('promo')) { pts++; lines.push('✅ Назвали конкретную акцию (+1)'); } else lines.push('❌ Не назвали акцию: клиентка не услышала выгоду');
-                    if (roles.includes('ask')) { pts++; lines.push('✅ Задали открытый вопрос (+1)'); } else lines.push('❌ Нет вопроса: диалог не начался');
+                    if (roles.includes('greet')) { pts++; lines.push('✅ Поздоровались (+1)'); } else lines.push('❌ Нет приветствия (0 из 1)');
+                    if (roles.includes('promo')) { pts++; lines.push('✅ Назвали конкретную акцию (+1)'); } else lines.push('❌ Не назвали акцию: клиентка не услышала выгоду (0 из 1)');
+                    if (roles.includes('ask')) { pts++; lines.push('✅ Задали открытый вопрос (+1)'); } else lines.push('❌ Нет вопроса: диалог не начался (0 из 1)');
                     const pos = r => roles.indexOf(r);
                     const orderOk = ['greet', 'promo', 'pause', 'ask'].every(r => roles.includes(r)) && pos('greet') < pos('promo') && pos('promo') < pos('pause') && pos('pause') < pos('ask');
                     if (orderOk) { pts++; lines.push('✅ Правильный порядок: приветствие → акция → пауза → вопрос (+1)'); }
-                    else lines.push('❌ Порядок: сначала приветствие и акция, затем пауза 20–30 секунд, и только потом вопрос');
-                    if (!traps.length) { pts++; lines.push('✅ Без фраз-ловушек (+1)'); }
+                    else lines.push('❌ Порядок: сначала приветствие и акция, затем пауза 20–30 секунд, и только потом вопрос (0 из 1)');
+                    if (!traps.length) { pts++; lines.push('✅ Без фраз-ловушек (+1)'); } else lines.push('❌ Есть фразы-ловушки (0 из 1)');
                     traps.forEach(id => { const f = F.find(x => x.id === id); lines.push('⚠️ Ловушка «' + f.text + '» — ' + f.why); });
                     [...bz.children].forEach(el => { el.classList.add(el.dataset.id.startsWith('T') ? 'bad' : 'good'); });
                     [...bz.children, ...fp.children].forEach(el => el.classList.add('locked'));
@@ -625,10 +658,10 @@
                     const asks = roles.filter(r => r === 'ask').length;
                     const lines = []; let pts = 0;
                     const hasJoin = roles.includes('join'), hasPlan = roles.includes('plan');
-                    if (hasJoin) { pts += 1; lines.push('✅ Поддержали клиента (+1)'); } else lines.push('❌ Нет поддержки: клиент растерян, сначала успокойте его');
-                    if (asks >= 1) { pts += 2; lines.push('✅ Задали вопрос о её предпочтениях (+2)'); } else lines.push('❌ Ни одного вопроса о ней, подбор будет наугад');
-                    if (hasPlan) { pts += 1; lines.push('✅ Сказали, что будет дальше (+1)'); } else lines.push('❌ Не сказали, что покажете дальше');
-                    if (!traps.length) { pts += 1; lines.push('✅ Без фраз-ловушек (+1)'); }
+                    if (hasJoin) { pts += 1; lines.push('✅ Поддержали клиента (+1)'); } else lines.push('❌ Нет поддержки: клиент растерян, сначала успокойте его (0 из 1)');
+                    if (asks >= 1) { pts += 2; lines.push('✅ Задали вопрос о её предпочтениях (+2)'); } else lines.push('❌ Ни одного вопроса о ней, подбор будет наугад (0 из 2)');
+                    if (hasPlan) { pts += 1; lines.push('✅ Сказали, что будет дальше (+1)'); } else lines.push('❌ Не сказали, что покажете дальше (0 из 1)');
+                    if (!traps.length) { pts += 1; lines.push('✅ Без фраз-ловушек (+1)'); } else lines.push('❌ Есть фразы-ловушки (0 из 1)');
                     traps.forEach(id => { const f = F.find(x => x.id === id); lines.push('⚠️ Ловушка «' + f.text + '» — ' + f.why); });
                     pts = Math.max(0, pts);
                     [...bz.children].forEach(el => { el.classList.add(el.dataset.id.startsWith('T') ? 'bad' : 'good'); });
@@ -688,7 +721,7 @@
                     ]);
                     $('ans').disabled = true; $('go').style.display = 'none';
                     const lines = [
-                        `🔎 Важные детали: найдено ${hit} из 3${fal ? ', лишних: ' + fal : ''} (+${clickPts}). Зелёные — найденные, жёлтые — пропущенные, красные — лишние.`,
+                        `🔎 Важные детали: найдено ${hit} из 3${fal ? ', лишних: ' + fal + ' (за каждую −1)' : ''} (+${clickPts} из 3). Зелёные — найденные, жёлтые — пропущенные, красные — лишние.`,
                         ...r.lines
                     ];
                     done({ pts: clickPts + r.pts, max: 6, lines, userAnswer: `Детали: ${picked.map(i => S[i].t).join(' / ')}. Ответ: ${txt}` });
@@ -737,10 +770,10 @@
                     const lines = []; let pts = 0;
                     const both = tray.includes('sv') && tray.includes('au');
                     if (both) { pts += 2; lines.push('✅ Положили рядом серебро и золото: она сама увидит разницу (+2)'); }
-                    else if (tray.includes('au')) { pts += 1; lines.push('➖ Показали золото, но без серебра рядом сравнить не с чем (+1)'); }
-                    else lines.push('❌ Золото не показали: клиентка не узнает, что есть вариант лучше под её задачу');
-                    if (tray.includes('di')) lines.push('⚠️ Серьги за 48 000 ₽ — не ступень выше, а прыжок: похоже на давление');
-                    if (tray.includes('bj')) lines.push('⚠️ Бижутерия не подойдёт для носки «не снимая»');
+                    else if (tray.includes('au')) { pts += 1; lines.push('➖ Показали золото, но без серебра рядом сравнить не с чем (+1 из 2)'); }
+                    else lines.push('❌ Золото не показали: клиентка не узнает, что есть вариант лучше под её задачу (0 из 2)');
+                    if (tray.includes('di')) lines.push('💡 Серьги за 48 000 ₽ — не ступень выше, а прыжок: похоже на давление (баллы не снимаются)');
+                    if (tray.includes('bj')) lines.push('💡 Бижутерия не подойдёт для носки «не снимая» (баллы не снимаются)');
                     const r = checkText(txt, [
                         { label: 'Назвали выгоду под её задачу: не темнеет, можно не снимать, надолго', stems: ['не темне', 'не потемн', 'темнеет', 'не снима', 'не снимать', 'кажд', 'ежеднев', 'надолго', 'долго', 'годами', 'много лет', 'вода', 'воды', 'душ', 'не окисл', 'как нов', 'служ', 'носить посто', 'всегда'], pts: 2 },
                         { label: 'Предложили примерить или сравнить', test: t => hasAny(t, ['пример', 'сравн', 'рядом', 'оба', 'обе', 'зеркал', 'давайте', 'посмотрите', 'надень']), pts: 1 }
@@ -802,9 +835,11 @@
                     const total = RING + items.reduce((a, p) => a + p.p, 0);
                     const over = total > LIMIT;
                     let bp = items.reduce((a, p) => a + (p.id === 'ch' && !basket.includes('pd') ? -1 : p.v), 0);
-                    const lines = items.map(p => { const ok = p.v > 0 && !(p.id === 'ch' && !basket.includes('pd')); return (ok ? '✅ ' : (p.v === 0 && p.id !== 'br') ? '➖ ' : '❌ ') + p.n + ' — ' + p.why; });
+                    const ptxt = v => v > 0 ? ' (+' + v + ')' : v < 0 ? ' (−' + (-v) + ')' : ' (0)';
+                    const lines = items.map(p => { const v = (p.id === 'ch' && !basket.includes('pd')) ? -1 : p.v; const ok = v > 0; return (ok ? '✅ ' : (p.v === 0 && p.id !== 'br') ? '➖ ' : '❌ ') + p.n + ' — ' + p.why + ptxt(v); });
                     if (over) { bp -= 2; lines.push('⚠️ Чек ' + rub(total) + ' — больше названных 50 000. Клиентка назвала предел, и его нужно уважать (−2)'); }
-                    else lines.push('✅ Уложились в бюджет клиентки: ' + rub(total));
+                    else lines.push('✅ Уложились в бюджет клиентки: ' + rub(total) + ' (штрафа нет)');
+                    if (bp > 5) lines.push('ℹ️ За выбор в чек — не больше 5 баллов, засчитано 5');
                     bp = Math.max(0, Math.min(5, bp));
                     const r = checkText(txt, [
                         { label: 'Опирались на её историю: платье, свадьбу, образ', stems: ['плать', 'свадьб', 'образ', 'торжеств', 'праздн', 'дочер', 'синий', 'синем', 'синего', 'синь', 'темно', 'вечер', 'мероприят', 'к наряд', 'наряд'], pts: 1 },
@@ -868,13 +903,13 @@
         {
             icon: '🎁', title: 'Кулон для жены', principle: 'Завершение сделки и прощание',
             task: 'Поймай момент', skill: 'Закрытие и прощание', potential: 21000,
-            etalon: 'Сигналы покупки: второй раз спрашивает цену, уточняет про цепочку подлиннее, держит кулон и улыбается. Взгляд на часы и слова про синий цвет — не сигналы. Фраза: «Отличный выбор, топаз как раз её цвет! Давайте подберём цепочку 50 см и оформим — через пять минут подарок будет готов». Прощание: «Уверена, жена будет рада! Заходите — подберём к кулону серьги».',
+            etalon: 'Сигналы покупки: второй раз спрашивает цену, интересуется подарочной упаковкой, держит кулон и улыбается. Взгляд на часы и слова про синий цвет — не сигналы. Фраза: «Отличный выбор, топаз как раз её цвет! К кулону нужна цепочка — у жены есть подходящая или подберём? Давайте оформим и упакуем — через пять минут подарок будет готов». Прощание: «Уверена, жена будет рада! Будем рады видеть вас снова».',
             render(area, done) {
                 const S = [
                     { t: 'Мужчина выбирает подарок жене, вы показали три кулона.', plain: true },
                     { t: 'Второй раз спрашивает цену кулона с топазом.', sig: true },
                     { t: 'Говорит, что жена любит синий цвет.', sig: false },
-                    { t: 'Уточняет, можно ли взять цепочку подлиннее.', sig: true },
+                    { t: 'Спрашивает, упакуете ли вы кулон в подарочную коробку.', sig: true },
                     { t: 'Бросает взгляд на часы.', sig: false },
                     { t: 'Держит кулон на ладони и улыбается.', sig: true }
                 ];
@@ -883,7 +918,7 @@
                     <div class="instruction"><b>Шаг 1.</b> Нажмите на детали, которые говорят: <b>клиент готов купить</b>. Есть и лишние.</div>
                     <div class="story" id="story"></div>
                     <div class="instruction"><b>Шаг 2.</b> Что вы скажете, чтобы завершить покупку? И как попрощаетесь, когда он будет уходить?</div>
-                    <div class="tip">💡 Не спрашивайте, берёт ли он, а предложите следующее действие.</div><textarea class="answer-textarea" id="ans" placeholder="Я скажу: «...». Прощаясь: «...»"></textarea>
+                    <div class="tip">💡 Не спрашивайте, берёт ли он, а предложите следующее действие. И подумайте, чего не хватает кулону.</div><textarea class="answer-textarea" id="ans" placeholder="Я скажу: «...». Прощаясь: «...»"></textarea>
                     <div class="hint-err" id="err"></div>
                     <button class="btn-primary" id="go">🤝 Завершить</button>`;
                 const st = $('story');
@@ -907,15 +942,16 @@
                         if (s.plain) return; el.classList.add('detail');
                         if (s.sig && picked.includes(i)) el.classList.add('sig'); else if (s.sig) el.classList.add('miss'); else if (picked.includes(i)) el.classList.add('false'); });
                     const r = checkText(txt, [
-                        { label: 'Предложили оформить действием («давайте оформим / к кассе»)', stems: ['давайте оформ', 'оформим', 'оформляем', 'оформлю', 'к кассе', 'упакуем', 'упакую', 'пробью', 'пробьем', 'пробьём', 'давайте подбер', 'подберем цеп', 'подберём цеп', 'давайте возьм'], pts: 2 },
+                        { label: 'Предложили оформить действием («давайте оформим / к кассе»)', stems: ['давайте оформ', 'оформим', 'оформляем', 'оформлю', 'к кассе', 'упакуем', 'упакую', 'пробью', 'пробьем', 'пробьём', 'давайте возьм'], pts: 2 },
+                        { label: 'Предложили цепочку к кулону (комплект)', stems: ['цеп', 'комплект', 'к кулону подбер', 'шнур'], pts: 1 },
                         { label: 'Напомнили выгоду: подарок, её цвет, радость жены', stems: ['жен', 'подар', 'синий', 'синего', 'её цвет', 'ее цвет', 'топаз', 'рада', 'обрадует', 'понравит', 'отличный выбор', 'прекрасный выбор'], pts: 1 },
                         { label: 'Тепло попрощались и пригласили вернуться', stems: ['заходите', 'приходите', 'ждем', 'ждём', 'будем рады', 'рады видеть', 'возвращайтесь', 'до встречи', 'хорошего', 'спасибо'], pts: 1 }
                     ], [
                         { label: 'Спросили «берёте?» или отпустили «подумать»', stems: ['берете?', 'берёте?', 'будете брать', 'ну что', 'подумайте', 'не торопитесь'], pts: 1 }
                     ]);
                     $('ans').disabled = true; $('go').style.display = 'none';
-                    const lines = [`🔎 Сигналы покупки: найдено ${hit} из 3${fal ? ', лишних: ' + fal : ''} (+${clickPts})`, ...r.lines];
-                    done({ pts: clickPts + r.pts, max: 7, lines, userAnswer: `Сигналы: ${picked.map(i => S[i].t).join(' / ')}. Ответ: ${txt}` });
+                    const lines = [`🔎 Сигналы покупки: найдено ${hit} из 3${fal ? ', лишних: ' + fal + ' (за каждую −1)' : ''} (+${clickPts} из 3)`, ...r.lines];
+                    done({ pts: clickPts + r.pts, max: 8, lines, userAnswer: `Сигналы: ${picked.map(i => S[i].t).join(' / ')}. Ответ: ${txt}` });
                 };
             }
         },
@@ -969,9 +1005,9 @@
                     });
                     $('go').style.display = 'none';
                     const lines = [
-                        `🔍 Найдено ошибок: ${found} из 2${falseP ? ', лишних отметок: ' + falseP + ' (−' + falseP + ')' : ''}`,
-                        (sel.includes(errIdx[0]) ? '✅ ' : '❌ Пропущена. ') + '<b>Ошибка 1:</b> ' + esc(D[errIdx[0]].why),
-                        (sel.includes(errIdx[1]) ? '✅ ' : '❌ Пропущена. ') + '<b>Ошибка 2:</b> ' + esc(D[errIdx[1]].why)
+                        `🔍 Найдено ошибок: ${found} из 2 — за каждую +2${falseP ? '. Лишних отметок: ' + falseP + ' (−' + falseP + ')' : ''}`,
+                        (sel.includes(errIdx[0]) ? '✅ (+2) ' : '❌ Пропущена (0 из 2). ') + '<b>Ошибка 1:</b> ' + esc(D[errIdx[0]].why),
+                        (sel.includes(errIdx[1]) ? '✅ (+2) ' : '❌ Пропущена (0 из 2). ') + '<b>Ошибка 2:</b> ' + esc(D[errIdx[1]].why)
                     ];
                     done({ pts: findPts, max: 4, lines, userAnswer: `Найдено ошибок: ${found}/2, ложных отметок: ${falseP}` });
                 };
@@ -1015,7 +1051,7 @@
                     const l = lcs(good, exp);
                     let pts = Math.round(l / ST.length * 6) - traps;
                     pts = Math.max(0, pts);
-                    const lines = [`✅ В правильном порядке: ${l} из ${ST.length} шагов`];
+                    const lines = [`✅ В правильном порядке: ${l} из ${ST.length} шагов (+${Math.round(l / ST.length * 6)} из 6)`];
                     const missing = ST.filter((_, i) => !seq.includes('s' + i));
                     if (missing.length) lines.push('❌ Пропущено: ' + missing.join('; '));
                     seq.filter(k => k.startsWith('t')).forEach(k => lines.push('⚠️ Лишний шаг: «' + TR[+k[1]] + '» (−1)'));
@@ -1082,7 +1118,7 @@
         const fb = $('feedback');
         fb.className = 'feedback ' + cls;
         fb.innerHTML = `
-            <div class="fb-head"><div class="fb-outcome">${outcome}${rev ? ' +' + rub(rev) : ''}</div><div class="fb-points">${res.pts} из ${res.max} · ${percent}%</div></div>
+            <div class="fb-head"><div class="fb-outcome">${outcome}${rev ? ' +' + rub(rev) : ''}</div><div class="fb-points">${res.pts} ${(n => n % 10 === 1 && n % 100 !== 11 ? 'балл' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'балла' : 'баллов')(res.pts)} из ${res.max} · ${percent}%</div></div>
             <ul class="fb-list">${res.lines.map(l => `<li>${l}</li>`).join('')}</ul>
             <div class="fb-etalon"><b>✅ Как можно было</b>${esc(c.etalon)}</div>
             <button class="btn-next" style="display:block" onclick="nextClient()">${idx < CLIENTS.length - 1 ? '➡️ Следующий клиент' : '🏁 Закрыть смену'}</button>`;
@@ -1111,28 +1147,24 @@
         else { level = null; }
         const dateStr = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
 
+        const best = answers.map((a, i) => ({ s: a.skill, p: a.percentTask, i })).sort((x, y) => y.p - x.p || x.i - y.i).slice(0, 3).map(x => String(x.s).toLowerCase()).join(', ');
         const skills = answers.map(a => `<div class="cert-skill"><span>${esc(a.skill)}</span><div class="cert-bar"><i style="width:${a.percentTask}%"></i></div><em>${a.percentTask}%</em></div>`).join('');
         const table = `<table class="summary-table">${answers.map((a, i) => `<tr><td>${i + 1}. ${esc(CLIENTS[i].title)}<br><span style="color:#6b7280;font-size:12px">${esc(a.outcome)}</span></td><td>${a.percentTask}%</td></tr>`).join('')}</table>`;
 
         let html = '';
         if (level) {
             html = `
-                <div class="certificate" id="certificate">
-                    <div class="cert-logo">${certTitle}</div>
-                    <div class="cert-brand">585GOLD</div>
-                    <div class="cert-title">СЕРТИФИКАТ</div>
-                    <div class="cert-subtitle">подтверждает успешное прохождение итоговой аттестации «Одна смена в 585GOLD»</div>
-                    <div class="cert-name">${esc(user.name)}</div>
-                    <div class="cert-level ${levelClass}">${level}</div>
-                    <div class="cert-score">${percent}%</div>
-                    <div class="cert-stats">
-                        <div class="cert-stat"><b>${rub(revenue)}</b>выручка смены</div>
-                        <div class="cert-stat"><b>${bought} из ${CLIENTS.length}</b>клиентов купили</div>
-                    </div>
-                    <div class="cert-skills">${skills}</div>
-                    <div class="cert-date">${dateStr} | ${esc(user.city)}</div>
-                    <div class="cert-signature">«Клиент не помнит, что вы сказали. Он помнит, как вы заставили его себя чувствовать.»</div>
-                </div>
+                <div class="certificate ga ${levelClass}" id="certificate"><div class="ga-edge"><div class="ga-in">
+                    <div class="ga-brand">585GOLD</div><div class="ga-kick">обучение продажам</div>
+                    <div class="ga-title">Сертификат</div>
+                    <div class="ga-sub">вручается</div>
+                    <div class="ga-name">${esc(user.name)}</div><div class="ga-rule"></div>
+                    <div class="ga-lvl">${level}</div>
+                    <div class="ga-row"><div class="ga-seal"><div><b>${percent}%</b><span>результат</span></div></div>
+                        <div class="ga-facts"><div><b>${rub(revenue)}</b>выручка смены</div><div><b>${bought} из ${CLIENTS.length}</b>клиентов купили</div></div></div>
+                    <div class="ga-best">за успешное прохождение итоговой аттестации «Одна смена».<br>Сильнее всего: <i>${esc(best)}</i>.</div>
+                    <div class="ga-foot"><div>${dateStr}<br>${esc(user.city)}</div><div>Команда обучения<br>585GOLD</div></div>
+                </div></div></div>
                 <div class="cert-actions">
                     <button class="btn-primary" onclick="downloadCertificate()">📥 Скачать сертификат</button>
                     <button class="btn-secondary" onclick="window.print()">🖨️ Распечатать</button>
@@ -1211,7 +1243,7 @@
     async function downloadCertificate() {
         const cert = $('certificate'); if (!cert) return;
         try {
-            const canvas = await html2canvas(cert, { scale: 2, backgroundColor: '#fef9ef' });
+            const canvas = await html2canvas(cert, { scale: 2, backgroundColor: '#fbf6ea' });
             const isPhone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             if (isPhone) { $('certImg').src = canvas.toDataURL('image/png'); $('saveImg').style.display = 'block'; $('saveImg').scrollIntoView({ behavior: 'smooth' }); if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) return; }
             const link = document.createElement('a');
