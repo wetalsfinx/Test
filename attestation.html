@@ -868,6 +868,7 @@
                     <div class="client-line"><b>👤 Клиентка</b>${esc(this.situation)}</div>
                     <div class="timer-start" id="ts">
                         <div class="instruction" style="margin:0 0 12px">На ответ <b>${LIMIT} секунд</b>, как в живом разговоре. Когда время выйдет, ответ отправится сам.</div>
+                        <div class="tip" style="margin:0 0 12px">💡 Вспомните 4 шага работы с возражением.</div>
                         <button class="btn-primary" id="start" style="margin-top:0">⏱️ Я готов(а) ответить</button>
                     </div>
                     <div id="tw" class="hidden">
@@ -918,8 +919,8 @@
                 area.innerHTML = `
                     <div class="instruction"><b>Шаг 1.</b> Нажмите на детали, которые говорят: <b>клиент готов купить</b>. Есть и лишние.</div>
                     <div class="story" id="story"></div>
-                    <div class="instruction"><b>Шаг 2.</b> Что вы скажете, чтобы завершить покупку? И как попрощаетесь, когда он будет уходить?</div>
-                    <div class="tip">💡 Не спрашивайте, берёт ли он, а предложите следующее действие. И подумайте, чего не хватает кулону.</div><textarea class="answer-textarea" id="ans" placeholder="Я скажу: «...». Прощаясь: «...»"></textarea>
+                    <div class="instruction"><b>Шаг 2.</b> Напишите две вещи: <b>1) что скажете, чтобы завершить покупку</b>, и <b>2) как попрощаетесь</b>, когда он будет уходить.</div>
+                    <div class="tip">💡 Не спрашивайте, берёт ли он, а предложите следующее действие. Подумайте, чего не хватает кулону. И не забудьте прощание — за него тоже есть баллы.</div><textarea class="answer-textarea" id="ans" placeholder="Я скажу: «...». Прощаясь: «...»"></textarea>
                     <div class="hint-err" id="err"></div>
                     <button class="btn-primary" id="go">🤝 Завершить</button>`;
                 const st = $('story');
