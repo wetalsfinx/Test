@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 3.11-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 3.11-2</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -361,8 +361,11 @@ const SVC_SK = { 'Помощь без запроса': 'K2', 'Проактивн
 // ГРУППЫ МАГАЗИНОВ (3.11): ноябрь — новые магазины из stores.js, октябрь — прежние. Переключатель в шапке.
 const STORES_OCT = ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик'];
 const STORES_NOV = (window.STORES_585 || ['Копейск', 'Боровичи', 'Казань, Зорге, 95', 'СПб, Заневский, 67', 'Москва', 'СПб, Энгельса, 138']);
-// повторная группа: учился в сентябре — в общих цифрах ноября не участвует, смотрится отдельно
+// повторная группа: учился в сентябре. С 3.11-2 считается вместе со всеми (Виталий), отдельно — сравнение «сентябрь → ноябрь».
+// Если разница с сентябрём окажется большой — решим, выводить ли его из общих цифр.
 const REPEAT = ['СПб, Заневский, 67'];
+// Сентябрь Заневского — из «Итоги сентябрь\\ВСЁ СЕНТЯБРЬ 2026.csv» (без лайфхаков): [дата, сотрудник, вид, %]
+const SEPT_ZAN = [["2026-09-03T16:48:40", "Насырова Алина", "test", 82], ["2026-09-03T17:06:22", "Филиппова Ксения", "test", 100], ["2026-09-05T10:28:49", "Корнюхина Анна", "test", 91], ["2026-09-05T16:44:44", "Кочергина Светлана", "test", 100], ["2026-09-09T16:00:07", "Корнюхина Анна", "trainer", 83], ["2026-09-09T16:05:19", "Кочергина Светлана", "trainer", 67], ["2026-09-09T16:17:08", "Кочергина Светлана", "trainer", 67], ["2026-09-11T10:51:41", "Ксения Филиппова", "trainer", 100], ["2026-09-11T13:49:14", "Насырова Алина", "trainer", 67], ["2026-09-14T19:18:53", "Корнюхина Анна", "errorfinder", 100], ["2026-09-15T10:14:14", "Ксения Филиппова", "errorfinder", 86], ["2026-09-15T13:36:18", "Насырова Алина", "errorfinder", 71], ["2026-09-16T12:16:57", "Кочергина Светлана", "errorfinder", 100], ["2026-09-18T17:34:03", "Корнюхина Анна", "clienttype", 86], ["2026-09-18T17:35:32", "Насырова Алина", "clienttype", 100], ["2026-09-19T12:58:09", "Ксения Филиппова", "clienttype", 100], ["2026-09-20T12:17:01", "Кочергина Светлана", "clienttype", 86], ["2026-09-22T12:07:53", "Корнюхина Анна", "crosssell", 100], ["2026-09-23T10:16:38", "Ксения Филиппова", "crosssell", 100], ["2026-09-23T10:19:46", "Насырова Алина", "crosssell", 100], ["2026-09-25T17:20:43", "Луценко Ольга", "final_exam_1", 81], ["2026-09-25T17:28:22", "Ксения Филиппова", "final_exam_1", 85], ["2026-09-25T17:57:31", "Корнюхина Анна", "final_exam_1", 64], ["2026-09-30T13:53:08", "Насырова Алина", "final_exam_1", 57]];
 let STORES = STORES_NOV, GSTORES = STORES_NOV;
 const SK = [
   { k: 'K1', n: 'Приветствие и речевая пластинка', short: 'Приветствие', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
@@ -529,23 +532,34 @@ async function load() {
 
 // группа: даты + (для ноября) магазины из stores.js; Заневский — только когда выбран
 const inGrp = (date, city) => { const g = GROUPS[GRP], d = new Date(date); if (!(d >= dayOf(g.from) && d < dayOf(g.to))) return false;
-  if (g.byStore && !g.stores.includes(city)) return false; if (GRP === 'nov' && !STORE && REPEAT.includes(city)) return false; return true; };
+  if (g.byStore && !g.stores.includes(city)) return false; return true; };
 function applyGroup() {
   const g = GROUPS[GRP]; GSTORES = g.stores;
-  STORES = GRP === 'nov' && !STORE ? GSTORES.filter(c => !REPEAT.includes(c)) : GSTORES;
+  STORES = GSTORES;
   SCHED = g.sched.filter(s => (!s.only || s.only.includes(STORE)) && (!s.except || !s.except.includes(STORE)));
   RECS = ALL_RECS.filter(r => inGrp(r.date, r.city));
   LH = ALL_LH.filter(e => !e.date || inGrp(e.date, e.city));
 }
 function renderGrpNote() {
   const box = $('grpNote'); if (!box) return;
-  if (GRP === 'nov' && !STORE) { box.innerHTML = REPEAT.map(c => `<div class="grp-note">🔁 <span><b>${esc(c)}</b> — повторная группа (учился в сентябре), в общих цифрах ноября не участвует.</span><button class="btn" data-rep="${esc(c)}">Открыть отдельно</button></div>`).join(''); box.querySelectorAll('[data-rep]').forEach(b => b.onclick = () => setStore(b.dataset.rep)); return; }
+  if (GRP === 'nov' && !STORE) { box.innerHTML = REPEAT.map(c => `<div class="grp-note">🔁 <span><b>${esc(c)}</b> — повторная группа (учился в сентябре), считается вместе со всеми.</span><button class="btn" data-rep="${esc(c)}">Сентябрь → ноябрь</button></div>`).join(''); box.querySelectorAll('[data-rep]').forEach(b => b.onclick = () => setStore(b.dataset.rep)); return; }
   if (GRP === 'nov' && REPEAT.includes(STORE)) {
-    const sep = ALL_RECS.filter(r => /заневск/i.test(r.city) && new Date(r.date) < dayOf('2026-10-01')), now = RECS.filter(r => r.city === STORE);
-    const lastBy = (rs, t, first) => { const m = {}; rs.filter(r => r.type === t).forEach(r => { const k = normKey(r.name); if (first ? !(k in m) : true) m[k] = r.percent; }); return Object.values(m); };
-    const cell = (lbl, a, b) => `<div>${lbl}<br>сентябрь: <b>${a.length ? avg(a) + '%' : '—'}</b> <span class="muted">${a.length ? a.length + ' чел.' : 'нет в базе'}</span><br>ноябрь: <b>${b.length ? avg(b) + '%' : '—'}</b> <span class="muted">${b.length ? b.length + ' чел.' : 'ещё нет'}</span></div>`;
-    box.innerHTML = `<div class="grp-note">🔁 <span><b>${esc(STORE)}</b> — повторная группа: учился в сентябре. 19–25.11 вместо Тренировки диалога — «Сервис».</span><button class="btn" id="grpBack">← Все новые магазины</button>
-      <div class="grp-cmp">${cell('📝 Входной тест, первая попытка', lastBy(sep, 'test', true), lastBy(now, 'test', true))}${cell('🏆 Аттестация, последняя', lastBy(sep, 'final_exam_1').concat(lastBy(sep, 'final_exam_old')), lastBy(now, 'final_exam_1'))}</div></div>`;
+    // по каждому сотруднику: первая попытка (у аттестации — последняя)
+    const pick = (rs, t) => { const m = {}; rs.filter(r => r.type === t).sort((x, y) => new Date(x.date) - new Date(y.date)).forEach(r => { const k = normKey(r.name); if (t === 'final_exam_1' || !(k in m)) m[k] = { name: r.name, p: r.percent }; }); return m; };
+    const sep = SEPT_ZAN.map(([date, name, type, percent]) => ({ date, name, type, percent })), now = RECS.filter(r => r.city === STORE);
+    const ROWS = [['test', '📝 Входной тест', 'тот же тест'], ['final_exam_1', '🏆 Аттестация «Одна смена»', 'в сентябре — версия до правок 28.10'], ['trainer', '💬 Тренировка диалога', 'в ноябре у Заневского вместо него «Сервис»'], ['errorfinder', '🔍 Найди ошибку', 'в сентябре — старая версия'], ['crosssell', '🛍️ Допродажи', 'в сентябре — старая версия'], ['clienttype', '🧑‍🤝‍🧑 Типы клиентов', 'в ноябре нет'], ['service', '🤝 Сервис', 'в сентябре не было']];
+    const cell = m => { const v = Object.values(m); return v.length ? `<b>${avg(v.map(x => x.p))}%</b> <span class="muted">${v.length} чел.</span>` : '<span class="muted">—</span>'; };
+    const tbl = ROWS.map(([t, n, note]) => { const a = pick(sep, t), b = pick(now, t); const va = Object.values(a), vb = Object.values(b);
+      const d = va.length && vb.length ? avg(vb.map(x => x.p)) - avg(va.map(x => x.p)) : null;
+      return `<tr><td>${n}<br><span class="muted" style="font-size:12px">${note}</span></td><td>${cell(a)}</td><td>${cell(b)}</td><td>${delta(d)}</td></tr>`; }).join('');
+    // по людям: входной тест и аттестация
+    const ppl = {}; [['s', sep], ['n', now]].forEach(([w, rs]) => ['test', 'final_exam_1'].forEach(t => Object.entries(pick(rs, t)).forEach(([k, x]) => { const p = ppl[k] = ppl[k] || { name: cap(x.name.toLowerCase()) }; p[w + t] = x.p; })));
+    const v = x => x == null ? '<span class="muted">—</span>' : x + '%';
+    const ptbl = Object.values(ppl).sort((a, b) => a.name.localeCompare(b.name)).map(p => `<tr><td>${esc(p.name)}</td><td>${v(p.stest)}</td><td>${v(p.ntest)}</td><td>${v(p.sfinal_exam_1)}</td><td>${v(p.nfinal_exam_1)}</td></tr>`).join('');
+    box.innerHTML = `<div class="grp-note" style="display:block">🔁 <b>${esc(STORE)}</b> — повторная группа: сентябрь → ноябрь. В ноябре считается вместе со всеми; 19–25.11 вместо Тренировки диалога — «Сервис». Если разница с сентябрём большая — решим, выводить ли его из общих цифр.
+      <button class="btn" id="grpBack" style="float:right">← Все магазины</button>
+      <div class="tw" style="margin-top:10px"><table><thead><tr><th>Что</th><th>Сентябрь</th><th>Ноябрь</th><th>Разница</th></tr></thead><tbody>${tbl}</tbody></table></div>
+      <details style="margin-top:8px"><summary><b>По сотрудникам</b> — входной тест и аттестация</summary><div class="tw"><table><thead><tr><th>Сотрудник</th><th>Тест · сент.</th><th>Тест · нояб.</th><th>Аттестация · сент.</th><th>Аттестация · нояб.</th></tr></thead><tbody>${ptbl}</tbody></table></div><p class="hint">Сентябрь — первая попытка теста и последняя аттестации, из файла «ВСЁ СЕНТЯБРЬ 2026.csv». Новые люди появятся в ноябрьских колонках, ушедшие останутся только в сентябре.</p></details></div>`;
     $('grpBack').onclick = () => setStore(''); return;
   }
   box.innerHTML = '';
