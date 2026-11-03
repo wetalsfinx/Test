@@ -172,6 +172,8 @@ function card(t, k, big) {
   return `<a class="card ${k === 0 && big ? 'first' : ''} ${big ? '' : 'small'}" href="${t.u}" data-u="${t.u}"><div class="top"><div class="ic">${t.i}</div><div><div class="nm">${t.n}</div>${big ? `<div class="ds">${t.d}</div>` : ''}</div></div><div class="meta">${pills}</div>${big ? '<span class="go">Начать →</span>' : ''}</a>`;
 }
 async function draw() {
+  // Месяц закончился — всем одно и то же, без ввода имени и списка магазинов (3.11)
+  if (!open.length && today > day(T[T.length - 1].to)) { ['reg','conf','who','chgBox'].forEach(i => $(i).classList.add('hidden')); $('warn').innerHTML = ''; $('list').innerHTML = '<div class="all"><div class="e">🎉</div><h2>Обучение этого месяца завершено</h2><p>Спасибо!</p></div>'; document.querySelector('.note').classList.add('hidden'); return; }
   const me = ls.get('go585_me');
   if (!me) { $('conf').classList.add('hidden'); $('chgBox').classList.add('hidden'); $('warn').innerHTML = ''; $('reg').classList.remove('hidden'); $('who').classList.add('hidden'); $('list').innerHTML = ''; return; }
   $('reg').classList.add('hidden');
