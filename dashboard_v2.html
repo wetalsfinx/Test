@@ -23,6 +23,11 @@
   header .sub { opacity: .85; font-size: 14px; }
   header .right { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   header select { padding: 9px 12px; border-radius: 12px; border: none; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink); max-width: 260px; }
+  #grpSel { background: #ffd98a; }
+  .grp-note { margin: 12px 0 0; padding: 12px 16px; border-radius: 14px; background: #fff7e0; border: 1px solid #f1d58a; font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .grp-note .btn { margin-left: auto; }
+  .grp-cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; width: 100%; margin-top: 6px; }
+  .grp-cmp div { background: #fff; border-radius: 12px; padding: 10px 12px; } .grp-cmp b { font-size: 20px; }
   .hbtn { background: #fff; color: var(--red); border: none; border-radius: 12px; padding: 9px 14px; font-weight: 800; font-family: inherit; font-size: 14px; cursor: pointer; }
   .status { font-size: 12.5px; opacity: .85; }
   nav.tabs { display: flex; gap: 6px; margin: 14px 0; background: var(--card); padding: 6px; border-radius: 16px; border: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; position: sticky; top: 0; z-index: 5; }
@@ -211,8 +216,9 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 27.10-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 3.11-1</span></div></div>
     <div class="right">
+      <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
       <a class="hbtn" href="test585.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block" title="Все тренажёры без регистрации — ваши прохождения не считаются">🧪 Все тренажёры</a>
       <button class="hbtn" id="reloadBtn">🔄 Обновить</button>
@@ -231,6 +237,7 @@
     <button data-t="data">⚙️ Данные</button>
   </nav>
 
+  <div id="grpNote"></div>
   <!-- ============ ОБЗОР ============ -->
   <section class="tab on" id="t-over">
     <div class="kpis" id="ovKpis"></div>
@@ -333,9 +340,9 @@
     </div>
     <div class="card danger">
       <h2>⚠️ Очистить базу</h2>
-      <p class="hint">Удаляет результаты из базы навсегда — например, перед стартом с новыми магазинами. Сначала обязательно сохраните копию.</p>
+      <p class="hint">Удаляет результаты из базы навсегда — например, перед стартом с новыми магазинами. Сначала обязательно сохраните копию. <b>Удаляется только группа, выбранная в шапке</b> (<span id="dzGrp"></span>).</p>
       <div class="dz-grid">
-        <div class="dz-step"><div class="dz-n">1</div><div><b>Сохранить копию</b><small>Все записи, включая лайфхаки, в файл Excel (CSV)</small><button class="btn" id="dzCsv">📥 Скачать копию</button></div></div>
+        <div class="dz-step"><div class="dz-n">1</div><div><b>Сохранить копию</b><small>Записи выбранной группы, включая лайфхаки, в файл Excel (CSV)</small><button class="btn" id="dzCsv">📥 Скачать копию</button></div></div>
         <div class="dz-step"><div class="dz-n">2</div><div><b>Что удалить</b>
           <label class="dz-ck"><input type="checkbox" id="dzRes" checked> Тест, тренажёры и аттестация <span class="muted" id="dzResN"></span></label>
           <label class="dz-ck"><input type="checkbox" id="dzLh" checked> Посещения лайфхаков <span class="muted" id="dzLhN"></span></label></div></div>
@@ -351,7 +358,12 @@
 // ===================== НАСТРОЙКИ =====================
 // «Сервис»: принцип карточки → навык (14.10; старые названия принципов — для прохождений до 12.10)
 const SVC_SK = { 'Помощь без запроса': 'K2', 'Проактивность': 'K2', 'Эмпатия': 'K2', 'Искренний интерес': 'K3', 'Гибкость': 'K3', 'Честность': 'K4', 'Маленькие жесты': 'K4', 'Личное завершение': 'K11', 'Завершение контакта': 'K11', 'Вы — не просто покупатель': 'K11', 'Не просто покупатель': 'K11' };
-const STORES = (window.STORES_585 || ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик']);
+// ГРУППЫ МАГАЗИНОВ (3.11): ноябрь — новые магазины из stores.js, октябрь — прежние. Переключатель в шапке.
+const STORES_OCT = ['СПб, Новочеркасский, 28/19', 'СПб, Дыбенко, 27', 'Самара', 'Казань', 'Тюмень', 'Черкесск', 'Ульяновск', 'Нальчик'];
+const STORES_NOV = (window.STORES_585 || ['Копейск', 'Боровичи', 'Казань, Зорге, 95', 'СПб, Заневский, 67', 'Москва', 'СПб, Энгельса, 138']);
+// повторная группа: учился в сентябре — в общих цифрах ноября не участвует, смотрится отдельно
+const REPEAT = ['СПб, Заневский, 67'];
+let STORES = STORES_NOV, GSTORES = STORES_NOV;
 const SK = [
   { k: 'K1', n: 'Приветствие и речевая пластинка', short: 'Приветствие', tr: { name: 'Тренировка диалога', url: 'dialog_trainer.html' } },
   { k: 'K2', n: 'Инициатива и контакт', short: 'Контакт', tr: { name: 'Сервис с человеческим лицом', url: 'service_trainer.html' } },
@@ -376,7 +388,7 @@ const TSHORT = { trainer: 'Диалог', crosssell: 'Допродажи', error
 const TICON = { trainer: '💬', crosssell: '🛍️', errorfinder: '🔍', clienttype: '🧑‍🤝‍🧑', algorithm: '🧭', service: '🤝' };
 const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт, потребности, презентация, сервис' };
 // расписание октябрьской программы: открытие → срок (включительно)
-const SCHED = [
+const SCHED_OCT = [
   { t: 'test', from: '2026-10-01', to: '2026-10-05' },
   { t: 'trainer', from: '2026-10-07', to: '2026-10-14' },
   { t: 'service', from: '2026-10-12', to: '2026-10-19' },
@@ -385,6 +397,21 @@ const SCHED = [
   { t: 'errorfinder', from: '2026-10-22', to: '2026-10-29' },
   { t: 'final_exam_1', from: '2026-10-28', to: '2026-11-02' }
 ];
+// расписание ноября (утверждено 3.11). Новый тренажёр добавлять, когда он готов и есть в go_nov.html.
+// only / except — как в go_nov.html: Заневский 19–25.11 проходит «Сервис» вместо Тренировки диалога
+const SCHED_NOV = [
+  { t: 'test', from: '2026-11-03', to: '2026-11-09' },
+  { t: 'trainer', from: '2026-11-19', to: '2026-11-25', except: REPEAT },
+  { t: 'service', from: '2026-11-19', to: '2026-11-25', only: REPEAT },
+  { t: 'final_exam_1', from: '2026-12-01', to: '2026-12-04' }
+];
+const GROUPS = {
+  nov: { name: 'Ноябрь', from: '2026-11-03', to: '2027-03-01', stores: STORES_NOV, sched: SCHED_NOV, byStore: true },
+  oct: { name: 'Октябрь', from: '2026-10-01', to: '2026-11-03', stores: STORES_OCT, sched: SCHED_OCT },
+  all: { name: 'Все записи', from: '2000-01-01', to: '2100-01-01', stores: STORES_NOV.concat(STORES_OCT), sched: SCHED_OCT }
+};
+let GRP = (() => { try { const g = JSON.parse(localStorage.getItem('dash2_grp')); return GROUPS[g] ? g : 'nov'; } catch (e) { return 'nov'; } })();
+let SCHED = SCHED_NOV;
 const dayOf = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
 const schedState = s => { const now = new Date(), a = dayOf(s.from), b = new Date(+dayOf(s.to) + 864e5); return now < a ? 'soon' : now < b ? 'open' : 'done'; };
 const schedLabel = t => t === 'test' ? '📝 Входной тест' : t === 'final_exam_1' ? '🏆 Аттестация' : t === 'dorogo' ? '🎭 Сценка «Дорого»' : TICON[t] + ' ' + TSHORT[t];
@@ -446,7 +473,7 @@ const rootKey = k => { let g = 0; while (MERGE[k] && g++ < 10) k = MERGE[k]; ret
 function lev(a, b) { const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; }
 
 // ===================== ДАННЫЕ =====================
-let db = null, RECS = [], LH = [], VISITS = [], PEOPLE = {}, STORE = '', lastLoad = null;
+let db = null, ALL_RECS = [], ALL_LH = [], RECS = [], LH = [], VISITS = [], PEOPLE = {}, STORE = '', lastLoad = null;
 try { localStorage.setItem('dm_trainer', '1'); } catch (e) { } // на этом браузере открытия страниц директоров не считаются
 try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (e) {} } catch (e) { console.error(e); }
 
@@ -495,12 +522,36 @@ async function load() {
   try { const s = await colGet(SN, 'lifehacks'); LH = []; s.forEach(d => LH.push(Object.assign({}, d.data(), { _id: d.id }))); } catch (e) { LH = []; }
   VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date, col: 'lifehacks', id: e._id })); LH = LH.filter(e => e.event !== 'dm_open'); // запасной путь записи открытий
   try { const s = await colGet(SN, 'dm_visits'); s.forEach(d => { const x = d.data(); if (x.store) VISITS.push({ store: x.store, date: x.date, col: 'dm_visits', id: d.id }); }); } catch (e) { }
-  RECS = recs.sort((a, b) => new Date(a.date) - new Date(b.date));
+  ALL_RECS = recs.sort((a, b) => new Date(a.date) - new Date(b.date)); ALL_LH = LH;
   lastLoad = new Date();
   build();
 }
 
+// группа: даты + (для ноября) магазины из stores.js; Заневский — только когда выбран
+const inGrp = (date, city) => { const g = GROUPS[GRP], d = new Date(date); if (!(d >= dayOf(g.from) && d < dayOf(g.to))) return false;
+  if (g.byStore && !g.stores.includes(city)) return false; if (GRP === 'nov' && !STORE && REPEAT.includes(city)) return false; return true; };
+function applyGroup() {
+  const g = GROUPS[GRP]; GSTORES = g.stores;
+  STORES = GRP === 'nov' && !STORE ? GSTORES.filter(c => !REPEAT.includes(c)) : GSTORES;
+  SCHED = g.sched.filter(s => (!s.only || s.only.includes(STORE)) && (!s.except || !s.except.includes(STORE)));
+  RECS = ALL_RECS.filter(r => inGrp(r.date, r.city));
+  LH = ALL_LH.filter(e => !e.date || inGrp(e.date, e.city));
+}
+function renderGrpNote() {
+  const box = $('grpNote'); if (!box) return;
+  if (GRP === 'nov' && !STORE) { box.innerHTML = REPEAT.map(c => `<div class="grp-note">🔁 <span><b>${esc(c)}</b> — повторная группа (учился в сентябре), в общих цифрах ноября не участвует.</span><button class="btn" data-rep="${esc(c)}">Открыть отдельно</button></div>`).join(''); box.querySelectorAll('[data-rep]').forEach(b => b.onclick = () => setStore(b.dataset.rep)); return; }
+  if (GRP === 'nov' && REPEAT.includes(STORE)) {
+    const sep = ALL_RECS.filter(r => /заневск/i.test(r.city) && new Date(r.date) < dayOf('2026-10-01')), now = RECS.filter(r => r.city === STORE);
+    const lastBy = (rs, t, first) => { const m = {}; rs.filter(r => r.type === t).forEach(r => { const k = normKey(r.name); if (first ? !(k in m) : true) m[k] = r.percent; }); return Object.values(m); };
+    const cell = (lbl, a, b) => `<div>${lbl}<br>сентябрь: <b>${a.length ? avg(a) + '%' : '—'}</b> <span class="muted">${a.length ? a.length + ' чел.' : 'нет в базе'}</span><br>ноябрь: <b>${b.length ? avg(b) + '%' : '—'}</b> <span class="muted">${b.length ? b.length + ' чел.' : 'ещё нет'}</span></div>`;
+    box.innerHTML = `<div class="grp-note">🔁 <span><b>${esc(STORE)}</b> — повторная группа: учился в сентябре. 19–25.11 вместо Тренировки диалога — «Сервис».</span><button class="btn" id="grpBack">← Все новые магазины</button>
+      <div class="grp-cmp">${cell('📝 Входной тест, первая попытка', lastBy(sep, 'test', true), lastBy(now, 'test', true))}${cell('🏆 Аттестация, последняя', lastBy(sep, 'final_exam_1').concat(lastBy(sep, 'final_exam_old')), lastBy(now, 'final_exam_1'))}</div></div>`;
+    $('grpBack').onclick = () => setStore(''); return;
+  }
+  box.innerHTML = '';
+}
 function build() {
+  applyGroup(); renderGrpNote();
   // сотрудники
   PEOPLE = {};
   RECS.forEach(r => {
@@ -532,9 +583,10 @@ function build() {
   });
   // фильтр магазинов
   const cities = [...new Set(Object.values(PEOPLE).map(p => p.city))];
-  const all = STORES.concat(cities.filter(c => !STORES.includes(c)));
-  $('storeSel').innerHTML = '<option value="">🏙️ Все магазины</option>' + all.map(c => `<option ${c === STORE ? 'selected' : ''}>${esc(c)}</option>`).join('');
-  $('status').textContent = `✅ ${RECS.length} прохождений · ${Object.keys(PEOPLE).length} сотрудников · ${TEST_SKIPPED ? `🧪 тестовых скрыто: ${TEST_SKIPPED} · ` : ''}${lastLoad.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+  const all = GSTORES.concat(cities.filter(c => !GSTORES.includes(c)));
+  $('storeSel').innerHTML = `<option value="">🏙️ Все магазины${GRP === 'nov' ? ' (новые)' : ''}</option>` + all.map(c => `<option value="${esc(c)}" ${c === STORE ? 'selected' : ''}>${GRP === 'nov' && REPEAT.includes(c) ? '🔁 ' + esc(c) + ' · повторный' : esc(c)}</option>`).join('');
+  $('grpSel').value = GRP;
+  $('status').textContent = `✅ ${GROUPS[GRP].name}: ${RECS.length} прохождений · ${Object.keys(PEOPLE).length} сотрудников · ${TEST_SKIPPED ? `🧪 тестовых скрыто: ${TEST_SKIPPED} · ` : ''}${lastLoad.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
   renderAll();
 }
 const people = () => Object.values(PEOPLE).filter(p => !STORE || p.city === STORE);
@@ -559,7 +611,7 @@ function renderOverview() {
   const g = withBoth.length ? gEx : gTr;
   $('ovKpis').innerHTML = [
     ['👥 В обучении', P.length, 'сотрудников проходили хоть что-то'],
-    !RECS.some(r => r.type === 'final_exam_1') ? ['🏆 Аттестованы', '—', 'аттестация откроется 28.10'] : ['🏆 Аттестованы', `${withExam.length}`, P.length ? `${Math.round(withExam.length / P.length * 100)}% сотрудников · средний балл ${avg(withExam.map(p => p.exam.percent)) ?? '—'}%` : '—'],
+    !RECS.some(r => r.type === 'final_exam_1') ? ['🏆 Аттестованы', '—', (s => s ? 'аттестация откроется ' + dm(s.from) : 'аттестации пока нет')(SCHED.find(x => x.t === 'final_exam_1'))] : ['🏆 Аттестованы', `${withExam.length}`, P.length ? `${Math.round(withExam.length / P.length * 100)}% сотрудников · средний балл ${avg(withExam.map(p => p.exam.percent)) ?? '—'}%` : '—'],
     withBoth.length ? ['📈 Рост после обучения', (gEx >= 0 ? '+' : '') + gEx + ' п.п.', `входной тест → аттестация, ${withBoth.length} чел.`, gEx >= 0 ? 'up' : 'down'] : ['📈 Рост после обучения', '⏳', 'появится после первых аттестаций: сравним входной тест и аттестацию'],
     ['🎯 Тренажёры', `${avg(P.map(p => p.trainN)) != null ? (P.reduce((a, p) => a + p.trainN, 0) / Math.max(1, P.length)).toFixed(1).replace('.', ',') : '—'} <small style="font-size:16px;color:var(--ink-3)">из ${activeTr().length}</small>`, 'в среднем тренажёров на сотрудника · подробно во вкладке «Результаты»']
   ].map(k => `<div class="kpi"><div class="l">${k[0]}</div><div class="v ${k[3] || ''}">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
@@ -933,7 +985,7 @@ function fillRecFilters() {
   const order = ['test'].concat(TRAINERS, ['final_exam_1', 'final_exam_old', 'lifehacks']), types = order.filter(t => rows.some(r => r.type === t)).concat([...new Set(rows.map(r => r.type))].filter(t => !order.includes(t)));
   const ct = $('recType').value; $('recType').innerHTML = '<option value="">📚 Все виды</option>' + types.map(t => `<option value="${t}" ${t === ct ? 'selected' : ''}>${typeLabel(t)}</option>`).join('');
   const ids = new Set(rows.map(rid)); [...SEL].forEach(x => { if (!ids.has(x)) SEL.delete(x); });
-  $('dzResN').textContent = `(${RECS.length})`; $('dzLhN').textContent = `(${LH.length})`;
+  $('dzResN').textContent = `(${RECS.length})`; if ($('dzGrp')) $('dzGrp').textContent = GROUPS[GRP].name + (STORE ? ' · ' + STORE : ''); $('dzLhN').textContent = `(${LH.length})`;
   renderRecs();
 }
 function recFiltered(ignoreType) {
@@ -1006,13 +1058,13 @@ const dzCheck = () => { $('dzGo').disabled = !($('dzWord').value.trim().toUpperC
 $('dzWord').oninput = dzCheck; $('dzRes').onchange = dzCheck; $('dzLh').onchange = dzCheck;
 $('dzGo').onclick = async () => {
   const what = [$('dzRes').checked ? 'тест, тренажёры и аттестацию' : '', $('dzLh').checked ? 'посещения лайфхаков' : ''].filter(Boolean).join(' и ');
-  if (!confirm(`Последнее предупреждение!\n\nБудут удалены навсегда: ${what}.\nВосстановить данные будет нельзя.\n\nКопию сохранили?`)) return;
+  if (!confirm(`Последнее предупреждение!\n\nГруппа: ${GROUPS[GRP].name}${STORE ? ' · ' + STORE : ''}.\nБудут удалены навсегда: ${what}.\nВосстановить данные будет нельзя.\n\nКопию сохранили?`)) return;
   $('dzGo').disabled = true; const box = $('dzProg'); box.innerHTML = '<div class="muted" style="margin-top:10px">⏳ Собираю записи из базы…</div>';
   const cols = [...new Set(($('dzRes').checked ? COLS.map(c => c[0]) : []).concat($('dzLh').checked ? ['lifehacks'] : []))], list = [];
-  try { for (const c of cols) { const s = await colGet(null, c); s.forEach(d => list.push([c, d.id])); } }
+  try { for (const c of cols) { const s = await colGet(null, c); s.forEach(d => { const x = d.data(); if (GRP === 'all' || (x.date && inGrp(x.date, x.city || x.store || 'Не указан') && (!STORE || (x.city || x.store) === STORE))) list.push([c, d.id]); }); } }
   catch (e) { box.innerHTML = `<div class="empty">⚠️ Не удалось прочитать базу: ${esc(e.message)}</div>`; return; }
   const { done, fail } = await delDocs(list, box);
-  box.innerHTML = fail ? `<div class="empty">⚠️ Удалено ${done}, не удалось ${fail}. Нажмите «Обновить» и повторите.</div>` : `<div class="empty">✅ База очищена: удалено ${done} записей</div>`;
+  box.innerHTML = fail ? `<div class="empty">⚠️ Удалено ${done}, не удалось ${fail}. Нажмите «Обновить» и повторите.</div>` : `<div class="empty">✅ Удалено ${done} записей (${GROUPS[GRP].name})</div>`;
   $('dzWord').value = ''; SEL.clear(); await load();
 };
 
@@ -1084,25 +1136,27 @@ function renderDirLinks() {
   const url = c => base + encodeURIComponent(c);
   const fmt = d => new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   const seen = c => { const v = VISITS.filter(x => x.store === c && x.date).sort((a, b) => new Date(a.date) - new Date(b.date)); return v.length ? `<span class="dm-seen ok">✅ открыл ${v.length} ${v.length % 10 === 1 && v.length % 100 !== 11 ? 'раз' : v.length % 10 >= 2 && v.length % 10 <= 4 && (v.length % 100 < 10 || v.length % 100 >= 20) ? 'раза' : 'раз'} · первый ${fmt(v[0].date)} · последний ${fmt(v[v.length - 1].date)}</span>` : '<span class="dm-seen">⏳ ещё не открывал</span>'; };
-  $('ovDir').innerHTML = STORES.map((c, i) => `<div class="dl-row"><div><b>🏬 ${esc(c)}</b><br>${seen(c)}${VISITS.some(x => x.store === c && x.id) ? ` <button class="btn dm-reset" data-dr="${i}" title="Удалить открытия этого магазина (например, ваши тестовые)">🗑 Сбросить</button>` : ''}</div><span><a class="btn" href="${url(c)}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Ссылка</button> <button class="btn" data-dm="${i}">✉️ Письмо</button></span></div>`).join('')
-    + `<details class="dm-lab"><summary>🧪 Архив вариантов страницы (эксперимент 7.10)</summary><p class="hint">Директорам уходит вариант 1. Остальные сохранены — откроются с панелью переключения.</p>${STORES.map(c => `<div class="dl-row"><b>${esc(c)}</b><span class="muted" style="font-size:12.5px">${[['0', 'только навыки'], ['2', 'ошибки сотрудников'], ['3', 'навыки по тренажёрам']].map(([v, n]) => `<a href="${url(c)}&var=${v}&lab=1" target="_blank">${v} · ${n}</a>`).join(' · ')}</span></div>`).join('')}</details>`;
-  $('ovDir').querySelectorAll('button[data-dl]').forEach(b => b.onclick = () => copyText(url(STORES[+b.dataset.dl]), b));
+  $('ovDir').innerHTML = GSTORES.map((c, i) => `<div class="dl-row"><div><b>🏬 ${esc(c)}</b><br>${seen(c)}${VISITS.some(x => x.store === c && x.id) ? ` <button class="btn dm-reset" data-dr="${i}" title="Удалить открытия этого магазина (например, ваши тестовые)">🗑 Сбросить</button>` : ''}</div><span><a class="btn" href="${url(c)}" target="_blank">👁 Открыть</a> <button class="btn" data-dl="${i}">📋 Ссылка</button> <button class="btn" data-dm="${i}">✉️ Письмо</button></span></div>`).join('')
+    + `<details class="dm-lab"><summary>🧪 Архив вариантов страницы (эксперимент 7.10)</summary><p class="hint">Директорам уходит вариант 1. Остальные сохранены — откроются с панелью переключения.</p>${GSTORES.map(c => `<div class="dl-row"><b>${esc(c)}</b><span class="muted" style="font-size:12.5px">${[['0', 'только навыки'], ['2', 'ошибки сотрудников'], ['3', 'навыки по тренажёрам']].map(([v, n]) => `<a href="${url(c)}&var=${v}&lab=1" target="_blank">${v} · ${n}</a>`).join(' · ')}</span></div>`).join('')}</details>`;
+  $('ovDir').querySelectorAll('button[data-dl]').forEach(b => b.onclick = () => copyText(url(GSTORES[+b.dataset.dl]), b));
   $('ovDir').querySelectorAll('button[data-dr]').forEach(b => b.onclick = async () => {
-    const c = STORES[+b.dataset.dr], v = VISITS.filter(x => x.store === c && x.id);
+    const c = GSTORES[+b.dataset.dr], v = VISITS.filter(x => x.store === c && x.id);
     if (!confirm(`Удалить открытия страницы директора «${c}» (${v.length})? Счётчик начнётся заново.`)) return;
     b.disabled = true; b.textContent = '…'; let fail = 0;
     await Promise.all(v.map(x => db.collection('results').doc(x.col).collection('items').doc(x.id).delete().catch(() => fail++)));
     if (fail) alert(`Не удалось удалить ${fail} из ${v.length} — проверьте правила Firestore.`);
     load();
   });
-  $('ovDir').querySelectorAll('button[data-dm]').forEach(b => b.onclick = () => copyText(DM_MAIL(url(STORES[+b.dataset.dm])), b));
+  $('ovDir').querySelectorAll('button[data-dm]').forEach(b => b.onclick = () => copyText(DM_MAIL(url(GSTORES[+b.dataset.dm])), b));
 }
 
 // ===================== НАВИГАЦИЯ =====================
 function showTab(t) { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('on', s.id === 't-' + t)); store.set('dash2_tab', t); }
-function setStore(c) { STORE = c; $('storeSel').value = c; renderAll(); }
+function setStore(c) { STORE = c; $('storeSel').value = c; build(); }
+function setGrp(g) { GRP = GROUPS[g] ? g : 'nov'; try { localStorage.setItem('dash2_grp', JSON.stringify(GRP)); } catch (e) { } STORE = ''; build(); }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => showTab(b.dataset.t));
 $('storeSel').onchange = e => setStore(e.target.value);
+$('grpSel').onchange = e => setGrp(e.target.value);
 $('reloadBtn').onclick = load;
 $('rkSearch').oninput = renderRank;
 $('rkStage').querySelectorAll('button').forEach(b => b.onclick = () => { rkStage = b.dataset.v; $('rkStage').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderRank(); });
