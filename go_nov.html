@@ -69,6 +69,9 @@ a.card.small .nm { font-size: 16px; }
 .tabs button { position: relative; border: none; background: none; color: #4b5563; border-radius: 12px; padding: 9px 8px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; display: grid; gap: 1px; }
 .tabs button small { font-size: 12px; font-weight: 600; color: #9ca3af; }
 .tabs button.on { background: #fde8ec; color: #c41e3a; } .tabs button.on small { color: #c41e3a; opacity: .8; }
+.tabs button small.left { color: #fff !important; opacity: 1 !important; background: #c41e3a; border-radius: 999px; padding: 1px 8px; justify-self: center; }
+.todoal { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 2px solid #c41e3a; background: #fff5f6; color: #1f2937; border-radius: 14px; padding: 12px 14px; margin: 4px 0 14px; font: inherit; font-size: 15px; cursor: pointer; }
+.todoal b { color: #c41e3a; } .todoal .gt { margin-left: auto; white-space: nowrap; font-weight: 700; color: #c41e3a; }
 .tabs .dotnew { position: absolute; top: 8px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: #c41e3a; }
 .necklace { display: flex; align-items: center; justify-content: space-between; position: relative; padding: 6px 2px; }
 .necklace::before { content: ""; position: absolute; left: 6px; right: 6px; top: 50%; height: 1.5px; background: #dcc28f; }
@@ -164,6 +167,7 @@ ol.path { list-style: none; margin: 4px 0 0; padding: 0; }
   </div>
   <section id="viewPath" class="ph hidden">
     <div class="ptop"><h2>Мой путь</h2><span class="cnt" id="cnt"></span></div>
+    <div id="pathTodo"></div>
     <div class="necklace" id="bar" aria-hidden="true"></div>
     <div id="finalBox"></div>
     <div class="hint" id="hint"></div>
@@ -233,11 +237,14 @@ const dm = s => { const d = day(s); return d.getDate() + '.' + String(d.getMonth
 let EXP = TODAY_MAT ? TODAY_MAT.s : null;
 function necklace() { return OPENED.map((o, k) => `<i class="${o ? (TODAY_MAT && TODAY_MAT.s === k + 1 ? 'now' : 'on') : ''}"></i>`).join(''); }
 function setTab(t) { ls.set('go585_tab', t); if (t === 'path') ls.set('go585_seen', STEP); drawTabs(); window.scrollTo(0, 0); }
-let OPEN_N = 0;
+let OPEN_N = 0, FIRST_TODO = null;
 function drawTabs() {
   const t = ls.get('go585_tab') === 'path' ? 'path' : 'tr', nOpen = OPENED.filter(Boolean).length;
   if (t === 'path') ls.set('go585_seen', STEP);
-  $('tabTr').innerHTML = `Задания<small>${OPEN_N ? 'осталось ' + OPEN_N : 'всё пройдено'}</small>`;
+  $('tabTr').innerHTML = `Задания<small class="${OPEN_N ? 'left' : ''}">${OPEN_N ? 'осталось ' + OPEN_N : 'всё пройдено'}</small>`;
+  // на «Моём пути» — напоминание о непройденном задании (чтобы не пропустили тест)
+  $('pathTodo').innerHTML = OPEN_N && FIRST_TODO ? `<button class="todoal" id="toTodo">⚠️ <span>Вам осталось: <b>${esc(FIRST_TODO.n)}</b> · до ${fmt(day(FIRST_TODO.to))}</span><span class="gt">Пройти →</span></button>` : '';
+  if ($('toTodo')) $('toTodo').onclick = () => setTab('tr');
   $('tabPath').innerHTML = `Мой путь<small>${nOpen} из 12</small>${TODAY_MAT && ls.get('go585_seen') !== STEP ? '<span class="dotnew"></span>' : ''}`;
   $('tabTr').classList.toggle('on', t === 'tr'); $('tabPath').classList.toggle('on', t === 'path');
   $('viewTr').classList.toggle('hidden', t === 'path'); $('viewPath').classList.toggle('hidden', t !== 'path');
@@ -344,8 +351,8 @@ async function draw() {
   const open = OPEN.filter(t => (!t.only || t.only.includes(me.city)) && (!t.except || !t.except.includes(me.city)));
   $('tabs').classList.remove('hidden'); drawTeaser(); drawPath();
   const testDoneP = myResults('test', me).then(r => r.length > 0 || !!(ls.get('go585_self') || {})['test_new.html']).catch(() => !!(ls.get('go585_self') || {})['test_new.html']);
-  if (!open.length) { OPEN_N = 0; drawTabs(); $('list').innerHTML = `<div class="all"><div class="e">${today > day(END) ? '🎉' : '✓'}</div><h2>${today > day(END) ? 'Обучение этого месяца завершено' : 'Сейчас открытых заданий нет'}</h2><p>${today > day(END) ? 'Спасибо! Путь из 12 этапов остаётся с вами — вкладка «Мой путь».' : 'Новое задание придёт в письме. А пока — загляните в «Мой путь».'}</p></div>`; drawAsk(me, await testDoneP); return; }
-  OPEN_N = open.length; drawTabs();
+  if (!open.length) { OPEN_N = 0; FIRST_TODO = null; drawTabs(); $('list').innerHTML = `<div class="all"><div class="e">${today > day(END) ? '🎉' : '✓'}</div><h2>${today > day(END) ? 'Обучение этого месяца завершено' : 'Сейчас открытых заданий нет'}</h2><p>${today > day(END) ? 'Спасибо! Путь из 12 этапов остаётся с вами — вкладка «Мой путь».' : 'Новое задание придёт в письме. А пока — загляните в «Мой путь».'}</p></div>`; drawAsk(me, await testDoneP); return; }
+  OPEN_N = open.length; FIRST_TODO = open[0]; drawTabs();
   $('list').innerHTML = '<div class="load">⏳ Проверяю, что вы уже прошли…</div>';
   const opened = ls.get('go585_opened') || {};
   const status = await Promise.all(open.map(async t => {
@@ -364,7 +371,7 @@ async function draw() {
     if (ls.get('go585_ok_' + me.city)) $('warn').innerHTML = '';
   }
   const todo = status.filter(s => !s.done), done = status.filter(s => s.done);
-  OPEN_N = todo.length; drawTabs();
+  OPEN_N = todo.length; FIRST_TODO = todo.length ? todo[0].t : null; drawTabs();
   let html = '';
   if (todo.length) {
     html += `<div class="sec">${todo.length === 1 ? 'Вам осталось пройти' : 'Вам осталось · ' + todo.length}</div>`;
@@ -414,6 +421,7 @@ window.addEventListener('pageshow', e => { if (e.persisted && stale()) location.
 document.addEventListener('visibilitychange', () => { if (!document.hidden && stale()) location.reload(); });
 // Вернулся из тренажёра — обновить отметки
 document.addEventListener('visibilitychange', () => { if (!document.hidden && ls.get('go585_me')) draw(); });
+ls.set('go585_tab', 'tr'); // каждый вход — с «Заданий»: там тест и тренажёры
 draw();
 </script>
 </body>
