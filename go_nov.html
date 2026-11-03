@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>585GOLD | Тренажёры сейчас</title>
+<title>585GOLD | Твой путь к успеху</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 * { box-sizing: border-box; }
@@ -64,23 +64,81 @@ a.card.small .nm { font-size: 16px; }
 .load { text-align: center; color: #6b7280; padding: 30px 0; }
 .selfbtn { background: none; border: none; color: #6b7280; font: inherit; text-decoration: underline; cursor: pointer; padding: 2px 4px; }
 .note { text-align: center; font-size: 12.5px; color: #9ca3af; margin: 22px 0 8px; line-height: 1.5; }
+/* ===== 12 шагов: вкладки, путь (3.11) ===== */
+.tabs { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: #fff; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.08); margin: 8px 0 4px; }
+.tabs button { position: relative; border: none; background: none; color: #4b5563; border-radius: 12px; padding: 9px 8px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; display: grid; gap: 1px; }
+.tabs button small { font-size: 12px; font-weight: 600; color: #9ca3af; }
+.tabs button.on { background: #fde8ec; color: #c41e3a; } .tabs button.on small { color: #c41e3a; opacity: .8; }
+.tabs .dotnew { position: absolute; top: 8px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: #c41e3a; }
+.necklace { display: flex; align-items: center; justify-content: space-between; position: relative; padding: 6px 2px; }
+.necklace::before { content: ""; position: absolute; left: 6px; right: 6px; top: 50%; height: 1.5px; background: #dcc28f; }
+.necklace i { position: relative; width: 11px; height: 11px; transform: rotate(45deg); border: 1.5px solid #dcc28f; background: #fff; border-radius: 2px; }
+.necklace i.on { background: #c41e3a; border-color: #c41e3a; }
+.necklace i.now { background: #c41e3a; border-color: #c41e3a; box-shadow: 0 0 0 3px #fde8ec; width: 14px; height: 14px; }
+.teaser { background: #fff; border: 1.5px solid #dcc28f; border-radius: 20px; padding: 16px 18px; margin: 14px 0; display: grid; gap: 10px; }
+.teaser .kick { font-size: 12px; font-weight: 700; color: #a8741c; text-transform: uppercase; letter-spacing: .08em; }
+.teaser .tt { font-size: 18px; font-weight: 800; line-height: 1.25; }
+.teaser .more { justify-self: start; background: none; border: 1.5px solid #1f2937; color: #1f2937; border-radius: 999px; padding: 8px 16px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.say { position: relative; padding: 10px 12px 10px 34px; border-radius: 12px; background: #ecfdf5; color: #1f2937; font-size: 15px; line-height: 1.45; }
+.say::before { content: "✓"; position: absolute; left: 12px; top: 9px; font-weight: 800; color: #047857; }
+.say.no { background: #f3f4f6; color: #9ca3af; text-decoration: line-through; }
+.say.no::before { content: "✕"; color: #c41e3a; }
+.tip { font-size: 14px; color: #4b5563; line-height: 1.45; }
+.ask { background: #fbf1de; border: 1px solid #dcc28f; border-radius: 20px; padding: 16px; margin: 14px 0; display: grid; gap: 12px; }
+.ask .q { font-weight: 800; font-size: 16px; } .ask .q small { display: block; font-weight: 500; color: #4b5563; font-size: 13px; margin-top: 2px; }
+.ask .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ask .chips button { background: #fff; border: 1px solid #dcc28f; border-radius: 999px; padding: 8px 12px; font: inherit; font-size: 14px; font-weight: 600; color: #1f2937; cursor: pointer; }
+.ask .skip { justify-self: start; background: none; border: none; color: #6b7280; text-decoration: underline; font: inherit; font-size: 13px; cursor: pointer; padding: 0; }
+.ph { background: #fff; border-radius: 20px; padding: 20px 16px 8px; box-shadow: 0 4px 20px rgba(0,0,0,.08); display: grid; gap: 10px; margin-top: 10px; }
+.ph .ptop { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.ph h2 { margin: 0; font-size: 20px; font-weight: 800; }
+.ph .cnt { font-size: 13.5px; font-weight: 700; color: #a8741c; }
+.ph .hint { font-size: 14px; color: #4b5563; line-height: 1.45; } .ph .hint b { color: #1f2937; }
+.final { background: #fbf1de; border: 1px solid #dcc28f; border-radius: 16px; padding: 14px 16px; font-size: 14px; color: #4b5563; } .final b { display: block; font-size: 16px; color: #a8741c; margin-bottom: 2px; }
+ol.path { list-style: none; margin: 4px 0 0; padding: 0; }
+.st { position: relative; padding-left: 46px; }
+.st::before { content: ""; position: absolute; left: 17px; top: 0; bottom: 0; width: 2px; background: #e5e7eb; }
+.st:first-child::before { top: 26px; } .st:last-child::before { bottom: calc(100% - 26px); }
+.st.open::before { background: #dcc28f; }
+.gem { position: absolute; left: 4px; top: 12px; width: 28px; height: 28px; display: grid; place-items: center; z-index: 1; }
+.gem::before { content: ""; position: absolute; inset: 3px; transform: rotate(45deg); border-radius: 4px; background: #fff; border: 1.5px solid #d1d5db; }
+.gem span { position: relative; font-size: 11px; font-weight: 800; color: #9ca3af; }
+.st.open .gem::before { background: #c41e3a; border-color: #c41e3a; } .st.open .gem span { color: #fff; }
+.st.now .gem::after { content: ""; position: absolute; inset: -3px; transform: rotate(45deg); border-radius: 6px; border: 2px solid #c41e3a; opacity: .35; }
+@media (prefers-reduced-motion: no-preference) { .st.now .gem::after { animation: pulse 2.2s ease-in-out infinite; } }
+@keyframes pulse { 50% { opacity: .05; transform: rotate(45deg) scale(1.15); } }
+.sh { width: 100%; text-align: left; background: none; border: none; padding: 14px 0; display: flex; gap: 8px; align-items: center; cursor: pointer; color: #1f2937; border-bottom: 1px solid #f0f0f0; font: inherit; }
+.st:last-child .sh, .st:last-child .body { border-bottom: none; }
+.sh .sn { flex: 1; min-width: 0; font-weight: 700; font-size: 15.5px; line-height: 1.3; }
+.sh .sm { font-size: 12.5px; color: #9ca3af; font-weight: 600; white-space: nowrap; }
+.sh .star { font-size: 12px; font-weight: 700; color: #a8741c; white-space: nowrap; }
+.st.lock .sh { cursor: default; } .st.lock .sn { color: #9ca3af; font-weight: 500; }
+.tagnow { font-size: 11.5px; font-weight: 700; background: #c41e3a; color: #fff; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+.chev { width: 9px; height: 9px; flex: none; border-right: 2px solid #9ca3af; border-bottom: 2px solid #9ca3af; transform: rotate(45deg) translate(-2px, -2px); }
+.st.exp .chev { transform: rotate(225deg) translate(-2px, -2px); }
+.body { padding: 2px 0 16px; display: grid; gap: 14px; border-bottom: 1px solid #f0f0f0; }
+.mat { display: grid; gap: 7px; } .mat .mt { font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; } .mat .mt .nowl { color: #c41e3a; }
+.mat.soon .mt { color: #c0c4cc; }
+.intro { font-size: 15px; line-height: 1.45; color: #4b5563; text-align: center; margin: 0 0 6px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="head">
     <div class="brand">585GOLD · ОБУЧЕНИЕ</div>
-    <h1>Тренажёры сейчас</h1>
+    <h1>Твой путь к успеху</h1>
     <div class="today" id="today"></div>
   </div>
 
   <div id="reg" class="box hidden">
-    <p>Как вас зовут? Один раз — и мы покажем, что вам осталось пройти.</p>
+    <p class="intro"><b style="color:#1f2937">Добро пожаловать!</b> В этом месяце вас ждут 12 этапов продажи — от «Добрый день» до тёплого прощания. Каждый рабочий день открывается новый шаг, а здесь — ваши задания: тест, тренажёры, аттестация.</p>
+    <div class="necklace" aria-hidden="true"><i class="now"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <p>Как вас зовут? Один раз — и страница запомнит вас.</p>
     <input id="userName" placeholder="Имя и фамилия" autocomplete="name" list="names">
     <datalist id="names"></datalist>
     <select id="userCity"><option value="">Выберите магазин</option></select>
     <div class="err" id="regErr"></div>
-    <button class="btn" id="saveBtn">Показать мои тренажёры →</button>
+    <button class="btn" id="saveBtn">Начать путь →</button>
   </div>
 
   <div id="conf" class="box confirm hidden">
@@ -97,9 +155,21 @@ a.card.small .nm { font-size: 16px; }
     <select id="chgCity"><option value="">Выберите магазин</option></select>
     <button class="btn" id="chgSave">Сохранить</button>
   </div>
-  <div id="warn"></div>
-  <div id="list"></div>
-  <p class="note">Сохраните эту страницу — здесь всегда ваши открытые тренажёры.</p>
+  <div id="tabs" class="tabs hidden"><button id="tabTr" class="on"></button><button id="tabPath"></button></div>
+  <div id="viewTr">
+    <div id="warn"></div>
+    <div id="list"></div>
+    <div id="teaser"></div>
+    <div id="ask"></div>
+  </div>
+  <section id="viewPath" class="ph hidden">
+    <div class="ptop"><h2>Мой путь</h2><span class="cnt" id="cnt"></span></div>
+    <div class="necklace" id="bar" aria-hidden="true"></div>
+    <div id="finalBox"></div>
+    <div class="hint" id="hint"></div>
+    <ol class="path" id="path"></ol>
+  </section>
+  <p class="note" id="foot">Одна страница на всё обучение: тест, тренажёры, аттестация и путь.<br>Сохраните её в закладки.</p>
 </div>
 <script src="stores.js"></script>
 <script>
@@ -111,9 +181,10 @@ const T = [
   // 19–25.11: всем — Тренировка диалога, Заневскому — «Сервис» (диалог он проходил в сентябре; решение Виталия 3.11)
   { n: 'Тренировка диалога', u: 'dialog_trainer.html', i: '💬', d: 'Живой разговор с клиентом: доведите до покупки.', m: 6, from: '2026-11-19', to: '2026-11-25', col: 'dialog', except: ['СПб, Заневский, 67'] },
   { n: 'Сервис с человеческим лицом', u: 'service_trainer.html', i: '🤝', d: '16 ситуаций: хорошо или плохо поступил продавец?', m: 5, from: '2026-11-19', to: '2026-11-25', col: 'service', only: ['СПб, Заневский, 67'] },
+  { n: 'Аттестация «Одна смена»', u: 'attestation.html', i: '🏆', d: '9 клиентов, ответы своими словами, именной сертификат.', m: 25, from: '2026-12-01', to: '2026-12-04', col: 'final_exam' },
 ];
 // Последний день ноябрьской программы: до него страница не пишет «обучение завершено»
-const END = '2026-12-01';
+const END = '2026-12-04';
 const KEY = 'AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc';
 const BASE = 'https://firestore.googleapis.com/v1/projects/gold-8105a/databases/(default)/documents/results/';
 const MON = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -127,6 +198,95 @@ const left = t => Math.round((day(t.to) - today) / 864e5);
 const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return n + ' ' + (m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 10 || h >= 20) ? b : c); };
 const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
 $('today').textContent = 'Сегодня ' + WD[now.getDay()] + ', ' + fmt(now);
+// ===== 12 ШАГОВ: путь продавца (3.11) =====
+// Рабочие дни ноября: шаг 1 = 3.11 (материал 01, карта пути) … шаг 20 = 1.12 (итоговая шпаргалка — путь открыт целиком)
+const NOVD = ['2026-11-03','2026-11-05','2026-11-06','2026-11-09','2026-11-10','2026-11-11','2026-11-12','2026-11-13','2026-11-16','2026-11-17','2026-11-18','2026-11-19','2026-11-20','2026-11-23','2026-11-24','2026-11-25','2026-11-26','2026-11-27','2026-11-30','2026-12-01'];
+const STAGES = ['Приветствие','Начало контакта','Выявление потребностей','Презентация','Повышение ценности','Допродажа','Финансовые инструменты','Работа с возражениями','Завершение сделки','Альтернатива и каталог','Тёплое прощание','Не покупают сегодня'];
+// d — номер шага (0 = 3.11), s — этап 1–12. Фразы сверены с материалами и правилами (пауза перед вопросом, 4 способа оплаты, каталог каждому)
+const MATS = [
+  { d: 1, s: 1, t: 'Речевая пластинка', say: '«Добрый день! Сегодня [акция недели]». Затем 20–30 секунд дайте осмотреться — и только потом вопрос.', tip: 'Акция — конкретная: что, сколько, до какого числа. Каждому клиенту, сразу при встрече.' },
+  { d: 2, s: 2, t: 'Инициатива в диалоге', no: '«Вам помочь?»', say: '«Вижу, вы присматриваетесь к серьгам. Давайте покажу три модели, которые сейчас выбирают чаще всего»' },
+  { d: 3, s: 2, t: 'Неконтактный покупатель', say: '«Изучайте спокойно, я буду рядом. Захотите примерить — скажите»', tip: '1,5–2 метра, в поле зрения. Подходите, когда клиент взял украшение в руки или ищет вас глазами.' },
+  { d: 4, s: 3, t: 'Искусство задавать вопросы', say: '«Для какого повода подбираете украшение?»', tip: 'Клиент говорит 70% времени, вы — 30%.' },
+  { d: 5, s: 3, t: 'Без вопроса о бюджете', no: '«На какую сумму рассчитываете?»', say: '«Для какого случая выбираете?»', tip: 'Повод, стиль, предпочтения. Сумму назвал сам — примите и уточните повод.' },
+  { d: 6, s: 4, t: 'Презентация: ХПВ и примерка', say: '«57 граней — это игра света. Давайте примерим — увидите, как сидит»', tip: 'Характеристика → преимущество → выгода. Каждая презентация заканчивается примеркой и зеркалом.' },
+  { d: 7, s: 4, t: 'Знание товара', say: '«Гладкое плетение — кулон скользит и смотрится с цепочкой как одно украшение»' },
+  { d: 8, s: 4, t: '«Можно» или «Давайте»', no: '«Можно примерить?»', say: '«Давайте примерим»' },
+  { d: 9, s: 3, t: 'Типы клиентов', say: '«Вижу, вы спешите — быстро покажу три лучших варианта»', tip: 'Подстраивайтесь под человека: эксперту — факты, растерянному — 2–3 готовых варианта.' },
+  { d: 10, s: 5, t: 'Повышение ценности', say: '«Для сравнения примерьте ещё вот это — бриллиант в нём чище, на свету видна разница»', tip: 'Только после вопросов. Выбор — за клиентом.' },
+  { d: 11, s: 6, t: 'Второе украшение и уход', say: '«Давайте подберём серьги из той же коллекции — вместе они создадут законченный образ»', tip: 'Предлагаем в зале, сразу после выбора, а не на кассе.' },
+  { d: 12, s: 7, t: 'Финансовые инструменты', say: '«Для такого выбора есть Сплит — 4 платежа без переплат, или рассрочка. Как вам удобнее?»', tip: 'Четыре способа: Сплит, рассрочка, кредит, обмен «старое на новое». Называйте два-три. Спросили «Сколько стоит?» — сначала цена.' },
+  { d: 13, s: 8, t: 'Возражение «Дорого»', say: '«Понимаю, цена важна. А с чем вы сравниваете?»', tip: 'Сначала способы оплаты. Модель дешевле — только если ни один не подошёл.' },
+  { d: 14, s: 8, t: 'Возражения кроме «дорого»', say: '«Давайте сфотографируем кольцо на вашей руке на ваш телефон — мужу будет проще увидеть, как оно вам идёт»' },
+  { d: 15, s: 10, t: 'Альтернатива и каталог', no: '«Этого нет»', say: '«Что именно понравилось — форма камня или стиль оправы? Найдём в зале или закажем с доставкой в наш магазин»', tip: 'Электронный каталог — каждому покупателю: комплект к покупке, даже если подарок нужен сегодня.' },
+  { d: 16, s: 9, t: 'Закрытие сделки', no: '«Ну что, берёте?»', say: '«Давайте оформим, пока этот размер есть в наличии»', tip: 'Сигналы: переспрашивает цену, спрашивает детали, просит совета между двумя.' },
+  { d: 17, s: 12, t: '«Я подумаю» и клиент без покупки', say: '«Конечно, решение важное. Над чем хотите подумать — над моделью или ценой?»' },
+  { d: 18, s: 11, t: 'Сервис и постоянный клиент', say: '«Как рада вас видеть! Как носится кольцо, которое вы брали?»', tip: 'Имя, прошлая покупка, маленький жест — запоминается лучше любой акции.' }
+];
+const STEP = NOVD.filter(d => day(d) <= today).length - 1;        // номер сегодняшнего шага (0…19), −1 — до старта
+const IS_WORKDAY = NOVD.some(d => +day(d) === +today);
+const IS_LAST = STEP >= NOVD.length - 1;
+const openAt = s => Math.min(...MATS.filter(m => m.s === s).map(m => m.d));
+const OPENED = STAGES.map((_, k) => IS_LAST || openAt(k + 1) <= STEP);
+const TODAY_MAT = IS_LAST ? null : MATS.find(m => m.d === STEP);
+const dm = s => { const d = day(s); return d.getDate() + '.' + String(d.getMonth() + 1).padStart(2, '0'); };
+let EXP = TODAY_MAT ? TODAY_MAT.s : null;
+function necklace() { return OPENED.map((o, k) => `<i class="${o ? (TODAY_MAT && TODAY_MAT.s === k + 1 ? 'now' : 'on') : ''}"></i>`).join(''); }
+function setTab(t) { ls.set('go585_tab', t); if (t === 'path') ls.set('go585_seen', STEP); drawTabs(); window.scrollTo(0, 0); }
+let OPEN_N = 0;
+function drawTabs() {
+  const t = ls.get('go585_tab') === 'path' ? 'path' : 'tr', nOpen = OPENED.filter(Boolean).length;
+  if (t === 'path') ls.set('go585_seen', STEP);
+  $('tabTr').innerHTML = `Задания<small>${OPEN_N ? 'осталось ' + OPEN_N : 'всё пройдено'}</small>`;
+  $('tabPath').innerHTML = `Мой путь<small>${nOpen} из 12</small>${TODAY_MAT && ls.get('go585_seen') !== STEP ? '<span class="dotnew"></span>' : ''}`;
+  $('tabTr').classList.toggle('on', t === 'tr'); $('tabPath').classList.toggle('on', t === 'path');
+  $('viewTr').classList.toggle('hidden', t === 'path'); $('viewPath').classList.toggle('hidden', t !== 'path');
+}
+function stepLabel() { return `шаг ${STEP + 1} из 20` + (TODAY_MAT ? ` · этап ${TODAY_MAT.s} из 12` : ''); }
+function drawTeaser() {
+  const neck = `<div class="necklace" aria-hidden="true">${necklace()}</div>`;
+  $('teaser').innerHTML = STEP < 0 ? '' : IS_LAST
+    ? `<div class="teaser"><div class="kick">Весь путь открыт · 12 из 12</div><div class="tt">Все 12 этапов и главные фразы — ваша шпаргалка в телефоне</div>${neck}<button class="more" data-go>Открыть путь</button></div>`
+    : STEP === 0
+    ? `<div class="teaser"><div class="kick">Ваш путь · 12 этапов</div><div class="tt">От «Добрый день» до тёплого прощания. Первый этап откроется ${fmt(day(NOVD[1]))}</div>${neck}<button class="more" data-go>Посмотреть карту</button></div>`
+    : TODAY_MAT
+    ? `<div class="teaser"><div class="kick">${IS_WORKDAY ? 'Сегодня на пути' : 'Последний шаг'} · ${stepLabel()}</div><div class="tt">${esc(TODAY_MAT.t)}</div>${TODAY_MAT.no ? `<div class="say no">${esc(TODAY_MAT.no)}</div>` : ''}<div class="say">${esc(TODAY_MAT.say)}</div>${neck}<button class="more" data-go>Весь путь</button></div>` : '';
+  $('teaser').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { if (TODAY_MAT) EXP = TODAY_MAT.s; drawPath(); setTab('path'); });
+}
+function drawPath() {
+  const hard = ls.get('go585_hard');
+  $('cnt').textContent = `Открыто ${OPENED.filter(Boolean).length} из 12`;
+  $('bar').innerHTML = necklace();
+  $('finalBox').innerHTML = IS_LAST ? '<div class="final"><b>Весь путь открыт</b>Это ваша шпаргалка: все 12 этапов и главные фразы — в телефоне. Нажмите на любой этап.</div>' : '';
+  $('hint').innerHTML = STEP < 0 ? '' : STEP === 0 ? `Сегодня — карта пути. Первый этап откроется ${fmt(day(NOVD[1]))}.`
+    : IS_LAST ? '' : TODAY_MAT ? `${IS_WORKDAY ? 'Сегодня' : 'Последний шаг'}: <b>«${esc(TODAY_MAT.t)}»</b> · ${stepLabel()}. Нажмите на открытый этап, чтобы увидеть главное.` : '';
+  $('path').innerHTML = STAGES.map((name, k) => {
+    const s = k + 1, o = OPENED[k], now = TODAY_MAT && TODAY_MAT.s === s, exp = o && EXP === s, ms = MATS.filter(m => m.s === s);
+    const meta = o ? (hard === k ? '<span class="star">★ ваш трудный</span>' : '') : `<span class="sm">с ${dm(NOVD[openAt(s)])}</span>`;
+    const body = exp ? `<div class="body">${ms.map(m => (IS_LAST || m.d <= STEP)
+      ? `<div class="mat"><div class="mt">${esc(m.t)}${m.d === STEP && IS_WORKDAY ? ' <span class="nowl">· сегодня</span>' : ''}</div>${m.no ? `<div class="say no">${esc(m.no)}</div>` : ''}<div class="say">${esc(m.say)}</div>${m.tip ? `<div class="tip">${esc(m.tip)}</div>` : ''}</div>`
+      : `<div class="mat soon"><div class="mt">${esc(m.t)} · откроется ${dm(NOVD[m.d])}</div></div>`).join('')}</div>` : '';
+    return `<li class="st ${o ? 'open' : 'lock'} ${now ? 'now' : ''} ${exp ? 'exp' : ''}"><span class="gem"><span>${s}</span></span><button class="sh" data-s="${s}" ${o ? '' : 'disabled'}><span class="sn">${esc(name)}</span>${now && IS_WORKDAY ? '<span class="tagnow">сегодня</span>' : ''}${meta}${o ? '<span class="chev"></span>' : ''}</button>${body}</li>`;
+  }).join('');
+  $('path').querySelectorAll('.sh:not([disabled])').forEach(b => b.onclick = () => { const s = +b.dataset.s; EXP = EXP === s ? 0 : s; drawPath(); });
+}
+// «Какой этап сложнее всего?» — после входного теста, один раз. Ответ — в базу (results/stage_hard; если запись запрещена — в lifehacks, event 'hard_stage')
+async function sendHard(me, k) {
+  const f = { user_name: { stringValue: me.name }, city: { stringValue: me.city }, stage: { integerValue: String(k + 1) }, stage_name: { stringValue: STAGES[k] }, event: { stringValue: 'hard_stage' }, detail: { stringValue: STAGES[k] }, date: { stringValue: new Date().toISOString() } };
+  for (const col of ['stage_hard', 'lifehacks']) {
+    try { const r = await fetch(BASE + col + '/items?key=' + KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: f }) }); if (r.ok) return true; } catch (e) {}
+  }
+  return false;
+}
+function drawAsk(me, testDone) {
+  const a = ls.get('go585_hard');
+  if (!testDone || a != null) { $('ask').innerHTML = ''; return; }
+  $('ask').innerHTML = `<div class="ask"><div class="q">Какой этап продажи вам сложнее всего?<small>Один вопрос, одно нажатие — отметим его на вашем пути.</small></div><div class="chips">${STAGES.map((s, k) => `<button data-k="${k}">${esc(s)}</button>`).join('')}</div><button class="skip" id="askSkip">Пропустить</button></div>`;
+  $('ask').querySelectorAll('button[data-k]').forEach(b => b.onclick = () => { const k = +b.dataset.k; ls.set('go585_hard', k); sendHard(me, k); $('ask').innerHTML = ''; if (OPENED[k]) EXP = k + 1; drawPath(); setTab('path'); });
+  $('askSkip').onclick = () => { ls.set('go585_hard', -1); $('ask').innerHTML = ''; };
+}
+$('tabTr').onclick = () => setTab('tr');
+$('tabPath').onclick = () => setTab('path');
 
 const OPEN = T.filter(t => day(t.from) <= today && today <= day(t.to))
   .sort((a, b) => (a.extra || 0) - (b.extra || 0) || day(a.to) - day(b.to));
@@ -174,15 +334,18 @@ async function draw() {
   let me = ls.get('go585_me');
   // Телефон помнит магазин не из ноябрьского списка (октябрь) — заново имя и магазин
   if (me && (window.STORES_585 || []).indexOf(me.city) < 0) { try { ['go585_me','go585_self','go585_opened'].forEach(k => localStorage.removeItem(k)); } catch (e) {} me = null; }
-  if (!me) { $('conf').classList.add('hidden'); $('chgBox').classList.add('hidden'); $('warn').innerHTML = ''; $('reg').classList.remove('hidden'); $('who').classList.add('hidden'); $('list').innerHTML = ''; return; }
+  if (!me) { $('conf').classList.add('hidden'); $('chgBox').classList.add('hidden'); $('warn').innerHTML = ''; $('reg').classList.remove('hidden'); $('who').classList.add('hidden'); $('list').innerHTML = ''; $('tabs').classList.add('hidden'); $('viewPath').classList.add('hidden'); $('viewTr').classList.remove('hidden'); $('teaser').innerHTML = ''; $('ask').innerHTML = ''; return; }
   $('reg').classList.add('hidden');
   $('who').classList.remove('hidden');
   $('conf').classList.add('hidden'); $('chgBox').classList.add('hidden'); $('warn').innerHTML = '';
   $('who').innerHTML = `<div class="av">👤</div><div class="wn"><b>${esc(me.name)}</b><span>🏬 ${esc(me.city)}</span></div><div class="wb"><button id="chgStore">Другой магазин</button><button id="chg">Это не я</button></div>`;
-  $('chg').onclick = () => { try { localStorage.removeItem('go585_me'); localStorage.removeItem('go585_self'); localStorage.removeItem('go585_opened'); } catch (e) {} draw(); };
+  $('chg').onclick = () => { try { ['go585_me', 'go585_self', 'go585_opened', 'go585_hard', 'go585_tab', 'go585_seen'].forEach(k => localStorage.removeItem(k)); } catch (e) {} draw(); };
   $('chgStore').onclick = () => { fillSel($('chgCity'), me.city); $('chgBox').classList.toggle('hidden'); };
   const open = OPEN.filter(t => (!t.only || t.only.includes(me.city)) && (!t.except || !t.except.includes(me.city)));
-  if (!open.length) { $('list').innerHTML = `<div class="all"><div class="e">🎉</div><h2>${today > day(END) ? 'Обучение этого месяца завершено' : 'Сейчас открытых тренажёров нет'}</h2><p>${today > day(END) ? 'Спасибо!' : 'Новое задание придёт в письме.'}</p></div>`; return; }
+  $('tabs').classList.remove('hidden'); drawTeaser(); drawPath();
+  const testDoneP = myResults('test', me).then(r => r.length > 0 || !!(ls.get('go585_self') || {})['test_new.html']).catch(() => !!(ls.get('go585_self') || {})['test_new.html']);
+  if (!open.length) { OPEN_N = 0; drawTabs(); $('list').innerHTML = `<div class="all"><div class="e">${today > day(END) ? '🎉' : '✓'}</div><h2>${today > day(END) ? 'Обучение этого месяца завершено' : 'Сейчас открытых заданий нет'}</h2><p>${today > day(END) ? 'Спасибо! Путь из 12 этапов остаётся с вами — вкладка «Мой путь».' : 'Новое задание придёт в письме. А пока — загляните в «Мой путь».'}</p></div>`; drawAsk(me, await testDoneP); return; }
+  OPEN_N = open.length; drawTabs();
   $('list').innerHTML = '<div class="load">⏳ Проверяю, что вы уже прошли…</div>';
   const opened = ls.get('go585_opened') || {};
   const status = await Promise.all(open.map(async t => {
@@ -201,6 +364,7 @@ async function draw() {
     if (ls.get('go585_ok_' + me.city)) $('warn').innerHTML = '';
   }
   const todo = status.filter(s => !s.done), done = status.filter(s => s.done);
+  OPEN_N = todo.length; drawTabs();
   let html = '';
   if (todo.length) {
     html += `<div class="sec">${todo.length === 1 ? 'Вам осталось пройти' : 'Вам осталось · ' + todo.length}</div>`;
@@ -214,6 +378,8 @@ async function draw() {
   $('list').innerHTML = html;
   $('list').querySelectorAll('.selfbtn').forEach(b => b.onclick = () => { const o = ls.get('go585_self') || {}; o[b.dataset.u] = 1; ls.set('go585_self', o); draw(); });
   $('list').querySelectorAll('a.card').forEach(a => a.addEventListener('click', () => { const o = ls.get('go585_opened') || {}; o[a.dataset.u] = 1; ls.set('go585_opened', o); }));
+  const ts = status.find(x => x.t.col === 'test');
+  drawAsk(me, ts ? ts.done : await testDoneP);
 }
 $('saveBtn').onclick = () => {
   const n = $('userName').value.trim(), c = $('userCity').value;

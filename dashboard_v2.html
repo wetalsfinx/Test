@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 3.11-2</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 3.11-3</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -523,7 +523,7 @@ async function load() {
     } catch (e) { console.warn(col, e.message); }
   }
   try { const s = await colGet(SN, 'lifehacks'); LH = []; s.forEach(d => LH.push(Object.assign({}, d.data(), { _id: d.id }))); } catch (e) { LH = []; }
-  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date, col: 'lifehacks', id: e._id })); LH = LH.filter(e => e.event !== 'dm_open'); // запасной путь записи открытий
+  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date, col: 'lifehacks', id: e._id })); LH = LH.filter(e => e.event !== 'dm_open' && e.event !== 'hard_stage'); // запасной путь записи открытий; hard_stage — ответ «какой этап сложнее» с go_nov.html (3.11), в лайфхаках не считаем
   try { const s = await colGet(SN, 'dm_visits'); s.forEach(d => { const x = d.data(); if (x.store) VISITS.push({ store: x.store, date: x.date, col: 'dm_visits', id: d.id }); }); } catch (e) { }
   ALL_RECS = recs.sort((a, b) => new Date(a.date) - new Date(b.date)); ALL_LH = LH;
   lastLoad = new Date();
