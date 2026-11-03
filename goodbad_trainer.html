@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>585GOLD | Хорошо или плохо</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Inter', sans-serif; background: #f5f5f5; margin: 0; padding: 16px; color: #1f2937; overflow-x: hidden; }
+.wrap { max-width: 500px; margin: 0 auto; }
+.hidden { display: none !important; }
+.box { background: #fff; border-radius: 20px; padding: 22px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+h1 { color: #c41e3a; margin: 0 0 6px; font-size: 24px; font-weight: 800; text-align: center; }
+.sub { color: #6b7280; font-size: 14px; text-align: center; line-height: 1.45; margin: 0 0 18px; }
+.how { background: #fdf2f4; border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
+.how b { color: #c41e3a; }
+input, select { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; margin-bottom: 12px; font-family: inherit; background: #fff; color: #1f2937; }
+input:focus, select:focus { outline: none; border-color: #c41e3a; }
+.btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; background: #c41e3a; color: #fff; font-family: inherit; }
+.err { color: #c41e3a; font-size: 13px; min-height: 18px; margin: -4px 0 8px; }
+
+.bar { position: sticky; top: 0; z-index: 5; background: #f5f5f5; padding: 4px 0 12px; }
+.barrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.step { font-size: 13px; font-weight: 700; color: #6b7280; }
+.score { background: #1f2937; color: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; transition: transform .25s, background .25s; }
+.score.bump { transform: scale(1.12); background: #10b981; }
+.prog { height: 6px; background: #e5e7eb; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: #c41e3a; transition: width .3s; }
+
+.stage { position: relative; }
+.card { position: relative; background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 6px 24px rgba(0,0,0,.10); touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab; transition: transform .3s ease, opacity .3s ease, border-color .2s; border: 3px solid transparent; }
+.card.drag { transition: none; cursor: grabbing; }
+.card.fly-r { transform: translateX(130%) rotate(14deg); opacity: 0; }
+.card.fly-l { transform: translateX(-130%) rotate(-14deg); opacity: 0; }
+.card.in { animation: cardIn .3s ease; }
+@keyframes cardIn { from { transform: translateY(16px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+.card.ok { border-color: #10b981; }
+.card.no { border-color: #c41e3a; }
+.stamp { position: absolute; top: 8px; background: #fff; padding: 4px 10px; border: 3px solid; border-radius: 10px; font-weight: 800; font-size: 14px; opacity: 0; transform: rotate(-6deg); pointer-events: none; }
+.stamp.g { right: 16px; color: #10b981; border-color: #10b981; transform: rotate(6deg); }
+.stamp.b { right: 16px; color: #c41e3a; border-color: #c41e3a; }
+.sit { padding-right: 110px; font-size: 13px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; margin: 0 0 6px; }
+.sitt { font-size: 15px; line-height: 1.5; margin: 0 0 14px; color: #374151; }
+.say { background: #fdf2f4; border-radius: 16px 16px 4px 16px; padding: 14px 16px; font-size: 17px; line-height: 1.5; font-weight: 600; color: #1f2937; }
+.say small { display: block; font-size: 12px; color: #c41e3a; font-weight: 700; margin-bottom: 4px; }
+.hint { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 12px; }
+
+.btns { display: flex; gap: 12px; margin-top: 14px; }
+.btns button { flex: 1; padding: 16px 8px; border-radius: 14px; font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer; border: 2px solid; background: #fff; }
+.b-bad { color: #c41e3a; border-color: #c41e3a !important; }
+.b-good { color: #059669; border-color: #10b981 !important; }
+.btns button:active { transform: scale(.97); }
+
+.fb { border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.55; margin-top: 14px; animation: cardIn .25s ease; }
+.fb.ok { background: #ecfdf5; color: #065f46; }
+.fb.no { background: #fef2f2; color: #7f1d1d; }
+.fb b.t { display: block; margin-bottom: 4px; font-size: 16px; }
+.fb .better { margin-top: 10px; background: #fff; border-radius: 10px; padding: 10px 12px; color: #065f46; font-weight: 600; }
+.fb .better span { display: block; font-size: 12px; font-weight: 700; color: #059669; margin-bottom: 2px; }
+.next { margin-top: 14px; }
+
+.final { text-align: center; }
+.big { font-size: 44px; font-weight: 800; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.of { color: #6b7280; font-size: 14px; margin-bottom: 16px; }
+.sk { text-align: left; margin-top: 16px; }
+.sk h3 { font-size: 15px; margin: 16px 0 8px; }
+.sk div { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+.sk div b { font-variant-numeric: tabular-nums; }
+.tip { background: #fdf2f4; border-radius: 14px; padding: 14px; font-size: 14px; line-height: 1.5; text-align: left; margin-top: 16px; }
+.tip p { margin: 8px 0 0; }
+.save { font-size: 13px; padding: 10px; border-radius: 10px; margin: 14px 0; background: #f3f4f6; color: #6b7280; }
+.restart { background: #fff; color: #c41e3a; border: 2px solid #c41e3a; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="reg" class="box">
+  <h1>👍 Хорошо или плохо? 👎</h1>
+  <p class="sub">22 ситуации в зале. Продавец что-то говорит клиенту — а вы решаете: так продают или так теряют покупателя?</p>
+  <div class="how">
+    👉 Смахните карточку <b>вправо — хорошо</b>, <b>влево — плохо</b>. Или нажмите кнопку.<br>
+    💡 После каждого ответа — коротко, почему.<br>
+    🏷️ Акции и цены в карточках — для примера.<br>⏱️ Около 5 минут. Легко не будет: плохие фразы звучат вежливо 🙂
+  </div>
+  <input id="userName" placeholder="Имя и фамилия" autocomplete="name">
+  <select id="userCity"><option value="">Выберите магазин</option></select>
+  <div class="err" id="regErr"></div>
+  <button class="btn" id="startBtn">Начать →</button>
+</div>
+
+<div id="game" class="hidden">
+  <div class="bar">
+    <div class="barrow"><span class="step" id="stepLbl"></span><span class="score" id="scoreLbl">✅ 0</span></div>
+    <div class="prog"><i id="prog"></i></div>
+  </div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<div id="fin" class="box final hidden"></div>
+
+</div>
+<script src="stores.js"></script>
+<script src="me.js"></script>
+<script>
+// ===================== FIREBASE =====================
+const firebaseConfig = {
+  apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc",
+  authDomain: "gold-8105a.firebaseapp.com",
+  projectId: "gold-8105a",
+  storageBucket: "gold-8105a.firebasestorage.app",
+  messagingSenderId: "195469188947",
+  appId: "1:195469188947:web:af9671f88b0e70eceecba6"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const colRef = c => db.collection('results').doc(c).collection('items');
+const withTimeout = p => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 8000))]);
+// Пишем в свою коллекцию goodbad; если правила базы её не пускают — в lifehacks с event 'goodbad'
+async function saveResult(r) {
+  try { await withTimeout(colRef('goodbad').add(r)); }
+  catch (e) {
+    if (String(e && (e.code || e.message)).indexOf('permission') < 0) throw e;
+    await withTimeout(colRef('lifehacks').add(Object.assign({}, r, { event: 'goodbad' })));
+  }
+}
+const BK = 'goodbad_backup';
+window.addEventListener('load', async () => {
+  let backup = []; try { backup = JSON.parse(localStorage.getItem(BK) || '[]'); } catch (e) {}
+  if (!backup.length) return;
+  const left = [];
+  for (const r of backup) { try { await saveResult(r); } catch (e) { left.push(r); } }
+  try { localStorage.setItem(BK, JSON.stringify(left)); } catch (e) {}
+});
+
+// ===================== НАВЫКИ =====================
+const SKILLS = {
+  K1: 'Приветствие', K2: 'Инициатива и контакт', K3: 'Выявление потребностей',
+  K4: 'Презентация ХПВ и примерка', K5: 'Повышение ценности', K6: 'Допродажа',
+  K7: 'Финансовые инструменты', K8: 'Возражения', K9: 'Альтернатива и каталог',
+  K10: 'Закрытие сделки', K11: 'Прощание и сервис'
+};
+
+// ===================== 22 КАРТОЧКИ (по 2 на навык) =====================
+// ok: true — продавец сказал хорошо, false — плохо. why — почему. better — как лучше (у плохих).
+const CARDS = [
+  { id: 1, skill: 'K1', ok: true,
+    sit: 'Клиентка заходит в магазин.',
+    say: '«Добрый день! Сегодня скидка 30% на украшения с бриллиантами».',
+    why: 'Приветствие и конкретная акция — сразу при встрече. Клиентка с порога знает, зачем оставаться. А вопрос — через 20–30 секунд, когда она осмотрится.' },
+  { id: 2, skill: 'K1', ok: false,
+    sit: 'Клиент только что вошёл в магазин.',
+    say: '«Здравствуйте! Проходите, пожалуйста. Подбираете украшение для себя или в подарок?»',
+    why: 'Вопрос с порога, а выгоды нет: клиент не понимает, зачем оставаться, и чаще отвечает «просто смотрю».',
+    better: '«Добрый день! Сегодня скидка 30% на бриллианты». Через 20–30 секунд: «Для себя выбираете или в подарок?»' },
+
+  { id: 3, skill: 'K2', ok: false,
+    sit: 'Клиентка уже пару минут молча рассматривает витрину с серьгами.',
+    say: '«Вам чем-нибудь помочь? Если что, я здесь».',
+    why: 'На «Вам помочь?» почти всегда отвечают «Нет, просто смотрю» — и разговор закончен.',
+    better: '«Вижу, вы смотрите серьги. Давайте покажу эти две поближе — на свету они играют иначе».' },
+  { id: 4, skill: 'K2', ok: true,
+    sit: 'Клиент сказал: «Я сам посмотрю, спасибо».',
+    say: '«Конечно! Меня зовут Анна, я рядом — захотите примерить, позовите».',
+    why: 'Правильный отход: без обиды и без хождения по пятам. Клиент знает, к кому обратиться, а через 2–3 минуты можно мягко подойти снова.' },
+
+  { id: 5, skill: 'K3', ok: false,
+    sit: 'Мужчина выбирает подарок жене.',
+    say: '«На какую сумму рассчитываете? Подберу варианты в вашем бюджете».',
+    why: 'О бюджете не спрашиваем: клиент чувствует, что его оценивают, и называет сумму ниже, чем готов потратить.',
+    better: '«Какой повод? И какой у неё стиль — классика или что-то современное?»' },
+  { id: 6, skill: 'K3', ok: true,
+    sit: 'Клиентка: «Ищу подарок маме на юбилей».',
+    say: '«Юбилей — особый повод! Что мама носит чаще — серьги или кольца?»',
+    why: 'Повод отмечен, вопрос — о вкусе, а не о деньгах. Ещё один-два вопроса (например, о стиле) — и можно показать 2–3 точных варианта.' },
+
+  { id: 7, skill: 'K4', ok: true,
+    sit: 'Клиентка рассматривает кольцо с бриллиантом.',
+    say: '«57 граней — это игра света: кольцо будет сверкать на руке. Давайте примерим — посмотрите в зеркало».',
+    why: 'Характеристика → преимущество → выгода, и сразу примерка с зеркалом. На руке украшение продаёт себя лучше.' },
+  { id: 8, skill: 'K4', ok: false,
+    sit: 'Клиентка держит в руках серьги.',
+    say: '«Золото 585 пробы, вес 3,2 грамма, вставки — фианиты. Будете мерить?»',
+    why: 'Одни характеристики без выгоды, а «Будете мерить?» легко услышать «нет».',
+    better: '«Золото не темнеет — будете носить годами. Давайте примерим — посмотрите, как они подчеркнут взгляд».' },
+
+  { id: 9, skill: 'K5', ok: false,
+    sit: 'Клиентка после вопросов выбрала кольцо с фианитом.',
+    say: '«Есть ещё такое же, но подороже, с бриллиантом. Хотите посмотреть, пока вы здесь?»',
+    why: '«Подороже» звучит как давление, разница не названа, а на вопрос легко ответить «нет».',
+    better: '«Для сравнения примерьте ещё вот это — бриллиант в нём чище, на свету видна разница».' },
+  { id: 10, skill: 'K5', ok: true,
+    sit: 'Клиентка выбирает серебряную цепочку, чтобы носить каждый день.',
+    say: '«Давайте примерим рядом золотую — она не темнеет, носите каждый день без забот. Сравните сами».',
+    why: 'Ступень выше с понятной разницей, примерка обоих — и выбор остаётся за клиенткой.' },
+
+  { id: 11, skill: 'K6', ok: true,
+    sit: 'Клиент выбрал кулон в подарок.',
+    say: '«Отличный выбор! Чтобы кулон сидел безупречно, давайте сразу подберём к нему цепочку».',
+    why: 'Комплимент выбору и парное украшение — сразу после выбора, в зале. Звучит как забота, а не как «ещё что-нибудь».' },
+  { id: 12, skill: 'K6', ok: false,
+    sit: 'Клиентка уже на кассе, оплачивает кольцо.',
+    say: '«Кстати, к нему есть серьги из той же коллекции, очень красивые — показать?»',
+    why: 'Поздно и вопросом: на кассе клиент уже решил, а «показать?» приглашает сказать «не надо».',
+    better: 'В зале, сразу после выбора: «Давайте подберём серьги из той же коллекции — получится законченный образ».' },
+
+  { id: 13, skill: 'K7', ok: false,
+    sit: 'Клиентка примеряет кольцо, о цене ещё не спрашивала.',
+    say: '«Если для вас это дорого, не переживайте — у нас есть рассрочка, оформим быстро».',
+    why: 'Звучит как намёк, что клиентке не по карману, — и способ назван только один.',
+    better: '«Для такого выбора есть Сплит — 4 платежа без переплат — и рассрочка, а старое золото примем в обмен. Как вам удобнее?»' },
+  { id: 14, skill: 'K7', ok: true,
+    sit: 'Клиентка прямо спрашивает: «Сколько стоят эти серьги?»',
+    say: '«42 000 ₽. А для них есть Сплит — 4 платежа по 10 500 ₽ без переплат — и рассрочка. Как вам удобнее?»',
+    why: 'На прямой вопрос — сначала цена, потом два способа оплаты. Если начать со способов, клиентка решит: продавец думает, что ей не хватит денег.' },
+
+  { id: 15, skill: 'K8', ok: true,
+    sit: 'Клиентка посмотрела на ценник: «Дороговато…»',
+    say: '«Понимаю, сумма серьёзная. А с чем сравниваете?»',
+    why: 'Не спорим и не оправдываемся: выслушали, присоединились и выясняем, что стоит за «дорого». Потом — аргумент под эту причину и способы оплаты.' },
+  { id: 16, skill: 'K8', ok: false,
+    sit: 'Клиент: «В другом магазине такое же дешевле».',
+    say: '«Да, но у нас качество намного лучше, а там часто продают неизвестно что».',
+    why: '«Да, но» перечёркивает согласие, качество без аргументов — это спор, а конкурента не обесцениваем. Спор усиливает возражение.',
+    better: '«Понимаю. А с таким же камнем и весом сравниваете? Давайте разберём, из чего складывается цена».' },
+
+  { id: 17, skill: 'K9', ok: false,
+    sit: 'Клиентке нужно кольцо 16-го размера, а на витрине только 17-й.',
+    say: '«16-го, к сожалению, сейчас нет. Можем заказать, но придётся подождать — это долго».',
+    why: 'Клиентка слышит «нет» и «долго» — и уходит. А решение есть.',
+    better: '«Давайте примерим 17-й на средний палец — часто садится идеально. Не подойдёт — закажем 16-й с доставкой в наш магазин».' },
+  { id: 18, skill: 'K9', ok: true,
+    sit: 'Клиент купил кольцо, подарок нужен сегодня.',
+    say: '«Кольцо подарите сегодня, а серьги в том же дизайне подберём в электронном каталоге — закажем с доставкой в наш магазин».',
+    why: 'Электронный каталог — каждому покупателю, даже если подарок нужен сегодня: к следующему празднику будет готовый комплект.' },
+
+  { id: 19, skill: 'K10', ok: true,
+    sit: 'Клиентка примерила кольцо, улыбается: «Да, красиво…»',
+    say: '«Оно вам очень идёт! Давайте оформим».',
+    why: 'Это сигнал покупки. Не ждём «беру» и не затягиваем: комплимент выбору — и уверенное «Давайте оформим».' },
+  { id: 20, skill: 'K10', ok: false,
+    sit: 'Клиентка долго выбирает между двумя кольцами.',
+    say: '«Оба очень красивые, выбирайте на свой вкус. Ну что, какое в итоге берёте?»',
+    why: '«Ну что, берёте?» звучит как давление, а «на свой вкус» оставляет клиентку одну с выбором. Помогите вопросом о её жизни.',
+    better: '«Какое из них будете носить чаще — каждый день или по особым случаям?»' },
+
+  { id: 21, skill: 'K11', ok: false,
+    sit: 'Клиентка ничего не выбрала, решила зайти позже и прощается.',
+    say: '«Хорошо, подумайте, конечно. До свидания!»',
+    why: 'Сухо — у клиентки нет повода вернуться. Тёплое прощание без покупки — главный повод прийти снова.',
+    better: '«Спасибо, что зашли! Будем рады видеть вас снова — покажем новинки и поможем с выбором».' },
+  { id: 22, skill: 'K11', ok: true,
+    sit: 'Мария купила серьги в подарок подруге и уходит.',
+    say: '«Мария, было приятно помочь! Заходите — покажу новинки».',
+    why: 'По имени, лично и с приглашением вернуться. Клиент помнит не слова, а как с ним обошлись.' }
+];
+
+// ===================== ИГРА =====================
+let userName = '', userCity = '', deck = [], idx = 0, score = 0, answers = [], locked = false;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// Перемешиваем так, чтобы две карточки одного навыка не шли подряд
+function shuffle() {
+  for (let t = 0; t < 200; t++) {
+    const a = CARDS.slice().sort(() => Math.random() - .5);
+    if (a.every((c, i) => i === 0 || a[i - 1].skill !== c.skill)) return a;
+  }
+  return CARDS.slice();
+}
+
+$('startBtn').onclick = () => {
+  const n = $('userName').value.trim().replace(/\s+/g, ' '), c = $('userCity').value;
+  if (n.split(' ').filter(w => w.length > 1).length < 2) { $('regErr').textContent = 'Напишите имя и фамилию'; return; }
+  if (!c) { $('regErr').textContent = 'Выберите магазин'; return; }
+  userName = n; userCity = c;
+  deck = shuffle(); idx = 0; score = 0; answers = [];
+  $('reg').classList.add('hidden'); $('game').classList.remove('hidden');
+  show();
+};
+
+function show() {
+  const c = deck[idx]; locked = false;
+  $('stepLbl').textContent = 'Карточка ' + (idx + 1) + ' из ' + deck.length;
+  $('prog').style.width = (idx / deck.length * 100) + '%';
+  $('stage').innerHTML =
+    '<div class="card in" id="card">' +
+      '<span class="stamp g" id="stG">ХОРОШО</span><span class="stamp b" id="stB">ПЛОХО</span>' +
+      '<p class="sit">🎬 Ситуация</p><p class="sitt">' + esc(c.sit) + '</p>' +
+      '<div class="say"><small>🗣️ Продавец говорит</small>' + esc(c.say) + '</div>' +
+      (idx === 0 ? '<div class="hint">← смахните влево или вправо →</div>' : '') +
+    '</div>' +
+    '<div class="btns" id="btns"><button class="b-bad" onclick="answer(false)">👎 Плохо</button><button class="b-good" onclick="answer(true)">👍 Хорошо</button></div>' +
+    '<div id="fbBox"></div>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  bindSwipe($('card'));
+}
+
+function bindSwipe(el) {
+  let x0 = null, y0 = 0, dx = 0, id = null;
+  el.addEventListener('pointerdown', e => { if (locked) return; x0 = e.clientX; y0 = e.clientY; dx = 0; id = e.pointerId; el.classList.add('drag'); });
+  el.addEventListener('pointermove', e => {
+    if (x0 === null || e.pointerId !== id) return;
+    dx = e.clientX - x0;
+    if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(e.clientY - y0)) { try { el.setPointerCapture(id); } catch (_) {} }
+    el.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx / 20) + 'deg)';
+    $('stG').style.opacity = Math.max(0, Math.min(1, dx / 90));
+    $('stB').style.opacity = Math.max(0, Math.min(1, -dx / 90));
+  });
+  const end = () => {
+    if (x0 === null) return;
+    x0 = null; el.classList.remove('drag'); el.style.transform = '';
+    $('stG').style.opacity = 0; $('stB').style.opacity = 0;
+    if (Math.abs(dx) > 90) answer(dx > 0);
+  };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+}
+
+function answer(saidGood) {
+  if (locked) return; locked = true;
+  const c = deck[idx], right = (saidGood === c.ok);
+  if (right) { score++; const s = $('scoreLbl'); s.textContent = '✅ ' + score; s.classList.add('bump'); setTimeout(() => s.classList.remove('bump'), 300); }
+  answers.push({ n: idx + 1, id: c.id, skill: c.skill, skillName: SKILLS[c.skill], situation: c.sit, phrase: c.say,
+    correct: c.ok ? 'good' : 'bad', choice: saidGood ? 'good' : 'bad', isCorrect: right });
+  const card = $('card');
+  card.classList.add(right ? 'ok' : 'no');
+  $(saidGood ? 'stG' : 'stB').style.opacity = 1;
+  $('btns').classList.add('hidden');
+  const last = idx === deck.length - 1;
+  $('fbBox').innerHTML =
+    '<div class="fb ' + (right ? 'ok' : 'no') + '">' +
+      '<b class="t">' + (right ? '✅ Верно! ' : '❌ Не совсем. ') + (c.ok ? 'Это хорошо.' : 'Это плохо.') + '</b>' +
+      esc(c.why) +
+      (c.better ? '<div class="better"><span>✅ Как лучше</span>' + esc(c.better) + '</div>' : '') +
+    '</div>' +
+    '<button class="btn next" onclick="nextCard(' + saidGood + ')">' + (last ? 'Посмотреть результат →' : 'Дальше →') + '</button>';
+  setTimeout(() => { const b = document.querySelector('.next'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 150);
+}
+
+function nextCard(saidGood) {
+  const card = $('card');
+  card.classList.add(saidGood ? 'fly-r' : 'fly-l');
+  setTimeout(() => { idx++; if (idx < deck.length) show(); else finish(); }, 280);
+}
+
+async function finish() {
+  $('game').classList.add('hidden');
+  const total = deck.length, percent = Math.round(score / total * 100);
+  const sk = {};
+  answers.forEach(a => { sk[a.skill] = sk[a.skill] || { r: 0, t: 0 }; sk[a.skill].t++; if (a.isCorrect) sk[a.skill].r++; });
+  const rows = Object.keys(SKILLS).map(k => ({ k, name: SKILLS[k], p: sk[k] ? Math.round(sk[k].r / sk[k].t * 100) : 0 }));
+  const weak = rows.filter(r => r.p < 100), strong = rows.filter(r => r.p === 100);
+  const wrong = answers.filter(a => !a.isCorrect).map(a => CARDS.find(c => c.id === a.id));
+  const tips = wrong.slice(0, 2);
+  const emoji = percent >= 90 ? '🏆' : percent >= 75 ? '💪' : percent >= 50 ? '👍' : '📚';
+  const title = percent >= 90 ? 'Отличный слух на продажи!' : percent >= 75 ? 'Хороший результат!' : percent >= 50 ? 'Неплохо — есть куда расти' : 'Стоит пройти ещё раз';
+
+  const fin = $('fin');
+  fin.innerHTML =
+    '<div style="font-size:44px">' + emoji + '</div>' +
+    '<h1>' + title + '</h1>' +
+    '<div class="big">' + score + ' из ' + total + '</div>' +
+    '<div class="of">верных ответов · ' + percent + '%</div>' +
+    '<div class="sk">' +
+      (weak.length ? '<h3>⚠️ Обратите внимание</h3>' + weak.sort((a, b) => a.p - b.p).map(r => '<div><span>' + r.name + '</span><b>' + r.p + '%</b></div>').join('') : '') +
+      (strong.length ? '<h3>✅ Без ошибок</h3>' + strong.map(r => '<div><span>' + r.name + '</span><b>100%</b></div>').join('') : '') +
+    '</div>' +
+    (tips.length ? '<div class="tip"><b>📌 Запомните</b>' + tips.map(c => '<p>' + (c.ok ? '✅ Так — хорошо: ' + esc(c.say) : '✅ ' + esc(c.better)) + '</p>').join('') + '</div>'
+                 : '<div class="tip"><b>📌 Без единой ошибки!</b><p>Теперь главное — говорить так же в зале, каждому клиенту.</p></div>') +
+    '<div class="save" id="saveSt">⏳ Сохраняем результат…</div>' +
+    '<button class="btn restart" onclick="location.reload()">🔄 Пройти ещё раз</button>';
+  fin.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const skills = {}; rows.forEach(r => skills[r.k] = r.p);
+  const result = {
+    id: Date.now(), type: 'goodbad', format: 'swipe', user_name: userName, city: userCity,
+    score, total, percent, passed: percent >= 80, skills, answers,
+    date: new Date().toISOString(), timestamp: new Date().toLocaleString('ru-RU')
+  };
+  let bk = []; try { bk = JSON.parse(localStorage.getItem(BK) || '[]'); } catch (e) {}
+  bk.push(result); try { localStorage.setItem(BK, JSON.stringify(bk)); } catch (e) {}
+  try {
+    await saveResult(result);
+    try { bk = JSON.parse(localStorage.getItem(BK) || '[]').filter(r => r.id !== result.id); localStorage.setItem(BK, JSON.stringify(bk)); } catch (e) {}
+    $('saveSt').textContent = '✅ Результат сохранён';
+    $('saveSt').style.background = '#ecfdf5'; $('saveSt').style.color = '#065f46';
+  } catch (e) {
+    $('saveSt').textContent = '📶 Нет связи — результат сохранён на телефоне и отправится, когда откроете тренажёр снова';
+  }
+}
+</script>
+</body>
+</html>
