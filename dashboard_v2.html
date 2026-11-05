@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 3.11-3</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 5.11-1</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -243,6 +243,7 @@
     <div class="kpis" id="ovKpis"></div>
     <div class="card"><h2>⏰ Тренажёры по срокам</h2><p class="hint">Что открыто сейчас, сколько сотрудников уже прошли и сколько дней осталось. Нажмите на строку — увидите, кто прошёл и кто нет. Считаются сотрудники, которые уже начали обучение (штатной численности в базе нет).</p><div id="ovDead"></div></div>
     <div class="card"><h2>🗺️ Магазины по этапам</h2><p class="hint">В клетке — какая доля сотрудников магазина прошла этап, ниже — сколько человек из скольких и средний результат первой попытки. <b>Нажмите на клетку</b> — откроется, кто прошёл и с каким результатом, кто ещё нет, их ответы и трудные шаги. Нажмите на название магазина — весь дашборд покажет только его.</p><div class="tw" id="ovHeat"></div><div class="legend"><span><i style="background:rgba(22,163,74,.3)"></i>прошли 80% и больше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>меньше 60%</span><span><i style="background:#e8e2de"></i>ещё не открыт</span></div></div>
+    <div class="card"><h2>📱 Кто открывает страницу заданий</h2><p class="hint">Каждое открытие go_nov.html (по QR или по ссылке) и нажатие на задание. Учёт — с 5 ноября. «Открыли, но ничего не прошли» — повод напомнить лично.</p><div id="ovVisits"></div></div>
     <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождения по дням. Наведите на столбик — по тренажёрам. Значок под датой — в этот день открылся тренажёр: видно, как продавцы реагируют на рассылку.</p><div id="ovDays"></div></div>
     <div class="card"><h2>🕒 Последние прохождения</h2><p class="hint">Кто, из какого магазина, что и с каким результатом прошёл — самые свежие сверху. Нажмите на имя — откроется карточка сотрудника, «📄» — его ответы. Все записи с фильтрами — во вкладке «⚙️ Данные».</p><div class="tw" id="ovFeed"></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="ovFeedMore"></div></div>
   </section>
@@ -476,6 +477,7 @@ const rootKey = k => { let g = 0; while (MERGE[k] && g++ < 10) k = MERGE[k]; ret
 function lev(a, b) { const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; }
 
 // ===================== ДАННЫЕ =====================
+let GOV = [], ALL_GOV = [], GV = [];
 let db = null, ALL_RECS = [], ALL_LH = [], RECS = [], LH = [], VISITS = [], PEOPLE = {}, STORE = '', lastLoad = null;
 try { localStorage.setItem('dm_trainer', '1'); } catch (e) { } // на этом браузере открытия страниц директоров не считаются
 try { firebase.initializeApp({ apiKey: "AIzaSyACk392rDmGmYxaC1uqQqMsRvjOaYKgpTc", authDomain: "gold-8105a.firebaseapp.com", projectId: "gold-8105a", storageBucket: "gold-8105a.firebasestorage.app", messagingSenderId: "195469188947", appId: "1:195469188947:web:af9671f88b0e70eceecba6" }); db = firebase.firestore(); try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (e) {} } catch (e) { console.error(e); }
@@ -502,7 +504,7 @@ async function load() {
   if (!db) { $('status').textContent = '⚠️ База не загрузилась — откройте по ссылке github.io'; return; }
   const recs = [], SEEN = new Set();
   TEST_SKIPPED = 0;
-  const SN = Object.fromEntries(await Promise.all([...new Set(COLS.map(c => c[0]).concat(['lifehacks', 'dm_visits']))].map(c => getCol(c).then(x => [c, x], () => [c, null]))));
+  const SN = Object.fromEntries(await Promise.all([...new Set(COLS.map(c => c[0]).concat(['lifehacks', 'dm_visits', 'go_visits']))].map(c => getCol(c).then(x => [c, x], () => [c, null]))));
   for (const [col, type] of COLS) {
     try {
       const snap = await colGet(SN, col);
@@ -523,8 +525,10 @@ async function load() {
     } catch (e) { console.warn(col, e.message); }
   }
   try { const s = await colGet(SN, 'lifehacks'); LH = []; s.forEach(d => LH.push(Object.assign({}, d.data(), { _id: d.id }))); } catch (e) { LH = []; }
-  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date, col: 'lifehacks', id: e._id })); LH = LH.filter(e => e.event !== 'dm_open' && e.event !== 'hard_stage'); // запасной путь записи открытий; hard_stage — ответ «какой этап сложнее» с go_nov.html (3.11), в лайфхаках не считаем
+  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date, col: 'lifehacks', id: e._id })); GOV = LH.filter(e => e.event === 'go_open' || e.event === 'go_tap'); LH = LH.filter(e => e.event !== 'dm_open' && e.event !== 'hard_stage' && e.event !== 'go_open' && e.event !== 'go_tap'); // запасной путь записи открытий; hard_stage — ответ «какой этап сложнее» с go_nov.html (3.11), в лайфхаках не считаем
   try { const s = await colGet(SN, 'dm_visits'); s.forEach(d => { const x = d.data(); if (x.store) VISITS.push({ store: x.store, date: x.date, col: 'dm_visits', id: d.id }); }); } catch (e) { }
+  try { const s = await colGet(SN, 'go_visits'); s.forEach(d => GOV.push(d.data())); } catch (e) { }
+  ALL_GOV = GOV.filter(v => v.date && !/^тренер\s+тест$/i.test(String(v.user_name || '').trim()));
   ALL_RECS = recs.sort((a, b) => new Date(a.date) - new Date(b.date)); ALL_LH = LH;
   lastLoad = new Date();
   build();
@@ -539,6 +543,7 @@ function applyGroup() {
   SCHED = g.sched.filter(s => (!s.only || s.only.includes(STORE)) && (!s.except || !s.except.includes(STORE)));
   RECS = ALL_RECS.filter(r => inGrp(r.date, r.city));
   LH = ALL_LH.filter(e => !e.date || inGrp(e.date, e.city));
+  GV = ALL_GOV.filter(v => v.city ? inGrp(v.date, v.city) : (new Date(v.date) >= dayOf(GROUPS[GRP].from) && new Date(v.date) < dayOf(GROUPS[GRP].to)));
 }
 function renderGrpNote() {
   const box = $('grpNote'); if (!box) return;
@@ -618,6 +623,25 @@ function renderFeed() {
   if ($('feedMore')) $('feedMore').onclick = () => { feedN += 20; renderFeed(); };
   $('feedAll').onclick = () => showTab('data');
 }
+// 5.11: кто открывает go_nov.html (results/go_visits): по магазинам — открытия, люди, кто открыл, но ничего не прошёл
+function renderVisits() {
+  const box = $('ovVisits'); if (!box) return;
+  const V = GV.filter(v => !STORE || v.city === STORE), opens = V.filter(v => v.event === 'go_open'), taps = V.filter(v => v.event === 'go_tap');
+  if (!V.length) { box.innerHTML = '<p class="muted">Пока никто не открывал страницу (учёт — с 5 ноября).</p>'; return; }
+  const fmt = d => new Date(d).toLocaleString('ru-RU', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const done = new Set(Object.values(PEOPLE).filter(p => p.recs.length).map(p => p.key));
+  const shops = (STORE ? [STORE] : STORES).map(c => {
+    const o = opens.filter(v => v.city === c), t = taps.filter(v => v.city === c), ppl = {};
+    o.concat(t).filter(v => v.user_name).forEach(v => { const k = rootKey(pkey(String(v.user_name).trim().replace(/\s+/g, ' '), c)); const p = ppl[k] = ppl[k] || { name: cap(String(v.user_name).trim().replace(/\s+/g, ' ').toLowerCase()), n: 0, last: v.date }; if (v.event === 'go_open') p.n++; if (v.date > p.last) p.last = v.date; });
+    const idle = Object.entries(ppl).filter(([k]) => !done.has(k)).map(([, p]) => p);
+    const last = o.length ? o.map(v => v.date).sort().pop() : null;
+    return { c, o: o.length, t: t.length, ppl: Object.keys(ppl).length, idle, last };
+  });
+  const anon = opens.filter(v => !v.user_name), anonDev = new Set(anon.map(v => v.device)).size;
+  const rows = shops.map(r => `<tr><td><b>${esc(r.c)}</b></td><td>${r.o || '<span class="muted">0</span>'}</td><td>${r.ppl || '<span class="muted">0</span>'}</td><td>${r.t || '<span class="muted">0</span>'}</td><td>${r.idle.length ? r.idle.map(p => `<span class="pill" title="открывал(а) ${p.n} раз, последний — ${fmt(p.last)}">${esc(p.name)}</span>`).join(' ') : '<span class="muted">—</span>'}</td><td>${r.last ? fmt(r.last) : '<span class="muted" style="color:var(--bad,#b3122e)">с 5.11 не открывали</span>'}</td></tr>`).join('');
+  box.innerHTML = `<div class="tw" style="overflow-x:auto"><table><thead><tr><th>Магазин</th><th>Открытий</th><th>Человек</th><th>Нажали на задание</th><th>Открыли, но ничего не прошли</th><th>Последнее открытие</th></tr></thead><tbody>${rows}</tbody></table></div>` +
+    (anon.length ? `<p class="hint" style="margin-top:8px">👤 Ещё ${anon.length} откр. без имени (${anonDev} тел.) — открыли страницу, но не представились.</p>` : '');
+}
 function renderOverview() {
   renderTestSum(); renderDirLinks(); renderFeed();
   const P = people(), withExam = P.filter(p => p.exam), withBoth = P.filter(p => p.growth != null);
@@ -630,7 +654,7 @@ function renderOverview() {
     ['🎯 Тренажёры', `${avg(P.map(p => p.trainN)) != null ? (P.reduce((a, p) => a + p.trainN, 0) / Math.max(1, P.length)).toFixed(1).replace('.', ',') : '—'} <small style="font-size:16px;color:var(--ink-3)">из ${activeTr().length}</small>`, 'в среднем тренажёров на сотрудника · подробно во вкладке «Результаты»']
   ].map(k => `<div class="kpi"><div class="l">${k[0]}</div><div class="v ${k[3] || ''}">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
 
-  renderDeadlines(P); renderHeat();
+  renderDeadlines(P); renderHeat(); renderVisits();
 
   // активность
   const R = RECS.filter(r => !STORE || r.city === STORE), days = [];

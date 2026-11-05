@@ -182,6 +182,7 @@ ol.path { list-style: none; margin: 4px 0 0; padding: 0; }
 // col — коллекция результатов в базе (если тренажёр их сохраняет), чтобы отметить «✅ пройдено».
 const T = [
   { n: 'Входной тест', u: 'test_new.html', i: '📝', d: '13 ситуаций из зала. Не экзамен — диагностика.', m: 10, from: '2026-11-03', to: '2026-11-09', col: 'test' },
+  { n: 'Хорошо или плохо', u: 'goodbad_trainer.html', i: '👍', d: 'Так продают или так теряют клиента? Смахните карточку.', m: 5, from: '2026-11-09', to: '2026-11-13', col: 'goodbad' },
   // 19–25.11: всем — Тренировка диалога, Заневскому — «Сервис» (диалог он проходил в сентябре; решение Виталия 3.11)
   { n: 'Тренировка диалога', u: 'dialog_trainer.html', i: '💬', d: 'Живой разговор с клиентом: доведите до покупки.', m: 6, from: '2026-11-19', to: '2026-11-25', col: 'dialog', except: ['СПб, Заневский, 67'] },
   { n: 'Сервис с человеческим лицом', u: 'service_trainer.html', i: '🤝', d: '16 ситуаций: хорошо или плохо поступил продавец?', m: 5, from: '2026-11-19', to: '2026-11-25', col: 'service', only: ['СПб, Заневский, 67'] },
@@ -397,7 +398,7 @@ $('saveBtn').onclick = () => {
   $('confCity').textContent = '🏬 Магазин: ' + c;
   $('reg').classList.add('hidden'); $('conf').classList.remove('hidden');
 };
-$('confYes').onclick = () => { ls.set('go585_me', { name: $('userName').value.trim().replace(/\s+/g, ' '), city: $('userCity').value }); draw(); };
+$('confYes').onclick = () => { ls.set('go585_me', { name: $('userName').value.trim().replace(/\s+/g, ' '), city: $('userCity').value }); draw(); logVisit('open'); };
 $('confNo').onclick = () => { $('conf').classList.add('hidden'); $('reg').classList.remove('hidden'); $('userCity').focus(); };
 function fillSel(sel, cur) { if (sel.options.length < 2) (window.STORES_585 || []).forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; sel.appendChild(o); }); sel.value = cur || ''; }
 $('chgSave').onclick = () => { const me = ls.get('go585_me'), c = $('chgCity').value; if (!me || !c) return; ls.set('go585_me', { name: me.name, city: c }); draw(); };
@@ -421,6 +422,25 @@ window.addEventListener('pageshow', e => { if (e.persisted && stale()) location.
 document.addEventListener('visibilitychange', () => { if (!document.hidden && stale()) location.reload(); });
 // Вернулся из тренажёра — обновить отметки
 document.addEventListener('visibilitychange', () => { if (!document.hidden && ls.get('go585_me')) draw(); });
+// ===== Учёт открытий (5.11): кто и когда открывал страницу и нажимал на задания =====
+// results/go_visits/items {event:'go_open'|'go_tap', user_name, city, device, mobile, detail, page, date}; если запись запрещена — в lifehacks.
+// «Тренер Тест» не пишем. Одно и то же событие с одного телефона — не чаще раза в 30 минут.
+const DEV = (() => { let d = ls.get('go585_dev'); if (!d) { d = Math.random().toString(36).slice(2, 10); ls.set('go585_dev', d); } return d; })();
+async function logVisit(ev, extra) {
+  const me = ls.get('go585_me') || {};
+  if (/^тренер\s+тест$/i.test(String(me.name || '').trim())) return;
+  const key = 'go585_lv_' + ev + '_' + (me.name || '') + '_' + (extra || '');
+  const last = ls.get(key); if (last && Date.now() - last < 30 * 60 * 1000) return;
+  ls.set(key, Date.now());
+  const f = { event: { stringValue: ev === 'open' ? 'go_open' : 'go_tap' }, user_name: { stringValue: me.name || '' }, city: { stringValue: me.city || '' },
+    device: { stringValue: DEV }, mobile: { booleanValue: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) }, detail: { stringValue: extra || '' },
+    page: { stringValue: 'go_nov' }, date: { stringValue: new Date().toISOString() } };
+  for (const col of ['go_visits', 'lifehacks']) {
+    try { const r = await fetch(BASE + col + '/items?key=' + KEY, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: f }) }); if (r.ok) return; } catch (e) {}
+  }
+}
+document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a.card[data-u]'); if (a) logVisit('tap', a.dataset.u); }, true);
+logVisit('open');
 ls.set('go585_tab', 'tr'); // каждый вход — с «Заданий»: там тест и тренажёры
 draw();
 </script>
