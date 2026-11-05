@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 5.11-3</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 5.11-4</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -243,7 +243,7 @@
     <div class="kpis" id="ovKpis"></div>
     <div class="card"><h2>⏰ Тренажёры по срокам</h2><p class="hint">Что открыто сейчас, сколько сотрудников уже прошли и сколько дней осталось. Нажмите на строку — увидите, кто прошёл и кто нет. Считаются сотрудники, которые уже начали обучение (штатной численности в базе нет).</p><div id="ovDead"></div></div>
     <div class="card"><h2>🗺️ Магазины по этапам</h2><p class="hint">В клетке — какая доля сотрудников магазина прошла этап, ниже — сколько человек из скольких и средний результат первой попытки. <b>Нажмите на клетку</b> — откроется, кто прошёл и с каким результатом, кто ещё нет, их ответы и трудные шаги. Нажмите на название магазина — весь дашборд покажет только его.</p><div class="tw" id="ovHeat"></div><div class="legend"><span><i style="background:rgba(22,163,74,.3)"></i>прошли 80% и больше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>меньше 60%</span><span><i style="background:#e8e2de"></i>ещё не открыт</span></div></div>
-    <div class="card"><h2>📱 Кто открывает страницу заданий</h2><p class="hint">По дням: сколько раз открывали go_nov.html (по QR или по ссылке), сколько человек зашло и сколько из них в тот же день прошли задание. Остальные — «зашли и ушли»: их имена в таблице, повод напомнить лично. Наведите на имя — время входа. Учёт — с 5 ноября.</p><div id="ovVisits"></div></div>
+    <div class="card" id="visCard"><h2 id="visHead" style="cursor:pointer;user-select:none;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap" title="Нажмите, чтобы скрыть или раскрыть"><span>📱 Кто открывает страницу заданий <span id="visSum" style="font-size:14px;font-weight:600;color:var(--ink-3,#7a7481)"></span></span><span id="visTog" style="font-size:14px;font-weight:700;color:var(--red,#b3122e)">▸ Раскрыть</span></h2><div id="visBody" hidden><p class="hint">По дням: сколько раз открывали go_nov.html (по QR или по ссылке), сколько человек зашло и сколько из них в тот же день прошли задание. Остальные — «зашли и ушли»: их имена в таблице, повод напомнить лично. Наведите на имя — время входа. Учёт — с 5 ноября.</p><div id="ovVisits"></div></div></div>
     <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождения по дням. Наведите на столбик — по тренажёрам. Значок под датой — в этот день открылся тренажёр: видно, как продавцы реагируют на рассылку.</p><div id="ovDays"></div></div>
     <div class="card"><h2>🕒 Последние прохождения</h2><p class="hint">Кто, из какого магазина, что и с каким результатом прошёл — самые свежие сверху. Нажмите на имя — откроется карточка сотрудника, «📄» — его ответы. Все записи с фильтрами — во вкладке «⚙️ Данные».</p><div class="tw" id="ovFeed"></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="ovFeedMore"></div></div>
   </section>
@@ -660,6 +660,11 @@ function renderVisits() {
     `<div class="tw" style="overflow-x:auto"><table><thead><tr><th>Магазин</th><th>Входов</th><th>Человек</th><th>Прошли задание</th><th>Зашли и ушли ничего не пройдя <span class="muted">(👆 — нажимали на задание)</span></th></tr></thead><tbody>${rows}</tbody></table></div>` +
     (anon.length ? `<p class="hint" style="margin-top:8px">👤 Ещё <b>${anonDev} тел.</b> открыли страницу и не ввели имя и магазин — кто это, неизвестно.</p>` : '');
   box.querySelectorAll('.vday').forEach(b => b.onclick = () => { VDAY = b.dataset.d; renderVisits(); });
+  // свёрнуто/раскрыто (5.11-4): в заголовке — короткий итог за сегодня, состояние помнит браузер
+  $('visSum').textContent = '· ' + (D === today ? 'сегодня' : dlab(D)) + ': зашли ' + T.p + ' чел., прошли задание ' + T.d;
+  const open = store.get('dash2_vis_open', false);
+  $('visBody').hidden = !open; $('visTog').textContent = open ? '▾ Скрыть' : '▸ Раскрыть';
+  $('visHead').onclick = () => { store.set('dash2_vis_open', !store.get('dash2_vis_open', false)); renderVisits(); };
 }
 function renderOverview() {
   renderTestSum(); renderDirLinks(); renderFeed();
