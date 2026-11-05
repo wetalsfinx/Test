@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 5.11-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 5.11-2</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -626,7 +626,10 @@ function renderFeed() {
 // 5.11: кто открывает go_nov.html (results/go_visits): по магазинам — открытия, люди, кто открыл, но ничего не прошёл
 function renderVisits() {
   const box = $('ovVisits'); if (!box) return;
-  const V = GV.filter(v => !STORE || v.city === STORE), opens = V.filter(v => v.event === 'go_open'), taps = V.filter(v => v.event === 'go_tap');
+  // открытие до формы «имя и магазин» пишется без имени — если этот телефон потом представился, засчитываем открытие ему (5.11-2)
+  const DEVM = {}; GV.forEach(v => { if (v.user_name && v.device) DEVM[v.device] = v; });
+  const GV2 = GV.map(v => !v.user_name && DEVM[v.device] ? Object.assign({}, v, { user_name: DEVM[v.device].user_name, city: DEVM[v.device].city }) : v);
+  const V = GV2.filter(v => !STORE || v.city === STORE || !v.user_name), opens = V.filter(v => v.event === 'go_open'), taps = V.filter(v => v.event === 'go_tap');
   if (!V.length) { box.innerHTML = '<p class="muted">Пока никто не открывал страницу (учёт — с 5 ноября).</p>'; return; }
   const fmt = d => new Date(d).toLocaleString('ru-RU', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
   const done = new Set(Object.values(PEOPLE).filter(p => p.recs.length).map(p => p.key));
@@ -640,7 +643,7 @@ function renderVisits() {
   const anon = opens.filter(v => !v.user_name), anonDev = new Set(anon.map(v => v.device)).size;
   const rows = shops.map(r => `<tr><td><b>${esc(r.c)}</b></td><td>${r.o || '<span class="muted">0</span>'}</td><td>${r.ppl || '<span class="muted">0</span>'}</td><td>${r.t || '<span class="muted">0</span>'}</td><td>${r.idle.length ? r.idle.map(p => `<span class="pill" title="открывал(а) ${p.n} раз, последний — ${fmt(p.last)}">${esc(p.name)}</span>`).join(' ') : '<span class="muted">—</span>'}</td><td>${r.last ? fmt(r.last) : '<span class="muted" style="color:var(--bad,#b3122e)">с 5.11 не открывали</span>'}</td></tr>`).join('');
   box.innerHTML = `<div class="tw" style="overflow-x:auto"><table><thead><tr><th>Магазин</th><th>Открытий</th><th>Человек</th><th>Нажали на задание</th><th>Открыли, но ничего не прошли</th><th>Последнее открытие</th></tr></thead><tbody>${rows}</tbody></table></div>` +
-    (anon.length ? `<p class="hint" style="margin-top:8px">👤 Ещё ${anon.length} откр. без имени (${anonDev} тел.) — открыли страницу, но не представились.</p>` : '');
+    (anon.length ? `<p class="hint" style="margin-top:8px">👤 <b>${anonDev} тел.</b> открыли страницу, но так и не ввели имя и магазин (последний раз — ${fmt(anon.map(v => v.date).sort().pop())}). Кто это и из какого магазина — неизвестно.</p>` : '<p class="hint" style="margin-top:8px">👤 Все, кто открывал страницу, представились.</p>');
 }
 function renderOverview() {
   renderTestSum(); renderDirLinks(); renderFeed();
