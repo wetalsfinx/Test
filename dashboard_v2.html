@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 5.11-2</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 5.11-3</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -243,7 +243,7 @@
     <div class="kpis" id="ovKpis"></div>
     <div class="card"><h2>⏰ Тренажёры по срокам</h2><p class="hint">Что открыто сейчас, сколько сотрудников уже прошли и сколько дней осталось. Нажмите на строку — увидите, кто прошёл и кто нет. Считаются сотрудники, которые уже начали обучение (штатной численности в базе нет).</p><div id="ovDead"></div></div>
     <div class="card"><h2>🗺️ Магазины по этапам</h2><p class="hint">В клетке — какая доля сотрудников магазина прошла этап, ниже — сколько человек из скольких и средний результат первой попытки. <b>Нажмите на клетку</b> — откроется, кто прошёл и с каким результатом, кто ещё нет, их ответы и трудные шаги. Нажмите на название магазина — весь дашборд покажет только его.</p><div class="tw" id="ovHeat"></div><div class="legend"><span><i style="background:rgba(22,163,74,.3)"></i>прошли 80% и больше</span><span><i style="background:rgba(245,158,11,.4)"></i>60–79%</span><span><i style="background:rgba(220,38,38,.3)"></i>меньше 60%</span><span><i style="background:#e8e2de"></i>ещё не открыт</span></div></div>
-    <div class="card"><h2>📱 Кто открывает страницу заданий</h2><p class="hint">Каждое открытие go_nov.html (по QR или по ссылке) и нажатие на задание. Учёт — с 5 ноября. «Открыли, но ничего не прошли» — повод напомнить лично.</p><div id="ovVisits"></div></div>
+    <div class="card"><h2>📱 Кто открывает страницу заданий</h2><p class="hint">По дням: сколько раз открывали go_nov.html (по QR или по ссылке), сколько человек зашло и сколько из них в тот же день прошли задание. Остальные — «зашли и ушли»: их имена в таблице, повод напомнить лично. Наведите на имя — время входа. Учёт — с 5 ноября.</p><div id="ovVisits"></div></div>
     <div class="card"><h2>📅 Активность за 14 дней</h2><p class="hint">Прохождения по дням. Наведите на столбик — по тренажёрам. Значок под датой — в этот день открылся тренажёр: видно, как продавцы реагируют на рассылку.</p><div id="ovDays"></div></div>
     <div class="card"><h2>🕒 Последние прохождения</h2><p class="hint">Кто, из какого магазина, что и с каким результатом прошёл — самые свежие сверху. Нажмите на имя — откроется карточка сотрудника, «📄» — его ответы. Все записи с фильтрами — во вкладке «⚙️ Данные».</p><div class="tw" id="ovFeed"></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap" id="ovFeedMore"></div></div>
   </section>
@@ -624,26 +624,42 @@ function renderFeed() {
   $('feedAll').onclick = () => showTab('data');
 }
 // 5.11: кто открывает go_nov.html (results/go_visits): по магазинам — открытия, люди, кто открыл, но ничего не прошёл
+let VDAY = ''; // выбранный день в «Кто открывает страницу заданий» ('' — сегодня)
 function renderVisits() {
   const box = $('ovVisits'); if (!box) return;
-  // открытие до формы «имя и магазин» пишется без имени — если этот телефон потом представился, засчитываем открытие ему (5.11-2)
+  const dk = d => { const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+  const dlab = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'numeric' }); };
+  const fmt = d => new Date(d).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  // открытие до формы «имя и магазин» пишется без имени — если этот телефон потом представился, засчитываем открытие ему
   const DEVM = {}; GV.forEach(v => { if (v.user_name && v.device) DEVM[v.device] = v; });
-  const GV2 = GV.map(v => !v.user_name && DEVM[v.device] ? Object.assign({}, v, { user_name: DEVM[v.device].user_name, city: DEVM[v.device].city }) : v);
-  const V = GV2.filter(v => !STORE || v.city === STORE || !v.user_name), opens = V.filter(v => v.event === 'go_open'), taps = V.filter(v => v.event === 'go_tap');
-  if (!V.length) { box.innerHTML = '<p class="muted">Пока никто не открывал страницу (учёт — с 5 ноября).</p>'; return; }
-  const fmt = d => new Date(d).toLocaleString('ru-RU', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const done = new Set(Object.values(PEOPLE).filter(p => p.recs.length).map(p => p.key));
-  const shops = (STORE ? [STORE] : STORES).map(c => {
-    const o = opens.filter(v => v.city === c), t = taps.filter(v => v.city === c), ppl = {};
-    o.concat(t).filter(v => v.user_name).forEach(v => { const k = rootKey(pkey(String(v.user_name).trim().replace(/\s+/g, ' '), c)); const p = ppl[k] = ppl[k] || { name: cap(String(v.user_name).trim().replace(/\s+/g, ' ').toLowerCase()), n: 0, last: v.date }; if (v.event === 'go_open') p.n++; if (v.date > p.last) p.last = v.date; });
-    const idle = Object.entries(ppl).filter(([k]) => !done.has(k)).map(([, p]) => p);
-    const last = o.length ? o.map(v => v.date).sort().pop() : null;
-    return { c, o: o.length, t: t.length, ppl: Object.keys(ppl).length, idle, last };
+  const ALLV = GV.map(v => !v.user_name && DEVM[v.device] ? Object.assign({}, v, { user_name: DEVM[v.device].user_name, city: DEVM[v.device].city }) : v)
+    .filter(v => !STORE || v.city === STORE || !v.user_name);
+  const today = dk(new Date());
+  const days = [...new Set(ALLV.map(v => dk(v.date)).concat([today]))].sort().reverse().slice(0, 10);
+  const D = days.includes(VDAY) ? VDAY : today;
+  const nm = v => String(v.user_name || '').trim().replace(/\s+/g, ' ');
+  const keyOf = (n, c) => rootKey(pkey(n, c));
+  // кто что прошёл в этот день (по базе результатов)
+  const doneDay = {}; RECS.filter(r => dk(r.date) === D).forEach(r => { const k = keyOf(r.name, r.city); (doneDay[k] = doneDay[k] || new Set()).add(r.type); });
+  const dayStat = k => { const V = ALLV.filter(v => dk(v.date) === k && v.event === 'go_open'); const ppl = new Set(V.filter(v => v.user_name).map(v => keyOf(nm(v), v.city))); return { o: V.length, p: ppl.size }; };
+  const V = ALLV.filter(v => dk(v.date) === D);
+  const rowsData = (STORE ? [STORE] : STORES).map(c => {
+    const o = V.filter(v => v.event === 'go_open' && v.city === c), ppl = {};
+    V.filter(v => v.city === c && v.user_name).forEach(v => { const k = keyOf(nm(v), c); const p = ppl[k] = ppl[k] || { name: cap(nm(v).toLowerCase()), n: 0, tap: 0, last: v.date }; if (v.event === 'go_open') p.n++; else p.tap++; if (v.date > p.last) p.last = v.date; });
+    const list = Object.entries(ppl).map(([k, p]) => Object.assign(p, { done: doneDay[k] ? [...doneDay[k]] : [] }));
+    return { c, o: o.length, list, passed: list.filter(p => p.done.length), idle: list.filter(p => !p.done.length) };
   });
-  const anon = opens.filter(v => !v.user_name), anonDev = new Set(anon.map(v => v.device)).size;
-  const rows = shops.map(r => `<tr><td><b>${esc(r.c)}</b></td><td>${r.o || '<span class="muted">0</span>'}</td><td>${r.ppl || '<span class="muted">0</span>'}</td><td>${r.t || '<span class="muted">0</span>'}</td><td>${r.idle.length ? r.idle.map(p => `<span class="pill" title="открывал(а) ${p.n} раз, последний — ${fmt(p.last)}">${esc(p.name)}</span>`).join(' ') : '<span class="muted">—</span>'}</td><td>${r.last ? fmt(r.last) : '<span class="muted" style="color:var(--bad,#b3122e)">с 5.11 не открывали</span>'}</td></tr>`).join('');
-  box.innerHTML = `<div class="tw" style="overflow-x:auto"><table><thead><tr><th>Магазин</th><th>Открытий</th><th>Человек</th><th>Нажали на задание</th><th>Открыли, но ничего не прошли</th><th>Последнее открытие</th></tr></thead><tbody>${rows}</tbody></table></div>` +
-    (anon.length ? `<p class="hint" style="margin-top:8px">👤 <b>${anonDev} тел.</b> открыли страницу, но так и не ввели имя и магазин (последний раз — ${fmt(anon.map(v => v.date).sort().pop())}). Кто это и из какого магазина — неизвестно.</p>` : '<p class="hint" style="margin-top:8px">👤 Все, кто открывал страницу, представились.</p>');
+  const T = rowsData.reduce((a, r) => ({ o: a.o + r.o, p: a.p + r.list.length, d: a.d + r.passed.length }), { o: 0, p: 0, d: 0 });
+  const anon = V.filter(v => v.event === 'go_open' && !v.user_name), anonDev = new Set(anon.map(v => v.device)).size;
+  const tl = t => typeof schedLabel === 'function' ? schedLabel(t) : t;
+  const chip = p => `<span class="pill" title="${p.n} вх.${p.tap ? ', нажимал(а) на задание' : ''}, последний — ${fmt(p.last)}${p.done.length ? '\nпрошёл(ла): ' + p.done.map(tl).join(', ') : ''}">${esc(p.name)}${p.tap && !p.done.length ? ' 👆' : ''}</span>`;
+  const rows = rowsData.map(r => `<tr><td><b>${esc(r.c)}</b></td><td>${r.o || '<span class="muted">0</span>'}</td><td>${r.list.length || '<span class="muted">0</span>'}</td><td>${r.list.length ? `<b>${r.passed.length}</b> <span class="muted">из ${r.list.length}</span>` : '<span class="muted">—</span>'}</td><td>${r.idle.length ? r.idle.map(chip).join(' ') : '<span class="muted">—</span>'}</td></tr>`).join('');
+  box.innerHTML =
+    `<div class="toolbar" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">${days.map(k => { const st = dayStat(k); return `<button class="btn vday" data-d="${k}" style="${k === D ? 'background:var(--ink,#1d1a20);color:#fff' : ''}">${k === today ? 'Сегодня' : dlab(k)} · ${st.p} чел.</button>`; }).join('')}</div>` +
+    `<div class="kpis" style="margin-bottom:10px"><div class="kpi"><div class="l">📱 Входов на страницу</div><div class="v">${T.o}</div><div class="s">${D === today ? 'сегодня' : dlab(D)}, по QR и ссылке</div></div><div class="kpi"><div class="l">👥 Человек зашло</div><div class="v">${T.p}</div><div class="s">разных сотрудников</div></div><div class="kpi"><div class="l">✅ Из них прошли задание</div><div class="v">${T.d}</div><div class="s">в этот же день</div></div><div class="kpi"><div class="l">🚶 Зашли и ушли</div><div class="v ${T.p - T.d ? 'down' : ''}">${T.p - T.d}</div><div class="s">ничего не прошли в этот день</div></div></div>` +
+    `<div class="tw" style="overflow-x:auto"><table><thead><tr><th>Магазин</th><th>Входов</th><th>Человек</th><th>Прошли задание</th><th>Зашли и ушли ничего не пройдя <span class="muted">(👆 — нажимали на задание)</span></th></tr></thead><tbody>${rows}</tbody></table></div>` +
+    (anon.length ? `<p class="hint" style="margin-top:8px">👤 Ещё <b>${anonDev} тел.</b> открыли страницу и не ввели имя и магазин — кто это, неизвестно.</p>` : '');
+  box.querySelectorAll('.vday').forEach(b => b.onclick = () => { VDAY = b.dataset.d; renderVisits(); });
 }
 function renderOverview() {
   renderTestSum(); renderDirLinks(); renderFeed();
