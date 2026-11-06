@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 5.11-4</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 6.11-1</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -653,11 +653,11 @@ function renderVisits() {
   const anon = V.filter(v => v.event === 'go_open' && !v.user_name), anonDev = new Set(anon.map(v => v.device)).size;
   const tl = t => typeof schedLabel === 'function' ? schedLabel(t) : t;
   const chip = p => `<span class="pill" title="${p.n} вх.${p.tap ? ', нажимал(а) на задание' : ''}, последний — ${fmt(p.last)}${p.done.length ? '\nпрошёл(ла): ' + p.done.map(tl).join(', ') : ''}">${esc(p.name)}${p.tap && !p.done.length ? ' 👆' : ''}</span>`;
-  const rows = rowsData.map(r => `<tr><td><b>${esc(r.c)}</b></td><td>${r.o || '<span class="muted">0</span>'}</td><td>${r.list.length || '<span class="muted">0</span>'}</td><td>${r.list.length ? `<b>${r.passed.length}</b> <span class="muted">из ${r.list.length}</span>` : '<span class="muted">—</span>'}</td><td>${r.idle.length ? r.idle.map(chip).join(' ') : '<span class="muted">—</span>'}</td></tr>`).join('');
+  const rows = rowsData.map(r => `<tr><td><b>${esc(r.c)}</b></td><td>${r.o || '<span class="muted">0</span>'}</td><td>${r.list.length || '<span class="muted">0</span>'}</td><td>${r.list.length ? `<b>${r.passed.length}</b> <span class="muted">из ${r.list.length}</span>${r.passed.length ? '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">' + r.passed.map(p => `<span class="pill" style="background:#e4f4ea;color:#1e7a45" title="${esc(p.done.map(tl).join(', '))} · вход ${fmt(p.last)}">✅ ${esc(p.name)} <span style="font-weight:500">· ${esc(p.done.map(tl).join(', '))}</span></span>`).join('') + '</div>' : ''}` : '<span class="muted">—</span>'}</td><td>${r.idle.length ? r.idle.map(chip).join(' ') : '<span class="muted">—</span>'}</td></tr>`).join('');
   box.innerHTML =
     `<div class="toolbar" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">${days.map(k => { const st = dayStat(k); return `<button class="btn vday" data-d="${k}" style="${k === D ? 'background:var(--ink,#1d1a20);color:#fff' : ''}">${k === today ? 'Сегодня' : dlab(k)} · ${st.p} чел.</button>`; }).join('')}</div>` +
     `<div class="kpis" style="margin-bottom:10px"><div class="kpi"><div class="l">📱 Входов на страницу</div><div class="v">${T.o}</div><div class="s">${D === today ? 'сегодня' : dlab(D)}, по QR и ссылке</div></div><div class="kpi"><div class="l">👥 Человек зашло</div><div class="v">${T.p}</div><div class="s">разных сотрудников</div></div><div class="kpi"><div class="l">✅ Из них прошли задание</div><div class="v">${T.d}</div><div class="s">в этот же день</div></div><div class="kpi"><div class="l">🚶 Зашли и ушли</div><div class="v ${T.p - T.d ? 'down' : ''}">${T.p - T.d}</div><div class="s">ничего не прошли в этот день</div></div></div>` +
-    `<div class="tw" style="overflow-x:auto"><table><thead><tr><th>Магазин</th><th>Входов</th><th>Человек</th><th>Прошли задание</th><th>Зашли и ушли ничего не пройдя <span class="muted">(👆 — нажимали на задание)</span></th></tr></thead><tbody>${rows}</tbody></table></div>` +
+    `<div class="tw" style="overflow-x:auto"><table><thead><tr><th>Магазин</th><th>Входов</th><th>Человек</th><th>Прошли задание <span class="muted">(кто и что)</span></th><th>Зашли и ушли ничего не пройдя <span class="muted">(👆 — нажимали на задание)</span></th></tr></thead><tbody>${rows}</tbody></table></div>` +
     (anon.length ? `<p class="hint" style="margin-top:8px">👤 Ещё <b>${anonDev} тел.</b> открыли страницу и не ввели имя и магазин — кто это, неизвестно.</p>` : '');
   box.querySelectorAll('.vday').forEach(b => b.onclick = () => { VDAY = b.dataset.d; renderVisits(); });
   // свёрнуто/раскрыто (5.11-4): в заголовке — короткий итог за сегодня, состояние помнит браузер
