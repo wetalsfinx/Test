@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 6.11-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 9.11-1</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -624,7 +624,7 @@ function renderFeed() {
   $('feedAll').onclick = () => showTab('data');
 }
 // 5.11: кто открывает go_nov.html (results/go_visits): по магазинам — открытия, люди, кто открыл, но ничего не прошёл
-let VDAY = ''; // выбранный день в «Кто открывает страницу заданий» ('' — сегодня)
+let VIS_OPEN = false, VDAY = ''; // выбранный день в «Кто открывает страницу заданий» ('' — сегодня)
 function renderVisits() {
   const box = $('ovVisits'); if (!box) return;
   const dk = d => { const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
@@ -662,9 +662,9 @@ function renderVisits() {
   box.querySelectorAll('.vday').forEach(b => b.onclick = () => { VDAY = b.dataset.d; renderVisits(); });
   // свёрнуто/раскрыто (5.11-4): в заголовке — короткий итог за сегодня, состояние помнит браузер
   $('visSum').textContent = '· ' + (D === today ? 'сегодня' : dlab(D)) + ': зашли ' + T.p + ' чел., прошли задание ' + T.d;
-  const open = store.get('dash2_vis_open', false);
+  const open = VIS_OPEN; // при открытии и обновлении страницы — всегда свёрнуто (6.11-2)
   $('visBody').hidden = !open; $('visTog').textContent = open ? '▾ Скрыть' : '▸ Раскрыть';
-  $('visHead').onclick = () => { store.set('dash2_vis_open', !store.get('dash2_vis_open', false)); renderVisits(); };
+  $('visHead').onclick = () => { VIS_OPEN = !VIS_OPEN; renderVisits(); };
 }
 function renderOverview() {
   renderTestSum(); renderDirLinks(); renderFeed();
