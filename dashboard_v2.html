@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 9.11-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 9.11-2</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -384,13 +384,13 @@ const SK = [
 const SKN = Object.fromEntries(SK.map(s => [s.k, s]));
 const TOOLS = {
   test: 'Входной тест', trainer: 'Тренировка диалога', crosssell: 'Тренажёр допродаж', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов',
-  algorithm: 'Алгоритм продаж', service: 'Сервис', final_exam_1: 'Аттестация «Одна смена»', final_exam_old: 'Аттестация (старая)'
+  algorithm: 'Алгоритм продаж', service: 'Сервис', goodbad: '«Хорошо или плохо»', final_exam_1: 'Аттестация «Одна смена»', final_exam_old: 'Аттестация (старая)'
 };
 // порядок = хронология октября (как в SCHED); резерв (Типы клиентов, Алгоритм) — в конце
-const TRAINERS = ['trainer', 'service', 'crosssell', 'errorfinder', 'clienttype', 'algorithm'];
-const TSHORT = { trainer: 'Диалог', crosssell: 'Допродажи', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов', algorithm: 'Алгоритм', service: 'Сервис' };
-const TICON = { trainer: '💬', crosssell: '🛍️', errorfinder: '🔍', clienttype: '🧑‍🤝‍🧑', algorithm: '🧭', service: '🤝' };
-const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт, потребности, презентация, сервис' };
+const TRAINERS = ['goodbad', 'trainer', 'service', 'crosssell', 'errorfinder', 'clienttype', 'algorithm']; // 9.11: «Хорошо или плохо» — первый тренажёр ноября
+const TSHORT = { trainer: 'Диалог', crosssell: 'Допродажи', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов', algorithm: 'Алгоритм', service: 'Сервис', goodbad: 'Хорошо или плохо' };
+const TICON = { trainer: '💬', crosssell: '🛍️', errorfinder: '🔍', clienttype: '🧑‍🤝‍🧑', algorithm: '🧭', service: '🤝', goodbad: '👍' };
+const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт, потребности, презентация, сервис', goodbad: 'все 11 навыков, по 2 карточки' };
 // расписание октябрьской программы: открытие → срок (включительно)
 const SCHED_OCT = [
   { t: 'test', from: '2026-10-01', to: '2026-10-05' },
@@ -405,6 +405,7 @@ const SCHED_OCT = [
 // only / except — как в go_nov.html: Заневский 19–25.11 проходит «Сервис» вместо Тренировки диалога
 const SCHED_NOV = [
   { t: 'test', from: '2026-11-03', to: '2026-11-09' },
+  { t: 'goodbad', from: '2026-11-09', to: '2026-11-13' },
   { t: 'trainer', from: '2026-11-19', to: '2026-11-25', except: REPEAT },
   { t: 'service', from: '2026-11-19', to: '2026-11-25', only: REPEAT },
   { t: 'final_exam_1', from: '2026-12-01', to: '2026-12-04' }
@@ -423,7 +424,7 @@ const schedRec = (p, t) => t === 'test' ? p.test : t === 'final_exam_1' ? p.exam
 const dm = s => dayOf(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'numeric' });
 const plDay = n => n % 10 === 1 && n % 100 !== 11 ? 'день' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'дня' : 'дней';
 const activeTr = () => TRAINERS.filter(t => RECS.some(r => r.type === t));
-const COLS = [['test', 'test'], ['dialog', 'trainer'], ['crosssell', 'crosssell'], ['errorfinder', 'errorfinder'], ['clienttype', 'clienttype'], ['service', 'service'], ['algorithm', 'algorithm'], ['final_exam', 'final_exam'], ['final_exam_1', 'final_exam_1']];
+const COLS = [['test', 'test'], ['dialog', 'trainer'], ['crosssell', 'crosssell'], ['errorfinder', 'errorfinder'], ['clienttype', 'clienttype'], ['service', 'service'], ['goodbad', 'goodbad'], ['algorithm', 'algorithm'], ['final_exam', 'final_exam'], ['final_exam_1', 'final_exam_1']];
 const TEST_TOPICS = ['Приветствие и контакт', 'Выявление бюджета', 'Дополнительные товары', 'Выбор материала', 'Сопутствующие товары', 'Возражение «дорого»', 'Альтернатива, нет размера', 'Эмоциональная презентация', 'Дополнительные модели', 'Рассрочка (Сплит)', 'Инициатива, молчаливый клиент', 'Завершение сделки', '«Я подумаю»'];
 const TEST_SK = ['K1', 'K3', 'K6', 'K5', 'K6', 'K8', 'K9', 'K4', 'K2', 'K7', 'K2', 'K10', 'K8'];
 const RULES = [['Проявляй инициативу', 'K1'], ['Проявляй инициативу', 'K2'], ['Задавай вопросы ДО показа', 'K3'], ['Презентуй с эмоцией', 'K4'], ['Предлагай примерку', 'K4'], ['Показывай вариант лучше', 'K5'], ['Называй Сплит до цены', 'K7'], ['Отрабатывай «дорого»', 'K8'], ['Не отпускай без альтернативы', 'K9'], ['Закрывай сделку', 'K10'], ['Предлагай второе украшение', 'K6'], ['Предлагай футляр и уход', 'K6'], ['Завершай с теплотой', 'K11']];
@@ -445,6 +446,7 @@ function itemsOf(r) {
     case 'clienttype': return (x.scenarios || []).map(s => [s.scenario || s.clientType, CT_SK[s.scenario] || 'K4', s.isCorrect ? 100 : 0]);
     case 'algorithm': return (x.scenarios || []).map(s => [s.scenario, ALG_SK[s.scenario] || 'K10', s.percent || 0]);
     case 'service': return (x.answers || []).filter(a => a.principle).map(a => [a.principle, SVC_SK[a.principle] || 'K11', a.isCorrect ? 100 : 0]);
+    case 'goodbad': return (x.answers || []).filter(a => a.skill).map(a => [(a.skillName || (SKN[a.skill] || {}).n || a.skill) + ' · ' + (a.correct === 'good' ? '👍' : '👎') + ' ' + String(a.phrase || '').slice(0, 40), a.skill, a.isCorrect ? 100 : 0]); // 9.11: у каждой карточки свой навык
     case 'final_exam_1': return (x.answers || []).filter(a => a.skill).flatMap(a => [].concat(EX_SK[a.skill] || 'K10').map(k => [a.skill, k, a.percentTask || 0]));
     default: return [];
   }
@@ -525,7 +527,8 @@ async function load() {
     } catch (e) { console.warn(col, e.message); }
   }
   try { const s = await colGet(SN, 'lifehacks'); LH = []; s.forEach(d => LH.push(Object.assign({}, d.data(), { _id: d.id }))); } catch (e) { LH = []; }
-  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date, col: 'lifehacks', id: e._id })); GOV = LH.filter(e => e.event === 'go_open' || e.event === 'go_tap'); LH = LH.filter(e => e.event !== 'dm_open' && e.event !== 'hard_stage' && e.event !== 'go_open' && e.event !== 'go_tap'); // запасной путь записи открытий; hard_stage — ответ «какой этап сложнее» с go_nov.html (3.11), в лайфхаках не считаем
+  LH.filter(e => e.event === 'goodbad' && e.user_name && e.percent != null && String(e.user_name).trim().replace(/\s+/g, ' ').toLowerCase() !== 'тренер тест').forEach(x => recs.push({ col: 'lifehacks', docId: x._id, type: 'goodbad', name: String(x.user_name).trim().replace(/\s+/g, ' '), city: x.city || 'Не указан', percent: Math.max(0, Math.min(100, Math.round(+x.percent || 0))), date: x.date || new Date(0).toISOString(), raw: x })); // 9.11: запасной путь записи «Хорошо или плохо»
+  VISITS = LH.filter(e => e.event === 'dm_open').map(e => ({ store: e.store || e.city, date: e.date, col: 'lifehacks', id: e._id })); GOV = LH.filter(e => e.event === 'go_open' || e.event === 'go_tap'); LH = LH.filter(e => e.event !== 'dm_open' && e.event !== 'hard_stage' && e.event !== 'go_open' && e.event !== 'go_tap' && e.event !== 'goodbad'); // запасной путь записи открытий; hard_stage — ответ «какой этап сложнее» с go_nov.html (3.11), в лайфхаках не считаем
   try { const s = await colGet(SN, 'dm_visits'); s.forEach(d => { const x = d.data(); if (x.store) VISITS.push({ store: x.store, date: x.date, col: 'dm_visits', id: d.id }); }); } catch (e) { }
   try { const s = await colGet(SN, 'go_visits'); s.forEach(d => GOV.push(d.data())); } catch (e) { }
   ALL_GOV = GOV.filter(v => v.date && !/^тренер\s+тест$/i.test(String(v.user_name || '').trim()));
@@ -954,6 +957,7 @@ function recAnswersHtml(r) {
         return `<div class="msg ${m.s} ${k}">${tag}<b>${m.s === 'client' ? '👤' : '🧑‍💼'}</b> ${esc(m.t)}${isErr && m.r ? `<div class="muted" style="margin-top:4px">📌 Как надо: ${esc(m.r)}</div>` : ''}</div>`; }).join('') : '';
       return qa(esc(c.scenario), c.percent, `<div class="qa-out">Нашёл ${found} из ${cor.length} ошибок${fp ? ` · лишних отметок: ${fp}` : ''}</div>${body}`); }).join('');
     case 'algorithm': return S.map(c => { const rf = REF.alg[c.scenario]; return qa(esc(c.scenario), c.percent, `<div class="qa-out">Верно выстроено шагов: <b>${c.score ?? '?'} из ${c.max ?? '?'}</b>${c.trapsPlaced ? ` · ловушек в цепочке: <b style="color:var(--bad)">${c.trapsPlaced}</b>` : ''}${c.perfect ? ' · 🏆 идеально' : ''}</div>${rf ? `<div class="qa-lbl">Правильный порядок</div>${rf.steps.map((t, i) => line('dim', i + 1 + '.', esc(t))).join('')}` : ''}<div class="muted" style="margin-top:6px">Тренажёр сохраняет только количество верных шагов, сам порядок сотрудника не сохраняется.</div>`); }).join('');
+    case 'goodbad': return A.map((a, i) => qa(`${i + 1}. ${esc(a.skillName || (SKN[a.skill] || {}).n || a.skill || '')}`, a.isCorrect ? 100 : 0, `${a.situation ? `<div class="qa-sit">${esc(a.situation)}</div>` : ''}${a.phrase ? `<div class="qa-lbl">Фраза продавца</div><div class="qa-out">${esc(a.phrase)}</div>` : ''}${line(a.isCorrect ? 'ok' : 'no', a.isCorrect ? '✅' : '❌', 'Оценка сотрудника: ' + (a.choice === 'good' ? '👍 хорошо' : '👎 плохо'))}${a.isCorrect ? '' : line('ok', '✔️', 'Правильно: ' + (a.correct === 'good' ? '👍 хорошо' : '👎 плохо'))}`)).join('');
     case 'service': return A.map((a, i) => { const good = a.correct === 'good'; return qa(`${i + 1}. ${esc(a.principle || '')}`, a.isCorrect ? 100 : 0, `${a.situation ? `<div class="qa-sit">${esc(a.situation)}</div>` : ''}${a.action ? `<div class="qa-lbl">Что сделал продавец</div><div class="qa-out">${esc(a.action)}</div>` : ''}${line(a.isCorrect ? 'ok' : 'no', a.isCorrect ? '✅' : '❌', 'Оценка сотрудника: ' + (a.selected === 'good' ? '👍 хорошо' : '👎 плохо'))}${a.isCorrect ? '' : line('ok', '✔️', 'Правильно: ' + (good ? '👍 хорошо' : '👎 плохо'))}`); }).join('');
     case 'final_exam_1': return answersHtml(r);
     case 'final_exam_old': return A.map((a, i) => { const rf = REF.fe[a.situation] || {}; const se = { perfect: ['✅ оценил: полностью', 'good'], partial: ['🟡 оценил: частично', 'mid'], miss: ['❌ оценил: не справился', 'bad'] }[a.selfEval] || ['', 'none'];
