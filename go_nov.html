@@ -358,7 +358,7 @@ async function draw() {
   const opened = ls.get('go585_opened') || {};
   const status = await Promise.all(open.map(async t => {
     if (!t.col) return { t, done: !!opened[t.u] || !!(ls.get('go585_self') || {})[t.u], pct: null, local: true };
-    const mine = (ls.get('go585_self') || {})[t.u];
+    const mine = t.col === 'test' ? (ls.get('go585_self') || {})[t.u] : null; // 10.11: «я прошёл(а)» — только у входного теста; тренажёр считается пройденным, только если он есть в базе (старые отметки на телефонах не действуют)
     try { const r = await myResults(t.col, me); if (!r.length && mine) return { t, done: true, pct: null, self: true }; const here = r.filter(x => !x.city), use = here.length ? here : r; return { t, done: r.length > 0, pct: r.length ? Math.max(...use.map(x => x.p)) : null, other: here.length ? null : (r[0] && r[0].city) }; }
     catch (e) { return { t, done: !!mine, pct: null, self: !!mine, err: true }; }
   }));
@@ -378,7 +378,8 @@ async function draw() {
     html += `<div class="sec">${todo.length === 1 ? 'Вам осталось пройти' : 'Вам осталось · ' + todo.length}</div>`;
     html += card(todo[0].t, 0, true);
     if (todo.length > 1) html += '<div class="sec">Потом</div>' + todo.slice(1).map(s => card(s.t, 1, false)).join('');
-    html += `<p class="note" style="margin-top:4px">Уже проходили, а здесь не отмечено? ${todo.map(s => `<button class="selfbtn" data-u="${s.t.u}">${s.t.n} — я прошёл(а)</button>`).join(' ')}</p>`;
+    const selfTodo = todo.filter(s => s.t.col === 'test');
+    if (selfTodo.length) html += `<p class="note" style="margin-top:4px">Уже проходили, а здесь не отмечено? ${selfTodo.map(s => `<button class="selfbtn" data-u="${s.t.u}">${s.t.n} — я прошёл(а)</button>`).join(' ')}</p>`;
   } else {
     html += `<div class="all"><div class="e">🎉</div><h2>Всё открытое пройдено!</h2><p>Отличная работа. Новое задание придёт в письме.</p></div>`;
   }
