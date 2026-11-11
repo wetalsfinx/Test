@@ -183,9 +183,9 @@ ol.path { list-style: none; margin: 4px 0 0; padding: 0; }
 const T = [
   { n: 'Входной тест', u: 'test_new.html', i: '📝', d: '13 ситуаций из зала. Не экзамен — диагностика.', m: 10, from: '2026-11-03', to: '2026-11-09', col: 'test' },
   { n: 'Хорошо или плохо', u: 'goodbad_trainer.html', i: '👍', d: 'Так продают или так теряют клиента? Смахните карточку.', m: 5, from: '2026-11-09', to: '2026-11-13', col: 'goodbad' },
-  // 19–25.11: всем — Тренировка диалога, Заневскому — «Сервис» (диалог он проходил в сентябре; решение Виталия 3.11)
-  { n: 'Тренировка диалога', u: 'dialog_trainer.html', i: '💬', d: 'Живой разговор с клиентом: доведите до покупки.', m: 6, from: '2026-11-19', to: '2026-11-25', col: 'dialog', except: ['СПб, Заневский, 67'] },
-  { n: 'Сервис с человеческим лицом', u: 'service_trainer.html', i: '🤝', d: '16 ситуаций: хорошо или плохо поступил продавец?', m: 5, from: '2026-11-19', to: '2026-11-25', col: 'service', only: ['СПб, Заневский, 67'] },
+  // 11.11 (решение Виталия): один тренажёр в неделю, в пятницу — последний день старого и старт нового; Заневский проходит всё вместе со всеми
+  { n: 'Найди ошибку', u: 'error_finder.html', i: '🔍', d: 'Целые диалоги из зала: найдите, где продавец теряет клиента.', m: 7, from: '2026-11-13', to: '2026-11-20', col: 'errorfinder' },
+  { n: 'Тренировка диалога', u: 'dialog_trainer.html', i: '💬', d: 'Живой разговор с клиентом: доведите до покупки.', m: 6, from: '2026-11-20', to: '2026-11-27', col: 'dialog' },
   { n: 'Аттестация «Одна смена»', u: 'attestation.html', i: '🏆', d: '9 клиентов, ответы своими словами, именной сертификат.', m: 25, from: '2026-12-01', to: '2026-12-04', col: 'final_exam' },
 ];
 // Последний день ноябрьской программы: до него страница не пишет «обучение завершено»
@@ -407,7 +407,7 @@ $('userName').addEventListener('keydown', e => { if (e.key === 'Enter') $('saveB
 // Подсказка имён: кто из этого магазина уже есть в базе (по входному тесту и тренажёрам)
 $('userCity').addEventListener('change', async () => {
   const c = $('userCity').value, seen = new Map(); $('names').innerHTML = ''; if (!c) return;
-  for (const col of ['test', 'dialog', 'service', 'crosssell']) {
+  for (const col of ['test', 'goodbad', 'errorfinder', 'dialog']) {
     try {
       const r = await fetch(BASE + col + '/items?pageSize=300&key=' + KEY); const j = await r.json();
       (j.documents || []).forEach(d => { const f = d.fields || {}; if (f.city?.stringValue !== c) return; const n = String(f.user_name?.stringValue || '').trim().replace(/\s+/g, ' '); const k = toks(n).sort().join(' '); if (toks(n).length >= 2 && !seen.has(k)) seen.set(k, n); });

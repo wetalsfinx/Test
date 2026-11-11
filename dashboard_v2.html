@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 10.11-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 11.11-1</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -402,12 +402,12 @@ const SCHED_OCT = [
   { t: 'final_exam_1', from: '2026-10-28', to: '2026-11-02' }
 ];
 // расписание ноября (утверждено 3.11). Новый тренажёр добавлять, когда он готов и есть в go_nov.html.
-// only / except — как в go_nov.html: Заневский 19–25.11 проходит «Сервис» вместо Тренировки диалога
+// only / except — как в go_nov.html (с 11.11 не используются: один тренажёр в неделю, Заневский — со всеми)
 const SCHED_NOV = [
   { t: 'test', from: '2026-11-03', to: '2026-11-09' },
   { t: 'goodbad', from: '2026-11-09', to: '2026-11-13' },
-  { t: 'trainer', from: '2026-11-19', to: '2026-11-25', except: REPEAT },
-  { t: 'service', from: '2026-11-19', to: '2026-11-25', only: REPEAT },
+  { t: 'errorfinder', from: '2026-11-13', to: '2026-11-20' },
+  { t: 'trainer', from: '2026-11-20', to: '2026-11-27' }, // 11.11: Заневский — вместе со всеми, без «Сервиса»
   { t: 'final_exam_1', from: '2026-12-01', to: '2026-12-04' }
 ];
 const GROUPS = {
@@ -427,7 +427,7 @@ const activeTr = () => TRAINERS.filter(t => RECS.some(r => r.type === t));
 const COLS = [['test', 'test'], ['dialog', 'trainer'], ['crosssell', 'crosssell'], ['errorfinder', 'errorfinder'], ['clienttype', 'clienttype'], ['service', 'service'], ['goodbad', 'goodbad'], ['algorithm', 'algorithm'], ['final_exam', 'final_exam'], ['final_exam_1', 'final_exam_1']];
 const TEST_TOPICS = ['Приветствие и контакт', 'Выявление бюджета', 'Дополнительные товары', 'Выбор материала', 'Сопутствующие товары', 'Возражение «дорого»', 'Альтернатива, нет размера', 'Эмоциональная презентация', 'Дополнительные модели', 'Рассрочка (Сплит)', 'Инициатива, молчаливый клиент', 'Завершение сделки', '«Я подумаю»'];
 const TEST_SK = ['K1', 'K3', 'K6', 'K5', 'K6', 'K8', 'K9', 'K4', 'K2', 'K7', 'K2', 'K10', 'K8'];
-const RULES = [['Проявляй инициативу', 'K1'], ['Проявляй инициативу', 'K2'], ['Задавай вопросы ДО показа', 'K3'], ['Презентуй с эмоцией', 'K4'], ['Предлагай примерку', 'K4'], ['Показывай вариант лучше', 'K5'], ['Называй Сплит до цены', 'K7'], ['Отрабатывай «дорого»', 'K8'], ['Не отпускай без альтернативы', 'K9'], ['Закрывай сделку', 'K10'], ['Предлагай второе украшение', 'K6'], ['Предлагай футляр и уход', 'K6'], ['Завершай с теплотой', 'K11']];
+const RULES = [['Проявляй инициативу', 'K1'], ['Проявляй инициативу', 'K2'], ['Задавай вопросы ДО показа', 'K3'], ['Презентуй с эмоцией', 'K4'], ['Предлагай примерку', 'K4'], ['Показывай вариант лучше', 'K5'], ['Называй способы оплаты', 'K7'], ['Отрабатывай «дорого»', 'K8'], ['Не отпускай без альтернативы', 'K9'], ['Закрывай сделку', 'K10'], ['Предлагай второе украшение', 'K6'], ['Предлагай футляр и уход', 'K6'], ['Завершай с теплотой', 'K11']];
 const EF_SK = { 'Холодный клиент': 'K2', 'Подарок жене': 'K3', 'Дорого!': 'K8', 'Просто смотрю': 'K2', 'Допродажа на кассе': 'K6', 'А что есть ещё?': 'K4', 'Беру': 'K6' };
 const CT_SK = { 'Холодный клиент': 'K2', 'Молчаливый наблюдатель': 'K2', 'Постоянный клиент': 'K11', 'Растерянный мужчина (подарок)': 'K3' };
 const CS_SK = {}; // с 16.10 «Собери покупку»: все 10 ситуаций — K6
@@ -449,7 +449,7 @@ function itemsOf(r) {
   const x = r.raw;
   switch (r.type) {
     case 'test': return (x.answers || []).map(a => { const i = a.originalIndex ?? (a.questionNum - 1); return [TEST_TOPICS[i] || ('Вопрос ' + (i + 1)), TEST_SK[i] || 'K4', a.correct ? 100 : 0]; });
-    case 'trainer': return RULES.filter(([n]) => (n !== 'Предлагай второе украшение' || (x.total || 6) >= 7) && (n !== 'Предлагай футляр и уход' || (x.total || 6) >= 8) && (!['Показывай вариант лучше', 'Называй Сплит до цены', 'Отрабатывай «дорого»', 'Закрывай сделку'].includes(n) || (x.total || 6) >= 12)).map(([n, k]) => [n, k, (x.rules_applied || []).includes(n) ? 100 : 0]); // старые прохождения — 6 правил
+    case 'trainer': return RULES.filter(([n]) => (n !== 'Предлагай второе украшение' || (x.total || 6) >= 7) && (n !== 'Предлагай футляр и уход' || (x.total || 6) >= 8) && (!['Показывай вариант лучше', 'Называй способы оплаты', 'Отрабатывай «дорого»', 'Закрывай сделку'].includes(n) || (x.total || 6) >= 12)).map(([n, k]) => [n, k, (x.rules_applied || []).map(r => r === 'Называй Сплит до цены' ? 'Называй способы оплаты' : r).includes(n) ? 100 : 0]); // старые прохождения — 6 правил; 11.11: правило переименовано, старое имя засчитываем
     case 'crosssell': return (x.scenarios || []).map(s => [s.scenario, x.format === 'basket' ? 'K6' : (s.scenario === 'Серебряная цепь' ? 'K5' : CS_SK[s.scenario] || 'K6'), s.percent != null ? s.percent : (s.isCorrect ? 100 : 0)]);
     case 'errorfinder': if (x.format === 'v2') return (x.scenarios || []).flatMap(s => (s.lines || []).filter(l => l.s === 'seller' && l.err).map(l => [s.scenario + ' · ' + ((SKN[l.skill] || {}).n || l.skill), l.skill, l.marked ? 100 : 0])); // с 16.10: навык у каждой ошибки
       return (x.scenarios || []).map(s => [s.scenario, EF_SK[s.scenario] || 'K4', s.percent != null ? s.percent : Math.round((s.score || 0) / (s.maxScore || 1) * 100)]);
@@ -565,7 +565,7 @@ function renderGrpNote() {
     // по каждому сотруднику: первая попытка (у аттестации — последняя)
     const pick = (rs, t) => { const m = {}; rs.filter(r => r.type === t).sort((x, y) => new Date(x.date) - new Date(y.date)).forEach(r => { const k = normKey(r.name); if (t === 'final_exam_1' || !(k in m)) m[k] = { name: r.name, p: r.percent }; }); return m; };
     const sep = SEPT_ZAN.map(([date, name, type, percent]) => ({ date, name, type, percent })), now = RECS.filter(r => r.city === STORE);
-    const ROWS = [['test', '📝 Входной тест', 'тот же тест'], ['final_exam_1', '🏆 Аттестация «Одна смена»', 'в сентябре — версия до правок 28.10'], ['trainer', '💬 Тренировка диалога', 'в ноябре у Заневского вместо него «Сервис»'], ['errorfinder', '🔍 Найди ошибку', 'в сентябре — старая версия'], ['crosssell', '🛍️ Допродажи', 'в сентябре — старая версия'], ['clienttype', '🧑‍🤝‍🧑 Типы клиентов', 'в ноябре нет'], ['service', '🤝 Сервис', 'в сентябре не было']];
+    const ROWS = [['test', '📝 Входной тест', 'тот же тест'], ['final_exam_1', '🏆 Аттестация «Одна смена»', 'в сентябре — версия до правок 28.10'], ['trainer', '💬 Тренировка диалога', 'в ноябре — тот же тренажёр (20–27.11)'], ['errorfinder', '🔍 Найди ошибку', 'в сентябре — старая версия'], ['crosssell', '🛍️ Допродажи', 'в сентябре — старая версия'], ['clienttype', '🧑‍🤝‍🧑 Типы клиентов', 'в ноябре нет'], ['service', '🤝 Сервис', 'в сентябре не было; в ноябре нет']];
     const cell = m => { const v = Object.values(m); return v.length ? `<b>${avg(v.map(x => x.p))}%</b> <span class="muted">${v.length} чел.</span>` : '<span class="muted">—</span>'; };
     const tbl = ROWS.map(([t, n, note]) => { const a = pick(sep, t), b = pick(now, t); const va = Object.values(a), vb = Object.values(b);
       const d = va.length && vb.length ? avg(vb.map(x => x.p)) - avg(va.map(x => x.p)) : null;
@@ -574,7 +574,7 @@ function renderGrpNote() {
     const ppl = {}; [['s', sep], ['n', now]].forEach(([w, rs]) => ['test', 'final_exam_1'].forEach(t => Object.entries(pick(rs, t)).forEach(([k, x]) => { const p = ppl[k] = ppl[k] || { name: cap(x.name.toLowerCase()) }; p[w + t] = x.p; })));
     const v = x => x == null ? '<span class="muted">—</span>' : x + '%';
     const ptbl = Object.values(ppl).sort((a, b) => a.name.localeCompare(b.name)).map(p => `<tr><td>${esc(p.name)}</td><td>${v(p.stest)}</td><td>${v(p.ntest)}</td><td>${v(p.sfinal_exam_1)}</td><td>${v(p.nfinal_exam_1)}</td></tr>`).join('');
-    box.innerHTML = `<div class="grp-note" style="display:block">🔁 <b>${esc(STORE)}</b> — повторная группа: сентябрь → ноябрь. В ноябре считается вместе со всеми; 19–25.11 вместо Тренировки диалога — «Сервис». Если разница с сентябрём большая — решим, выводить ли его из общих цифр.
+    box.innerHTML = `<div class="grp-note" style="display:block">🔁 <b>${esc(STORE)}</b> — повторная группа: сентябрь → ноябрь. В ноябре считается вместе со всеми; Тренировку диалога (20–27.11) проходит вместе со всеми — сравним с сентябрём. Если разница с сентябрём большая — решим, выводить ли его из общих цифр.
       <button class="btn" id="grpBack" style="float:right">← Все магазины</button>
       <div class="tw" style="margin-top:10px"><table><thead><tr><th>Что</th><th>Сентябрь</th><th>Ноябрь</th><th>Разница</th></tr></thead><tbody>${tbl}</tbody></table></div>
       <details style="margin-top:8px"><summary><b>По сотрудникам</b> — входной тест и аттестация</summary><div class="tw"><table><thead><tr><th>Сотрудник</th><th>Тест · сент.</th><th>Тест · нояб.</th><th>Аттестация · сент.</th><th>Аттестация · нояб.</th></tr></thead><tbody>${ptbl}</tbody></table></div><p class="hint">Сентябрь — первая попытка теста и последняя аттестации, из файла «ВСЁ СЕНТЯБРЬ 2026.csv». Новые люди появятся в ноябрьских колонках, ушедшие останутся только в сентябре.</p></details></div>`;
