@@ -216,7 +216,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 11.11-1</span></div></div>
+    <div><div class="brand">585<b>GOLD</b> · Аналитика обучения</div><div class="sub">От входного теста до итоговой аттестации · <span title="Версия файла дашборда">версия 13.11-1</span></div></div>
     <div class="right">
       <select id="grpSel" title="Какую группу магазинов показывать"><option value="nov">🆕 Ноябрь · новые магазины</option><option value="oct">📦 Октябрь</option><option value="all">🗂️ Все записи базы</option></select>
       <select id="storeSel"><option value="">🏙️ Все магазины</option></select>
@@ -388,6 +388,9 @@ const TOOLS = {
 };
 // порядок = хронология октября (как в SCHED); резерв (Типы клиентов, Алгоритм) — в конце
 const TRAINERS = ['goodbad', 'trainer', 'service', 'crosssell', 'errorfinder', 'clienttype', 'algorithm']; // 9.11: «Хорошо или плохо» — первый тренажёр ноября
+const TRAINERS_BASE = TRAINERS.slice();
+// 13.11: порядок тренажёров — по расписанию выбранной группы (SCHED), остальные — следом в базовом порядке
+function orderTrainers(sched) { const s = sched.map(x => x.t).filter(t => TRAINERS_BASE.includes(t)); const o = s.concat(TRAINERS_BASE.filter(t => !s.includes(t))); TRAINERS.splice(0, TRAINERS.length, ...o); }
 const TSHORT = { trainer: 'Диалог', crosssell: 'Допродажи', errorfinder: 'Найди ошибку', clienttype: 'Типы клиентов', algorithm: 'Алгоритм', service: 'Сервис', goodbad: 'Хорошо или плохо' };
 const TICON = { trainer: '💬', crosssell: '🛍️', errorfinder: '🔍', clienttype: '🧑‍🤝‍🧑', algorithm: '🧭', service: '🤝', goodbad: '👍' };
 const TSKILL = { trainer: 'выявление, презентация, завершение', crosssell: 'допродажа', errorfinder: 'все этапы продажи', clienttype: 'презентация под тип клиента', algorithm: 'алгоритм продажи', service: 'контакт, потребности, презентация, сервис', goodbad: 'все 11 навыков, по 2 карточки' };
@@ -554,6 +557,7 @@ function applyGroup() {
   const g = GROUPS[GRP]; GSTORES = g.stores;
   STORES = GSTORES;
   SCHED = g.sched.filter(s => (!s.only || s.only.includes(STORE)) && (!s.except || !s.except.includes(STORE)));
+  orderTrainers(g.sched);
   RECS = ALL_RECS.filter(r => inGrp(r.date, r.city));
   LH = ALL_LH.filter(e => !e.date || inGrp(e.date, e.city));
   GV = ALL_GOV.filter(v => v.city ? inGrp(v.date, v.city) : (new Date(v.date) >= dayOf(GROUPS[GRP].from) && new Date(v.date) < dayOf(GROUPS[GRP].to)));
