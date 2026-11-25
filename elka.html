@@ -71,29 +71,32 @@ h1{font-family:Unbounded;font-weight:800;font-size:4.6vh;line-height:1.1;margin:
 .un{border:0;background:#f3e6d6;color:#8a3a3a;border-radius:8px;padding:3px 8px;font:500 12px Onest;cursor:pointer;margin-left:6px}.un.sure{background:#b3122e;color:#fff}
 .tag{display:inline-block;font-size:11px;background:#fde9c8;color:#8a5a10;border-radius:6px;padding:1px 6px;margin-left:6px}
 
-/* телефон вертикально */
+/* телефон вертикально: ёлка — главная, QR — по кнопке */
+.qrbtn,.qrov{display:none}
 @media (orientation:portrait){
-  html,body{overflow:auto;height:auto}
-  .stage{display:flex;flex-direction:column;height:auto;padding:16px;gap:14px}
-  .left{order:2}
-  #tree{height:auto;width:100%;max-height:none}
-  .right{order:1;gap:12px}
-  .logo{font-size:15px;padding:7px 10px}.logo small{font-size:9px}
+  .stage{display:flex;flex-direction:column;height:calc(100svh - 118px);padding:12px 12px 0;gap:4px}
+  .right{order:1;gap:6px;flex:none}
+  .left{order:2;flex:1;min-height:0}
+  #tree{height:100%;width:100%;max-height:none}
+  h1,.qrbox,.feed{display:none}
+  .brand{justify-content:center}
+  .logo{font-size:14px;padding:6px 9px}.logo small{font-size:8px}
   .brand .t{font-size:12px}
-  h1{font-size:26px}
-  .count b{font-size:54px}.count span{font-size:15px}
-  .qrbox{flex-direction:column;text-align:center;padding:16px}
-  .qrbox img{width:min(74vw,330px);height:min(74vw,330px)}
-  .qrbox p{font-size:16px}
-  .feed{min-height:0}
-  .feed div{font-size:15px}.feed div small{font-size:12px}
-  .allin{font-size:18px}
-  .toast{left:50%;top:40%;font-size:24px;padding:18px 22px;white-space:normal;width:86vw}
+  .count{justify-content:center;gap:10px;align-items:center}
+  .count b{font-size:44px}.count span{font-size:15px;line-height:1.25}
+  .allin{font-size:16px;padding:8px}
+  .qrbtn{display:block;margin:6px 12px 8px;border:0;border-radius:16px;padding:14px;font:800 16px Unbounded;color:#2a0a10;background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,#c99a3e);box-shadow:0 8px 26px rgba(230,190,106,.35);width:calc(100% - 24px)}
+  .qrov.on{display:flex;position:fixed;inset:0;z-index:20;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(90% 70% at 50% 30%,#4a1020,#120a10);padding:20px;text-align:center}
+  .qrov img{width:min(88vw,62vh);height:min(88vw,62vh);background:#fff;border-radius:22px;padding:12px;box-shadow:0 0 50px rgba(230,190,106,.35)}
+  .qrov h2{font-family:Unbounded;font-size:22px;margin:0;color:var(--gold2)}
+  .qrov p{margin:0;font-size:16px;line-height:1.4}
+  .qrov small{color:var(--muted);font-size:13px}
+  .toast{left:50%;top:45%;font-size:22px;padding:16px 20px;white-space:normal;width:86vw}
   .toast small{font-size:14px}
-  .bar{position:static;margin:0 16px 24px;opacity:.9;flex-wrap:wrap;justify-content:center}
+  .bar{position:static;margin:0 12px 14px;opacity:.85;flex-wrap:wrap;justify-content:center}
   .bar button{font-size:12px;padding:6px 8px}
+  .bar .fs{display:none}
   .st{display:none}
-  .lab{font-size:22px}
   .panel{padding:16px;font-size:13px}.panel table{font-size:13px}
 }
 </style>
@@ -111,7 +114,9 @@ h1{font-family:Unbounded;font-weight:800;font-size:4.6vh;line-height:1.1;margin:
     <div class="allin" id="allin">🎉 Все в сборе — ёлка горит!</div>
   </div>
 </div>
+<button class="qrbtn" onclick="$('qrov').classList.add('on')">📱 Показать QR-код</button>
 <div class="bar" id="bar"></div>
+<div class="qrov" id="qrov" onclick="this.classList.remove('on')"><h2>Зажгите свой огонёк ✨</h2><img alt="QR" id="qrBig"><p>Наведите камеру телефона<br>и нажмите свою фамилию</p><small>Нажмите, чтобы вернуться к ёлке</small></div>
 <div class="toast" id="toast"></div>
 <div class="st" id="st">подключаемся…</div>
 
@@ -193,6 +198,8 @@ function drawTree(){
   layer = el('g', {});
 }
 let wires = [], layer;
+const SC = () => matchMedia('(orientation:portrait)').matches ? 1.3 : 1;
+addEventListener('resize', () => { lastKey = ''; render(); });
 // гирлянды: базовая высота y, провис, наклон
 const GARL = [ { y: 175, sag: 26, k: -14 }, { y: 300, sag: 34, k: 18 }, { y: 430, sag: 40, k: -20 }, { y: 560, sag: 46, k: 22 }, { y: 655, sag: 22, k: -12 } ];
 function gpt(g, t){
@@ -213,11 +220,12 @@ const COLS = ['#ff4d6d', '#ffd166', '#f7e2a8', '#7ee3ff', '#ff8fab', '#b8f2a6', 
 
 /* ---------- данные ---------- */
 function listFor(d){ return REG.people.filter(p => p.d === d); }
+function localDay(iso){ const t = new Date(iso), p = n => String(n).padStart(2, '0'); return isNaN(t) ? '' : t.getFullYear() + '-' + p(t.getMonth() + 1) + '-' + p(t.getDate()); }
 function norm(s){ return (s || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я ]/g, '').replace(/\s+/g, ' ').trim(); }
 function arrivals(d){
   const list = listFor(d), out = [], keys = new Set();
   const cancelled = new Set(recs.filter(r => r.cancel).map(r => r.cancel));
-  const rs = recs.filter(r => !r.cancel && r.user_name && !cancelled.has(r._id) && r.day === d && r.event === REG.event && (TEST || !/тест/i.test(r.user_name))).sort((a, b) => a.date < b.date ? -1 : 1);
+  const rs = recs.filter(r => !r.cancel && r.user_name && !cancelled.has(r._id) && r.day === d && (TEST || localDay(r.date) >= d) && r.event === REG.event && (TEST || !/тест/i.test(r.user_name))).sort((a, b) => a.date < b.date ? -1 : 1);
   for (const r of rs) {
     let pid = r.pid;
     if (!pid) { // ручной ввод — может совпасть со списком (фамилия + инициал)
@@ -264,7 +272,7 @@ function render(){
   let lit = 0;
   order.forEach((o, i) => {
     const q = pos[idx[i] ?? i]; if (!q) return;
-    const g = el('g', { transform: `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)})` }, layer);
+    const g = el('g', { transform: `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)}) scale(${SC()})` }, layer);
     el('rect', { x: -5, y: -19, width: 10, height: 8, rx: 1.5, fill: '#8a7448' }, g);
     if (o.a) {
       lit++;
@@ -325,7 +333,7 @@ function chime(){
 /* ---------- панель ---------- */
 function renderBar(){
   $('bar').innerHTML = REG.days.map(d => `<button class="${d.d === day ? 'on' : ''}" onclick="setDay('${d.d}')">${d.label}</button>`).join('') +
-    `<button onclick="openList()">📋 Список</button><button onclick="toggleFs()">⛶ На весь экран</button><button class="${sound ? 'on' : ''}" onclick="sound=!sound;renderBar();chime()">${sound ? '🔔 Звук' : '🔕 Звук'}</button>`;
+    `<button onclick="openList()">📋 Список</button><button class="fs" onclick="toggleFs()">⛶ На весь экран</button><button class="${sound ? 'on' : ''}" onclick="sound=!sound;renderBar();chime()">${sound ? '🔔 Звук' : '🔕 Звук'}</button>`;
 }
 function setDay(d){ day = d; first = true; seen = new Set(); lastKey = ''; renderBar(); render(); }
 function toggleFs(){ document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
@@ -367,6 +375,7 @@ function exportCsv(){
 }
 
 /* ---------- старт ---------- */
+$('qrBig').src = document.querySelector('.qrbox img').src;
 drawTree(); renderBar(); load(); setInterval(load, 3000);
 </script>
 </body>
