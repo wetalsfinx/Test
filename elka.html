@@ -46,7 +46,9 @@ h1{font-family:Unbounded;font-weight:800;font-size:4.6vh;line-height:1.1;margin:
 .bar button.on{background:var(--red);border-color:var(--red)}
 .st{position:fixed;right:14px;bottom:12px;z-index:3;font-size:12px;color:var(--muted);opacity:.5}
 /* огоньки */
-.bulbOff{fill:#3d3135;stroke:#6b5a3a;stroke-width:1}
+.bulbOff{fill:rgba(230,190,106,.06);stroke:#e6be6a;stroke-opacity:.45;stroke-width:1.2;stroke-dasharray:3 3}
+.tw{animation:twk 3s ease-in-out infinite}
+@keyframes twk{0%,100%{opacity:1}50%{opacity:.2}}
 .lab{font:700 19px Onest;fill:var(--cream);paint-order:stroke;stroke:#1a0a10;stroke-width:4px;stroke-linejoin:round}
 .lit{animation:tw 2.6s ease-in-out infinite}
 @keyframes tw{50%{opacity:.78}}
@@ -152,18 +154,49 @@ if (GUEST) document.body.classList.add('guest');
 let day = (Q.get('d') && REG.days.some(x => x.d === Q.get('d'))) ? Q.get('d') : regDefaultDay(), recs = [], seen = new Set(), first = true, sound = false;
 $('sub').textContent = REG.title + ' · ' + REG.city;
 
-/* ---------- снег ---------- */
+/* ---------- снег: настоящие снежинки (26.11) ---------- */
 (function snow(){
-  const c = $('snow'), x = c.getContext('2d'); let W, H, f = [];
-  function rs(){ W = c.width = innerWidth; H = c.height = innerHeight; }
+  const c = $('snow'), x = c.getContext('2d'); let W, H, f = [], dpr = Math.min(devicePixelRatio || 1, 2);
+  function rs(){ W = innerWidth; H = innerHeight; c.width = W * dpr; c.height = H * dpr; c.style.width = W + 'px'; c.style.height = H + 'px'; x.setTransform(dpr, 0, 0, dpr, 0, 0); }
   rs(); addEventListener('resize', rs);
-  for (let i = 0; i < 110; i++) f.push({ x: Math.random(), y: Math.random(), r: Math.random() * 2.6 + .6, s: Math.random() * .0011 + .0004, w: Math.random() * 6.28 });
+  // заготовки снежинок: шесть лучей с веточками, разные узоры
+  function sprite(sz, kind){
+    const o = document.createElement('canvas'), r = sz / 2; o.width = o.height = sz * dpr; const g = o.getContext('2d');
+    g.scale(dpr, dpr); g.translate(r, r); g.strokeStyle = '#fff'; g.lineCap = 'round'; g.lineWidth = Math.max(1, sz / 22);
+    g.shadowColor = 'rgba(255,255,255,.8)'; g.shadowBlur = sz / 8;
+    const L = r * .86;
+    for (let i = 0; i < 6; i++) {
+      g.save(); g.rotate(i * Math.PI / 3);
+      g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -L);
+      const br = kind === 0 ? [[.45, .32], [.7, .22]] : kind === 1 ? [[.35, .4], [.6, .3], [.82, .16]] : [[.55, .42]];
+      for (const [t, w] of br) { g.moveTo(0, -L * t); g.lineTo(-L * w, -L * (t + w * .9)); g.moveTo(0, -L * t); g.lineTo(L * w, -L * (t + w * .9)); }
+      if (kind === 2) { g.moveTo(-L * .14, -L * .9); g.lineTo(0, -L); g.lineTo(L * .14, -L * .9); }
+      g.stroke(); g.restore();
+    }
+    g.beginPath(); g.arc(0, 0, sz / 14, 0, 6.28); g.fillStyle = '#fff'; g.fill();
+    return o;
+  }
+  const SPR = [];
+  for (const sz of [18, 26, 36, 48]) for (let k = 0; k < 3; k++) SPR.push({ c: sprite(sz, k), sz });
+  const N = innerWidth < 700 ? 34 : 60;
+  for (let i = 0; i < N; i++) {
+    const big = Math.random();
+    const s = SPR[(big < .5 ? 0 : big < .8 ? 3 : big < .95 ? 6 : 9) + (i % 3)];
+    f.push({ x: Math.random(), y: Math.random(), s, sp: .00045 + Math.random() * .0007 + s.sz / 48 * .0004, w: Math.random() * 6.28, rot: Math.random() * 6.28, vr: (Math.random() - .5) * .012, a: .45 + Math.random() * .45 });
+  }
+  const dust = []; for (let i = 0; i < 90; i++) dust.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.6 + .4, s: Math.random() * .0008 + .0003, w: Math.random() * 6.28 });
   (function loop(){
     x.clearRect(0, 0, W, H);
+    for (const p of dust) {
+      p.y += p.s; p.w += .01; if (p.y > 1.02) { p.y = -.02; p.x = Math.random(); }
+      x.beginPath(); x.arc((p.x + Math.sin(p.w) * .01) * W, p.y * H, p.r, 0, 6.28); x.fillStyle = 'rgba(255,255,255,.45)'; x.fill();
+    }
     for (const p of f) {
-      p.y += p.s; p.w += .008; if (p.y > 1.02) { p.y = -.02; p.x = Math.random(); }
-      x.beginPath(); x.arc((p.x + Math.sin(p.w) * .012) * W, p.y * H, p.r, 0, 6.28);
-      x.fillStyle = p.r > 2.4 ? 'rgba(247,226,168,.7)' : 'rgba(255,255,255,.55)'; x.fill();
+      p.y += p.sp; p.w += .006; p.rot += p.vr;
+      if (p.y > 1.06) { p.y = -.06; p.x = Math.random(); }
+      const sz = p.s.sz; x.save(); x.globalAlpha = p.a;
+      x.translate((p.x + Math.sin(p.w) * .02) * W, p.y * H); x.rotate(p.rot);
+      x.drawImage(p.s.c, -sz / 2, -sz / 2, sz, sz); x.restore();
     }
     requestAnimationFrame(loop);
   })();
@@ -172,46 +205,51 @@ $('sub').textContent = REG.title + ' · ' + REG.city;
 /* ---------- ёлка ---------- */
 const NS = 'http://www.w3.org/2000/svg';
 const CX = 300, TOP = 95, BOT = 690;
-function halfW(y){ // ширина ёлки по ярусам
-  const tiers = [[95, 250, 20, 130], [215, 420, 60, 200], [370, 560, 90, 250], [510, 690, 120, 290]];
-  let w = 0; for (const [a, b, w0, w1] of tiers) if (y >= a && y <= b) w = Math.max(w, w0 + (w1 - w0) * (y - a) / (b - a));
-  return w;
+function halfW(y){ // ёлка из света — ровный треугольник (26.11)
+  return y < TOP ? 0 : 12 + (Math.min(y, BOT) - TOP) / (BOT - TOP) * 278;
 }
 function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent || svg).appendChild(e); return e; }
 const svg = $('tree');
+function rnd(seed){ let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
 function drawTree(){
   svg.innerHTML = '';
   const defs = el('defs', {});
   defs.innerHTML = `
-  <linearGradient id="gT" x1="0" x2="1"><stop offset="0" stop-color="#0d3b2a"/><stop offset=".5" stop-color="#17604a"/><stop offset="1" stop-color="#0a3022"/></linearGradient>
   <radialGradient id="gGlow"><stop offset="0" stop-color="#f7e2a8" stop-opacity=".9"/><stop offset="1" stop-color="#f7e2a8" stop-opacity="0"/></radialGradient>
+  <radialGradient id="gHalo" cx=".5" cy=".62" r=".55"><stop offset="0" stop-color="#e6be6a" stop-opacity=".22"/><stop offset=".6" stop-color="#e6be6a" stop-opacity=".06"/><stop offset="1" stop-color="#e6be6a" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gLine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6d8"/><stop offset="1" stop-color="#e6be6a" stop-opacity=".5"/></linearGradient>
   <filter id="blur"><feGaussianBlur stdDeviation="6"/></filter>
-  <filter id="soft"><feGaussianBlur stdDeviation="2.5"/></filter>`;
-  // ствол и подставка
-  el('rect', { x: CX - 28, y: 680, width: 56, height: 50, rx: 6, fill: '#5a3420' });
-  el('path', { d: `M${CX - 80} 728 h160 l-14 48 h-132 z`, fill: '#b3122e', stroke: '#e6be6a', 'stroke-width': 2 });
-  el('path', { d: `M${CX - 80} 744 h160`, stroke: '#e6be6a', 'stroke-width': 2, opacity: .6 });
-  // ярусы
-  const tiers = [[95, 250, 20, 130], [215, 420, 60, 200], [370, 560, 90, 250], [510, 690, 120, 290]];
-  for (const [a, b, w0, w1] of tiers.slice().reverse()) {
-    const n = 7, pts = [];
-    pts.push(`M${CX - w0} ${a}`);
-    pts.push(`L${CX - w1} ${b - 10}`);
-    for (let i = 0; i <= n; i++) { const x = CX - w1 + 2 * w1 * i / n; pts.push(`Q${x - w1 / n} ${b + 14} ${x} ${b - 10}`); }
-    pts.push(`L${CX + w0} ${a} Z`);
-    el('path', { d: pts.join(' ').replace(`Q${CX - w1 - w1 / n} ${b + 14} ${CX - w1} ${b - 10}`, ''), fill: 'url(#gT)', stroke: '#e6be6a', 'stroke-opacity': .35, 'stroke-width': 1.5 });
+  <filter id="soft"><feGaussianBlur stdDeviation="2.5"/></filter>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  // мягкое золотое сияние за ёлкой
+  el('ellipse', { cx: CX, cy: 420, rx: 295, ry: 370, fill: 'url(#gHalo)' });
+  const R = rnd(585), dots = el('g', { filter: 'url(#glow)' });
+  const dot = (x, y, r, o, cls) => { const d = el('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r, fill: R() < .18 ? '#ffffff' : '#f7e2a8', 'fill-opacity': o, class: cls || 'tw' }, dots); d.style.animationDelay = (R() * 4).toFixed(2) + 's'; d.style.animationDuration = (2.2 + R() * 2.6).toFixed(2) + 's'; };
+  // контур: две линии из плотных точек
+  for (let y = TOP + 8; y <= BOT; y += 9) { const w = halfW(y); dot(CX - w, y, 1.9, .95); dot(CX + w, y, 1.9, .95); }
+  // спираль-лента из света: перед — ярче, сзади — тусклее
+  const turns = 4.2, steps = 260;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps, y = TOP + 20 + t * (BOT - TOP - 30), a = t * turns * Math.PI * 2, w = halfW(y) * .92;
+    const front = Math.cos(a) > 0; dot(CX + Math.sin(a) * w, y + Math.cos(a) * 6, front ? 2.1 : 1.2, front ? .95 : .3);
   }
-  // гирлянды-провода
+  // россыпь искр внутри силуэта
+  for (let i = 0; i < 170; i++) { const y = TOP + 25 + Math.pow(R(), .8) * (BOT - TOP - 25), w = halfW(y) - 8; dot(CX + (R() * 2 - 1) * w, y, R() * 1.3 + .5, .25 + R() * .5); }
+  // основание: светящаяся линия и отражение
+  el('ellipse', { cx: CX, cy: BOT + 18, rx: 300, ry: 22, fill: '#e6be6a', opacity: .16, filter: 'url(#blur)' });
+  for (let x = -270; x <= 270; x += 10) dot(CX + x, BOT + 16 + Math.abs(x) * -.018, 1.6, .8 - Math.abs(x) / 450);
+  // гирлянды — тонкие золотые нити, на них загораются огоньки участников
   wires = [];
   GARL.forEach(g => {
     const p = []; for (let t = 0; t <= 1.0001; t += .05) p.push(gpt(g, t));
-    el('path', { d: 'M' + p.map(q => q.x.toFixed(1) + ' ' + q.y.toFixed(1)).join(' L'), stroke: '#c9a35a', 'stroke-opacity': .55, 'stroke-width': 1.6, fill: 'none' });
+    el('path', { d: 'M' + p.map(q => q.x.toFixed(1) + ' ' + q.y.toFixed(1)).join(' L'), stroke: '#e6be6a', 'stroke-opacity': .28, 'stroke-width': 1, 'stroke-dasharray': '2 5', fill: 'none' });
   });
-  // звезда
+  // звезда из линий
   const st = el('g', { id: 'star', transform: `translate(${CX} ${TOP - 28})` });
-  el('circle', { r: 46, fill: 'url(#gGlow)', id: 'starGlow', opacity: 0 }, st);
-  const sp = []; for (let i = 0; i < 10; i++) { const r = i % 2 ? 15 : 36, a = -Math.PI / 2 + i * Math.PI / 5; sp.push((r * Math.cos(a)).toFixed(1) + ',' + (r * Math.sin(a)).toFixed(1)); }
-  el('polygon', { points: sp.join(' '), fill: '#7a6a4a', stroke: '#e6be6a', 'stroke-width': 2, id: 'starP' }, st);
+  el('circle', { r: 60, fill: 'url(#gGlow)', id: 'starGlow', opacity: .35 }, st);
+  const sp = []; for (let i = 0; i < 10; i++) { const r = i % 2 ? 13 : 34, a = -Math.PI / 2 + i * Math.PI / 5; sp.push((r * Math.cos(a)).toFixed(1) + ',' + (r * Math.sin(a)).toFixed(1)); }
+  el('polygon', { points: sp.join(' '), fill: 'rgba(230,190,106,.12)', stroke: '#f7e2a8', 'stroke-width': 2, 'stroke-linejoin': 'round', id: 'starP', filter: 'url(#glow)' }, st);
+  for (let i = 0; i < 4; i++) el('line', { x1: 0, y1: -46, x2: 0, y2: -56, stroke: '#f7e2a8', 'stroke-width': 1.5, 'stroke-linecap': 'round', opacity: .7, transform: `rotate(${i * 90 + 45})` }, st);
   layer = el('g', {});
 }
 let wires = [], layer;
@@ -292,15 +330,14 @@ function render(){
   order.forEach((o, i) => {
     const q = pos[idx[i] ?? i]; if (!q) return;
     const g = el('g', { transform: `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)}) scale(${SC()})` }, layer);
-    el('rect', { x: -5, y: -19, width: 10, height: 8, rx: 1.5, fill: '#8a7448' }, g);
     if (o.a) {
       lit++;
       const c = COLS[i % COLS.length];
       const inner = el('g', { class: 'lit' + (!first && !seen.has(o.a.key) ? ' new' : '') }, g);
       inner.style.animationDelay = (i % 5) * .45 + 's';
       el('circle', { r: 34, fill: c, opacity: .4, filter: 'url(#blur)' }, inner);
-      el('ellipse', { rx: 12, ry: 15, fill: c, stroke: '#fff', 'stroke-opacity': .6, 'stroke-width': 1 }, inner);
-      el('ellipse', { cx: -4, cy: -5, rx: 3.5, ry: 5, fill: '#fff', opacity: .75 }, inner);
+      el('circle', { r: 11, fill: c, stroke: '#fff', 'stroke-opacity': .85, 'stroke-width': 1.5 }, inner);
+      el('circle', { r: 4.5, fill: '#fff', opacity: .9 }, inner);
       const isMe = GUEST && ((ME && o.a.ids.includes(ME)) || (MN && norm(o.a.user_name) === norm(MN)));
       if (isMe) el('circle', { r: 22, class: 'meRing' }, inner);
       const sur = o.a.user_name.split(' ')[0];
@@ -309,7 +346,7 @@ function render(){
       if (!first && !seen.has(o.a.key)) { announce(o.a); chime(); }
       seen.add(o.a.key);
     } else {
-      el('ellipse', { rx: 11, ry: 14, class: 'bulbOff' }, g);
+      el('circle', { r: 9, class: 'bulbOff' }, g);
     }
   });
   const wait = list.filter(p => !arr.some(a => a.pid === p.id)).length;
@@ -317,8 +354,8 @@ function render(){
   $('cntTxt').innerHTML = plural(lit, 'огонёк горит', 'огонька горят', 'огоньков горит') + (wait ? '<br>ждём ещё ' + wait : '');
   const all = list.length > 0 && list.every(p => arr.some(a => a.pid === p.id));
   $('allin').classList.toggle('on', all);
-  $('starP').setAttribute('fill', all ? '#ffd166' : '#7a6a4a');
-  $('starGlow').setAttribute('opacity', all ? 1 : 0);
+  $('starP').setAttribute('fill', all ? '#ffd166' : 'rgba(230,190,106,.12)');
+  $('starGlow').setAttribute('opacity', all ? 1 : .35);
   if (first) { // при первом открытии — последние в ленту, без вспышек
     $('feed').innerHTML = ''; arr.slice(-4).forEach(a => feedAdd(a));
   }
