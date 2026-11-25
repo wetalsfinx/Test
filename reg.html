@@ -68,6 +68,8 @@ input:focus,select:focus{border-color:var(--gold)}
 .done .who{color:var(--muted);font-size:14px;margin-top:16px}
 .spark{position:fixed;width:6px;height:6px;border-radius:50%;pointer-events:none;z-index:5}
 .wish{margin:22px auto 0;max-width:340px;border:1px solid rgba(230,190,106,.3);border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.45;color:var(--gold2);background:rgba(230,190,106,.06)}
+.tree{display:block;width:100%;margin:22px 0 0;border:0;border-radius:18px;padding:17px;font:800 16px Unbounded;color:#2a0a10;background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,#c99a3e);box-shadow:0 10px 30px rgba(230,190,106,.35);text-decoration:none;text-align:center}
+.tree small{display:block;font:500 13px Onest;margin-top:4px;color:#4a2a10}
 .reset{background:none;border:0;color:var(--muted);text-decoration:underline;font:400 13px Onest;margin-top:24px;cursor:pointer}
 </style>
 </head>
@@ -118,7 +120,8 @@ input:focus,select:focus{border-color:var(--gold)}
   <section id="s4" class="hidden done">
     <div class="ball pop"><div class="ring"></div><div class="cap"></div><div class="b"><span id="ballName"></span></div></div>
     <h2>Ваш огонёк горит!</h2>
-    <p>Посмотрите на экран — <br>на ёлке появилось ваше имя&nbsp;🎄</p>
+    <p>На нашей ёлке появилось ваше имя&nbsp;🎄</p>
+    <a class="tree" id="treeLink" href="elka.html">🎄 Посмотреть ёлку группы<small>кто сегодня с вами на тренинге</small></a>
     <div class="wish">Сегодня учимся дарить покупателям то, ради чего они приходят в декабре, — <b>радость</b>.</div>
     <div class="who" id="who"></div>
     <button class="reset" id="rs1" onclick="resetMe()">Ошиблись фамилией? Отменить отметку</button><br>
@@ -238,6 +241,8 @@ function done(rec, fresh){
   const sur = rec.user_name.split(' ')[0];
   $('ballName').textContent = sur;
   $('who').textContent = rec.user_name + ' · ' + rec.store;
+  const test = /тест/i.test(rec.user_name) || (rec.date || '').slice(0, 10) < rec.day;
+  $('treeLink').href = 'elka.html?g=1&d=' + rec.day + '&me=' + encodeURIComponent(rec._id || '') + '&mn=' + encodeURIComponent(rec.user_name) + (test ? '&test=1' : '');
   show('s4');
   if (fresh) burst();
 }
@@ -268,7 +273,7 @@ function burst(){
 
 /* ---------- старт ---------- */
 renderDays(); renderStores();
-try { const me = JSON.parse(localStorage.getItem(LS) || 'null'); if (me && me.day === day) done(me, false); } catch (e) {}
+try { const me = JSON.parse(localStorage.getItem(LS) || 'null'); if (me && REG.days.some(x => x.d === me.day)) { day = me.day; renderDays(); renderStores(); done(me, false); } } catch (e) {}
 </script>
 </body>
 </html>
