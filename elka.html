@@ -69,6 +69,32 @@ h1{font-family:Unbounded;font-weight:800;font-size:4.6vh;line-height:1.1;margin:
 .pb .g{background:var(--red);color:#fff}
 .pb .s{background:#eadfce;color:#3a2a20}
 .tag{display:inline-block;font-size:11px;background:#fde9c8;color:#8a5a10;border-radius:6px;padding:1px 6px;margin-left:6px}
+
+/* телефон вертикально */
+@media (orientation:portrait){
+  html,body{overflow:auto;height:auto}
+  .stage{display:flex;flex-direction:column;height:auto;padding:16px;gap:14px}
+  .left{order:2}
+  #tree{height:auto;width:100%;max-height:none}
+  .right{order:1;gap:12px}
+  .logo{font-size:15px;padding:7px 10px}.logo small{font-size:9px}
+  .brand .t{font-size:12px}
+  h1{font-size:26px}
+  .count b{font-size:54px}.count span{font-size:15px}
+  .qrbox{flex-direction:column;text-align:center;padding:16px}
+  .qrbox img{width:min(74vw,330px);height:min(74vw,330px)}
+  .qrbox p{font-size:16px}
+  .feed{min-height:0}
+  .feed div{font-size:15px}.feed div small{font-size:12px}
+  .allin{font-size:18px}
+  .toast{left:50%;top:40%;font-size:24px;padding:18px 22px;white-space:normal;width:86vw}
+  .toast small{font-size:14px}
+  .bar{position:static;margin:0 16px 24px;opacity:.9;flex-wrap:wrap;justify-content:center}
+  .bar button{font-size:12px;padding:6px 8px}
+  .st{display:none}
+  .lab{font-size:22px}
+  .panel{padding:16px;font-size:13px}.panel table{font-size:13px}
+}
 </style>
 </head>
 <body>
