@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>585GOLD · Зажгите свой огонёк</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#b3122e;--red2:#d61f3f;--bord:#340c16;--night:#120a10;--gold:#e6be6a;--gold2:#f7e2a8;--cream:#faf6f0;--muted:#c9b7a8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:Onest,system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 70% at 50% 0%,#4a1020 0%,#24080f 45%,var(--night) 100%) fixed;overflow-x:hidden}
+#snow{position:fixed;inset:0;pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 18px 40px}
+/* гирлянда */
+.garland{position:relative;height:64px;margin:0 -18px}
+.garland svg{position:absolute;inset:0;width:100%;height:100%}
+.bulb{position:absolute;width:14px;height:20px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:translate(-50%,0);animation:blink 2.4s infinite}
+.bulb:before{content:"";position:absolute;top:-5px;left:3px;width:8px;height:6px;background:#6b5a3a;border-radius:2px}
+@keyframes blink{0%,100%{opacity:1;filter:brightness(1.15)}50%{opacity:.45;filter:brightness(.7)}}
+.brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:4px}
+.logo{background:var(--red);color:#fff;font-family:Unbounded;font-weight:800;border-radius:12px;padding:7px 11px;line-height:.95;font-size:15px;text-align:center;box-shadow:0 0 22px rgba(214,31,63,.55)}
+.logo small{display:block;font-size:9px;letter-spacing:2px;font-weight:600}
+.brand .t{font-size:13px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+h1{font-family:Unbounded;font-weight:800;font-size:27px;line-height:1.15;text-align:center;margin:18px 0 6px;background:linear-gradient(180deg,#fff 0%,var(--gold2) 55%,var(--gold) 100%);-webkit-background-clip:text;color:transparent}
+.lead{text-align:center;color:var(--muted);font-size:15px;margin:0 0 22px;line-height:1.45}
+.lbl{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin:22px 0 10px;font-weight:600}
+.days{display:flex;gap:10px}
+.chip{flex:1;border:1.5px solid rgba(230,190,106,.35);background:rgba(255,255,255,.04);color:var(--cream);border-radius:14px;padding:12px 8px;font:600 15px Onest;cursor:pointer;transition:.2s}
+.chip.on{background:linear-gradient(135deg,var(--red2),var(--red));border-color:transparent;box-shadow:0 6px 22px rgba(179,18,46,.5)}
+.stores{display:grid;gap:10px}
+.store{display:flex;align-items:center;gap:12px;text-align:left;border:1.5px solid rgba(230,190,106,.25);background:rgba(255,255,255,.05);color:var(--cream);border-radius:16px;padding:15px 16px;font:600 16px Onest;cursor:pointer;transition:.15s}
+.store:active{transform:scale(.98)}
+.store .ic{font-size:22px}
+.store .ad{flex:1}
+.store .ad small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.store .ar{color:var(--gold);font-size:20px}
+.back{background:none;border:0;color:var(--gold);font:500 15px Onest;padding:14px 0 0;cursor:pointer}
+.names{display:grid;gap:10px}
+.name{display:flex;align-items:center;gap:14px;border:1.5px solid rgba(230,190,106,.25);background:rgba(255,255,255,.05);color:var(--cream);border-radius:16px;padding:15px 16px;font:600 18px Onest;cursor:pointer;text-align:left;transition:.15s}
+.name small{display:block;font:400 13px Onest;color:var(--muted);margin-top:2px}
+.name .o{width:30px;height:30px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#fff7 0,#fff0 40%),#4a3a3e;box-shadow:inset 0 -3px 6px #0006}
+.name.sel{border-color:var(--gold);background:rgba(230,190,106,.12)}
+.name.sel .o{background:radial-gradient(circle at 35% 30%,#fff 0,#fff0 35%),var(--gold);box-shadow:0 0 18px var(--gold)}
+.link{display:block;width:100%;background:none;border:1.5px dashed rgba(230,190,106,.4);color:var(--gold2);border-radius:16px;padding:14px;font:500 15px Onest;margin-top:14px;cursor:pointer}
+.muted{color:var(--muted);font-size:13px;text-align:center;margin-top:8px}
+input,select{width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(230,190,106,.3);border-radius:14px;color:var(--cream);font:500 17px Onest;padding:14px 14px;outline:none;margin-bottom:10px}
+select option{color:#222}
+input:focus,select:focus{border-color:var(--gold)}
+.go{position:sticky;bottom:14px;width:100%;margin-top:20px;border:0;border-radius:18px;padding:18px;font:800 17px Unbounded;color:#2a0a10;background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,#c99a3e);box-shadow:0 10px 30px rgba(230,190,106,.35),0 0 0 4px rgba(230,190,106,.12);cursor:pointer;transition:.2s}
+.go:disabled{opacity:.35;box-shadow:none}
+.go.wait{opacity:.7}
+.err{color:#ff9aa8;text-align:center;font-size:14px;margin-top:10px;min-height:18px}
+.hidden{display:none!important}
+/* успех */
+.done{text-align:center;padding-top:10px}
+.ball{position:relative;width:190px;height:210px;margin:10px auto 6px}
+.ball .cap{position:absolute;left:50%;top:0;width:34px;height:22px;transform:translateX(-50%);background:linear-gradient(90deg,#8a6a2e,var(--gold2),#8a6a2e);border-radius:5px}
+.ball .ring{position:absolute;left:50%;top:-14px;width:18px;height:18px;transform:translateX(-50%);border:3px solid var(--gold);border-radius:50%}
+.ball .b{position:absolute;left:5px;top:18px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff 0,#ffd9df 8%,#ff5470 26%,var(--red) 55%,#5a0716 100%);box-shadow:0 0 60px 10px rgba(255,84,112,.55),0 0 120px 30px rgba(230,190,106,.25);animation:glow 2s ease-in-out infinite;display:flex;align-items:center;justify-content:center}
+.ball .b span{font:800 20px Unbounded;color:#fff;text-shadow:0 2px 10px #5a0716;padding:0 18px;line-height:1.15}
+@keyframes glow{50%{box-shadow:0 0 80px 18px rgba(255,84,112,.7),0 0 160px 50px rgba(230,190,106,.35)}}
+.pop{animation:pop .9s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
+.done h2{font-family:Unbounded;font-size:23px;margin:18px 0 8px;color:var(--gold2)}
+.done p{color:var(--cream);font-size:16px;line-height:1.5;margin:6px 0}
+.done .who{color:var(--muted);font-size:14px;margin-top:16px}
+.spark{position:fixed;width:6px;height:6px;border-radius:50%;pointer-events:none;z-index:5}
+.wish{margin:22px auto 0;max-width:340px;border:1px solid rgba(230,190,106,.3);border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.45;color:var(--gold2);background:rgba(230,190,106,.06)}
+.reset{background:none;border:0;color:var(--muted);text-decoration:underline;font:400 13px Onest;margin-top:24px;cursor:pointer}
+</style>
+</head>
+<body>
+<canvas id="snow"></canvas>
+<div class="wrap">
+  <div class="garland" id="garland"></div>
+  <div class="brand"><div class="logo">585<small>GOLD</small></div><div class="t" id="sub"></div></div>
+
+  <!-- шаг 1: день и магазин -->
+  <section id="s1">
+    <h1>Зажгите свой огонёк&nbsp;✨</h1>
+    <p class="lead">Отметьтесь — и на нашей ёлке загорится огонёк с вашим именем</p>
+    <div class="lbl">День тренинга</div>
+    <div class="days" id="days"></div>
+    <div class="lbl">Ваш магазин</div>
+    <div class="stores" id="stores"></div>
+  </section>
+
+  <!-- шаг 2: фамилия -->
+  <section id="s2" class="hidden">
+    <button class="back" onclick="show('s1')">← Другой магазин</button>
+    <h1 id="s2h" style="font-size:22px"></h1>
+    <p class="lead">Нажмите на свою фамилию</p>
+    <div class="names" id="names"></div>
+    <button class="link hidden" id="otherDay" onclick="showAll()"></button>
+    <button class="link" onclick="openManual()">Меня нет в списке</button>
+    <button class="go" id="goList" disabled onclick="sendListed()">✨ Зажечь огонёк</button>
+    <div class="err" id="err2"></div>
+  </section>
+
+  <!-- шаг 2б: вручную -->
+  <section id="s3" class="hidden">
+    <button class="back" onclick="show('s2')">← К списку</button>
+    <h1 style="font-size:22px">Познакомимся</h1>
+    <p class="lead">Заполните — это займёт полминуты</p>
+    <div class="lbl">Фамилия, имя, отчество</div>
+    <input id="fio" autocomplete="name" placeholder="Иванова Мария Петровна" oninput="chk()">
+    <div class="lbl">Должность</div>
+    <select id="role" onchange="chk()"></select>
+    <div class="lbl">Магазин</div>
+    <select id="store" onchange="chk()"></select>
+    <button class="go" id="goMan" disabled onclick="sendManual()">✨ Зажечь огонёк</button>
+    <div class="err" id="err3"></div>
+  </section>
+
+  <!-- готово -->
+  <section id="s4" class="hidden done">
+    <div class="ball pop"><div class="ring"></div><div class="cap"></div><div class="b"><span id="ballName"></span></div></div>
+    <h2>Ваш огонёк горит!</h2>
+    <p>Посмотрите на экран — <br>на ёлке появилось ваше имя&nbsp;🎄</p>
+    <div class="wish">Сегодня учимся дарить покупателям то, ради чего они приходят в декабре, — <b>радость</b>.</div>
+    <div class="who" id="who"></div>
+    <button class="reset" onclick="resetMe()">Это не я — отметиться заново</button>
+  </section>
+</div>
+
+<script src="reg_list.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const LS = 'reg585_' + REG.event;
+let day = regDefaultDay(), store = null, pick = null, sending = false;
+
+/* ---------- гирлянда ---------- */
+(function garland(){
+  const g = $('garland'), cols = ['#ff4d6d','#f7e2a8','#ffd166','#7ee3ff','#ff8fab','#fff'];
+  g.innerHTML = '<svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M0 6 Q25 34 50 10 T100 8" stroke="#3b2a1e" stroke-width=".8" fill="none"/></svg>';
+  const n = 11;
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1), x = t * 100;
+    // приближённо по кривой
+    const y = t < .5 ? 6 + (34 - 6) * 4 * t * (1 - 2 * t) * .9 + 0 : 10 + Math.sin((t - .5) * 2 * Math.PI) * -12;
+    const b = document.createElement('div'); b.className = 'bulb';
+    const c = cols[i % cols.length];
+    b.style.cssText = `left:${x}%;top:${Math.max(4, Math.min(30, y)) * 1.3}px;background:${c};box-shadow:0 0 12px 3px ${c};animation-delay:${(i % 3) * .8}s`;
+    g.appendChild(b);
+  }
+})();
+
+/* ---------- снег ---------- */
+(function snow(){
+  const c = $('snow'), x = c.getContext('2d'); let W, H, f = [];
+  function rs(){ W = c.width = innerWidth * devicePixelRatio; H = c.height = innerHeight * devicePixelRatio; c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px'; }
+  rs(); addEventListener('resize', rs);
+  for (let i = 0; i < 70; i++) f.push({ x: Math.random(), y: Math.random(), r: Math.random() * 2.2 + .6, s: Math.random() * .0012 + .0005, w: Math.random() * 6.28 });
+  (function loop(){
+    x.clearRect(0, 0, W, H);
+    for (const p of f) {
+      p.y += p.s; p.w += .01; if (p.y > 1.02) { p.y = -.02; p.x = Math.random(); }
+      const px = (p.x + Math.sin(p.w) * .01) * W, py = p.y * H;
+      x.beginPath(); x.arc(px, py, p.r * devicePixelRatio, 0, 6.28);
+      x.fillStyle = p.r > 2 ? 'rgba(247,226,168,.75)' : 'rgba(255,255,255,.6)'; x.fill();
+    }
+    requestAnimationFrame(loop);
+  })();
+})();
+
+/* ---------- экраны ---------- */
+function show(id){ ['s1','s2','s3','s4'].forEach(s => $(s).classList.toggle('hidden', s !== id)); scrollTo(0, 0); }
+$('sub').textContent = REG.title + ' · ' + REG.city;
+
+function renderDays(){
+  $('days').innerHTML = REG.days.map(d => `<button class="chip ${d.d === day ? 'on' : ''}" onclick="setDay('${d.d}')">${d.label}</button>`).join('');
+}
+function setDay(d){ day = d; renderDays(); renderStores(); }
+function renderStores(){
+  $('stores').innerHTML = REG.stores.map((s, i) => {
+    const k = REG.people.filter(p => p.s === i && p.d === day).length;
+    return `<button class="store" onclick="openStore(${i})"><span class="ic">🎁</span><span class="ad">${s}<small>${k ? 'в списке на этот день: ' + k : 'отметиться'}</small></span><span class="ar">›</span></button>`;
+  }).join('');
+}
+function openStore(i){
+  store = i; pick = null; $('goList').disabled = true; $('err2').textContent = '';
+  $('s2h').textContent = REG.stores[i];
+  const mine = REG.people.filter(p => p.s === i && p.d === day);
+  const other = REG.people.filter(p => p.s === i && p.d !== day);
+  renderNames(mine.length ? mine : other);
+  const ob = $('otherDay');
+  if (mine.length && other.length) { ob.textContent = 'Я записан(а) на другой день'; ob.classList.remove('hidden'); }
+  else ob.classList.add('hidden');
+  show('s2');
+}
+function showAll(){ renderNames(REG.people.filter(p => p.s === store)); $('otherDay').classList.add('hidden'); }
+function renderNames(list){
+  $('names').innerHTML = list.length ? list.map(p => `<button class="name" id="n_${p.id}" onclick="choose('${p.id}')"><span class="o"></span><span>${p.n}<small>${p.r}</small></span></button>`).join('')
+    : '<p class="muted">В списке по этому магазину никого нет — нажмите «Меня нет в списке»</p>';
+}
+function choose(id){
+  pick = REG.people.find(p => p.id === id);
+  document.querySelectorAll('.name').forEach(b => b.classList.toggle('sel', b.id === 'n_' + id));
+  $('goList').disabled = false;
+}
+function openManual(){
+  $('role').innerHTML = '<option value="">— выберите —</option>' + REG.roles.map(r => `<option>${r}</option>`).join('');
+  $('store').innerHTML = REG.stores.map((s, i) => `<option value="${i}" ${i === store ? 'selected' : ''}>${s}</option>`).join('') + `<option value="-1">Другой магазин</option>`;
+  chk(); show('s3'); setTimeout(() => $('fio').focus(), 200);
+}
+function chk(){ $('goMan').disabled = !($('fio').value.trim().split(/\s+/).length >= 2 && $('role').value); }
+
+/* ---------- запись ---------- */
+async function save(rec){
+  const f = {};
+  for (const k in rec) f[k] = typeof rec[k] === 'boolean' ? { booleanValue: rec[k] } : { stringValue: String(rec[k]) };
+  for (let i = 0; i < 3; i++) {
+    try { const r = await fetch(REG_DB.BASE + '?key=' + REG_DB.KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: f }) }); if (r.ok) return true; } catch (e) {}
+    await new Promise(r => setTimeout(r, 800 * (i + 1)));
+  }
+  return false;
+}
+function device(){ let d = localStorage.getItem('reg585_dev'); if (!d) { d = Math.random().toString(36).slice(2, 9); localStorage.setItem('reg585_dev', d); } return d; }
+async function send(rec, btn, err){
+  if (sending) return; sending = true; btn.classList.add('wait'); btn.textContent = '✨ Зажигаем…'; $(err).textContent = '';
+  rec = Object.assign({ event: REG.event, day, date: new Date().toISOString(), device: device() }, rec);
+  const ok = await save(rec);
+  sending = false; btn.classList.remove('wait'); btn.textContent = '✨ Зажечь огонёк';
+  if (!ok) { $(err).textContent = 'Не получилось отправить — проверьте интернет и нажмите ещё раз'; return; }
+  try { localStorage.setItem(LS, JSON.stringify(rec)); } catch (e) {}
+  done(rec, true);
+}
+function sendListed(){ if (!pick) return; send({ pid: pick.id, user_name: pick.n, role: pick.r, store: REG.stores[pick.s], listed: true }, $('goList'), 'err2'); }
+function sendManual(){
+  const si = +$('store').value;
+  send({ pid: '', user_name: $('fio').value.trim().replace(/\s+/g, ' '), role: $('role').value, store: si >= 0 ? REG.stores[si] : 'Другой магазин', listed: false }, $('goMan'), 'err3');
+}
+function done(rec, fresh){
+  const sur = rec.user_name.split(' ')[0];
+  $('ballName').textContent = sur;
+  $('who').textContent = rec.user_name + ' · ' + rec.store;
+  show('s4');
+  if (fresh) burst();
+}
+function resetMe(){ localStorage.removeItem(LS); pick = null; show('s1'); }
+function burst(){
+  const cols = ['#f7e2a8','#ff5470','#e6be6a','#fff','#ffd166'];
+  for (let i = 0; i < 46; i++) {
+    const s = document.createElement('div'); s.className = 'spark';
+    const c = cols[i % cols.length]; s.style.background = c; s.style.boxShadow = `0 0 8px ${c}`;
+    s.style.left = innerWidth / 2 + 'px'; s.style.top = '200px';
+    document.body.appendChild(s);
+    const a = Math.random() * 6.28, d = 90 + Math.random() * 170;
+    s.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px,${Math.sin(a) * d + 80}px) scale(.3)`, opacity: 0 }], { duration: 1100 + Math.random() * 700, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => s.remove();
+  }
+}
+
+/* ---------- старт ---------- */
+renderDays(); renderStores();
+try { const me = JSON.parse(localStorage.getItem(LS) || 'null'); if (me && me.day === day) done(me, false); } catch (e) {}
+</script>
+</body>
+</html>
