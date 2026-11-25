@@ -121,7 +121,8 @@ input:focus,select:focus{border-color:var(--gold)}
     <p>Посмотрите на экран — <br>на ёлке появилось ваше имя&nbsp;🎄</p>
     <div class="wish">Сегодня учимся дарить покупателям то, ради чего они приходят в декабре, — <b>радость</b>.</div>
     <div class="who" id="who"></div>
-    <button class="reset" onclick="resetMe()">Это не я — отметиться заново</button>
+    <button class="reset" id="rs1" onclick="resetMe()">Ошиблись фамилией? Отменить отметку</button><br>
+    <button class="reset" onclick="another()">Отметить коллегу без телефона</button>
   </section>
 </div>
 
@@ -212,7 +213,7 @@ async function save(rec){
   const f = {};
   for (const k in rec) f[k] = typeof rec[k] === 'boolean' ? { booleanValue: rec[k] } : { stringValue: String(rec[k]) };
   for (let i = 0; i < 3; i++) {
-    try { const r = await fetch(REG_DB.BASE + '?key=' + REG_DB.KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: f }) }); if (r.ok) return true; } catch (e) {}
+    try { const r = await fetch(REG_DB.BASE + '?key=' + REG_DB.KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: f }) }); if (r.ok) { try { const j = await r.json(); return (j.name || '').split('/').pop() || 'ok'; } catch (e) { return 'ok'; } } } catch (e) {}
     await new Promise(r => setTimeout(r, 800 * (i + 1)));
   }
   return false;
@@ -224,6 +225,7 @@ async function send(rec, btn, err){
   const ok = await save(rec);
   sending = false; btn.classList.remove('wait'); btn.textContent = '✨ Зажечь огонёк';
   if (!ok) { $(err).textContent = 'Не получилось отправить — проверьте интернет и нажмите ещё раз'; return; }
+  rec._id = ok;
   try { localStorage.setItem(LS, JSON.stringify(rec)); } catch (e) {}
   done(rec, true);
 }
@@ -239,7 +241,19 @@ function done(rec, fresh){
   show('s4');
   if (fresh) burst();
 }
-function resetMe(){ localStorage.removeItem(LS); pick = null; show('s1'); }
+async function resetMe(){
+  const b = $('rs1');
+  if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Точно отменить? Нажмите ещё раз'; return; }
+  b.textContent = 'Отменяем…';
+  let me = null; try { me = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e) {}
+  if (me && me._id && me._id !== 'ok') {
+    const ok = await save({ event: REG.event, day: me.day, cancel: me._id, user_name: '', date: new Date().toISOString(), device: device() });
+    if (!ok) { b.textContent = 'Нет связи — нажмите ещё раз'; delete b.dataset.sure; return; }
+  }
+  localStorage.removeItem(LS); delete b.dataset.sure; b.textContent = 'Ошиблись фамилией? Отменить отметку';
+  pick = null; show('s1');
+}
+function another(){ localStorage.removeItem(LS); pick = null; show('s1'); }
 function burst(){
   const cols = ['#f7e2a8','#ff5470','#e6be6a','#fff','#ffd166'];
   for (let i = 0; i < 46; i++) {

@@ -68,6 +68,7 @@ h1{font-family:Unbounded;font-weight:800;font-size:4.6vh;line-height:1.1;margin:
 .pb button{border:0;border-radius:12px;padding:11px 16px;font:600 15px Onest;cursor:pointer}
 .pb .g{background:var(--red);color:#fff}
 .pb .s{background:#eadfce;color:#3a2a20}
+.un{border:0;background:#f3e6d6;color:#8a3a3a;border-radius:8px;padding:3px 8px;font:500 12px Onest;cursor:pointer;margin-left:6px}.un.sure{background:#b3122e;color:#fff}
 .tag{display:inline-block;font-size:11px;background:#fde9c8;color:#8a5a10;border-radius:6px;padding:1px 6px;margin-left:6px}
 
 /* телефон вертикально */
@@ -215,7 +216,8 @@ function listFor(d){ return REG.people.filter(p => p.d === d); }
 function norm(s){ return (s || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я ]/g, '').replace(/\s+/g, ' ').trim(); }
 function arrivals(d){
   const list = listFor(d), out = [], keys = new Set();
-  const rs = recs.filter(r => r.day === d && r.event === REG.event && (TEST || !/тест/i.test(r.user_name))).sort((a, b) => a.date < b.date ? -1 : 1);
+  const cancelled = new Set(recs.filter(r => r.cancel).map(r => r.cancel));
+  const rs = recs.filter(r => !r.cancel && r.user_name && !cancelled.has(r._id) && r.day === d && r.event === REG.event && (TEST || !/тест/i.test(r.user_name))).sort((a, b) => a.date < b.date ? -1 : 1);
   for (const r of rs) {
     let pid = r.pid;
     if (!pid) { // ручной ввод — может совпасть со списком (фамилия + инициал)
@@ -224,8 +226,8 @@ function arrivals(d){
       if (m) pid = m.id;
     }
     const key = pid || norm(r.user_name);
-    if (keys.has(key)) continue; keys.add(key);
-    out.push(Object.assign({}, r, { pid: pid || '', key }));
+    if (keys.has(key)) { out.find(o => o.key === key).ids.push(r._id); continue; } keys.add(key);
+    out.push(Object.assign({}, r, { pid: pid || '', key, ids: [r._id] }));
   }
   return out;
 }
@@ -251,6 +253,8 @@ function render(){
   const n = Math.max(list.length + extra.length, 6);
   const key = day + '|' + arr.map(a => a.key).join(',') + '|' + n;
   if (key === lastKey) return; lastKey = key;
+  const ak = new Set(arr.map(a => a.key));
+  if ([...seen].some(k => !ak.has(k))) { seen = new Set([...seen].filter(k => ak.has(k))); $('feed').innerHTML = ''; arr.slice(-4).forEach(a => feedAdd(a)); }
   const pos = slots(n);
   // порядок мест: участники из списка — по своим местам, остальные — следом
   const order = list.map(p => ({ p, a: arr.find(a => a.pid === p.id) })).concat(extra.map(a => ({ p: null, a })));
@@ -329,10 +333,10 @@ function toggleFs(){ document.fullscreenElement ? document.exitFullscreen() : do
 /* ---------- список для отчёта ---------- */
 function rows(){
   const list = listFor(day), arr = arrivals(day), out = [];
-  list.forEach(p => { const a = arr.find(x => x.pid === p.id); out.push({ n: p.n, r: p.r, s: REG.stores[p.s], t: a ? time(a.date) : '', ok: !!a, extra: false }); });
+  list.forEach(p => { const a = arr.find(x => x.pid === p.id); out.push({ n: p.n, r: p.r, s: REG.stores[p.s], t: a ? time(a.date) : '', ok: !!a, extra: false, ids: a ? a.ids : [] }); });
   arr.filter(a => !list.some(p => p.id === a.pid)).forEach(a => {
     const p = REG.people.find(x => x.id === a.pid);
-    out.push({ n: p ? p.n : a.user_name, r: p ? p.r : a.role, s: p ? REG.stores[p.s] : a.store, t: time(a.date), ok: true, extra: true, why: p ? 'по списку — на другой день' : 'нет в списке' });
+    out.push({ n: p ? p.n : a.user_name, r: p ? p.r : a.role, s: p ? REG.stores[p.s] : a.store, t: time(a.date), ok: true, extra: true, why: p ? 'по списку — на другой день' : 'нет в списке', ids: a.ids });
   });
   return out;
 }
@@ -341,8 +345,16 @@ function openList(){
   const dl = REG.days.find(d => d.d === day).label, rs = rows(), ok = rs.filter(r => r.ok).length, exp = listFor(day).length;
   $('lh').textContent = REG.title + ' · ' + REG.city + ' · ' + dl;
   $('ls').textContent = `Пришли: ${ok} · по списку: ${exp} · не отметились: ${rs.filter(r => !r.ok).length}`;
-  $('lt').innerHTML = rs.map((r, i) => `<tr class="${r.ok ? '' : 'no'}"><td>${i + 1}</td><td>${esc(r.n)}${r.extra ? '<span class="tag">' + r.why + '</span>' : ''}</td><td>${esc(r.r || '')}</td><td>${esc(r.s || '')}</td><td>${r.ok ? '<span class="ok">✅ ' + r.t + '</span>' : '⏳ не отметился'}</td></tr>`).join('');
+  $('lt').innerHTML = rs.map((r, i) => `<tr class="${r.ok ? '' : 'no'}"><td>${i + 1}</td><td>${esc(r.n)}${r.extra ? '<span class="tag">' + r.why + '</span>' : ''}</td><td>${esc(r.r || '')}</td><td>${esc(r.s || '')}</td><td>${r.ok ? '<span class="ok">✅ ' + r.t + '</span> <button class="un" data-ids="' + r.ids.join(',') + '" onclick="unmark(this)">✖ снять</button>' : '⏳ не отметился'}</td></tr>`).join('');
   $('ov').classList.add('on');
+}
+async function unmark(b){
+  if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'точно снять?'; b.classList.add('sure'); return; }
+  b.textContent = '…';
+  for (const id of b.dataset.ids.split(',').filter(Boolean)) {
+    try { await fetch(REG_DB.BASE + '?key=' + REG_DB.KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { event: { stringValue: REG.event }, day: { stringValue: day }, cancel: { stringValue: id }, user_name: { stringValue: '' }, date: { stringValue: new Date().toISOString() }, device: { stringValue: 'trainer' } } }) }); } catch (e) {}
+  }
+  lastKey = ''; await load();
 }
 function closeList(){ $('ov').classList.remove('on'); }
 function exportCsv(){
